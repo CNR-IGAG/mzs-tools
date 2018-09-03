@@ -286,7 +286,6 @@ class MzSTools:
 
 	def run1(self):
 
-		self.dlg1.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg1.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg1.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -300,7 +299,7 @@ class MzSTools:
 		dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
 		lista_dir_com = self.plugin_dir + os.sep + "dir_comuni_ms.txt"
 		tabella_controllo = self.plugin_dir + os.sep + "comuni.csv"
-		pacchetto = self.plugin_dir + os.sep + "progetto_MS.zip"
+		pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
 
 		dizio_comuni = {}
 		dict_comuni = {}
@@ -468,7 +467,6 @@ class MzSTools:
 
 	def run2(self):
 
-		self.dlg2.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg2.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg2.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -506,7 +504,6 @@ class MzSTools:
 
 	def run3(self):
 
-		self.dlg3.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg3.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg3.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -562,7 +559,6 @@ class MzSTools:
 
 	def run4(self):
 
-		self.dlg4.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg4.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg4.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -616,7 +612,6 @@ class MzSTools:
 		attend_mis, note_par, data_par) SELECT pkuid, id_indln, tipo_parln, id_parln, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, valore,
 		attend_mis, note_par, data_par FROM A.parametri_lineari;"""]
 
-		self.dlg5.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg5.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg5.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -635,7 +630,7 @@ class MzSTools:
 				if os.path.exists(out_dir):
 					input_name = out_dir + os.sep + "progetto_shapefile"
 					output_name = out_dir + os.sep + in_dir.split("/")[-1]
-					zip_ref = zipfile.ZipFile(self.plugin_dir + os.sep + "progetto_shapefile.zip", 'r')
+					zip_ref = zipfile.ZipFile(self.plugin_dir + os.sep + "data" + os.sep + "progetto_shapefile.zip", 'r')
 					zip_ref.extractall(out_dir)
 					zip_ref.close()
 					os.rename(input_name, output_name)
@@ -701,7 +696,6 @@ class MzSTools:
 
 	def run6(self):
 
-		self.dlg6.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg6.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg6.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -735,7 +729,6 @@ class MzSTools:
 
 	def run7(self):
 
-		self.dlg7.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg7.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg7.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -954,7 +947,6 @@ class MzSTools:
 
 	def run10(self):
 
-		self.dlg10.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg10.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg10.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 
@@ -1036,7 +1028,6 @@ class MzSTools:
 
 	def run11(self):
 
-		self.dlg11.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg11.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg11.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 		self.dlg11.pushButton_ita.clicked.connect(lambda: self.open_pdf(self.plugin_dir + os.sep + "manuale.pdf"))
@@ -1051,7 +1042,6 @@ class MzSTools:
 
 	def run12(self):
 
-		self.dlg12.centroms.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-centroMS.jpg'))
 		self.dlg12.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg12.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 		self.dlg12.dir_input.clear()
