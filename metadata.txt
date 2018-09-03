@@ -1,0 +1,43 @@
+# Mandatory items:
+
+[general]
+
+name=MzS Tools
+
+qgisMinimumVersion=2.16
+
+description=Plugin for Italian seismic microzonation.
+
+version=0.4
+
+author=IGAG - CNR
+email=emanuele.tarquini@igag.cnr.it
+
+
+about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1.
+    Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1.
+
+
+tracker=https://github.com/CNR-IGAG/mzs-tools/issues
+
+repository=https://github.com/CNR-IGAG/mzs-tools
+
+# End of mandatory metadata
+
+
+# Recommended items:
+
+
+
+tags=Italia, terremoto, microzonazione, sismica, IGAG, CNR, python
+
+
+homepage=https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools
+category=Database
+icon=icon.png
+# experimental flag
+experimental=True
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
