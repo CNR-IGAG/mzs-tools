@@ -10,12 +10,14 @@ description=Plugin for Italian seismic microzonation.
 
 version=0.4
 
-author=IGAG - CNR
+author=CNR-IGAG (https://www.igag.cnr.it/index.php/en/)
 email=emanuele.tarquini@igag.cnr.it
 
 
-about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1.
-    Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1.
+about=The plugin allows the creation of database and maps for the Italian seismic microzonation studies for levels 1, 2 and 3 according to the Standards of representation and computer archiving version 4.1 (http://www.protezionecivile.gov.it/jcms/en/standard_studi_ms.wp?request_locale=en)
+
+Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1
+(http://www.protezionecivile.gov.it/jcms/it/standard_studi_ms.wp?request_locale=it)
 
 
 tracker=https://github.com/CNR-IGAG/mzs-tools/issues
@@ -29,7 +31,7 @@ repository=https://github.com/CNR-IGAG/mzs-tools
 
 
 
-tags=Italia, terremoto, microzonazione, sismica, IGAG, CNR, python
+tags=Italy, Seismic hazard, seismic microzonation, microzonazione sismica, pericolosità geologica
 
 
 homepage=https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools
