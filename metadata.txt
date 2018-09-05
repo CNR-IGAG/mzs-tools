@@ -35,7 +35,7 @@ tags=Italy, Seismic hazard, seismic microzonation, microzonazione sismica, peric
 
 
 homepage=https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools
-category=Database and Maps
+category=Database
 icon=icon.png
 # experimental flag
 experimental=True
