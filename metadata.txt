@@ -8,20 +8,22 @@ qgisMinimumVersion=2.16
 
 description=Plugin for Italian seismic microzonation.
 
-version=0.4
+version=0.5
+author=IGAG-CNR
+email=labgis@igag.cnr.it
 
-author=IGAG - CNR
-email=emanuele.tarquini@igag.cnr.it
 
-
-about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1.
-    Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1.
-		Changelog: 
-		1. improved the "Add feature or record" tool;
-		2. improved the editing mode of the feature classes / tables "Siti", "Indagini" and "Parametri";
-		3. resolved the bugs related to the interaction of records in the feature classes / tables "Siti", "Indagini" and "Parametri";
-		4. improved the graphic dressing of some feature classes;
-		5. updated the Italian manual.	
+about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1 (http://www.protezionecivile.gov.it/jcms/en/standard_studi_ms.wp?request_locale=en).
+    Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1 (http://www.protezionecivile.gov.it/jcms/it/standard_studi_ms.wp?request_locale=it).
+changelog=
+		v0.5:
+				1. improved the "Add feature or record" tool;
+				2. improved the editing mode of the feature classes / tables "Siti", "Indagini" and "Parametri";
+				3. resolved the bugs related to the interaction of records in the feature classes / tables "Siti", "Indagini" and "Parametri";
+				4. improved the graphic dressing of some feature classes;
+				5. updated the Italian manual.
+		v0.4:
+				1. initial relase.		
 
 tracker=https://github.com/CNR-IGAG/mzs-tools/issues
 
@@ -34,7 +36,7 @@ repository=https://github.com/CNR-IGAG/mzs-tools
 
 
 
-tags=Italia, terremoto, microzonazione, sismica, IGAG, CNR, python
+tags=Italy, Seismic hazard, seismic microzonation, microzonazione sismica, pericolosità geologica
 
 
 homepage=https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools
