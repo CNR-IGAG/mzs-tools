@@ -80,7 +80,10 @@
         <enum>Qt::Vertical</enum>
        </property>
        <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+       <property name="centerButtons">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -188,7 +191,7 @@
       <string>Sito puntuale</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="23" column="0">
+      <item row="27" column="0">
        <widget class="QLabel" name="label">
         <property name="font">
          <font>
@@ -198,6 +201,32 @@
         </property>
         <property name="text">
          <string>Mod_identcoord</string>
+        </property>
+       </widget>
+      </item>
+      <item row="20" column="1">
+       <spacer name="verticalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="29" column="0">
+       <widget class="QLabel" name="label_3">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Desc_modcoord</string>
         </property>
        </widget>
       </item>
@@ -214,59 +243,7 @@
         </property>
        </spacer>
       </item>
-      <item row="16" column="1">
-       <spacer name="verticalSpacer_3">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="20" column="1">
-       <spacer name="verticalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="25" column="0">
-       <widget class="QLabel" name="label_3">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Desc_modcoord</string>
-        </property>
-       </widget>
-      </item>
-      <item row="21" column="1">
-       <widget class="QLineEdit" name="indirizzo">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="toolTip">
-         <string>Reference address.</string>
-        </property>
-       </widget>
-      </item>
-      <item row="28" column="1">
+      <item row="34" column="1">
        <spacer name="verticalSpacer_8">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -291,14 +268,14 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>ID code of the Municipality.</string>
+         <string/>
         </property>
         <property name="text">
          <string>0</string>
         </property>
        </widget>
       </item>
-      <item row="27" column="1">
+      <item row="33" column="1">
        <widget class="QLineEdit" name="quota_slm">
         <property name="font">
          <font>
@@ -307,15 +284,22 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>Altitude above sea level (meters).</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
-       <widget class="QLineEdit" name="ubicazione_prov">
-        <property name="enabled">
-         <bool>false</bool>
+      <item row="16" column="1">
+       <widget class="QLineEdit" name="coord_x">
+        <property name="toolTip">
+         <string/>
         </property>
+        <property name="inputMethodHints">
+         <set>Qt::ImhNone</set>
+        </property>
+       </widget>
+      </item>
+      <item row="29" column="1">
+       <widget class="QLineEdit" name="desc_modcoord">
         <property name="font">
          <font>
           <weight>50</weight>
@@ -323,27 +307,11 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>ID code of the Province.</string>
-        </property>
-        <property name="text">
-         <string>0</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="26" column="1">
-       <spacer name="verticalSpacer_7">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="27" column="0">
+      <item row="33" column="0">
        <widget class="QLabel" name="label_4">
         <property name="font">
          <font>
@@ -353,104 +321,6 @@
         </property>
         <property name="text">
          <string>Quota_slm</string>
-        </property>
-       </widget>
-      </item>
-      <item row="11" column="1">
-       <spacer name="verticalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="22" column="1">
-       <spacer name="verticalSpacer_5">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="21" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Indirizzo</string>
-        </property>
-       </widget>
-      </item>
-      <item row="32" column="1">
-       <spacer name="verticalSpacer_11">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="29" column="1">
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QComboBox" name="modo_quota">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <weight>50</weight>
-            <bold>false</bold>
-           </font>
-          </property>
-          <property name="toolTip">
-           <string>Mode used to identify the altitude of the campaign plan.</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>ID</string>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="1">
-       <widget class="QLineEdit" name="coord_x">
-        <property name="toolTip">
-         <string>Enter the value of the X coordinate in WGS84 UTM 33N.</string>
-        </property>
-        <property name="inputMethodHints">
-         <set>Qt::ImhNone</set>
         </property>
        </widget>
       </item>
@@ -503,21 +373,193 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>ID value of the record.</string>
+         <string/>
         </property>
         <property name="text">
          <string>0</string>
         </property>
        </widget>
       </item>
-      <item row="17" column="1">
-       <widget class="QLineEdit" name="coord_y">
+      <item row="28" column="1">
+       <spacer name="verticalSpacer_6">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="26" column="1">
+       <spacer name="verticalSpacer_5">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLineEdit" name="ubicazione_prov">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
         <property name="toolTip">
-         <string>Enter the value of the Y coordinate in WGS84 UTM 33N</string>
+         <string/>
+        </property>
+        <property name="text">
+         <string>0</string>
         </property>
        </widget>
       </item>
-      <item row="23" column="1">
+      <item row="32" column="1">
+       <spacer name="verticalSpacer_7">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="15" column="1">
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="35" column="1">
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QComboBox" name="modo_quota">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <weight>50</weight>
+            <bold>false</bold>
+           </font>
+          </property>
+          <property name="toolTip">
+           <string/>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="21" column="1">
+       <widget class="QLineEdit" name="coord_y">
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <spacer name="verticalSpacer_13">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Ubicazione_prov</string>
+        </property>
+       </widget>
+      </item>
+      <item row="39" column="1">
+       <widget class="QDateEdit" name="data_sito">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="toolTip">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="40" column="1">
+       <spacer name="verticalSpacer_11">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="36" column="1">
+       <spacer name="verticalSpacer_10">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_8">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>ID</string>
+        </property>
+       </widget>
+      </item>
+      <item row="27" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
          <widget class="QComboBox" name="mod_identcoord">
@@ -534,40 +576,14 @@
            </font>
           </property>
           <property name="toolTip">
-           <string>Mode used for identification of the track on the original document.</string>
+           <string/>
           </property>
          </widget>
         </item>
        </layout>
       </item>
-      <item row="5" column="1">
-       <spacer name="verticalSpacer_13">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="31" column="1">
-       <widget class="QDateEdit" name="data_sito">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="toolTip">
-         <string>Date of record storage.</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="label_10">
+      <item row="35" column="0">
+       <widget class="QLabel" name="label_5">
         <property name="font">
          <font>
           <weight>50</weight>
@@ -575,50 +591,37 @@
          </font>
         </property>
         <property name="text">
-         <string>Ubicazione_prov</string>
+         <string>Modo_quota</string>
         </property>
        </widget>
       </item>
-      <item row="25" column="1">
-       <widget class="QLineEdit" name="desc_modcoord">
+      <item row="10" column="0">
+       <widget class="QLabel" name="label_11">
         <property name="font">
          <font>
           <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>
-        <property name="toolTip">
-         <string>ID of the methods mentioned in &quot;Mod_identcoord&quot;.</string>
+        <property name="text">
+         <string>Ubicazione_com</string>
         </property>
        </widget>
       </item>
-      <item row="24" column="1">
-       <spacer name="verticalSpacer_6">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
+      <item row="39" column="0">
+       <widget class="QLabel" name="label_6">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
         </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
+        <property name="text">
+         <string>Data_sito</string>
         </property>
-       </spacer>
+       </widget>
       </item>
-      <item row="30" column="1">
-       <spacer name="verticalSpacer_10">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="33" column="1">
+      <item row="41" column="1">
        <widget class="QTextEdit" name="note_sito">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -639,12 +642,12 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>Note.</string>
+         <string/>
         </property>
        </widget>
       </item>
-      <item row="35" column="1">
-       <widget class="QLabel" name="label_9">
+      <item row="41" column="0">
+       <widget class="QLabel" name="label_7">
         <property name="font">
          <font>
           <weight>50</weight>
@@ -652,7 +655,33 @@
          </font>
         </property>
         <property name="text">
-         <string>(*): the coordinate system adopted is &quot;WGS 84 / UTM zone 33N&quot; (EPSG 32633).</string>
+         <string>Note_sito</string>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0">
+       <widget class="QLabel" name="label_12">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Coord_X (*)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="21" column="0">
+       <widget class="QLabel" name="label_13">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Coord_Y (*)</string>
         </property>
        </widget>
       </item>
@@ -669,20 +698,7 @@
         </property>
        </spacer>
       </item>
-      <item row="10" column="0">
-       <widget class="QLabel" name="label_11">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Ubicazione_com</string>
-        </property>
-       </widget>
-      </item>
-      <item row="36" column="1">
+      <item row="44" column="1">
        <spacer name="verticalSpacer_9">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -695,8 +711,14 @@
         </property>
        </spacer>
       </item>
-      <item row="29" column="0">
-       <widget class="QLabel" name="label_5">
+      <item row="43" column="1">
+       <widget class="QLabel" name="label_9">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="font">
          <font>
           <weight>50</weight>
@@ -704,25 +726,71 @@
          </font>
         </property>
         <property name="text">
-         <string>Modo_quota</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(*): Coordinate System &amp;quot;WGS 84 UTM zone 33N&amp;quot; (EPSG 32633).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
-      <item row="33" column="0">
-       <widget class="QLabel" name="label_7">
+      <item row="30" column="1">
+       <spacer name="verticalSpacer_15">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="11" column="1">
+       <spacer name="verticalSpacer_4">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="37" column="1">
+       <widget class="Line" name="line_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="1">
+       <widget class="QLineEdit" name="indirizzo">
         <property name="font">
          <font>
           <weight>50</weight>
           <bold>false</bold>
          </font>
         </property>
-        <property name="text">
-         <string>Note_sito</string>
+        <property name="toolTip">
+         <string/>
         </property>
        </widget>
+      </item>
+      <item row="13" column="1">
+       <spacer name="verticalSpacer_14">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item row="12" column="0">
-       <widget class="QLabel" name="label_12">
+       <widget class="QLabel" name="label_2">
         <property name="font">
          <font>
           <weight>50</weight>
@@ -730,33 +798,55 @@
          </font>
         </property>
         <property name="text">
-         <string>Coord_X (*)</string>
+         <string>Indirizzo</string>
+        </property>
+       </widget>
+      </item>
+      <item row="14" column="1">
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="31" column="1">
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="38" column="1">
+       <spacer name="verticalSpacer_16">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="37" column="0">
+       <widget class="QLabel" name="label_14">
+        <property name="text">
+         <string>&lt;b&gt;Altro&lt;/b&gt;</string>
+        </property>
+       </widget>
+      </item>
+      <item row="14" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="text">
+         <string>&lt;b&gt;Longitudine/Latitudine&lt;/b&gt;</string>
         </property>
        </widget>
       </item>
       <item row="31" column="0">
-       <widget class="QLabel" name="label_6">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
+       <widget class="QLabel" name="label_16">
         <property name="text">
-         <string>Data_sito</string>
-        </property>
-       </widget>
-      </item>
-      <item row="17" column="0">
-       <widget class="QLabel" name="label_13">
-        <property name="font">
-         <font>
-          <weight>50</weight>
-          <bold>false</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Coord_Y (*)</string>
+         <string>&lt;b&gt;Quota&lt;/b&gt;</string>
         </property>
        </widget>
       </item>

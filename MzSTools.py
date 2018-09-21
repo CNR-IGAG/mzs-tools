@@ -10,16 +10,13 @@ from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
 import os, processing, sys, zipfile, shutil, sqlite3, webbrowser, csv, time, datetime
-from tb_apri_progetto import apri_progetto
-from tb_copia_ms import copia_ms
-from tb_esporta_progetto import esporta_progetto
-from tb_esporta_shp import esporta_shp
-from tb_importa_progetto import importa_progetto
 from tb_nuovo_progetto import nuovo_progetto
-from tb_valida import valida
-from tb_edit_win import edit_win
-from tb_info import info
 from tb_importa_shp import importa_shp
+from tb_esporta_shp import esporta_shp
+from tb_edit_win import edit_win
+from tb_copia_ms import copia_ms
+from tb_valida import valida
+from tb_info import info
 
 
 class MzSTools:
@@ -42,9 +39,7 @@ class MzSTools:
 				QCoreApplication.installTranslator(self.translator)
 
 		self.dlg1 = nuovo_progetto()
-		self.dlg2 = apri_progetto()
-		self.dlg3 = importa_progetto()
-		self.dlg4 = esporta_progetto()
+##		self.dlg2 = aggiorna_progetto()
 		self.dlg5 = esporta_shp()
 		self.dlg6 = copia_ms()
 		self.dlg7 = valida()
@@ -71,15 +66,10 @@ class MzSTools:
   		self.dlg1.dir_output.clear()
 		self.dlg1.pushButton_out.clicked.connect(self.select_output_fld_1)
 
-		self.dlg3.dir_input.clear()
-		self.dlg3.pushButton_in.clicked.connect(self.select_input_fld_3)
-  		self.dlg3.dir_output.clear()
-		self.dlg3.pushButton_out.clicked.connect(self.select_output_fld_3)
-
-		self.dlg4.dir_input.clear()
-		self.dlg4.pushButton_in.clicked.connect(self.select_input_fld_4)
-  		self.dlg4.dir_output.clear()
-		self.dlg4.pushButton_out.clicked.connect(self.select_output_fld_4)
+##		self.dlg2.dir_input.clear()
+##		self.dlg2.pushButton_in.clicked.connect(self.select_input_fld_2)
+##		self.dlg2.dir_output.clear()
+##		self.dlg2.pushButton_out.clicked.connect(self.select_output_fld_2)
 
   		self.dlg5.dir_output.clear()
 		self.dlg5.pushButton_out.clicked.connect(self.select_output_fld_5)
@@ -134,40 +124,38 @@ class MzSTools:
 	def initGui(self):
 
 		icon_path1 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_nuovo_progetto.png'
-  		icon_path2 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_apri.png'
-		icon_path3 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_importa.png'
-		icon_path4 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_esporta.png'
-		icon_path5 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_esporta_shp.png'
+		icon_path2 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_aggiorna_progetto.png'
+		icon_path5 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_esporta.png'
 		icon_path6 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_copia_ms.png'
 		icon_path7 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_valida.png'
 		icon_path8 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_edita.png'
 		icon_path9 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_salva_edita.png'
 		icon_path10 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_xypoint.png'
 		icon_path11 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_info.png'
-		icon_path12 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_importa_shp.png'
+		icon_path12 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_importa.png'
 
 		self.add_action(
 			icon_path1,
 			text=self.tr(u'New project'),
 			callback=self.run1,
 			parent=self.iface.mainWindow())
-		self.add_action(
-			icon_path2,
-			text=self.tr(u'Open project'),
-			callback=self.run2,
-			parent=self.iface.mainWindow())
+##		self.add_action(
+##			icon_path2,
+##			text=self.tr(u'Update project'),
+##			callback=self.run2,
+##			parent=self.iface.mainWindow())
 
 		self.toolbar.addSeparator()
 
 		self.add_action(
-			icon_path3,
-			text=self.tr(u'Import project'),
-			callback=self.run3,
+			icon_path12,
+			text=self.tr(u'Import project folder to geodatabase'),
+			callback=self.run12,
 			parent=self.iface.mainWindow())
 		self.add_action(
-			icon_path12,
-			text=self.tr(u'Import shapefile to geodatabase'),
-			callback=self.run12,
+			icon_path5,
+			text=self.tr(u'Export geodatabase to project folder'),
+			callback=self.run5,
 			parent=self.iface.mainWindow())
 
 		self.toolbar.addSeparator()
@@ -194,21 +182,8 @@ class MzSTools:
 			parent=self.iface.mainWindow())
 		self.add_action(
 			icon_path7,
-			text=self.tr(u'Validation'),
+			text=self.tr(u'Validate'),
 			callback=self.run7,
-			parent=self.iface.mainWindow())
-
-		self.toolbar.addSeparator()
-
-		self.add_action(
-			icon_path4,
-			text=self.tr(u'Export project'),
-			callback=self.run4,
-			parent=self.iface.mainWindow())
-		self.add_action(
-			icon_path5,
-			text=self.tr(u'Export as shapefile'),
-			callback=self.run5,
 			parent=self.iface.mainWindow())
 
   		self.toolbar.addSeparator()
@@ -236,28 +211,16 @@ class MzSTools:
 		self.dlg1.dir_output.setText(out_dir)
 
 
-	def select_input_fld_3(self):
-
-		in_dir = QFileDialog.getOpenFileName(self.dlg3, "","", '*.zip')
-		self.dlg3.dir_input.setText(in_dir)
-
-
-	def select_output_fld_3(self):
-
-		out_dir = QFileDialog.getExistingDirectory(self.dlg3, "","", QFileDialog.ShowDirsOnly)
-		self.dlg3.dir_output.setText(out_dir)
-
-
-	def select_input_fld_4(self):
-
-		in_dir = QFileDialog.getExistingDirectory(self.dlg4, "","", QFileDialog.ShowDirsOnly)
-		self.dlg4.dir_input.setText(in_dir)
-
-
-	def select_output_fld_4(self):
-
-		out_dir = QFileDialog.getExistingDirectory(self.dlg4, "","", QFileDialog.ShowDirsOnly)
-		self.dlg4.dir_output.setText(out_dir)
+##	def select_input_fld_2(self):
+##
+##		in_dir = QFileDialog.getExistingDirectory(self.dlg2, "","", QFileDialog.ShowDirsOnly)
+##		self.dlg2.dir_input.setText(in_dir)
+##
+##
+##	def select_output_fld_2(self):
+##
+##		out_dir = QFileDialog.getExistingDirectory(self.dlg2, "","", QFileDialog.ShowDirsOnly)
+##		self.dlg2.dir_output.setText(out_dir)
 
 
 	def select_input_fld_5(self):
@@ -297,7 +260,6 @@ class MzSTools:
 		versione = open(vers_data,'r').read()
 		dir_svg_input = self.plugin_dir + os.sep + "img" + os.sep + "svg"
 		dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
-		lista_dir_com = self.plugin_dir + os.sep + "dir_comuni_ms.txt"
 		tabella_controllo = self.plugin_dir + os.sep + "comuni.csv"
 		pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
 
@@ -374,7 +336,6 @@ class MzSTools:
 						if os.path.isfile(full_file_name):
 							shutil.copy(full_file_name, dir_svg_output)
 
-				e = open(lista_dir_com,'a')
 				zip_ref = zipfile.ZipFile(pacchetto, 'r')
 				zip_ref.extractall(dir_out)
 				zip_ref.close()
@@ -383,16 +344,15 @@ class MzSTools:
 						comune_nome = (y[6:]).replace("_"," ")
 						path_comune = dir_out + os.sep + y
 						os.rename(dir_out + os.sep + "progetto_MS", path_comune)
-						e.write("\n" + path_comune + os.sep + "progetto_MS.qgs")
 
 				metadata = path_comune + os.sep + "allegati" + os.sep + comune_nome + " metadata.txt"
 				f = open(metadata,'a')
-				f.write("Municipality of "+ comune_nome +" Metadata:\n-------------------------------\n\n")
+				f.write("METADATA\nMunicipality of "+ comune_nome +":\n-------------------------------\n\n")
 				f.write("Database version: " + versione + "\n")
 				f.write("Expert: " + unicode(professionista).encode('utf-8') + "\n")
-				f.write("Expert: " + unicode(tel_prof).encode('utf-8') + "\n")
-				f.write("Expert email: " + unicode(email_prof).encode('utf-8') + "\n")
-				f.write("Expert website: " + unicode(sito_prof).encode('utf-8') + "\n")
+				f.write("Expert's phone: " + unicode(tel_prof).encode('utf-8') + "\n")
+				f.write("Expert's email: " + unicode(email_prof).encode('utf-8') + "\n")
+				f.write("Expert's website: " + unicode(sito_prof).encode('utf-8') + "\n")
 				f.write("Date: " + data_meta + "\n")
 				f.write("Data owner: " + unicode(propretario).encode('utf-8') + "\n")
 				f.write("Owner's phone: " + unicode(tel_prop).encode('utf-8') + "\n")
@@ -426,6 +386,8 @@ class MzSTools:
 					codice_regio = attrs[1]
 					nome = attrs[4]
 
+				sourceLYR.removeSelection()
+
 				layer_com = QgsMapLayerRegistry.instance().mapLayersByName("Limiti comunali")[0]
 				layer_com.setSubsetString("cod_regio='" + codice_regio + "'")
 
@@ -458,7 +420,7 @@ class MzSTools:
 				project.write()
 
 			except WindowsError:
-				QMessageBox.warning(None, u'WARNING!', u"A folder with the project folder name already exists in the output directory!\nOr the save path is incorrect!")
+				QMessageBox.warning(None, u'WARNING!', u"A folder with the project folder name already exists in the output directory!\nOr the save path is incorrect!\nOr the user does not have permission to edit the save folder!")
 				if os.path.exists(dir_out + os.sep + "progetto_MS"):
 					shutil.rmtree(dir_out + os.sep + "progetto_MS")
 			except:
@@ -466,127 +428,8 @@ class MzSTools:
 
 
 	def run2(self):
+		pass
 
-		self.dlg2.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg2.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-
-		lista_dir_com = self.plugin_dir + os.sep + "dir_comuni_ms.txt"
-		lista_com = []
-		duplicati = []
-		g = open(lista_dir_com, 'r')
-		h = (g.read()).split("\n")
-
-		for i in h:
-			if not os.path.exists(i.split("\\progetto_MS")[0]):
-				pass
-			else:
-				duplicati.append(i)
-
-		for j in duplicati:
-			if j not in lista_com:
-				lista_com.append(j)
-
-		self.dlg2.listWidget.clear()
-		self.dlg2.listWidget.addItems(lista_com)
-
-		self.dlg2.show()
-		result = self.dlg2.exec_()
-		if result:
-			try:
-	 			lista = self.dlg2.listWidget.currentItem().text()
-				project = QgsProject.instance()
-				project.read(QFileInfo(lista))
-			except AttributeError:
-				QMessageBox.warning(None, u'WARNING!', u"You have not selected any projects!")
-			except:
-				QMessageBox.critical(None, u'ERROR!', u"Generic error! Contact the plugin developers!")
-
-
-	def run3(self):
-
-		self.dlg3.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg3.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-
-		self.dlg3.dir_input.clear()
-		self.dlg3.dir_output.clear()
-		self.dlg3.button_box.setEnabled(False)
-		self.dlg3.dir_input.textChanged.connect(self.disableButton_3)
-		self.dlg3.dir_output.textChanged.connect(self.disableButton_3)
-
-		self.dlg3.show()
-		result = self.dlg3.exec_()
-		if result:
-
-			try:
-	 			in_dir = self.dlg3.dir_input.text()
-	 			out_dir = self.dlg3.dir_output.text()
-				if os.path.exists(in_dir) and os.path.exists(out_dir):
-					zip_ref = zipfile.ZipFile(in_dir, 'r')
-					zip_ref.extractall(out_dir + os.sep + (in_dir.split("/")[-1]).split(".")[0])
-					zip_ref.close()
-
-					lista_dir_com = self.plugin_dir + os.sep + "dir_comuni_ms.txt"
-					e = open(lista_dir_com,'a')
-					e.write("\n" + out_dir + os.sep + (in_dir.split("/")[-1]).split(".")[0] + os.sep + "progetto_MS.qgs")
-
-					project = QgsProject.instance()
-					project.read(QFileInfo(out_dir + os.sep + (in_dir.split("/")[-1]).split(".")[0] + os.sep + "progetto_MS.qgs"))
-
-					destLYR = QgsMapLayerRegistry.instance().mapLayersByName("Comune del progetto")[0]
-					canvas = iface.mapCanvas()
-					extent = destLYR.extent()
-					canvas.setExtent(extent)
-
-					features = destLYR.getFeatures()
-					for feat in features:
-						attrs = feat.attributes()
-						codice_regio = attrs[1]
-
-					layer_com = QgsMapLayerRegistry.instance().mapLayersByName("Limiti comunali")[0]
-					layer_com.setSubsetString("cod_regio='" + codice_regio + "'")
-					project.write()
-					QMessageBox.information(None, u'INFORMATION!', u"The project has been imported!")
-				else:
-					QMessageBox.warning(None, u'WARNING!', u"The selected directory does not exist!")
-
-			except IndexError:
-				QMessageBox.warning(None, u'WARNING!', u"An incomplete project has been selected!\nOr it is not a Seismic Microzonation project!")
-			except zipfile.BadZipfile:
-				QMessageBox.critical(None, u'ERROR!', u"The compressed file is corrupt!\nThe project folder can not be extracted!")
-			except:
-				QMessageBox.critical(None, u'ERROR!', u"Generic error! Contact the plugin developers!")
-
-
-	def run4(self):
-
-		self.dlg4.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg4.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-
-		self.dlg4.dir_input.clear()
-		self.dlg4.dir_output.clear()
-		self.dlg4.button_box.setEnabled(False)
-		self.dlg4.dir_input.textChanged.connect(self.disableButton_4)
-		self.dlg4.dir_output.textChanged.connect(self.disableButton_4)
-
-		self.dlg4.show()
-		result = self.dlg4.exec_()
-		if result:
-
-			try:
-	 			in_dir = self.dlg4.dir_input.text()
-	 			out_dir = self.dlg4.dir_output.text() + os.sep + self.dlg4.dir_input.text().split("\\")[-1]
-				if os.path.exists(in_dir) and os.path.exists(self.dlg4.dir_output.text()):
-					if os.path.exists(in_dir + os.sep + "progetto_MS.qgs"):
-						shutil.make_archive(out_dir, 'zip', in_dir)
-						QMessageBox.information(None, u'INFORMATION!', u"The project has been exported!")
-					else:
-						QMessageBox.warning(None, u'WARNING!', u"An incomplete project has been selected!\nOr it is not a Seismic Microzonation project!")
-				else:
-					QMessageBox.warning(None, u'WARNING!', u"The selected directory does not exist!")
-			except zipfile.LargeZipFile:
-				QMessageBox.critical(None, u'ERROR!', u"The project folder is too big!\nReduce the size of the project folder to 2 GB!")
-			except IndexError:
-				QMessageBox.critical(None, u'ERROR!', u"Generic error! Contact the plugin developers!")
 
 	def run5(self):
 
@@ -743,6 +586,8 @@ class MzSTools:
 		"Zone instabili liv 2":{u'pkuid':'integer', u'Tipo_i':'integer', u'FRT':'real', u'FRR':'real', u'IL':'real', u'DISL':'real', u'FA':'real', u'FV':'real', u'Ft':'real', u'FH0105':'real', u'FH0510':'real', u'FH0515':'real', u'FPGA':'real', u'FA0105':'real', u'FA0408':'real', u'FA0711':'real', u'SPETTRI':'text', u'LIVELLO':'integer', u'CAT':'text', u'ID_i':'integer', u'AMB':'text'},
 		"Isobate liv 3":{u'pkuid':'integer', u'Quota':'real', u'ID_isosub':'integer'}, "Zone stabili liv 3":{u'pkuid':'integer', u'Tipo_z':'integer', u'FA':'real', u'FV':'real', u'Ft':'real', u'FH0105':'real', u'FH0510':'real', u'FH0515':'real', u'FPGA':'real', u'FA0105':'real', u'FA0408':'real', u'FA0711':'real', u'SPETTRI':'text', u'LIVELLO':'integer', u'CAT':'text', u'ID_z':'integer'},
 		"Zone instabili liv 3":{u'pkuid':'integer', u'Tipo_i':'integer', u'FRT':'real', u'FRR':'real', u'IL':'real', u'DISL':'real', u'FA':'real', u'FV':'real', u'Ft':'real', u'FH0105':'real', u'FH0510':'real', u'FH0515':'real', u'FPGA':'real', u'FA0105':'real', u'FA0408':'real', u'FA0711':'real', u'SPETTRI':'text', u'LIVELLO':'integer', u'CAT':'text', u'ID_i':'integer', u'AMB':'text'}}
+		shp_validatore = ["geotec_self_inters", "stab_1_self_inters", "instab_1_self_inters", "ms1_inters_stab_instab", "stab_2_self_inters", "instab_2_self_inters", "ms2_inters_stab_instab", "stab_3_self_inters", "instab_3_self_inters", "ms3_inters_stab_instab"]
+
 		dir_progetto = QgsProject.instance().fileName()
 		indagini_punti = True
 		indagini_linee = True
@@ -888,6 +733,13 @@ class MzSTools:
 				e.write("\nAnalysis completed!")
 	 			QMessageBox.information(None, u'INFORMATION!', u"Validation summary report was saved in the project folder '...\\allegati\\log'")
 
+				for layer in iface.mapCanvas().layers():
+##					if layer <> None:
+					if layer.name() in shp_validatore:
+						feats_count = layer.featureCount()
+						if feats_count == 0:
+							QgsMapLayerRegistry.instance().removeMapLayer(layer)
+
 			except IOError:
 				QMessageBox.warning(None, u'WARNING!', u"Open a Seismic Microzonation project before starting this tool!")
 			except WindowsError:
@@ -901,30 +753,35 @@ class MzSTools:
 		proj = QgsProject.instance()
 		proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
 		proj.writeEntry('Digitizing','DefaultSnapTolerance', 20.0)
-		layers = iface.legendInterface().layers()
 		dizio_layer = {"Zone stabili liv 1":"Zone instabili liv 1", "Zone instabili liv 1":"Zone stabili liv 1", "Zone stabili liv 2":"Zone instabili liv 2", "Zone instabili liv 2":"Zone stabili liv 2",
 		"Zone stabili liv 3":"Zone instabili liv 3", "Zone instabili liv 3":"Zone stabili liv 3"}
 		poli_lyr = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
 		"Zone stabili liv 3", "Zone instabili liv 3"]
 
-		for fc in layers:
-			if fc.name() in poli_lyr:
-				proj.setSnapSettingsForLayer(fc.id(), True, 0, 0, 20, False)
-
 		layer = iface.activeLayer()
 		if layer <> None:
-			for chiave, valore in dizio_layer.iteritems():
-				if layer.name() == chiave:
-					OtherLayer = QgsMapLayerRegistry.instance().mapLayersByName(valore)[0]
-					proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
-					proj.setSnapSettingsForLayer(OtherLayer.id(), True, 0, 0, 20, True)
-				elif layer.name() == "Unita' geologico-tecniche":
-					proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
-				elif layer.name() == "Instabilita' di versante":
-					proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
+			if layer.name() in poli_lyr:
 
-			layer.startEditing()
-			iface.actionAddFeature().trigger()
+				for fc in iface.legendInterface().layers():
+					if fc.name() in poli_lyr:
+						proj.setSnapSettingsForLayer(fc.id(), True, 0, 0, 20, False)
+
+				for chiave, valore in dizio_layer.iteritems():
+					if layer.name() == chiave:
+						OtherLayer = QgsMapLayerRegistry.instance().mapLayersByName(valore)[0]
+						proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
+						proj.setSnapSettingsForLayer(OtherLayer.id(), True, 0, 0, 20, True)
+					elif layer.name() == "Unita' geologico-tecniche":
+						proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
+					elif layer.name() == "Instabilita' di versante":
+						proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
+
+				layer.startEditing()
+				iface.actionAddFeature().trigger()
+
+			else:
+	 			layer.startEditing()
+				iface.actionAddFeature().trigger()
 
 
 	def run9(self):
@@ -935,14 +792,19 @@ class MzSTools:
 		poligon_lyr = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
 		"Zone stabili liv 3", "Zone instabili liv 3"]
 
-		layers = iface.legendInterface().layers()
-		for fc in layers:
-			if fc.name() in poligon_lyr:
-				proj.setSnapSettingsForLayer(fc.id(), True, 0, 0, 20, False)
-
 		layer = iface.activeLayer()
 		if layer <> None:
-			layer.commitChanges()
+			if layer.name() in poligon_lyr:
+
+				layers = iface.legendInterface().layers()
+				for fc in layers:
+					if fc.name() in poligon_lyr:
+						proj.setSnapSettingsForLayer(fc.id(), True, 0, 0, 20, False)
+
+				layer.commitChanges()
+
+			else:
+				layer.commitChanges()
 
 
 	def run10(self):
@@ -1428,9 +1290,9 @@ class MzSTools:
 			self.dlg1.button_box.setEnabled(False)
 
 
-	def disableButton_3(self):
+	def disableButton_2(self):
 
-		check_campi = [self.dlg3.dir_input.text(), self.dlg3.dir_output.text()]
+		check_campi = [self.dlg2.dir_input.text(), self.dlg2.dir_output.text()]
 		check_value = []
 
 		for x in check_campi:
@@ -1443,29 +1305,9 @@ class MzSTools:
 
 		campi = sum(check_value)
 		if campi > 1:
-			self.dlg3.button_box.setEnabled(True)
+			self.dlg2.button_box.setEnabled(True)
 		else:
-			self.dlg3.button_box.setEnabled(False)
-
-
-	def disableButton_4(self):
-
-		check_campi = [self.dlg4.dir_input.text(), self.dlg4.dir_output.text()]
-		check_value = []
-
-		for x in check_campi:
-			if len(x) > 0:
-				value_campi = 1
-				check_value.append(value_campi)
-			else:
-				value_campi = 0
-				check_value.append(value_campi)
-
-		campi = sum(check_value)
-		if campi > 1:
-			self.dlg4.button_box.setEnabled(True)
-		else:
-			self.dlg4.button_box.setEnabled(False)
+			self.dlg2.button_box.setEnabled(False)
 
 
 	def disableButton_5(self):
@@ -1572,7 +1414,6 @@ class MzSTools:
 
 			layers = self.iface.legendInterface().layers()
 			layer_stab = []
-			layer_instab = []
 			for layer in layers:
 				if str(layer.name()).startswith("Stab") or str(layer.name()).startswith("Zone stabili"):
 					layer_stab.append(layer.name())
@@ -1589,7 +1430,6 @@ class MzSTools:
 			self.dlg6.output_ms.clear()
 
 			layers = self.iface.legendInterface().layers()
-			layer_stab = []
 			layer_instab = []
 			for layer in layers:
 				if str(layer.name()).startswith("Instab") or str(layer.name()).startswith("Zone instabili") or str(layer.name()).startswith("Instabilita' di versante"):
@@ -1953,3 +1793,19 @@ class MzSTools:
 	def open_pdf(self, pdf_path):
 
 		os.startfile(pdf_path)
+
+
+	def radio_zip_clicked(self, enabled):
+
+		if enabled:
+			self.dlg6.input_ms.clear()
+			self.dlg6.output_ms.clear()
+			zip_unzip is True
+
+
+	def radio_unzip_clicked(self, enabled):
+
+		if enabled:
+			self.dlg6.input_ms.clear()
+			self.dlg6.output_ms.clear()
+			zip_unzip is False

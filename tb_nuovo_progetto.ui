@@ -109,7 +109,7 @@
          </font>
         </property>
         <property name="toolTip">
-         <string>Creation date project.</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -266,7 +266,7 @@
          </palette>
         </property>
         <property name="toolTip">
-         <string>Enter the name and surname.</string>
+         <string/>
         </property>
         <property name="placeholderText">
          <string/>
@@ -340,14 +340,14 @@
       <item row="7" column="1">
        <widget class="QLineEdit" name="tel_prof">
         <property name="toolTip">
-         <string>Enter the expert's phone number.</string>
+         <string/>
         </property>
        </widget>
       </item>
       <item row="9" column="1">
        <widget class="QLineEdit" name="email_prof">
         <property name="toolTip">
-         <string>Enter the expert's email address.</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -444,14 +444,14 @@
       <item row="39" column="1">
        <widget class="QTextEdit" name="lineage">
         <property name="toolTip">
-         <string>Enter the data genealogy characterizing the QGIS project.</string>
+         <string/>
         </property>
        </widget>
       </item>
       <item row="11" column="1">
        <widget class="QLineEdit" name="sito_prof">
         <property name="toolTip">
-         <string>Enter the expert website.</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -509,14 +509,14 @@
       <item row="17" column="1">
        <widget class="QLineEdit" name="propretario">
         <property name="toolTip">
-         <string>Enter Region name of the Municipality involved in the studies.</string>
+         <string/>
         </property>
        </widget>
       </item>
       <item row="33" column="1">
        <widget class="QLineEdit" name="keyword">
         <property name="toolTip">
-         <string>Keywords.</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -588,14 +588,14 @@
       <item row="19" column="1">
        <widget class="QLineEdit" name="tel_prop">
         <property name="toolTip">
-         <string>Enter the phone number of regional representative.</string>
+         <string/>
         </property>
        </widget>
       </item>
       <item row="23" column="1">
        <widget class="QLineEdit" name="email_prop">
         <property name="toolTip">
-         <string>Enter the email address of the regional representative.</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -641,7 +641,7 @@
       <item row="27" column="1">
        <widget class="QLineEdit" name="sito_prop">
         <property name="toolTip">
-         <string>Enter the URL of the Region.</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -675,7 +675,7 @@
         <item>
          <widget class="QComboBox" name="comune">
           <property name="toolTip">
-           <string>Select the name of the Municipality.</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -691,7 +691,7 @@
       <item row="37" column="1">
        <widget class="QLineEdit" name="accuratezza">
         <property name="toolTip">
-         <string>Enter the discrepancy (in meters) between the geographical position of an object and the real position on the ground.</string>
+         <string/>
         </property>
        </widget>
       </item>
@@ -726,7 +726,7 @@
         <item>
          <widget class="QLineEdit" name="scala_nom">
           <property name="toolTip">
-           <string>Insert the map scale at which the print layout has the same metric requirements of the traditional map.</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -808,7 +808,7 @@
            <bool>true</bool>
           </property>
           <property name="toolTip">
-           <string>Enter the save directory of the QGIS project.</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -927,7 +927,10 @@
         <enum>Qt::Vertical</enum>
        </property>
        <property name="standardButtons">
-        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+        <set>QDialogButtonBox::Ok</set>
+       </property>
+       <property name="centerButtons">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
