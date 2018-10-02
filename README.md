@@ -12,3 +12,18 @@ Seismic Microzonation studies include the following maps:
 - Seismic Microzonation Map ("Carta di Microzonazione Sismica"). 
 
 The plugin was created to give the opportunity to quickly perform standard compliant Seismic Microzonation studies.
+
+Changelog:
+		v0.6:
+				-  video-guide additions;
+				-  update project (in particular .ui, .py files);
+				-  resolved bugs;
+				-  updated italian manual.
+		v0.5:
+				-  improved "Add feature or record" tool;
+				-  removed useless tool;
+				-  update project (in particular .ui, .py files);
+				-  resolved bugs;
+				-  updated manuals.
+		v0.4:
+				-  initial relase.
