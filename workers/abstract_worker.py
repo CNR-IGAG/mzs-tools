@@ -13,6 +13,7 @@ class AbstractWorker(QtCore.QObject):
     progress = QtCore.pyqtSignal(float)
     toggle_show_progress = QtCore.pyqtSignal(bool)
     set_message = QtCore.pyqtSignal(str)
+    set_log_message = QtCore.pyqtSignal(str)
     toggle_show_cancel = QtCore.pyqtSignal(bool)
     
     # private signal, don't use in concrete workers this is automatically

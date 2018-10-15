@@ -432,12 +432,12 @@ class MzSTools:
         self.dlg4.dir_input.textChanged.connect(self.disableButton_4)
         self.dlg4.tab_input.textChanged.connect(self.disableButton_4)
         
-        ############################### DEBUG
-        self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\44034_Montedinove")
-        self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\tab_montedinove")
-        #self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\54051_Spoleto")
-        #self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\tab_spoleto")
-        ############################### DEBUG
+        ############################### DEBUG ONLY!
+        # self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\44034_Montedinove")
+        # self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\tab_montedinove")
+        # self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\54051_Spoleto")
+        # self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\tab_spoleto")
+        ############################### DEBUG ONLY!
         
         self.dlg4.show()
         
@@ -447,9 +447,17 @@ class MzSTools:
             tab_dir = self.dlg4.tab_input.text()
             proj_abs_path = str(QgsProject.instance().readPath("./"))
             map_registry_instance = QgsMapLayerRegistry.instance()
-            # start import worker
+            
+            # create import worker
             worker = ImportWorker(proj_abs_path, in_dir, tab_dir, map_registry_instance)
-            self.start_worker(worker, self.iface, 'Starting import task...')
+            
+            # create import log file
+            logfile_path = proj_abs_path + os.sep + "allegati" + os.sep + "log" + os.sep + str(time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_import_log.txt"
+            log_file = open(logfile_path,'a')
+            log_file.write("IMPORT REPORT:" +"\n---------------\n\n")
+            
+            # start import worker
+            self.start_worker(worker, self.iface, 'Starting import task...', log_file)
 
     def run5(self):
 
@@ -1234,11 +1242,11 @@ class MzSTools:
             #zip_unzip is False
             
             
-    def start_worker(self, worker, iface, message):
+    def start_worker(self, worker, iface, message, log_file=None):
         
         ############################################
         # DEBUG ONLY
-        self.import_reset()
+        # self.import_reset()
         ############################################
         
         # configure the QgsMessageBar
@@ -1258,6 +1266,10 @@ class MzSTools:
         
         worker.set_message.connect(lambda message: self.set_worker_message(
             message, message_bar_item))
+        
+        if log_file is not None:
+            worker.set_log_message.connect(lambda message: self.set_worker_log_message(
+                message, log_file))
      
         worker.toggle_show_progress.connect(lambda show: self.toggle_worker_progress(
             show, progress_bar))
@@ -1266,10 +1278,10 @@ class MzSTools:
             show, cancel_button))
             
         worker.finished.connect(lambda result: self.worker_finished(
-            result, thread, worker, iface, message_bar_item))
+            result, thread, worker, iface, message_bar_item, log_file))
             
         worker.error.connect(lambda e, exception_str: self.worker_error(
-            e, exception_str, iface))
+            e, exception_str, iface, log_file))
             
         worker.progress.connect(progress_bar.setValue)
         
@@ -1278,8 +1290,7 @@ class MzSTools:
         thread.start()
         return thread, message_bar_item
      
-     
-    def worker_finished(self, result, thread, worker, iface, message_bar_item):
+    def worker_finished(self, result, thread, worker, iface, message_bar_item, log_file=None):
         
         # remove widget from message bar
         iface.messageBar().popWidget(message_bar_item)
@@ -1299,13 +1310,20 @@ class MzSTools:
         thread.wait()
         thread.deleteLater()
         
-        iface.mapCanvas().refreshAllLayers() 
+        iface.mapCanvas().refreshAllLayers()
         
-    #     shutil.rmtree(str(QgsProject.instance().readPath("./")) + os.sep + "allegati" + os.sep + "altro")
-    #     os.makedirs(str(QgsProject.instance().readPath("./")) + os.sep + "allegati" + os.sep + "altro")
-            
+        if log_file is not None:
+            log_file.write("\n\n" + result)
+            log_file.close()
+        
+        if result is not None:
+            QMessageBox.information(iface.mainWindow(), u'Import project',
+                u"Import process completed.\n\nImport report was saved in the project folder '...\\allegati\\log'")
+        else:
+            QMessageBox.critical(iface.mainWindow(), u'Import project',
+                u"Process interrupted! See the message log for more information.")
      
-    def worker_error(self, e, exception_string, iface):
+    def worker_error(self, e, exception_string, iface, log_file=None):
         # notify the user that something went wrong
         iface.messageBar().pushMessage(
             'Something went wrong! See the message log for more information.',
@@ -1315,11 +1333,17 @@ class MzSTools:
             'Worker thread raised an exception: %s' % exception_string,
             'Worker',
             level=QgsMessageLog.CRITICAL)
-     
+
+        log_file.write("Worker thread raised an exception:\n\n" + exception_string)
+
+        if log_file is not None:
+            log_file.close()
      
     def set_worker_message(self, message, message_bar_item):
         message_bar_item.setText(message)
-     
+        
+    def set_worker_log_message(self, message, log_file):
+        log_file.write(message)
      
     def toggle_worker_progress(self, show_progress, progress_bar):
         progress_bar.setMinimum(0)

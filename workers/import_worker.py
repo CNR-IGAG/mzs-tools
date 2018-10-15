@@ -72,6 +72,8 @@ class ImportWorker(AbstractWorker):
             if os.path.exists(path_tabelle + os.sep + nome_tab):
                 os.remove(path_tabelle + os.sep + nome_tab)
         
+        self.set_log_message.emit('Folder structure -> OK\n')
+        
         self.set_message.emit('Copying tables...')
         self.copy_files(self.tab_dir, path_tabelle)
         
@@ -80,6 +82,8 @@ class ImportWorker(AbstractWorker):
             raise UserAbortedNotification('USER Killed')
         self.current_step = self.current_step + 1
         self.progress.emit(self.current_step * 100/total_steps)
+        
+        self.set_log_message.emit('Tables copy -> OK\n')
         
         # step 2 (inserting features)
         ###############################################
@@ -97,45 +101,49 @@ class ImportWorker(AbstractWorker):
                     sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression( " \"LIVELLO\" = 2 " )))
                     self.calc_layer(sourceFeatures, destLYR, commonFields)
                     self.set_message.emit("  '" + chiave + "' shapefile has been copied!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
                 else:
-                    self.set_message.emit("  '" + chiave + "' shapefile does not exist!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile does not exist!\n")
                 
             elif chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
                 if os.path.exists(self.in_dir + os.sep + valore[0] + os.sep + valore[1] + ".shp"):
                     sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression( " \"LIVELLO\" = 3 " )))
                     self.calc_layer(sourceFeatures, destLYR, commonFields)
                     self.set_message.emit("  '" + chiave + "' shapefile has been copied!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
                 else:
-                    self.set_message.emit("  '" + chiave + "' shapefile does not exist!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile does not exist!\n")
                 
             elif chiave == "Siti puntuali":
                 if os.path.exists(self.in_dir + os.sep + valore[0] + os.sep + valore[1] + ".shp"):
                     if os.path.exists(path_tabelle + os.sep + 'Sito_Puntuale.txt'):
                         self.calc_siti(path_tabelle, "Ind_pu", 'Sito_Puntuale.txt', "csv_spu", 'ID_SPU', DIZIO_CAMPI_P, 'Siti puntuali', 'id_spu')
                         self.set_message.emit("  '" + chiave + "' shapefile has been copied!")
+                        self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
                         z_list.append("Sito_Puntuale")
                         check_sito_p = True
                     else:
-                        self.set_message.emit("  Table 'Sito_Puntuale.txt' does not exist!")
+                        self.set_log_message.emit("  Table 'Sito_Puntuale.txt' does not exist!\n")
                         check_sito_p = False
                         
                 else:
-                    self.set_message.emit("  '" + chiave + "' shapefile does not exist!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile does not exist!\n")
                     check_sito_p = False
                 
             elif chiave == "Siti lineari":
                 if os.path.exists(self.in_dir + os.sep + valore[0] + os.sep + valore[1] + ".shp"):
                     if os.path.exists(path_tabelle + os.sep + 'Sito_Lineare.txt'):
                         self.calc_siti(path_tabelle, "Ind_ln", 'Sito_Lineare.txt', "csv_sln", 'ID_SLN', DIZIO_CAMPI_L, 'Siti lineari', 'id_sln')
-                        self.set_message.emit("  '" + chiave + "' shapefile has been copied!\n\n")
+                        self.set_message.emit("  '" + chiave + "' shapefile has been copied!")
+                        self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
                         z_list.append("Sito_Lineare")
                         check_sito_l = True
                     else:
-                        self.set_message.emit("  Table 'Sito_Lineare.txt' does not exist!")
+                        self.set_log_message.emit("  Table 'Sito_Lineare.txt' does not exist!\n")
                         check_sito_l = False
                         
                 else:
-                    self.set_message.emit("  '" + chiave + "' shapefile does not exist!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile does not exist!\n")
                     check_sito_l = False
                 
             elif chiave == "Comune del progetto":
@@ -144,9 +152,9 @@ class ImportWorker(AbstractWorker):
                 if os.path.exists(self.in_dir + os.sep + valore[0] + os.sep + valore[1] + ".shp"):
                     sourceFeatures = sourceLYR.getFeatures()
                     self.calc_layer(sourceFeatures, destLYR, commonFields)
-                    self.set_message.emit("  '" + chiave + "' shapefile has been copied!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
                 else:
-                    self.set_message.emit("  '" + chiave + "' shapefile does not exist!")
+                    self.set_log_message.emit("  '" + chiave + "' shapefile does not exist!\n")
                     
             if self.killed:
                 break
@@ -158,6 +166,7 @@ class ImportWorker(AbstractWorker):
         if self.killed:
             raise UserAbortedNotification('USER Killed')
         
+        self.set_log_message.emit('Insert features -> OK\n')
         # end inserting features
         
         # step 3 (inserting indagini puntuali)
@@ -197,6 +206,8 @@ class ImportWorker(AbstractWorker):
             s_p = self.map_registry_instance.mapLayersByName('Siti puntuali')[0]
             self.calc_join(i_p, s_p, 'temp_pkey_spu', '"Siti puntuali_id_spu"', "id_spu")
             
+            self.set_log_message.emit('Insert Indagini puntuali -> OK\n')
+            
             if os.path.exists(path_tabelle + os.sep + "Parametri_Puntuali.txt"):
                 z_list.append("Parametri_Puntuali")
                 
@@ -227,6 +238,8 @@ class ImportWorker(AbstractWorker):
 
                 i_p = self.map_registry_instance.mapLayersByName('Indagini puntuali')[0]
                 self.calc_join(p_p, i_p, 'temp_pkey_indpu', '"Indagini puntuali_id_indpu"', "id_indpu")
+                
+                self.set_log_message.emit('Insert Parametri puntuali -> OK\n')
                 
                 if os.path.exists(path_tabelle + os.sep + "Curve.txt"):
                     z_list.append("Curve")
@@ -259,14 +272,14 @@ class ImportWorker(AbstractWorker):
 
                     p_p = self.map_registry_instance.mapLayersByName('Parametri puntuali')[0]
                     self.calc_join(cu, p_p, 'temp_pkey_parpu', '"Parametri puntuali_id_parpu"', "id_parpu")
+                    
+                    self.set_log_message.emit('Insert Curve -> OK\n')
         
         # end inserting indagini puntuali
         if self.killed:
             raise UserAbortedNotification('USER Killed')
         self.current_step = self.current_step + 1
         self.progress.emit(self.current_step * 100/total_steps)
-        
-        
         
         # step 4 (inserting indagini lineari)
         ###############################################
@@ -303,6 +316,8 @@ class ImportWorker(AbstractWorker):
             s_l = self.map_registry_instance.mapLayersByName('Siti lineari')[0]
             self.calc_join(i_l, s_l, 'temp_pkey_sln', '"Siti lineari_id_sln"', "id_sln")
             
+            self.set_log_message.emit('Insert Indagini lineari -> OK\n')
+            
             if os.path.exists(path_tabelle + os.sep + "Parametri_Lineari.txt"):
                 z_list.append("Parametri_Lineari")
                 
@@ -333,6 +348,8 @@ class ImportWorker(AbstractWorker):
 
                 i_l = self.map_registry_instance.mapLayersByName('Indagini lineari')[0]
                 self.calc_join(p_l, i_l, 'temp_pkey_indln', '"Indagini lineari_id_indln"', "id_indln")
+                
+                self.set_log_message.emit('Insert Parametri lineari -> OK\n')
 
         '''
         if check_sito_p is False:
@@ -348,7 +365,7 @@ class ImportWorker(AbstractWorker):
                 e.write("'" + t_lost + "' table does not exist!\n\n")
         '''
         
-        # inserting indagini lineari
+        # end inserting indagini lineari
         if self.killed:
             raise UserAbortedNotification('USER Killed')
         self.current_step = self.current_step + 1
@@ -368,8 +385,9 @@ class ImportWorker(AbstractWorker):
                     shutil.copytree(valore_fold[2], valore_fold[1])
                 else:
                     shutil.copytree(self.in_dir + os.sep + chiave_fold, self.proj_abs_path + os.sep + "allegati" + os.sep + chiave_fold)
+                self.set_log_message.emit('Folder ' + chiave_fold + ' copy -> OK\n')
             else:
-                self.set_message.emit("  The folder does not exist!")
+                self.set_log_message.emit(chiave_fold + " does not exist!")
                 
             if self.killed:
                 break
@@ -384,7 +402,7 @@ class ImportWorker(AbstractWorker):
         self.current_step = self.current_step + 1
         self.progress.emit(self.current_step * 100/total_steps)
         
-        return 'Import completed'
+        return 'Import completed!'
                 
     def attribute_adaptor(self, targetLayer, sourceLayer):
         targetLayerFields = []
