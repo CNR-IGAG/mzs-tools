@@ -1296,9 +1296,13 @@ class MzSTools:
         iface.messageBar().popWidget(message_bar_item)
         if result is not None:
             # report the result
+            if log_file is not None:
+                log_file.write("\n\n" + result)
             iface.messageBar().pushMessage('Process finished: %s.' % result)
             worker.successfully_finished.emit(result)
         else:
+            if log_file is not None:
+                log_file.write("\n\nProcess interrupted!")
             iface.messageBar().pushMessage(
                 'Process cancelled.',
                 level=QgsMessageBar.WARNING,
@@ -1313,7 +1317,6 @@ class MzSTools:
         iface.mapCanvas().refreshAllLayers()
         
         if log_file is not None:
-            log_file.write("\n\n" + result)
             log_file.close()
         
         if result is not None:
@@ -1334,10 +1337,7 @@ class MzSTools:
             'Worker',
             level=QgsMessageLog.CRITICAL)
 
-        log_file.write("Worker thread raised an exception:\n\n" + exception_string)
-
-        if log_file is not None:
-            log_file.close()
+        log_file.write("\n\n!!! Worker thread raised an exception:\n\n" + exception_string)
      
     def set_worker_message(self, message, message_bar_item):
         message_bar_item.setText(message)

@@ -351,19 +351,14 @@ class ImportWorker(AbstractWorker):
                 
                 self.set_log_message.emit('Insert Parametri lineari -> OK\n')
 
-        '''
         if check_sito_p is False:
-            f.write("Il layer 'Ind_pu' e/o la tabella 'Sito_Puntuale' non sono presenti! Quindi le tabelle correlate delle indagini e dei parametri non verranno copiate!\n\n")
-            e.write("'Ind_pu' layer and/or 'Sito_Puntuale' table are not present! So the correlated surveys and parameters tables will not be copied!\n\n")
+            self.set_log_message.emit("'Ind_pu' layer and/or 'Sito_Puntuale' table are not present! The correlated surveys and parameters tables will not be copied!\n\n")
         if check_sito_l is False:
-            f.write("Il layer 'Ind_ln' e/o la tabella 'Sito_Lineare' non sono presenti! Quindi le tabelle correlate delle indagini e dei parametri non verranno copiate!\n\n")
-            e.write("'Ind_ln' layer and/or 'Sito_Lineare' table are not present! So the correlated surveys and parameters tables will not be copied!\n\n")
+            self.set_log_message.emit("'Ind_ln' layer and/or 'Sito_Lineare' table are not present! The correlated surveys and parameters tables will not be copied!\n\n")
         if check_sito_p is True and check_sito_l is True:
-            tab_mancanti = list(set(lista_tab) - set(z_list))
+            tab_mancanti = list(set(LISTA_TAB) - set(z_list))
             for t_lost in tab_mancanti:
-                f.write("La tabella '" + t_lost + "' non esiste!\n\n")
-                e.write("'" + t_lost + "' table does not exist!\n\n")
-        '''
+                self.set_log_message.emit("'" + t_lost + "' table does not exist!\n")
         
         # end inserting indagini lineari
         if self.killed:
@@ -461,7 +456,7 @@ class ImportWorker(AbstractWorker):
                     modifiedFeature = self.attribute_fill(feature,destLYR,commonFields)
                     featureList.append(modifiedFeature)
                 else:
-                    self.set_message.emit("  Geometric error (feature %d will not be copied)\n" % (feature.id()+1))
+                    self.set_log_message.emit("  Geometry error (feature %d will not be copied)\n" % (feature.id()+1))
 
         data_provider = destLYR.dataProvider()
         current_feature = 1
@@ -522,7 +517,7 @@ class ImportWorker(AbstractWorker):
                     modifiedFeature = self.attribute_fill(feature,s,commonFields)
                     featureList.append(modifiedFeature)
                 else:
-                    self.set_message.emit("  Identified geometric error (feature %d will not be copied)" % (feature.id()+1))
+                    self.set_log_message.emit("  Geometry error (feature %d will not be copied)\n" % (feature.id()+1))
 
         data_provider = s.dataProvider()
 
