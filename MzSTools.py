@@ -11,6 +11,7 @@ from qgis.core import *
 from qgis.gui import *
 import os, processing, sys, zipfile, shutil, sqlite3, webbrowser, csv, time, datetime
 from tb_nuovo_progetto import nuovo_progetto
+from tb_aggiorna_progetto import aggiorna_progetto
 from tb_importa_shp import importa_shp
 from tb_esporta_shp import esporta_shp
 from tb_edit_win import edit_win
@@ -19,6 +20,7 @@ from tb_valida import valida
 from tb_info import info
 from tb_wait import wait
 from workers.import_worker import ImportWorker
+
 
 class MzSTools:
 
@@ -40,6 +42,7 @@ class MzSTools:
                 QCoreApplication.installTranslator(self.translator)
 
         self.dlg1 = nuovo_progetto()
+        self.dlg2 = aggiorna_progetto()
         self.dlg3 = info()
         self.dlg4 = importa_shp()
         self.dlg5 = esporta_shp()
@@ -68,6 +71,9 @@ class MzSTools:
         self.dlg1.dir_output.clear()
         self.dlg1.pushButton_out.clicked.connect(self.select_output_fld_1)
 
+        self.dlg2.dir_input.clear()
+        self.dlg2.pushButton_in.clicked.connect(self.select_input_fld_2)
+
         self.dlg5.dir_output.clear()
         self.dlg5.pushButton_out.clicked.connect(self.select_output_fld_5)
 
@@ -76,11 +82,9 @@ class MzSTools:
         self.dlg4.tab_input.clear()
         self.dlg4.pushButton_tab.clicked.connect(self.select_tab_fld_4)
 
-
     def tr(self, message):
 
         return QCoreApplication.translate('MzSTools', message)
-
 
     def add_action(
         self,
@@ -121,6 +125,7 @@ class MzSTools:
     def initGui(self):
 
         icon_path1 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_nuovo_progetto.png'
+        icon_path2 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_aggiorna_progetto.png'
         icon_path3 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_info.png'
         icon_path4 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_importa.png'
         icon_path5 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_esporta.png'
@@ -171,6 +176,14 @@ class MzSTools:
             text=self.tr(u'Copy "Stab" or "Instab" layer'),
             callback=self.run6,
             parent=self.iface.mainWindow())
+
+        self.toolbar.addSeparator()
+
+        self.add_action(
+            icon_path2,
+            text=self.tr(u'Update project'),
+            callback=self.run2,
+            parent=self.iface.mainWindow())
         self.add_action(
             icon_path7,
             text=self.tr(u'Validate'),
@@ -201,6 +214,10 @@ class MzSTools:
         out_dir = QFileDialog.getExistingDirectory(self.dlg1, "","", QFileDialog.ShowDirsOnly)
         self.dlg1.dir_output.setText(out_dir)
 
+    def select_input_fld_2(self):
+
+        in_dir = QFileDialog.getExistingDirectory(self.dlg2, "","", QFileDialog.ShowDirsOnly)
+        self.dlg2.dir_input.setText(in_dir)
 
     def select_input_fld_5(self):
 
@@ -400,9 +417,58 @@ class MzSTools:
                 QMessageBox.warning(None, u'WARNING!', u"A folder with the project folder name already exists in the output directory!\nOr the save path is incorrect!\nOr the user does not have permission to edit the save folder!")
                 if os.path.exists(dir_out + os.sep + "progetto_MS"):
                     shutil.rmtree(dir_out + os.sep + "progetto_MS")
-            except:
-                QMessageBox.critical(None, u'ERROR!', u"Generic error! Contact the plugin developers!")
+            except Exception as z:
+                QMessageBox.critical(None, u'ERROR!', u"Python error! Contact the plugin developers and report the following error:\n" + str(z))
 
+    def run2(self):
+        self.dlg2.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
+        self.dlg2.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
+        self.dlg2.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
+        self.dlg2.help_button.clicked.connect(lambda: webbrowser.open('https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools'))
+
+        self.dlg2.dir_input.clear()
+        self.dlg2.button_box.setEnabled(False)
+        self.dlg2.alert_text.hide()
+        self.dlg2.dir_input.textChanged.connect(self.disableButton_2)
+
+        self.dlg2.show()
+        result = self.dlg2.exec_()
+        if result:
+
+            try:
+                vers_data_1 = self.plugin_dir + os.sep + "versione.txt"
+                input1 = open(vers_data_1,'r').read()
+                dir2 = self.dlg2.dir_input.text()
+                vers_data_2 = dir2 + os.sep + "progetto" + os.sep + "versione.txt"
+                input2 = open(vers_data_2,'r').read()
+                pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
+
+                if input2 < input1:
+                    zip_ref = zipfile.ZipFile(pacchetto, 'r')
+                    zip_ref.extractall(dir2)
+                    zip_ref.close()
+                    shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "maschere")
+                    shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "maschere", dir2 + os.sep + "progetto" + os.sep + "maschere")
+                    shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "script")
+                    shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "script", dir2 + os.sep + "progetto" + os.sep + "script")
+                    os.remove(dir2 + os.sep + "progetto" + os.sep + "versione.txt")
+                    shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "versione.txt", dir2 + os.sep + "progetto" + os.sep + "versione.txt")
+                    shutil.rmtree(dir2 + os.sep + "progetto_MS")
+                    project = QgsProject.instance()
+                    project.read(QFileInfo(dir2 + os.sep + "progetto_MS.qgs"))
+                    zLayer = QgsMapLayerRegistry.instance().mapLayersByName("Comune del progetto")[0]
+                    canvas = iface.mapCanvas()
+                    extent = zLayer.extent()
+                    canvas.setExtent(extent)
+                    project.write()
+                    QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!")
+                else:
+                    QMessageBox.information(None, u'INFORMATION!', u"The project structure is already updated!")
+
+            except IOError:
+                QMessageBox.warning(None, u'WARNING!', u"Project path is incorrect!")
+            except Exception as z:
+                QMessageBox.critical(None, u'ERROR!', u"Python error! Contact the plugin developers and report the following error:\n" + str(z))
 
     def run3(self):
 
@@ -420,7 +486,7 @@ class MzSTools:
 
 
     def run_import(self):
-                
+
         self.dlg4.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
         self.dlg4.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
         self.dlg4.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
@@ -431,31 +497,31 @@ class MzSTools:
         self.dlg4.button_box.setEnabled(False)
         self.dlg4.dir_input.textChanged.connect(self.disableButton_4)
         self.dlg4.tab_input.textChanged.connect(self.disableButton_4)
-        
+
         ############################### DEBUG ONLY!
         # self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\44034_Montedinove")
         # self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\tab_montedinove")
         # self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\54051_Spoleto")
         # self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\tab_spoleto")
         ############################### DEBUG ONLY!
-        
+
         self.dlg4.show()
-        
+
         result = self.dlg4.exec_()
         if result:
             in_dir = self.dlg4.dir_input.text()
             tab_dir = self.dlg4.tab_input.text()
             proj_abs_path = str(QgsProject.instance().readPath("./"))
             map_registry_instance = QgsMapLayerRegistry.instance()
-            
+
             # create import worker
             worker = ImportWorker(proj_abs_path, in_dir, tab_dir, map_registry_instance)
-            
+
             # create import log file
             logfile_path = proj_abs_path + os.sep + "allegati" + os.sep + "log" + os.sep + str(time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_import_log.txt"
             log_file = open(logfile_path,'a')
             log_file.write("IMPORT REPORT:" +"\n---------------\n\n")
-            
+
             # start import worker
             self.start_worker(worker, self.iface, 'Starting import task...', log_file)
 
@@ -565,8 +631,8 @@ class MzSTools:
 
             except WindowsError:
                 QMessageBox.warning(None, u'WARNING!', u"A folder with the project folder name already exists in the output directory!")
-            except Exception as e:
-                QMessageBox.critical(None, u'ERROR!', u"Generic error! Contact the plugin developers!")
+            except Exception as z:
+                QMessageBox.critical(None, u'ERROR!', u"Python error! Contact the plugin developers and report the following error:\n" + str(z))
 
 
     def run6(self):
@@ -755,8 +821,8 @@ class MzSTools:
                 QMessageBox.warning(None, u'WARNING!', u"Open a Seismic Microzonation project before starting this tool!")
             except WindowsError:
                 QMessageBox.warning(None, u'WARNING!', u"Before running this tool, delete shapefiles for topological validation from the project!")
-            except:
-                QMessageBox.critical(None, u'ERROR!', u"Generic error! Contact the plugin developers!")
+            except Exception as z:
+                QMessageBox.critical(None, u'ERROR!', u"Python error! Contact the plugin developers and report the following error:\n" + str(z))
 
 
     def run8(self):
@@ -1240,15 +1306,15 @@ class MzSTools:
             self.dlg6.input_ms.clear()
             self.dlg6.output_ms.clear()
             #zip_unzip is False
-            
-            
+
+
     def start_worker(self, worker, iface, message, log_file=None):
-        
+
         ############################################
         # DEBUG ONLY
         # self.import_reset()
         ############################################
-        
+
         # configure the QgsMessageBar
         message_bar_item = iface.messageBar().createMessage(message)
         progress_bar = QProgressBar()
@@ -1259,39 +1325,39 @@ class MzSTools:
         message_bar_item.layout().addWidget(progress_bar)
         message_bar_item.layout().addWidget(cancel_button)
         iface.messageBar().pushWidget(message_bar_item, iface.messageBar().INFO)
-     
+
         # start the worker in a new thread
         thread = QThread(iface.mainWindow())
         worker.moveToThread(thread)
-        
+
         worker.set_message.connect(lambda message: self.set_worker_message(
             message, message_bar_item))
-        
+
         if log_file is not None:
             worker.set_log_message.connect(lambda message: self.set_worker_log_message(
                 message, log_file))
-     
+
         worker.toggle_show_progress.connect(lambda show: self.toggle_worker_progress(
             show, progress_bar))
-            
+
         worker.toggle_show_cancel.connect(lambda show: self.toggle_worker_cancel(
             show, cancel_button))
-            
+
         worker.finished.connect(lambda result: self.worker_finished(
             result, thread, worker, iface, message_bar_item, log_file))
-            
+
         worker.error.connect(lambda e, exception_str: self.worker_error(
             e, exception_str, iface, log_file))
-            
+
         worker.progress.connect(progress_bar.setValue)
-        
+
         thread.started.connect(worker.run)
-        
+
         thread.start()
         return thread, message_bar_item
-     
+
     def worker_finished(self, result, thread, worker, iface, message_bar_item, log_file=None):
-        
+
         # remove widget from message bar
         iface.messageBar().popWidget(message_bar_item)
         if result is not None:
@@ -1307,25 +1373,25 @@ class MzSTools:
                 'Process cancelled.',
                 level=QgsMessageBar.WARNING,
                 duration=3)
-        
+
         # clean up the worker and thread
         worker.deleteLater()
         thread.quit()
         thread.wait()
         thread.deleteLater()
-        
+
         iface.mapCanvas().refreshAllLayers()
-        
+
         if log_file is not None:
             log_file.close()
-        
+
         if result is not None:
             QMessageBox.information(iface.mainWindow(), u'Import project',
                 u"Import process completed.\n\nImport report was saved in the project folder '...\\allegati\\log'")
         else:
             QMessageBox.critical(iface.mainWindow(), u'Import project',
                 u"Process interrupted! See the message log for more information.")
-     
+
     def worker_error(self, e, exception_string, iface, log_file=None):
         # notify the user that something went wrong
         iface.messageBar().pushMessage(
@@ -1338,13 +1404,13 @@ class MzSTools:
             level=QgsMessageLog.CRITICAL)
 
         log_file.write("\n\n!!! Worker thread raised an exception:\n\n" + exception_string)
-     
+
     def set_worker_message(self, message, message_bar_item):
         message_bar_item.setText(message)
-        
+
     def set_worker_log_message(self, message, log_file):
         log_file.write(message)
-     
+
     def toggle_worker_progress(self, show_progress, progress_bar):
         progress_bar.setMinimum(0)
         if show_progress:
@@ -1352,29 +1418,27 @@ class MzSTools:
         else:
             # show an undefined progress
             progress_bar.setMaximum(0)
-     
-            
+
+
     def toggle_worker_cancel(self, show_cancel, cancel_button):
         cancel_button.setVisible(show_cancel)
-        
+
     # DEBUG ONLY
     def import_reset(self):
     #     nome = ['altro', 'documenti', 'plot', 'spettri']
         lista_layer = ["Siti puntuali", "Indagini puntuali", "Parametri puntuali", "Curve di riferimento", "Siti lineari", "Indagini lineari", "Parametri lineari",
             "Elementi geologici e idrogeologici puntuali", "Elementi puntuali", "Elementi lineari", "Forme", "Unita' geologico-tecniche", "Instabilita' di versante", "Isobate liv 1",
             "Zone stabili liv 1", "Zone instabili liv 1", "Isobate liv 2", "Zone stabili liv 2", "Zone instabili liv 2", "Isobate liv 3", "Zone stabili liv 3", "Zone instabili liv 3"]
-        
+
         for layer in iface.mapCanvas().layers():
             if layer.name() in lista_layer:
                 with edit(layer):
                     listOfIds = [feat.id() for feat in layer.getFeatures()]
                     layer.deleteFeatures( listOfIds )
-        
+
         '''
         for x in nome:
             if os.path.exists(self.in_dir + os.sep + "allegati" + os.sep + x):
                 shutil.rmtree(self.proj_abs_path + os.sep + "allegati" + os.sep + x)
                 os.makedirs(self.proj_abs_path + os.sep + "allegati" + os.sep + x)
         '''
-    
-    
