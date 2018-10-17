@@ -1,44 +1,15 @@
 # -*- coding: utf-8 -*-
 
+from MzSTools.constants import *
 import os, shutil, sqlite3, csv
 from qgis.core import QgsVectorLayer, QgsFeatureRequest, QgsField, QgsVectorJoinInfo
 from qgis.utils import QgsExpression
 
-from PyQt4.QtCore import QVariant
-
 from abstract_worker import AbstractWorker, UserAbortedNotification
 
 
-# CONSTANTS
-POSIZIONE = {"Comune del progetto":["BasiDati","Comune","id_com"], "Elementi lineari":["GeoTec","Elineari","ID_el"], "Elementi puntuali":["GeoTec","Epuntuali","ID_ep"],
-             "Forme":["GeoTec","Forme","ID_f"], "Elementi geologici e idrogeologici puntuali":["GeoTec","Geoidr","ID_gi"], "Unita' geologico-tecniche":["GeoTec","Geotec","ID_gt"],
-             "Instabilita' di versante":["GeoTec","Instab_geotec","ID_i"], "Siti lineari":["Indagini","Ind_ln","ID_SLN"], "Siti puntuali":["Indagini","Ind_pu","ID_SPU"],
-             "Zone instabili liv 1":["MS1","Instab","ID_i"], "Zone stabili liv 1":["MS1","Stab","ID_z"], "Isobate liv 1":["MS1","Isosub","ID_isosub"], "Zone instabili liv 2":["MS23","Instab","ID_i"],
-             "Zone stabili liv 2":["MS23","Stab","ID_z"], "Isobate liv 2":["MS23","Isosub","ID_isosub"], "Zone instabili liv 3":["MS23","Instab","ID_i"], "Zone stabili liv 3":["MS23","Stab","ID_z"],
-             "Isobate liv 3":["MS23","Isosub","ID_isosub"]}
-
-LISTA_LAYER = ["Siti puntuali", "Indagini puntuali", "Parametri puntuali", "Curve di riferimento", "Siti lineari", "Indagini lineari", "Parametri lineari",
-               "Elementi geologici e idrogeologici puntuali", "Elementi puntuali", "Elementi lineari", "Forme", "Unita' geologico-tecniche", "Instabilita' di versante", "Isobate liv 1",
-               "Zone stabili liv 1", "Zone instabili liv 1", "Isobate liv 2", "Zone stabili liv 2", "Zone instabili liv 2", "Isobate liv 3", "Zone stabili liv 3", "Zone instabili liv 3",
-               "Comune del progetto", "Limiti comunali"]
-
-DIZIO_CAMPI_L = {"pkuid":[QVariant.LongLong,'"csv_sln_pkey_sln"'], "ub_prov":[QVariant.String, '"csv_sln_ubicazione_prov"'], "ub_com":[QVariant.String, '"csv_sln_ubicazione_com"'],
-                 "aquota":[QVariant.Double, '"csv_sln_Aquota"'], "bquota":[QVariant.Double, '"csv_sln_Bquota"'], "data_sito":[QVariant.String, '"csv_sln_data_sito"'],
-                 "note_sito":[QVariant.String, '"csv_sln_note_sito"'], "mod_identc":[QVariant.String, '"csv_sln_mod_identcoord"'], "desc_modco":[QVariant.String, '"csv_sln_desc_modcoord"']}
-
-DIZIO_CAMPI_P = {"pkuid":[QVariant.LongLong,'"csv_spu_pkey_spu"'], "ub_prov":[QVariant.String, '"csv_spu_ubicazione_prov"'], "ub_com":[QVariant.String, '"csv_spu_ubicazione_com"'],
-                 "indirizzo":[QVariant.String, '"csv_spu_indirizzo"'], "quota_slm":[QVariant.LongLong, '"csv_spu_quota_slm"'], "modo_quota":[QVariant.String, '"csv_spu_modo_quota"'],
-                 "data_sito":[QVariant.String, '"csv_spu_data_sito"'], "note_sito":[QVariant.String, '"csv_spu_note_sito"'], "mod_identc":[QVariant.String, '"csv_spu_mod_identcoord"'],
-                 "desc_modco":[QVariant.String, '"csv_spu_desc_modcoord"']}
-
-LISTA_TAB = ["Sito_Puntuale", "Indagini_Puntuali", "Parametri_Puntuali", "Curve", "Sito_Lineare", "Indagini_Lineari", "Parametri_Lineari"]
-
-
-                   
 class ImportWorker(AbstractWorker):
-    '''
-    classdocs
-    '''
+    '''Worker class handling data import from existing project'''
  
     def __init__(self, proj_abs_path, in_dir, tab_dir, map_registry_instance):
         AbstractWorker.__init__(self)
@@ -474,7 +445,8 @@ class ImportWorker(AbstractWorker):
         
         shp_path = path_tabelle + os.sep + "Indagini" + os.sep + nome_shape + ".shp"
         fullname = os.path.join(path_tabelle, csv_path).replace('\\', '/')
-        s_geom = QgsVectorLayer(shp_path, '', 'ogr')
+        shp_layer = QgsVectorLayer(shp_path, '', 'ogr')
+        s_geom = self.map_registry_instance.addMapLayer(shp_layer)
         csv_uri = 'file:///%s?delimiter=;' % (fullname)
         s_attr = QgsVectorLayer(csv_uri, csv_tab_name, "delimitedtext")
         self.map_registry_instance.addMapLayer(s_attr)
@@ -491,15 +463,16 @@ class ImportWorker(AbstractWorker):
             s_geom.updateFields()
             expression = QgsExpression(valore[1])
             expression.prepare(s_geom.pendingFields())
-            s_geom.startEditing()
+#             s_geom.startEditing()
             for feature in s_geom.getFeatures():
                 value = expression.evaluate(feature)
                 feature[chiave] = value
-                s_geom.updateFeature(feature)
-            s_geom.commitChanges()
+                s_geom.dataProvider().changeAttributeValues({ feature.id() : {s_geom.dataProvider().fieldNameMap()[chiave] : value } })
+#                 s_geom.updateFeature(feature)
+#             s_geom.commitChanges()
 
         s = self.map_registry_instance.mapLayersByName(nome_layer)[0]
-        #s_geom = map_registry_instance.mapLayersByName(nome_shape)[0]
+#         s_geom = self.map_registry_instance.mapLayersByName(nome_shape)[0]
         featureList = []
         commonFields = self.attribute_adaptor(s,s_geom)
         commonFields.append('pkuid')
@@ -539,6 +512,8 @@ class ImportWorker(AbstractWorker):
         
     def calc_join(self, orig_tab, link_tab, temp_field, link_field, orig_field):
 
+        path_db = self.proj_abs_path + os.sep + "db" + os.sep + "indagini.sqlite"
+
         joinObject = QgsVectorJoinInfo()
         joinObject.joinLayerId = link_tab.id()
         joinObject.joinFieldName = 'pkuid'
@@ -547,12 +522,26 @@ class ImportWorker(AbstractWorker):
         orig_tab.addJoin(joinObject)
         expression = QgsExpression(link_field)
         expression.prepare(orig_tab.pendingFields())
-#         orig_tab.startEditing()
-        for feature in orig_tab.getFeatures():
-            value = expression.evaluate(feature)
-            feature[orig_field] = value
-            orig_tab.updateFeature(feature)
-#         orig_tab.commitChanges()
+
+        try:
+            conn = sqlite3.connect(path_db)
+            conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+    
+            for feature in orig_tab.getFeatures():
+                value = expression.evaluate(feature)
+                feature[orig_field] = value
+                
+                cur = conn.cursor()
+                nome_tab = LAYER_DB_TAB[orig_tab.name()]
+                cur.execute("UPDATE " + nome_tab + " SET " + orig_field + " = '" + value + "' WHERE pkuid = " + str(feature['pkuid']) + ";")
+    
+            conn.commit()
+        except Exception as ex:
+            # error will be forwarded upstream
+            raise ex
+        finally:
+            conn.close()
+            
         orig_tab.removeJoin(link_tab.id())
         
     def copy_files(self, src, dest):
