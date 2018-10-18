@@ -16,6 +16,14 @@ email=labgis@igag.cnr.it
 about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1 (http://www.protezionecivile.gov.it/jcms/en/standard_studi_ms.wp?request_locale=en).
     Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1 (http://www.protezionecivile.gov.it/jcms/it/standard_studi_ms.wp?request_locale=it).
 changelog=
+		v0.7:
+				-  moved import process to a separate thread;
+				-  import progress shown in qgis interface;
+				-  fixed bug with empty numeric values in csv files during import;
+				-  reimplemented import log file;
+				-  added "Update project" tool;
+				-  update project (in particular .ui, .py files);
+				-  updated italian manuals.
 		v0.6:
 				-  video-guide additions;
 				-  update project (in particular .ui, .py files);

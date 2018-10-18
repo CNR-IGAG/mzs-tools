@@ -14,6 +14,14 @@ Seismic Microzonation studies include the following maps:
 The plugin was created to give the opportunity to quickly perform standard compliant Seismic Microzonation studies.
 
 Changelog:
+		v0.7:
+				-  moved import process to a separate thread;
+				-  import progress shown in qgis interface;
+				-  fixed bug with empty numeric values in csv files during import;
+				-  reimplemented import log file;
+				-  added "Update project" tool;
+				-  update project (in particular .ui, .py files);
+				-  updated italian manuals.
 		v0.6:
 				-  video-guide additions;
 				-  update project (in particular .ui, .py files);

@@ -51,7 +51,6 @@ class MzSTools:
         self.dlg10 = edit_win()
         self.dlg11 = wait()
 
-
         self.posizione = {"Comune del progetto":["BasiDati","Comune","id_com"], "Elementi lineari":["GeoTec","Elineari","ID_el"], "Elementi puntuali":["GeoTec","Epuntuali","ID_ep"],
         "Forme":["GeoTec","Forme","ID_f"], "Elementi geologici e idrogeologici puntuali":["GeoTec","Geoidr","ID_gi"], "Unita' geologico-tecniche":["GeoTec","Geotec","ID_gt"],
         "Instabilita' di versante":["GeoTec","Instab_geotec","ID_i"], "Siti lineari":["Indagini","Ind_ln","ID_SLN"], "Siti puntuali":["Indagini","Ind_pu","ID_SPU"],
@@ -120,7 +119,6 @@ class MzSTools:
         self.actions.append(action)
 
         return action
-
 
     def initGui(self):
 
@@ -198,7 +196,6 @@ class MzSTools:
             callback=self.run3,
             parent=self.iface.mainWindow())
 
-
     def unload(self):
 
         for action in self.actions:
@@ -207,7 +204,6 @@ class MzSTools:
                 action)
             self.iface.removeToolBarIcon(action)
         del self.toolbar
-
 
     def select_output_fld_1(self):
 
@@ -236,12 +232,10 @@ class MzSTools:
         in_dir = QFileDialog.getExistingDirectory(self.dlg4, "","", QFileDialog.ShowDirsOnly)
         self.dlg4.dir_input.setText(in_dir)
 
-
     def select_tab_fld_4(self):
 
         tab_dir = QFileDialog.getExistingDirectory(self.dlg4, "","", QFileDialog.ShowDirsOnly)
         self.dlg4.tab_input.setText(tab_dir)
-
 
     def run1(self):
 
@@ -411,7 +405,7 @@ class MzSTools:
                     map_item_5 = composition.getComposerItemById('mappa_1')
                     map_item_5.refreshPicture()
 
-##                project.write()
+                project.write()
 
             except WindowsError:
                 QMessageBox.warning(None, u'WARNING!', u"A folder with the project folder name already exists in the output directory!\nOr the save path is incorrect!\nOr the user does not have permission to edit the save folder!")
@@ -484,7 +478,6 @@ class MzSTools:
 
             webbrowser.open('https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools')
 
-
     def run_import(self):
 
         self.dlg4.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
@@ -499,14 +492,13 @@ class MzSTools:
         self.dlg4.tab_input.textChanged.connect(self.disableButton_4)
 
         ############################### DEBUG ONLY!
-        # self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\44034_Montedinove")
-        # self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\montedinove\\tab_montedinove")
+        # self.dlg4.dir_input.setText(r"C:\Users\Emanuele Tarquini\Desktop\test\MONTEDINOVE\44034_Montedinove")
+        # self.dlg4.tab_input.setText(r"C:\Users\Emanuele Tarquini\Desktop\test\MONTEDINOVE\tab_montedinove")
         # self.dlg4.dir_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\54051_Spoleto")
         # self.dlg4.tab_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\tab_spoleto")
         ############################### DEBUG ONLY!
 
         self.dlg4.show()
-
         result = self.dlg4.exec_()
         if result:
             in_dir = self.dlg4.dir_input.text()
@@ -634,7 +626,6 @@ class MzSTools:
             except Exception as z:
                 QMessageBox.critical(None, u'ERROR!', u"Python error! Contact the plugin developers and report the following error:\n" + str(z))
 
-
     def run6(self):
 
         self.dlg6.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
@@ -670,7 +661,6 @@ class MzSTools:
             data_provider.addFeatures(features)
             destLYR.commitChanges()
             self.dlg11.hide()
-
 
     def run7(self):
 
@@ -824,7 +814,6 @@ class MzSTools:
             except Exception as z:
                 QMessageBox.critical(None, u'ERROR!', u"Python error! Contact the plugin developers and report the following error:\n" + str(z))
 
-
     def run8(self):
 
         proj = QgsProject.instance()
@@ -862,7 +851,6 @@ class MzSTools:
                 layer.startEditing()
                 iface.actionAddFeature().trigger()
 
-
     def run9(self):
 
         proj = QgsProject.instance()
@@ -886,7 +874,6 @@ class MzSTools:
 
             else:
                 layer.commitChanges()
-
 
     def run10(self):
 
@@ -970,7 +957,6 @@ class MzSTools:
             vpr.addFeatures([f])
             vectorLyr.updateExtents()
 
-
     def disableButton_1(self):
 
         check_campi = [self.dlg1.professionista.text(), self.dlg1.propretario.text(), self.dlg1.scala_nom.text(), self.dlg1.email_prof.text(), self.dlg1.email_prop.text(), self.dlg1.dir_output.text(), str(self.dlg1.comune.currentText())]
@@ -990,6 +976,33 @@ class MzSTools:
         else:
             self.dlg1.button_box.setEnabled(False)
 
+    def disableButton_2(self):
+
+        check_campi = [self.dlg2.dir_input.text()]
+        check_value = []
+        num_l = QgsProject.instance().layerTreeRoot().children()
+        if len(num_l) >= 1:
+            value_campi = 0
+            check_value.append(value_campi)
+            self.dlg2.alert_text.show()
+        else:
+            value_campi = 1
+            check_value.append(value_campi)
+            self.dlg2.alert_text.hide()
+
+        for x in check_campi:
+            if len(x) > 0:
+                value_campi = 1
+                check_value.append(value_campi)
+            else:
+                value_campi = 0
+                check_value.append(value_campi)
+
+        campi = sum(check_value)
+        if campi > 1:
+            self.dlg2.button_box.setEnabled(True)
+        else:
+            self.dlg2.button_box.setEnabled(False)
 
     def disableButton_4(self):
 
@@ -1021,7 +1034,6 @@ class MzSTools:
             self.dlg4.button_box.setEnabled(False)
             self.dlg4.alert_text.show()
 
-
     def disableButton_5(self):
 
         conteggio = 0
@@ -1052,7 +1064,6 @@ class MzSTools:
             self.dlg5.button_box.setEnabled(False)
             self.dlg5.alert_text.show()
 
-
     def disableButton_10(self):
 
         check_campi = [self.dlg10.coord_x.text(), self.dlg10.coord_y.text()]
@@ -1079,13 +1090,11 @@ class MzSTools:
             self.dlg10.button_box.setEnabled(False)
             self.dlg10.alert_text.show()
 
-
     def update_cod_istat(self, dizionario, nome_comune_sel, campo):
 
         for chiave, valore in dizionario.iteritems():
             if chiave == nome_comune_sel:
                 campo.setText(valore)
-
 
     def radio_stab_clicked(self, enabled):
 
@@ -1103,7 +1112,6 @@ class MzSTools:
             self.dlg6.input_ms.addItems(layer_stab)
             self.dlg6.output_ms.addItems(layer_stab)
 
-
     def radio_instab_clicked(self, enabled):
 
         if enabled:
@@ -1119,7 +1127,6 @@ class MzSTools:
 
             self.dlg6.input_ms.addItems(layer_instab)
             self.dlg6.output_ms.addItems(layer_instab)
-
 
     def esporta(self, list_attr, selected_layer):
 
@@ -1138,7 +1145,6 @@ class MzSTools:
             selected_layer.dataProvider().deleteAttributes(field_ids)
             selected_layer.updateFields()
 
-
     def define_mod(self, codici_mod, nome, lista):
 
         codici_mod_layer = QgsMapLayerRegistry.instance().mapLayersByName(nome)[0]
@@ -1148,7 +1154,6 @@ class MzSTools:
             codici_mod.append(lista)
         return codici_mod
 
-
     def update_mod_box(self, mod_box, codici_mod):
 
         mod_box.clear()
@@ -1156,7 +1161,6 @@ class MzSTools:
         mod_box.model().item(0).setEnabled(False)
         for row in codici_mod:
             mod_box.addItem(row[1])
-
 
     def update_num(self, value, n1, n2):
 
@@ -1167,7 +1171,6 @@ class MzSTools:
 
         except:
             value.setText('')
-
 
     def checkLayers(self, group, dict_layer, dizio_layer):
 
@@ -1188,7 +1191,6 @@ class MzSTools:
         added = d1_keys - d2_keys
         return added
 
-
     def topology_check(self, directory, lyr1, lyr2, campo1, campo2, nome1, nome2, nome3, f, e):
 
         processing.runandload("saga:polygonselfintersection", lyr1, campo1, directory + os.sep + nome1 + ".shp")
@@ -1207,7 +1209,6 @@ class MzSTools:
         f.write("    Fatto! Il file contenente le intersezioni tra i layer '" + lyr1 + "' e '" + lyr2 + "' e' stato salvato nella directory '\\allegati\\log\\analisi\\" + nome3 + ".shp'\n\n")
         e.write("    Done! File containing intersections between '" + lyr1 + "' and '" + lyr2 + "' layers was saved in '\\allegati\\log\\analisi\\" + nome3 + ".shp'\n\n")
 
-
     def elab_intersect(self, nome_file_inters):
 
         layer_name = QgsMapLayerRegistry.instance().mapLayersByName("Intersection")[0]
@@ -1220,7 +1221,6 @@ class MzSTools:
                 field_ids.append(layer_name.fieldNameIndex(field.name()))
         layer_name.dataProvider().deleteAttributes(field_ids)
         layer_name.updateFields()
-
 
     def elab_self_intersect(self, nome_file_inters):
 
@@ -1239,7 +1239,6 @@ class MzSTools:
         layer_name.dataProvider().deleteAttributes(field_ids)
         layer_name.updateFields()
 
-
     def remove_record(self, lyr_name):
 
         layer_name = QgsMapLayerRegistry.instance().mapLayersByName(lyr_name)[0]
@@ -1248,7 +1247,6 @@ class MzSTools:
             if elem.geometry().area() < 1:
                 layer_name.deleteFeature(elem.id())
         layer_name.commitChanges()
-
 
     def mappa_insieme(self, mainPath, destLYR):
 
@@ -1286,11 +1284,9 @@ class MzSTools:
         imageFilename =  mainPath + os.sep + "progetto" + os.sep + "loghi" + os.sep + "mappa_reg.png"
         image.save(imageFilename, 'png')
 
-
     def open_pdf(self, pdf_path):
 
         os.startfile(pdf_path)
-
 
     def radio_zip_clicked(self, enabled):
 
@@ -1299,14 +1295,12 @@ class MzSTools:
             self.dlg6.output_ms.clear()
             #zip_unzip is True
 
-
     def radio_unzip_clicked(self, enabled):
 
         if enabled:
             self.dlg6.input_ms.clear()
             self.dlg6.output_ms.clear()
             #zip_unzip is False
-
 
     def start_worker(self, worker, iface, message, log_file=None):
 
@@ -1418,7 +1412,6 @@ class MzSTools:
         else:
             # show an undefined progress
             progress_bar.setMaximum(0)
-
 
     def toggle_worker_cancel(self, show_cancel, cancel_button):
         cancel_button.setVisible(show_cancel)
