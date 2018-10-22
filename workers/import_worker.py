@@ -67,15 +67,11 @@ class ImportWorker(AbstractWorker):
             
             sourceLYR = QgsVectorLayer(self.in_dir + os.sep + valore[0] + os.sep + valore[1] + ".shp", valore[1], 'ogr')
             destLYR = self.map_registry_instance.mapLayersByName(chiave)[0]
-#             dest_field = []
-#             for x in destLYR.fields():
-#                 dest_field.append(x)
 
             commonFields = self.attribute_adaptor(destLYR,sourceLYR)
 
             if chiave == "Siti puntuali":
                 if os.path.exists(path_tabelle + os.sep + 'Sito_Puntuale.txt'):
-#                     self.calc_siti(path_tabelle, "Ind_pu", 'Sito_Puntuale.txt', "csv_spu", 'ID_SPU', DIZIO_CAMPI_P, 'Siti puntuali', 'id_spu')
                     self.insert_siti(sourceLYR, path_tabelle + os.sep + 'Sito_Puntuale.txt', "puntuale")
                     self.set_message.emit("  '" + chiave + "' shapefile has been copied!")
                     self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
@@ -86,7 +82,6 @@ class ImportWorker(AbstractWorker):
 
             elif chiave == "Siti lineari":
                 if os.path.exists(path_tabelle + os.sep + 'Sito_Lineare.txt'):
-#                     self.calc_siti(path_tabelle, "Ind_ln", 'Sito_Lineare.txt', "csv_sln", 'ID_SLN', DIZIO_CAMPI_L, 'Siti lineari', 'id_sln')
                     self.insert_siti(sourceLYR, path_tabelle + os.sep + 'Sito_Lineare.txt', "lineare")
                     self.set_message.emit("  '" + chiave + "' shapefile has been copied!")
                     self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
@@ -114,7 +109,6 @@ class ImportWorker(AbstractWorker):
                 sourceFeatures = sourceLYR.getFeatures()
                 self.calc_layer(sourceFeatures, destLYR, commonFields)
                 self.set_log_message.emit("  '" + chiave + "' shapefile has been copied!\n")
-                
 
             if self.killed:
                 break
@@ -129,224 +123,41 @@ class ImportWorker(AbstractWorker):
         self.set_log_message.emit('Insert features -> OK\n')
         # end inserting features
 
-        # step 3 (inserting indagini puntuali)
-        ###############################################
+        # step 3 (inserting indagini_puntuali and related data)
+        #######################################################
         if self.check_sito_p is True and os.path.exists(path_tabelle + os.sep + "Indagini_Puntuali.txt"):
-            self.set_message.emit('Inserting Indagini_Puntuali...')
             z_list.append("Indagini_Puntuali")
             self.insert_table("indagini_puntuali", path_tabelle + os.sep + "Indagini_Puntuali.txt")
             self.set_log_message.emit('Insert Indagini_Puntuali -> OK\n')
             
             if os.path.exists(path_tabelle + os.sep + "Parametri_Puntuali.txt"):
-                self.set_message.emit('Inserting Parametri_Puntuali...')
                 z_list.append("Parametri_Puntuali")
                 self.insert_table("parametri_puntuali", path_tabelle + os.sep + "Parametri_Puntuali.txt")
                 self.set_log_message.emit('Insert Parametri_Puntuali -> OK\n')
                 
                 if os.path.exists(path_tabelle + os.sep + "Curve.txt"):
-                    self.set_message.emit('Inserting Curve...')
                     z_list.append("Curve")
                     self.insert_table("curve", path_tabelle + os.sep + "Curve.txt")
                     self.set_log_message.emit('Insert Curve -> OK\n')
-        
-        '''
-        self.set_message.emit('Checking Indagini_Puntuali...')
-        path_db = self.proj_abs_path + os.sep + "db" + os.sep + "indagini.sqlite"
 
-        if self.check_sito_p is True and os.path.exists(path_tabelle + os.sep + "Indagini_Puntuali.txt"):
-            z_list.append("Indagini_Puntuali")
-
-            i_p = self.map_registry_instance.mapLayersByName('Indagini puntuali')[0]
-            field_i_p = QgsField('temp_pkey_spu', QVariant.LongLong)
-            i_p.addExpressionField('"id_spu"', field_i_p)
-            conn = sqlite3.connect(path_db)
-            conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
-            cur = conn.cursor()
-            csv_file = path_tabelle + os.sep + "Indagini_Puntuali.txt"
-            with open(csv_file,'rb') as fin:
-                dr = csv.DictReader(fin, delimiter=';', quotechar='"')
-
-#                 to_db = [(i['pkey_indpu'], i['pkey_spu'], i['classe_ind'], i['tipo_ind'], i['ID_INDPU'], i['id_indpuex'], i['arch_ex'], i['note_ind'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['data_ind'], i['doc_pag'], i['doc_ind']) for i in dr]
-                to_db = []
-                for i in dr:
-                    # transform empty strings to None to circumvent db CHECKs
-                    for k in i:
-                        if i[k] == "":
-                            i[k] = None
-                    to_db.append((i['pkey_indpu'], i['pkey_spu'], i['classe_ind'], i['tipo_ind'], i['ID_INDPU'], i['id_indpuex'], i['arch_ex'], i['note_ind'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['data_ind'], i['doc_pag'], i['doc_ind']))
-
-            self.set_message.emit('Inserting indagini_puntuali...')
-            cur.executemany("INSERT INTO indagini_puntuali (pkuid, id_spu, classe_ind, tipo_ind, id_indpu, id_indpuex, arch_ex, note_ind, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, doc_ind) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);", to_db)
-
-            i_p.addExpressionField('"id_spu"', field_i_p)
-            conn.commit()
-            conn.close()
-
-            s_p = self.map_registry_instance.mapLayersByName('Siti puntuali')[0]
-            self.calc_join(i_p, s_p, 'temp_pkey_spu', '"Siti puntuali_id_spu"', "id_spu")
-
-            self.set_log_message.emit('Insert Indagini puntuali -> OK\n')
-
-            if os.path.exists(path_tabelle + os.sep + "Parametri_Puntuali.txt"):
-                z_list.append("Parametri_Puntuali")
-
-                p_p = self.map_registry_instance.mapLayersByName('Parametri puntuali')[0]
-                field_p_p = QgsField('temp_pkey_indpu', QVariant.LongLong)
-                p_p.addExpressionField('"id_indpu"', field_p_p)
-                conn = sqlite3.connect(path_db)
-                conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
-                cur = conn.cursor()
-                csv_file = path_tabelle + os.sep + "Parametri_Puntuali.txt"
-                with open(csv_file,'rb') as fin:
-                    dr = csv.DictReader(fin, delimiter=';', quotechar='"')
-#                     to_db = [(i['pkey_parpu'], i['pkey_indpu'], i['tipo_parpu'], i['ID_PARPU'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['tab_curve'], i['note_par'], i['data_par']) for i in dr]
-                    to_db = []
-                    for i in dr:
-                        # transform empty strings to None to circumvent db CHECKs
-                        for k in i:
-                            if i[k] == "":
-                                i[k] = None
-                        to_db.append((i['pkey_parpu'], i['pkey_indpu'], i['tipo_parpu'], i['ID_PARPU'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['tab_curve'], i['note_par'], i['data_par']))
-
-                self.set_message.emit('Inserting parametri_puntuali...')
-                cur.executemany("INSERT INTO parametri_puntuali (pkuid , id_indpu , tipo_parpu , id_parpu , prof_top , prof_bot , spessore , quota_slm_top , quota_slm_bot , valore , attend_mis , tab_curve , note_par , data_par) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?);", to_db)
-
-                p_p.addExpressionField('"id_indpu"', field_p_p)
-                conn.commit()
-                conn.close()
-
-                i_p = self.map_registry_instance.mapLayersByName('Indagini puntuali')[0]
-                self.calc_join(p_p, i_p, 'temp_pkey_indpu', '"Indagini puntuali_id_indpu"', "id_indpu")
-
-                self.set_log_message.emit('Insert Parametri puntuali -> OK\n')
-
-                if os.path.exists(path_tabelle + os.sep + "Curve.txt"):
-                    z_list.append("Curve")
-
-                    cu = self.map_registry_instance.mapLayersByName('Curve di riferimento')[0]
-                    field_cu = QgsField('temp_pkey_parpu', QVariant.LongLong)
-                    cu.addExpressionField('"id_parpu"', field_cu)
-                    conn = sqlite3.connect(path_db)
-                    conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
-                    cur = conn.cursor()
-                    csv_file = path_tabelle + os.sep + "Curve.txt"
-                    with open(csv_file,'rb') as fin:
-                        dr = csv.DictReader(fin, delimiter=';', quotechar='"')
-#                         to_db = [(i['pkey_curve'], i['pkey_parpu'], i['cond_curve'], i['varx'], i['vary']) for i in dr]
-                        to_db = []
-                        for i in dr:
-                            # transform empty strings to None to circumvent db CHECKs
-                            for k in i:
-                                if i[k] == "":
-                                    i[k] = None
-                            to_db.append((i['pkey_curve'], i['pkey_parpu'], i['cond_curve'], i['varx'], i['vary']))
-
-
-                    self.set_message.emit('Inserting curve...')
-                    cur.executemany("INSERT INTO curve (pkuid, id_parpu, cond_curve, varx, vary) VALUES (?,?,?,?,?);", to_db)
-
-                    cu.addExpressionField('"id_parpu"', field_cu)
-                    conn.commit()
-                    conn.close()
-
-                    p_p = self.map_registry_instance.mapLayersByName('Parametri puntuali')[0]
-                    self.calc_join(cu, p_p, 'temp_pkey_parpu', '"Parametri puntuali_id_parpu"', "id_parpu")
-
-                    self.set_log_message.emit('Insert Curve -> OK\n')
-        
-        '''
-        
         # end inserting indagini puntuali
         if self.killed:
             raise UserAbortedNotification('USER Killed')
         self.current_step = self.current_step + 1
         self.progress.emit(self.current_step * 100/total_steps)
 
-        # step 4 (inserting indagini lineari)
-        ###############################################
+        # step 4 (inserting indagini lineari and related data)
+        ######################################################
         if self.check_sito_l is True and os.path.exists(path_tabelle + os.sep + "Indagini_Lineari.txt"):
-            self.set_message.emit('Inserting Indagini_Lineari...')
             z_list.append("Indagini_Lineari")
             self.insert_table("indagini_lineari", path_tabelle + os.sep + "Indagini_Lineari.txt")
             self.set_log_message.emit('Insert Indagini_Lineari -> OK\n')
             
             if os.path.exists(path_tabelle + os.sep + "Parametri_Lineari.txt"):
-                self.set_message.emit('Inserting Parametri_Lineari...')
                 z_list.append("Parametri_Lineari")
                 self.insert_table("parametri_lineari", path_tabelle + os.sep + "Parametri_Lineari.txt")
                 self.set_log_message.emit('Insert Parametri_Lineari -> OK\n')
-        
-        
-        '''
-        self.set_message.emit('Checking Indagini_Lineari...')
 
-        if self.check_sito_l is True and os.path.exists(path_tabelle + os.sep + "Indagini_Lineari.txt"):
-            z_list.append("Indagini_Lineari")
-
-            i_l = self.map_registry_instance.mapLayersByName('Indagini lineari')[0]
-            field_i_l = QgsField('temp_pkey_sln', QVariant.LongLong)
-            i_l.addExpressionField('"id_sln"', field_i_l)
-            conn = sqlite3.connect(path_db)
-            conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
-            cur = conn.cursor()
-            csv_file = path_tabelle + os.sep + "Indagini_Lineari.txt"
-            with open(csv_file,'rb') as fin:
-                dr = csv.DictReader(fin, delimiter=';', quotechar='"')
-#                 to_db = [(i['pkey_indln'], i['pkey_sln'], i['classe_ind'], i['tipo_ind'], i['ID_INDLN'], i['id_indlnex'], i['arch_ex'], i['note_indln'], i['data_ind'], i['doc_pag'], i['doc_ind']) for i in dr]
-                to_db = []
-                for i in dr:
-                    # transform empty strings to None to circumvent db CHECKs
-                    for k in i:
-                        if i[k] == "":
-                            i[k] = None
-                    to_db.append((i['pkey_indln'], i['pkey_sln'], i['classe_ind'], i['tipo_ind'], i['ID_INDLN'], i['id_indlnex'], i['arch_ex'], i['note_indln'], i['data_ind'], i['doc_pag'], i['doc_ind']))
-
-            self.set_message.emit('Inserting indagini_lineari...')
-            cur.executemany("INSERT INTO indagini_lineari (pkuid, id_sln, classe_ind, tipo_ind, id_indln, id_indlnex, arch_ex, note_indln, data_ind, doc_pag, doc_ind) VALUES (?,?,?,?,?,?,?,?,?,?,?);", to_db)
-
-            i_l.addExpressionField('"id_sln"', field_i_l)
-            conn.commit()
-            conn.close()
-
-            s_l = self.map_registry_instance.mapLayersByName('Siti lineari')[0]
-            self.calc_join(i_l, s_l, 'temp_pkey_sln', '"Siti lineari_id_sln"', "id_sln")
-
-            self.set_log_message.emit('Insert Indagini lineari -> OK\n')
-
-            if os.path.exists(path_tabelle + os.sep + "Parametri_Lineari.txt"):
-                z_list.append("Parametri_Lineari")
-
-                p_l = self.map_registry_instance.mapLayersByName('Parametri lineari')[0]
-                field_p_l = QgsField('temp_pkey_indln', QVariant.LongLong)
-                p_l.addExpressionField('"id_indln"', field_p_l)
-                conn = sqlite3.connect(path_db)
-                conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
-                cur = conn.cursor()
-                csv_file = path_tabelle + os.sep + "Parametri_Lineari.txt"
-                with open(csv_file,'rb') as fin:
-                    dr = csv.DictReader(fin, delimiter=';', quotechar='"')
-#                     to_db = [(i['pkey_parln'], i['pkey_indln'], i['tipo_parln'], i['ID_PARLN'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['note_par'], i['data_par']) for i in dr]
-                    to_db = []
-                    for i in dr:
-                        # transform empty strings to None to circumvent db CHECKs
-                        for k in i:
-                            if i[k] == "":
-                                i[k] = None
-                        to_db.append((i['pkey_parln'], i['pkey_indln'], i['tipo_parln'], i['ID_PARLN'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['note_par'], i['data_par']))
-
-                self.set_message.emit('Inserting parametri_lineari...')
-                cur.executemany("INSERT INTO parametri_lineari (pkuid, id_indln, tipo_parln, id_parln, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, note_par, data_par) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?);", to_db)
-
-                p_l.addExpressionField('"id_indln"', field_p_l)
-                conn.commit()
-                conn.close()
-
-                i_l = self.map_registry_instance.mapLayersByName('Indagini lineari')[0]
-                self.calc_join(p_l, i_l, 'temp_pkey_indln', '"Indagini lineari_id_indln"', "id_indln")
-
-                self.set_log_message.emit('Insert Parametri lineari -> OK\n')
-        '''
-        
         if self.check_sito_p is False:
             self.set_log_message.emit("'Ind_pu' layer and/or 'Sito_Puntuale' table are not present! The correlated surveys and parameters tables will not be copied!\n\n")
         if self.check_sito_l is False:
@@ -467,139 +278,6 @@ class ImportWorker(AbstractWorker):
             raise UserAbortedNotification('USER Killed')
 
     def insert_siti(self, vector_layer, txt_table, sito_type):
-        '''
-        QGIS TEST:
-        import csv, sqlite3, chardet
-        def insert_siti(vector_layer, txt_table):
-            dict_sito = {}
-            conn = sqlite3.connect(r"C:\Users\Francesco\Documents\044034_Montedinove\db\indagini.sqlite")
-            conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
-            conn.enable_load_extension(True)
-            try:
-                conn.execute('SELECT load_extension("mod_spatialite")')
-                conn.execute('DELETE FROM sito_puntuale')
-                cur = conn.cursor()
-                with open(txt_table,'r') as table:
-                    dr = csv.DictReader(table, delimiter=';', quotechar='"')
-                    for i in dr:
-                        for key in i.keys():
-                            dict_sito[key] = i[key]
-                            if key == "ID_SPU":
-                                for feature in vector_layer.getFeatures():
-                                    if feature["ID_SPU"] == dict_sito["ID_SPU"]:
-                                        geom = feature.geometry().exportToWkt()
-                        cur.execute("INSERT INTO sito_puntuale (id_spu, geom) VALUES ('"  + i[key] + "', GeomFromText('" + geom + "', 32633));")
-                        lastid = cur.lastrowid
-                        print dict_sito.keys()
-                        cur.execute('UPDATE sito_puntuale SET pkuid = ?, indirizzo = ?, mod_identcoord = ?,
-                                            desc_modcoord = ?, quota_slm = ?, modo_quota = ?, data_sito = ?, note_sito = ? 
-                                            WHERE pkuid = ?;',  (dict_sito["pkey_spu"], dict_sito["indirizzo"], dict_sito["mod_identcoord"],
-                                            dict_sito["desc_modcoord"], dict_sito["quota_slm"], dict_sito["modo_quota"],
-                                            dict_sito["data_sito"], dict_sito["note_sito"], lastid))
-                                                    
-                conn.commit()
-            finally:
-                conn.close()
-        
-        shp_path = r"C:\Users\Francesco\Documents\montedinove\44034_Montedinove\Indagini\Ind_pu.shp"
-        layer = QgsVectorLayer(shp_path, '', 'ogr')
-        txt_path = r"C:\Users\Francesco\Documents\montedinove\tab_montedinove\Sito_Puntuale.txt"
-        insert_siti(layer, txt_path)
-        '''
-        
-        ins_data_s_point = """
-            CREATE TRIGGER ins_data_s_point 
-            AFTER INSERT ON sito_puntuale 
-            FOR EACH ROW 
-            BEGIN 
-            UPDATE sito_puntuale 
-            SET ubicazione_com = ( 
-            SELECT comuni.cod_com 
-            FROM sito_puntuale, comuni 
-            WHERE pkuid = NEW.pkuid AND 
-            intersects(sito_puntuale.geom, comuni.Geometry) 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_puntuale 
-            SET ubicazione_prov = ( 
-            SELECT comuni.cod_prov 
-            FROM sito_puntuale, comuni 
-            WHERE pkuid = NEW.pkuid AND 
-            intersects(sito_puntuale.geom, comuni.Geometry) 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_puntuale 
-            SET id_spu = ubicazione_prov || ubicazione_com || 'P' || pkuid; 
-            UPDATE sito_puntuale 
-            SET coord_x = ( 
-            SELECT round(X(geom)) 
-            FROM sito_puntuale 
-            WHERE pkuid = NEW.pkuid 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_puntuale 
-            SET coord_y = ( 
-            SELECT round(Y(geom)) 
-            FROM sito_puntuale 
-            WHERE pkuid = NEW.pkuid 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            END
-        """
-        
-        ins_data_s_line = """
-            CREATE TRIGGER ins_data_s_line 
-            AFTER INSERT ON sito_lineare 
-            FOR EACH ROW 
-            BEGIN 
-            UPDATE sito_lineare 
-            SET ubicazione_com = ( 
-            SELECT comuni.cod_com 
-            FROM sito_lineare, comuni 
-            WHERE pkuid = NEW.pkuid AND 
-            intersects(sito_lineare.geom, comuni.Geometry) 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_lineare 
-            SET ubicazione_prov = ( 
-            SELECT comuni.cod_prov 
-            FROM sito_lineare, comuni 
-            WHERE pkuid = NEW.pkuid AND 
-            intersects(sito_lineare.geom, comuni.Geometry) 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_lineare 
-            SET id_sln = ubicazione_prov || ubicazione_com || 'L' || pkuid; 
-            UPDATE sito_lineare 
-            SET acoord_x = ( 
-            SELECT round(X(StartPoint(geom))) 
-            FROM sito_lineare 
-            WHERE pkuid = NEW.pkuid 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_lineare 
-            SET acoord_y = ( 
-            SELECT round(Y(StartPoint(geom))) 
-            FROM sito_lineare 
-            WHERE pkuid = NEW.pkuid 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_lineare 
-            SET bcoord_x = ( 
-            SELECT round(X(EndPoint(geom))) 
-            FROM sito_lineare 
-            WHERE pkuid = NEW.pkuid 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            UPDATE sito_lineare 
-            SET bcoord_y = ( 
-            SELECT round(Y(EndPoint(geom))) 
-            FROM sito_lineare 
-            WHERE pkuid = NEW.pkuid 
-            ) 
-            WHERE pkuid = NEW.pkuid; 
-            END
-        """
         
         if sito_type == "puntuale":
             id_field_name = "ID_SPU"
@@ -607,54 +285,55 @@ class ImportWorker(AbstractWorker):
         else:
             id_field_name = "ID_SLN"
             tab_name = "sito_lineare"
+        
         path_db = self.proj_abs_path + os.sep + "db" + os.sep + "indagini.sqlite"
         dict_sito = {}
         conn = sqlite3.connect(path_db)
         conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
         conn.enable_load_extension(True)
+        
         try:
             conn.execute('SELECT load_extension("mod_spatialite")')
             cur = conn.cursor()
+            
+            # drop insert trigger to speed up import process
+            # TODO: causes QGIS crash
+            # cur.execute("DROP TRIGGER ins_data_s_point" if tab_name == "sito_puntuale" else "DROP TRIGGER ins_data_s_line")
+            
             with open(txt_table,'r') as table:
                 dr = csv.DictReader(table, delimiter=';', quotechar='"')
                 current_feature = 1
                 row_num = len(list(dr))
-                    
+                # restart reading file after line count
                 table.seek(0)
                 next(dr)
                 for i in dr:
                     self.set_message.emit("Sito %s: inserting feature %s/%s" % (sito_type, str(current_feature), str(row_num)))
+                    
+                    # transform empty strings to None to circumvent db CHECKs
+                    for k in i:
+                        if i[k] == "":
+                            i[k] = None
+                    
+                    # populate dict_sito and get geom from vector layer      
                     for key in i.keys():
                         dict_sito[key] = i[key]
                         if key == id_field_name:
                             for feature in vector_layer.getFeatures():
                                 if feature[id_field_name] == dict_sito[id_field_name]:
                                     geom = feature.geometry().exportToWkt()
+
                     if sito_type == "puntuale":
-                        # drop insert trigger to speed up import process
-                        # cur.execute("DROP TRIGGER ins_data_s_point")
-                        
-                        cur.execute("INSERT INTO sito_puntuale (id_spu, geom) VALUES ('"  + dict_sito["ID_SPU"] + "', GeomFromText('" + geom + "', 32633));")
+                        cur.execute("INSERT INTO sito_puntuale (id_spu, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SPU"], geom))
                         lastid = cur.lastrowid
-                        
-                        # restore trigger ins_data_s_point 
-                        # cur.execute(ins_data_s_point)
-                        
                         cur.execute('''UPDATE sito_puntuale SET pkuid = ?, indirizzo = ?, mod_identcoord = ?,
                             desc_modcoord = ?, quota_slm = ?, modo_quota = ?, data_sito = ?, note_sito = ? 
                             WHERE pkuid = ?;''',  (dict_sito["pkey_spu"], dict_sito["indirizzo"], dict_sito["mod_identcoord"],
                             dict_sito["desc_modcoord"], dict_sito["quota_slm"], dict_sito["modo_quota"],
                             dict_sito["data_sito"], dict_sito["note_sito"], lastid))
                     else:
-                        # drop insert trigger to speed up import process
-                        # cur.execute("DROP TRIGGER ins_data_s_line")
-                        
-                        cur.execute("INSERT INTO sito_lineare (id_sln, geom) VALUES ('"  + dict_sito["ID_SLN"] + "', GeomFromText('" + geom + "', 32633));")
+                        cur.execute("INSERT INTO sito_lineare (id_sln, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SLN"], geom))
                         lastid = cur.lastrowid
-                        
-                        # restore trigger ins_data_s_line 
-                        # cur.execute(ins_data_s_line)
-                        
                         cur.execute('''UPDATE sito_lineare SET pkuid = ?, mod_identcoord = ?,
                             desc_modcoord = ?, aquota = ?, bquota = ?, data_sito = ?, note_sito = ? 
                             WHERE pkuid = ?;''',  (dict_sito["pkey_sln"], dict_sito["mod_identcoord"],
@@ -665,14 +344,17 @@ class ImportWorker(AbstractWorker):
                     if self.killed:
                         break
             
+            # restore insert trigger
+            # TODO: causes QGIS crash
+            # cur.execute(ins_data_s_point if tab_name == "sito_puntuale" else ins_data_s_line)
+            
             conn.commit()
-            # cur.execute('ANALYZE ' + tab_name)
-            # cur.execute('VACUUM')
-            cur.execute('SELECT RecoverSpatialIndex()')
+            
+            # check if spatial index needs rebuild
+            cur.execute('SELECT RecoverSpatialIndex(?, ?)', (tab_name, 'geom'))
         finally:
             conn.close()
-     
-     
+ 
     def insert_table(self, db_table, txt_table):
         
         # indagini_puntuali
@@ -729,11 +411,19 @@ class ImportWorker(AbstractWorker):
             cur = conn.cursor()
             with open(txt_table,'r') as table:
                 dr = csv.DictReader(table, delimiter=';', quotechar='"')
+                current_record = 1
+                row_num = len(list(dr))
+                # restart reading file after line count
+                table.seek(0)
+                next(dr)
                 for i in dr:
+                    self.set_message.emit("Table %s: inserting record %s/%s" % (db_table, str(current_record), str(row_num)))
+
                     # transform empty strings to None to circumvent db CHECKs
                     for k in i:
                         if i[k] == "":
                             i[k] = None
+                            
                     if db_table == "indagini_puntuali":
                         to_db = (i['pkey_indpu'], i['pkey_spu'], i['classe_ind'], i['tipo_ind'], i['ID_INDPU'], i['id_indpuex'], i['arch_ex'], i['note_ind'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['data_ind'], i['doc_pag'], i['doc_ind'])
                         fkey = i['pkey_spu']
@@ -767,82 +457,17 @@ class ImportWorker(AbstractWorker):
                     
                     cur.execute(insert_sql, to_db)
                     id_last_insert = cur.lastrowid
-                    cur.execute(select_parent_sql, (fkey))
+                    cur.execute(select_parent_sql, (fkey,))
                     id_parent = cur.fetchone()[1]
                     cur.execute(update_sql, (id_parent, id_last_insert))
+    
+                    current_record = current_record + 1
+                    if self.killed:
+                        break
     
             conn.commit()
         finally:
             conn.close()
-
-    def calc_siti(self, path_tabelle, nome_shape, csv_path, csv_tab_name, id_field, dizionario, nome_layer, id_orig_field):
-
-        shp_path = path_tabelle + os.sep + "Indagini" + os.sep + nome_shape + ".shp"
-        fullname = os.path.join(path_tabelle, csv_path).replace('\\', '/')
-        shp_layer = QgsVectorLayer(shp_path, '', 'ogr')
-        s_geom = self.map_registry_instance.addMapLayer(shp_layer)
-        csv_uri = 'file:///%s?delimiter=;' % (fullname)
-        s_attr = QgsVectorLayer(csv_uri, csv_tab_name, "delimitedtext")
-        self.map_registry_instance.addMapLayer(s_attr)
-
-        joinObject = QgsVectorJoinInfo()
-        joinObject.joinLayerId = s_attr.id()
-        joinObject.joinFieldName = id_field
-        joinObject.targetFieldName = id_field
-        joinObject.memoryCache = True
-        s_geom.addJoin(joinObject)
-
-        for chiave, valore in dizionario.iteritems():
-            s_geom.dataProvider().addAttributes([QgsField(chiave, valore[0])])
-            s_geom.updateFields()
-            expression = QgsExpression(valore[1])
-            expression.prepare(s_geom.pendingFields())
-#             s_geom.startEditing()
-            for feature in s_geom.getFeatures():
-                value = expression.evaluate(feature)
-##                feature[chiave] = value
-                s_geom.dataProvider().changeAttributeValues({ feature.id() : {s_geom.dataProvider().fieldNameMap()[chiave] : value } })
-#                 s_geom.updateFeature(feature)
-#             s_geom.commitChanges()
-
-        s = self.map_registry_instance.mapLayersByName(nome_layer)[0]
-#         s_geom = self.map_registry_instance.mapLayersByName(nome_shape)[0]
-        featureList = []
-        commonFields = self.attribute_adaptor(s,s_geom)
-        commonFields.append('pkuid')
-        commonFields.append('desc_modcoord')
-        commonFields.append('mod_identcoord')
-        commonFields.append('ubicazione_prov')
-        commonFields.append('ubicazione_com')
-        commonFields.append(id_orig_field)
-        sourceFeatures = s_geom.getFeatures()
-        for feature in sourceFeatures:
-            geom = feature.geometry()
-            if geom:
-                err = geom.validateGeometry()
-                if not err:
-                    modifiedFeature = self.attribute_fill(feature,s,commonFields)
-                    featureList.append(modifiedFeature)
-                else:
-                    self.set_log_message.emit("  Geometry error (feature %d will not be copied)\n" % (feature.id()+1))
-
-        data_provider = s.dataProvider()
-
-        current_feature = 1
-        for f in featureList:
-            self.set_message.emit(nome_layer + ": inserting feature " + str(current_feature) + "/" + str(len(featureList)))
-            data_provider.addFeatures([f])
-            current_feature = current_feature + 1
-            if self.killed:
-                break
-
-        s_geom.removeJoin(s_attr.id())
-        self.map_registry_instance.removeMapLayer(s_attr.id())
-        self.map_registry_instance.removeMapLayer(s_geom.id())
-
-        if self.killed:
-            raise UserAbortedNotification('USER Killed')
-
 
     def calc_join(self, orig_tab, link_tab, temp_field, link_field, orig_field):
 
@@ -870,16 +495,12 @@ class ImportWorker(AbstractWorker):
             for feature in orig_tab.getFeatures():
                 scope.setFeature(feature)
                 value = expression.evaluate(context)
-##                feature[orig_field] = value
                 if value is None:
                     pass
                 else:
                     nome_tab = LAYER_DB_TAB[orig_tab.name()]
-##                    self.set_log_message.emit(nome_tab + "\n")
-##                    self.set_log_message.emit(orig_field + "\n")
-##                    self.set_log_message.emit(value + "\n")
-##                    self.set_log_message.emit(str(feature['pkuid']))
-                    cur.execute("UPDATE %s SET %s  = %s WHERE pkuid = %s;" % nome_tab, orig_field, value, str(feature['pkuid']))
+#                     cur.execute("UPDATE %s SET %s  = %s WHERE pkuid = %s;" % nome_tab, orig_field, value, str(feature['pkuid']))
+                    cur.execute("UPDATE ? SET ?  = ? WHERE pkuid = ?", (nome_tab, orig_field, value, str(feature['pkuid'])))
 
             conn.commit()
         except Exception as ex:
