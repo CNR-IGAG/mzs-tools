@@ -11,8 +11,8 @@ from qgis.core import *
 from qgis.gui import *
 import os, sys, constants
 from tb_wait import wait
-from tb_nuovo_progetto import nuovo_progetto
 from tb_aggiorna_progetto import aggiorna_progetto
+from tb_nuovo_progetto import nuovo_progetto
 from tb_importa_shp import importa_shp
 from tb_esporta_shp import esporta_shp
 from tb_edit_win import edit_win
@@ -40,8 +40,8 @@ class MzSTools:
 				QCoreApplication.installTranslator(self.translator)
 
 		self.dlg0 = wait()
-		self.dlg1 = nuovo_progetto()
-		self.dlg2 = aggiorna_progetto()
+		self.dlg1 = aggiorna_progetto()
+		self.dlg2 = nuovo_progetto()
 		self.dlg3 = info()
 		self.dlg4 = importa_shp()
 		self.dlg5 = esporta_shp()
@@ -54,11 +54,8 @@ class MzSTools:
 		self.toolbar = self.iface.addToolBar(u'MzSTools')
 		self.toolbar.setObjectName(u'MzSTools')
 
-		self.dlg1.dir_output.clear()
-		self.dlg1.pushButton_out.clicked.connect(self.select_output_fld_1)
-
-		self.dlg2.dir_input.clear()
-		self.dlg2.pushButton_in.clicked.connect(self.select_input_fld_2)
+		self.dlg2.dir_output.clear()
+		self.dlg2.pushButton_out.clicked.connect(self.select_output_fld_2)
 
 		self.dlg4.dir_input.clear()
 		self.dlg4.pushButton_in.clicked.connect(self.select_input_fld_4)
@@ -68,6 +65,8 @@ class MzSTools:
 
 		self.dlg5.dir_output.clear()
 		self.dlg5.pushButton_out.clicked.connect(self.select_output_fld_5)
+
+		self.iface.projectRead.connect(self.run1)
 
 	def tr(self, message):
 		return QCoreApplication.translate('MzSTools', message)
@@ -108,8 +107,7 @@ class MzSTools:
 		return action
 
 	def initGui(self):
-		icon_path1 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_nuovo_progetto.png'
-		icon_path2 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_aggiorna_progetto.png'
+		icon_path2 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_nuovo_progetto.png'
 		icon_path3 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_info.png'
 		icon_path4 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_importa.png'
 		icon_path5 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_esporta.png'
@@ -120,9 +118,9 @@ class MzSTools:
 		icon_path10 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_xypoint.png'
 
 		self.add_action(
-			icon_path1,
+			icon_path2,
 			text=self.tr(u'New project'),
-			callback=self.run1,
+			callback=self.run2,
 			parent=self.iface.mainWindow())
 
 		self.toolbar.addSeparator()
@@ -164,11 +162,6 @@ class MzSTools:
 		self.toolbar.addSeparator()
 
 		self.add_action(
-			icon_path2,
-			text=self.tr(u'Update project'),
-			callback=self.run2,
-			parent=self.iface.mainWindow())
-		self.add_action(
 			icon_path7,
 			text=self.tr(u'Validate project'),
 			callback=self.run7,
@@ -190,13 +183,9 @@ class MzSTools:
 			self.iface.removeToolBarIcon(action)
 		del self.toolbar
 
-	def select_output_fld_1(self):
-		out_dir = QFileDialog.getExistingDirectory(self.dlg1, "","", QFileDialog.ShowDirsOnly)
-		self.dlg1.dir_output.setText(out_dir)
-
-	def select_input_fld_2(self):
-		in_dir = QFileDialog.getExistingDirectory(self.dlg2, "","", QFileDialog.ShowDirsOnly)
-		self.dlg2.dir_input.setText(in_dir)
+	def select_output_fld_2(self):
+		out_dir = QFileDialog.getExistingDirectory(self.dlg2, "","", QFileDialog.ShowDirsOnly)
+		self.dlg2.dir_output.setText(out_dir)
 
 	def select_input_fld_4(self):
 		in_dir = QFileDialog.getExistingDirectory(self.dlg4, "","", QFileDialog.ShowDirsOnly)
@@ -215,16 +204,25 @@ class MzSTools:
 		self.dlg5.dir_output.setText(out_dir)
 
 	def run1(self):
-		self.dlg1.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg1.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg1.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg1.nuovo()
+		percorso = QgsProject.instance().homePath()
+		dir_output = '/'.join(percorso.split('/')[:-1])
+		nome = percorso.split('/')[-1]
+		if os.path.exists(percorso + os.sep + "progetto"):
+			vers_data = (QgsProject.instance().fileName()).split("progetto")[0] + os.sep + "progetto" + os.sep + "versione.txt"
+			try:
+				proj_vers = open(vers_data,'r').read()
+				if proj_vers < '0.8':
+					qApp.processEvents()
+					self.dlg1.aggiorna(percorso,dir_output,nome)
+
+			except:
+				pass
 
 	def run2(self):
 		self.dlg2.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
 		self.dlg2.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 		self.dlg2.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg2.aggiorna()
+		self.dlg2.nuovo()
 
 	def run3(self):
 		self.dlg3.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
@@ -266,7 +264,7 @@ class MzSTools:
 		"Zone stabili liv 3", "Zone instabili liv 3"]
 
 		layer = iface.activeLayer()
-		if layer <> None:
+		if layer != None:
 			if layer.name() in POLY_LYR:
 
 				self.dlg0.show()
@@ -300,7 +298,7 @@ class MzSTools:
 		"Zone stabili liv 3", "Zone instabili liv 3"]
 
 		layer = iface.activeLayer()
-		if layer <> None:
+		if layer != None:
 			if layer.name() in POLIGON_LYR:
 
 				self.dlg0.show()

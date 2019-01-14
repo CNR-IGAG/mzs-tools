@@ -14,6 +14,13 @@ Seismic Microzonation studies include the following maps:
 The plugin was created to give the opportunity to quickly perform standard compliant Seismic Microzonation studies.
 
 Changelog:
+		v0.8:		
+				-  fixed bug in "indagini_puntuali.py";
+				-  update "siti_puntuali" and "siti_lineari" triggers;
+				-  added a new table ("Indagine stazione singola (HVSR)") and a new layout ("Carta delle frequenze naturali dei terreni");
+				-  update project (in particular .ui, .py files);
+				-  changed update project process and removed "Update project" tool;
+				-  updated italian manuals.
 		v0.7:
 				-  moved import process to a separate thread;
 				-  import progress shown in qgis interface;

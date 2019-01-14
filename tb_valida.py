@@ -56,11 +56,9 @@ class valida(QtGui.QDialog, FORM_CLASS):
 			try:
 				dict_layer = {}
 				pathname = QgsProject.instance().readPath("./") + os.sep + "allegati" + os.sep + "log"
-				logfile_ita = pathname + os.sep + str(time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_log_controllo.txt"
-				logfile_eng = pathname + os.sep + str(time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_validation_log.txt"
-				f = open(logfile_ita,'a')
-				e = open(logfile_eng,'a')
-				f.write("REPORT DI CONTROLLO E VALIDAZIONE:" +"\n----------------------------------\n\n")
+				logfile = pathname + os.sep + str(time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_validation_log.txt"
+
+				e = open(logfile,'a')
 				e.write("VALIDATION SUMMARY REPORT:" +"\n------------------------------\n\n")
 
 				if os.path.exists(pathname + os.sep + "analisi"):
@@ -69,19 +67,15 @@ class valida(QtGui.QDialog, FORM_CLASS):
 				else:
 					os.makedirs(pathname + os.sep + "analisi")
 
-				f.write("1) Controllo dei layer di progetto:\n")
 				e.write("1) Presence of project layers:\n")
 
 				root = QgsProject.instance().layerTreeRoot()
 				added = self.checkLayers(root, dict_layer, DIZIO_LYR)
 				if len(added) == 0:
-					f.write("   I layer fondamentali del progetto sono tutti presenti!")
 					e.write("   The project layers are all present!")
 				else:
-					f.write("   Mancano i seguenti layer:\n")
 					e.write("   The following layers are missing:\n")
 					for x in added:
-						f.write("	- " + x + "\n")
 						e.write("	- " + x + "\n")
 
 				if "Siti puntuali" in added or "Indagini puntuali" in added or "Parametri puntuali" in added or "Curve di riferimento" in added:
@@ -97,14 +91,12 @@ class valida(QtGui.QDialog, FORM_CLASS):
 				if "Zone stabili liv 3" in added or "Zone instabili liv 3" in added:
 					intersezioni_ms3 = False
 
-				f.write("\n\n2) Controllo geometrico:\n")
 				e.write("\n\n2) Geometric control:\n")
 
 				for nome in constants.LISTA_LAYER:
 					if nome in ["Indagini puntuali", "Parametri puntuali", "Curve di riferimento", "Indagini lineari", "Parametri lineari"]:
 						pass
 					else:
-						f.write("   Sto eseguendo il controllo geometrico del layer '" + nome + "'\n")
 						e.write("   I am performing geometric validation of the '" + nome + "' layer\n")
 						features = QgsMapLayerRegistry.instance().mapLayersByName(nome)[0]
 						for feature in features.getFeatures():
@@ -112,51 +104,38 @@ class valida(QtGui.QDialog, FORM_CLASS):
 							if geom:
 								err = geom.validateGeometry()
 								if err:
-									f.write('	%d individuato errore geometrico (feature %d)\n' % (len(err), feature.id()))
 									e.write('	%d identified geometric error (feature %d)\n' % (len(err), feature.id()))
-						f.write("   Ho terminato l'analisi del layer '" + nome + "'\n\n")
 						e.write("   I finished the analysis of the layer '" + nome + "'\n\n")
 
-				f.write("3) Controllo topologico:\n")
 				e.write("3) Topological control:\n")
 
-				f.write("   Sto eseguendo il controllo topologico per il livello 'Carta Geotecnica'...\n")
 				e.write("   I am performing topological validation of 'Carta Geotecnica' level...\n")
 				if intersezioni_geotec is True:
 					processing.runandload("saga:polygonselfintersection", "Unita' geologico-tecniche", "ID_gt", pathname + os.sep + "analisi" + os.sep + "geotec_self_inters.shp")
 					self.elab_self_intersect("geotec_self_inters")
 					self.remove_record("geotec_self_inters")
-					f.write("	Fatto! Il file contenente le auto-intersezioni del layer 'Unita' geologico-tecniche' e' stato salvato nella directory '\\allegati\\log\\analisi\\geotec_self_inters.shp'\n\n")
 					e.write("	Done! File containing auto-intersections of 'Unita' geologico-tecniche' layer has been saved in '\\allegati\\log\\analisi\\geotec_self_inters.shp'\n\n")
 				else:
-					f.write("	Non e' possibile eseguire il controllo topologico in quanto manca/mancano uno o piu' layer!\n\n")
 					e.write("	Topological validation can not be performed because one or more layers is/are missing!\n\n")
 
-				f.write("   Sto eseguendo il controllo topologico per il livello 'MS1'...\n")
 				e.write("   I am performing topological validation of the 'MS1' level...\n")
 				if intersezioni_ms1 is True:
-					self.topology_check(pathname + os.sep + "analisi", "Zone stabili liv 1", "Zone instabili liv 1", "ID_z", "ID_i", "stab_1_self_inters", "instab_1_self_inters", "ms1_inters_stab_instab", f, e)
+					self.topology_check(pathname + os.sep + "analisi", "Zone stabili liv 1", "Zone instabili liv 1", "ID_z", "ID_i", "stab_1_self_inters", "instab_1_self_inters", "ms1_inters_stab_instab", e)
 				else:
-					f.write("	Non e' possibile eseguire il controllo topologico in quanto manca/mancano uno o piu' layer!\n\n")
 					e.write("	Topological validation can not be performed because one or more layers is/are missing!\n\n")
 
-				f.write("   Sto eseguendo il controllo topologico per il livello 'MS2'...\n")
 				e.write("   I am performing topological validation of the 'MS2' level...\n")
 				if intersezioni_ms2 is True:
-					self.topology_check(pathname + os.sep + "analisi", "Zone stabili liv 2", "Zone instabili liv 2", "ID_z", "ID_i", "stab_2_self_inters", "instab_2_self_inters", "ms2_inters_stab_instab", f, e)
+					self.topology_check(pathname + os.sep + "analisi", "Zone stabili liv 2", "Zone instabili liv 2", "ID_z", "ID_i", "stab_2_self_inters", "instab_2_self_inters", "ms2_inters_stab_instab", e)
 				else:
-					f.write("	Non e' possibile eseguire il controllo topologico in quanto manca/mancano uno o piu' layer!\n\n")
 					e.write("	Topological validation can not be performed because one or more layers is/are missing!\n\n")
 
-				f.write("   Sto eseguendo il controllo topologico per il livello 'MS3'...\n")
 				e.write("   I am performing topological validation of the 'MS3' level...\n")
 				if intersezioni_ms3 is True:
-					self.topology_check(pathname + os.sep + "analisi", "Zone stabili liv 3", "Zone instabili liv 3", "ID_z", "ID_i", "stab_3_self_inters", "instab_3_self_inters", "ms3_inters_stab_instab", f, e)
+					self.topology_check(pathname + os.sep + "analisi", "Zone stabili liv 3", "Zone instabili liv 3", "ID_z", "ID_i", "stab_3_self_inters", "instab_3_self_inters", "ms3_inters_stab_instab", e)
 				else:
-					f.write("	Non e' possibile eseguire il controllo topologico in quanto manca/mancano uno o piu' layer!\n\n")
 					e.write("	Topological validation can not be performed because one or more layers is/are missing!\n\n")
 
-				f.write("\nAnalisi terminata!")
 				e.write("\nAnalysis completed!")
 				QMessageBox.information(None, u'INFORMATION!', u"Validation summary report was saved in the project folder '...\\allegati\\log'")
 
@@ -220,21 +199,18 @@ class valida(QtGui.QDialog, FORM_CLASS):
 		added = d1_keys - d2_keys
 		return added
 
-	def topology_check(self, directory, lyr1, lyr2, campo1, campo2, nome1, nome2, nome3, f, e):
+	def topology_check(self, directory, lyr1, lyr2, campo1, campo2, nome1, nome2, nome3, e):
 		processing.runandload("saga:polygonselfintersection", lyr1, campo1, directory + os.sep + nome1 + ".shp")
 		self.elab_self_intersect(nome1)
 		self.remove_record(nome1)
-		f.write("	Fatto! Il file contenente le auto-intersezioni del layer '" + lyr1 + "' e' stato salvato nella directory '\\allegati\\log\\analisi\\" + nome1 + ".shp'\n")
 		e.write("	Done! File containing auto-intersections of '" + lyr1 + "' layer has been saved in '\\allegati\\log\\analisi\\" + nome1 + ".shp'\n")
 		processing.runandload("saga:polygonselfintersection", lyr2, campo2, directory + os.sep + nome2 + ".shp")
 		self.elab_self_intersect(nome2)
 		self.remove_record(nome2)
-		f.write("	Fatto! Il file contenente le auto-intersezioni del layer '" + lyr2 + "' e' stato salvato nella directory '\\allegati\\log\\analisi\\" + nome2 + ".shp'\n")
 		e.write("	Done! File containing auto-intersections of '" + lyr2 + "' layer has been saved in '\\allegati\\log\\analisi\\" + nome2 + ".shp'\n")
 		processing.runandload("saga:intersect", lyr1, lyr2, True, directory + os.sep + nome3 + ".shp")
 		self.elab_intersect(nome3)
 		self.remove_record(nome3)
-		f.write("	Fatto! Il file contenente le intersezioni tra i layer '" + lyr1 + "' e '" + lyr2 + "' e' stato salvato nella directory '\\allegati\\log\\analisi\\" + nome3 + ".shp'\n\n")
 		e.write("	Done! File containing intersections between '" + lyr1 + "' and '" + lyr2 + "' layers was saved in '\\allegati\\log\\analisi\\" + nome3 + ".shp'\n\n")
 
 	def elab_intersect(self, nome_file_inters):

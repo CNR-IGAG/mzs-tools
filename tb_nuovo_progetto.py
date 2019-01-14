@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------------------
 # Name:		tb_nuovo_progetto.py
 # Author:	  Tarquini E.
-# Created:	 08-02-2018
+# Created:	 21-02-2018
 #-------------------------------------------------------------------------------
 
 from PyQt4 import QtGui, uic
@@ -11,7 +11,7 @@ from PyQt4.QtGui import *
 from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
-import os, sys, webbrowser, csv, shutil, zipfile
+import os, sys, webbrowser, csv, shutil, zipfile, sqlite3
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -28,10 +28,6 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 
 	def nuovo(self):
 		self.help_button.clicked.connect(lambda: webbrowser.open('https://www.youtube.com/watch?v=TcaljLE5TCk&t=57s&list=PLM5qQOkOkzgWH2VogqeQIDybylmE4P1TQ&index=2'))
-		REGIONE = {"01":"Piemonte","02":"Valle d'Aosta","03":"Lombardia","04":"Trentino Alto Adige","05":"Veneto",
-		"06":"Friuli Venezia Giulia", "07":"Liguria","08":"Emilia Romagna","09":"Toscana","10":"Umbria","11":"Marche",
-		"12":"Lazio","13":"Abruzzo","14":"Molise", "15":"Campania","16":"Puglia","17":"Basilicata","18":"Calabria",
-		"19":"Sicilia","20":"Sardegna"}
 		dir_svg_input = self.plugin_dir + os.sep + "img" + os.sep + "svg"
 		dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
 		tabella_controllo = self.plugin_dir + os.sep + "comuni.csv"
@@ -57,6 +53,7 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 		self.email_prof.clear()
 		self.sito_prof.clear()
 		self.data_meta.clear()
+		self.ufficio.clear()
 		self.propretario.clear()
 		self.tel_prop.clear()
 		self.email_prop.clear()
@@ -93,6 +90,7 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 					email_prof = self.email_prof.text()
 					sito_prof = self.sito_prof.text()
 					data_meta = self.data_meta.text()
+					ufficio = self.ufficio.text()
 					propretario = self.propretario.text()
 					tel_prop = self.tel_prop.text()
 					email_prop = self.email_prop.text()
@@ -128,6 +126,7 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 					f.write("Expert's email: " + unicode(email_prof).encode('utf-8') + "\n")
 					f.write("Expert's website: " + unicode(sito_prof).encode('utf-8') + "\n")
 					f.write("Date: " + data_meta + "\n")
+					f.write("Office: " + unicode(ufficio).encode('utf-8') + "\n")
 					f.write("Data owner: " + unicode(propretario).encode('utf-8') + "\n")
 					f.write("Owner's phone: " + unicode(tel_prop).encode('utf-8') + "\n")
 					f.write("Owner's email: " + unicode(email_prop).encode('utf-8') + "\n")
@@ -158,7 +157,11 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 					for feat in features:
 						attrs = feat.attributes()
 						codice_regio = attrs[1]
+						codice_prov = attrs[2]
+						codice_com = attrs[3]
 						nome = attrs[4]
+						regione = attrs[7]
+						provincia = attrs[6]
 
 					sourceLYR.removeSelection()
 
@@ -168,7 +171,8 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 					logo_regio_out = os.path.join(path_comune, "progetto" + os.sep + "loghi" + os.sep + "logo_regio.png").replace('\\', '/')
 					shutil.copyfile(logo_regio_in, logo_regio_out)
 
-					mainPath = (QgsProject.instance().fileName()).split("progetto")[0]
+##					mainPath = (QgsProject.instance().fileName()).split("progetto")[0]
+					mainPath = QgsProject.instance().homePath()
 					self.mappa_insieme(mainPath, sourceLYR)
 
 					canvas = iface.mapCanvas()
@@ -182,7 +186,7 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 						map_item.setMapCanvas(canvas)
 						map_item.zoomToExtent(canvas.extent())
 						map_item_2 = composition.getComposerItemById('regio_title')
-						map_item_2.setText("Regione " + REGIONE[codice_regio])
+						map_item_2.setText("Regione " + regione)
 						map_item_3 = composition.getComposerItemById('com_title')
 						map_item_3.setText("Comune di " + nome)
 						map_item_4 = composition.getComposerItemById('logo')
@@ -190,10 +194,10 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 						map_item_5 = composition.getComposerItemById('mappa_1')
 						map_item_5.refreshPicture()
 
+					self.indice_tab_execute(data_meta, regione, codice_regio, provincia, codice_prov, nome, codice_com, professionista, ufficio, propretario)
+					QMessageBox.information(None, u'INFORMATION!', u"The project has been created!\nSAVE the project, please!")
 ##					project.write()
 
-				except WindowsError:
-					QMessageBox.critical(None, u'ERROR!', u'Error:')
 				except Exception as z:
 					QMessageBox.critical(None, u'ERROR!', u'Error:\n"' + str(z) + '"')
 					if os.path.exists(dir_out + os.sep + "progetto_MS"):
@@ -267,3 +271,19 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 
 		imageFilename =  mainPath + os.sep + "progetto" + os.sep + "loghi" + os.sep + "mappa_reg.png"
 		image.save(imageFilename, 'png')
+
+	def indice_tab_execute(self, data_meta, regione, codice_regio, provincia, codice_prov, nome, codice_com, professionista, ufficio, propretario):
+
+		orig_gdb =  QgsProject.instance().readPath("./") + os.sep + "db" + os.sep + "indagini.sqlite"
+		conn = sqlite3.connect(orig_gdb)
+		sql = """ATTACH '""" + orig_gdb + """' AS A;"""
+		conn.execute(sql)
+		conn.execute("""INSERT INTO 'indice'(data_in,regione,cod_reg,provincia,cod_prov,comune,cod_com,soggetto,ufficio,responsabile,ID_MZS) VALUES ('""" + data_meta + """', '""" + regione + """', '""" + codice_regio + """', '""" + self.changeWord(provincia) + """', '""" + codice_prov + """', '""" + self.changeWord(nome) + """', '""" + codice_com + """', '""" + self.changeWord(professionista) + """', '""" + self.changeWord(ufficio) + """', '""" + self.changeWord(propretario) + """', '""" + codice_prov + codice_com + """');""")
+		conn.commit()
+		conn.close()
+
+	def changeWord(self, word):
+		for letter in word:
+			if letter == "'":
+				word = word.replace(letter,"''")
+		return word

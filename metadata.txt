@@ -8,7 +8,7 @@ qgisMinimumVersion=2.16
 
 description=Plugin for Italian seismic microzonation.
 
-version=0.7
+version=0.8
 author=IGAG-CNR
 email=labgis@igag.cnr.it
 
@@ -16,6 +16,13 @@ email=labgis@igag.cnr.it
 about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907).
     Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907).
 changelog=
+		v0.8:		
+				-  fixed bug in "indagini_puntuali.py";
+				-  update "siti_puntuali" and "siti_lineari" triggers;
+				-  added a new table ("Indagine stazione singola (HVSR)") and a new layout ("Carta delle frequenze naturali dei terreni");
+				-  update project (in particular .ui, .py files);
+				-  changed update project process and removed "Update project" tool;
+				-  updated italian manuals.
 		v0.7:
 				-  moved import process to a separate thread;
 				-  import progress shown in qgis interface;

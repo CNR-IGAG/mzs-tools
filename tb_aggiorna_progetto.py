@@ -11,7 +11,7 @@ from PyQt4.QtGui import *
 from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
-import os, sys, webbrowser, shutil, zipfile
+import os, sys, webbrowser, shutil, sqlite3, zipfile, datetime
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -26,77 +26,79 @@ class aggiorna_progetto(QtGui.QDialog, FORM_CLASS):
 		self.setupUi(self)
 		self.plugin_dir = os.path.dirname(__file__)
 
-	def aggiorna(self):
-		self.help_button.setEnabled(False)	# da eliminare una volta creata la videoguida!!!
-		self.help_button.clicked.connect(lambda: webbrowser.open('https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools'))
-		self.dir_input.clear()
-		self.button_box.setEnabled(False)
-		self.alert_text.hide()
-		self.dir_input.textChanged.connect(self.disableButton)
-
+	def aggiorna(self,dir2,dir_output,nome):
 		self.show()
 		result = self.exec_()
 		if result:
+			QgsProject.instance().clear()
+			for c in iface.activeComposers():
+				iface.deleteComposer(c)
+			try:
+				vers_data_1 = self.plugin_dir + os.sep + "versione.txt"
+				new_vers = open(vers_data_1,'r').read()
+				vers_data_2 = dir2 + os.sep + "progetto" + os.sep + "versione.txt"
+				proj_vers = open(vers_data_2,'r').read()
+				pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
 
-			dir2 = self.dir_input.text()
-			if os.path.isdir(dir2):
-				try:
-					vers_data_1 = self.plugin_dir + os.sep + "versione.txt"
-					input1 = open(vers_data_1,'r').read()
-					vers_data_2 = dir2 + os.sep + "progetto" + os.sep + "versione.txt"
-					input2 = open(vers_data_2,'r').read()
-					pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
+				if proj_vers < '0.8' and new_vers == '0.8':
+					name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
+					shutil.copytree(dir2, dir_output + os.sep + name_output)
+					QgsMessageLog.logMessage(dir_output + os.sep + name_output)
 
-					if input2 < input1:
-						zip_ref = zipfile.ZipFile(pacchetto, 'r')
-						zip_ref.extractall(dir2)
-						zip_ref.close()
-						shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "maschere")
-						shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "maschere", dir2 + os.sep + "progetto" + os.sep + "maschere")
-						shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "script")
-						shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "script", dir2 + os.sep + "progetto" + os.sep + "script")
-						os.remove(dir2 + os.sep + "progetto" + os.sep + "versione.txt")
-						shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "versione.txt", dir2 + os.sep + "progetto" + os.sep + "versione.txt")
-						shutil.rmtree(dir2 + os.sep + "progetto_MS")
-						project = QgsProject.instance()
-						project.read(QFileInfo(dir2 + os.sep + "progetto_MS.qgs"))
-						zLayer = QgsMapLayerRegistry.instance().mapLayersByName("Comune del progetto")[0]
-						canvas = iface.mapCanvas()
-						extent = zLayer.extent()
-						canvas.setExtent(extent)
-##						project.write()
-						QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!")
-					else:
-						QMessageBox.information(None, u'INFORMATION!', u"The project structure is already updated!")
+					path_db = dir2 + os.sep + "db" + os.sep + "indagini.sqlite"
+					conn = sqlite3.connect(path_db)
+					cursor = conn.cursor()
+					conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+					conn.enable_load_extension(True)
+					f = open(self.plugin_dir + os.sep + "query_v08.sql")
+					full_sql = f.read()
+					sql_commands = full_sql.replace('\n', '').split(';;')[:-1]
+					try:
+						conn.execute('SELECT load_extension("mod_spatialite")')
+						for sql_command in sql_commands:
+							cursor.execute(sql_command)
+						cursor.close()
+						conn.commit()
+					finally:
+						conn.close()
 
-				except Exception as z:
-					QMessageBox.critical(None, u'ERROR!', u'Error:\n"' + str(z) + '"')
-			else:
-				QMessageBox.warning(iface.mainWindow(), u'WARNING!', u"The selected directory does not exist!")
+					zip_ref = zipfile.ZipFile(pacchetto, 'r')
+					zip_ref.extractall(dir2)
+					zip_ref.close()
+					shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "maschere")
+					shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "maschere", dir2 + os.sep + "progetto" + os.sep + "maschere")
+					shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "script")
+					shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "script", dir2 + os.sep + "progetto" + os.sep + "script")
+					os.remove(dir2 + os.sep + "progetto_MS.qgs")
+					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto_MS.qgs", dir2 + os.sep + "progetto_MS.qgs")
+					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "loghi" + os.sep + "Legenda_valori_HVSR_rev01.svg", dir2 + os.sep + "progetto" + os.sep + "loghi" + os.sep + "Legenda_valori_HVSR_rev01.svg")
+					project = QgsProject.instance()
+					project.read(QFileInfo(dir2 + os.sep + "progetto_MS.qgs"))
+					zLayer = QgsMapLayerRegistry.instance().mapLayersByName("Comune del progetto")[0]
 
-	def disableButton(self):
-		check_campi = [self.dir_input.text()]
-		check_value = []
-		num_l = QgsProject.instance().layerTreeRoot().children()
-		if len(num_l) >= 1:
-			value_campi = 0
-			check_value.append(value_campi)
-			self.alert_text.show()
-		else:
-			value_campi = 1
-			check_value.append(value_campi)
-			self.alert_text.hide()
+					features = zLayer.getFeatures()
+					for feat in features:
+						attrs = feat.attributes()
+						codice_regio = attrs[1]
 
-		for x in check_campi:
-			if len(x) > 0:
-				value_campi = 1
-				check_value.append(value_campi)
-			else:
-				value_campi = 0
-				check_value.append(value_campi)
+					sourceLYR = QgsMapLayerRegistry.instance().mapLayersByName("Limiti comunali")[0]
+					sourceLYR.setSubsetString("cod_regio='" + codice_regio + "'")
+					canvas = iface.mapCanvas()
+					extent = zLayer.extent()
+					canvas.setExtent(extent)
 
-		campi = sum(check_value)
-		if campi > 1:
-			self.button_box.setEnabled(True)
-		else:
-			self.button_box.setEnabled(False)
+					composers = iface.activeComposers()
+					for composer_view in composers:
+						composition = composer_view.composition()
+						map_item = composition.getComposerItemById('mappa_0')
+						map_item.setMapCanvas(canvas)
+						map_item.zoomToExtent(canvas.extent())
+
+					zLayer.removeSelection()
+					os.remove(dir2 + os.sep + "progetto" + os.sep + "versione.txt")
+					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "versione.txt", dir2 + os.sep + "progetto" + os.sep + "versione.txt")
+					shutil.rmtree(dir2 + os.sep + "progetto_MS")
+					QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output + os.sep + name_output)
+
+			except Exception as z:
+				QMessageBox.critical(None, u'ERROR!', u'Error:\n"' + str(z) + '"')
