@@ -12,6 +12,9 @@ from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
 import os, sys, webbrowser, shutil, zipfile, sqlite3, constants
+from workers.export_worker import ExportWorker
+from setup_workers import setup_workers
+
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
 	os.path.dirname(__file__), 'tb_esporta_shp.ui'))
@@ -28,28 +31,6 @@ class esporta_shp(QtGui.QDialog, FORM_CLASS):
 
 	def esporta_prog(self):
 		self.help_button.clicked.connect(lambda: webbrowser.open('https://www.youtube.com/watch?v=dYcMZSpu6HA&t=2s'))
-		LISTA_LIV_2_3 = [["Zone stabili liv 3","Zone stabili liv 2","Stab.shp","Stab","ID_z"],
-		["Zone instabili liv 3","Zone instabili liv 2","Instab.shp","Instab","ID_i"],
-		["Isobate liv 3", "Isobate liv 2","Isosub.shp", "Isosub", "ID_isosub"]]
-		LISTA_QUERY = ["""INSERT INTO 'sito_puntuale'(pkey_spu, ubicazione_prov, ubicazione_com, ID_SPU, indirizzo, coord_X, coord_Y,
-		mod_identcoord, desc_modcoord, quota_slm, modo_quota, data_sito, note_sito) SELECT pkuid, ubicazione_prov, ubicazione_com,
-		id_spu, indirizzo, coord_x, coord_y, mod_identcoord, desc_modcoord, quota_slm, modo_quota, data_sito, note_sito FROM A.sito_puntuale;""",
-		"""INSERT INTO 'indagini_puntuali'(pkey_indpu, id_spu, classe_ind, tipo_ind, ID_INDPU, id_indpuex, arch_ex, note_ind, prof_top,
-		prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, doc_ind) SELECT pkuid, id_spu, classe_ind, tipo_ind, id_indpu,
-		id_indpuex, arch_ex, note_ind, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, doc_ind FROM A.indagini_puntuali;""",
-		"""INSERT INTO 'parametri_puntuali'(pkey_parpu, id_indpu, tipo_parpu, ID_PARPU, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, valore,
-		attend_mis, tab_curve, note_par, data_par) SELECT pkuid, id_indpu, tipo_parpu, id_parpu, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot,
-		valore, attend_mis, tab_curve, note_par, data_par FROM A.parametri_puntuali;""",
-		"""INSERT INTO 'curve'(pkey_curve, id_parpu, cond_curve, varx, vary) SELECT pkuid, id_parpu, cond_curve, varx, vary FROM A.curve;""",
-		"""INSERT INTO 'sito_lineare'(pkey_sln, ubicazione_prov, ubicazione_com, ID_SLN, Acoord_X, Acoord_Y, Bcoord_X, Bcoord_Y, mod_identcoord, desc_modcoord,
-		Aquota, Bquota, data_sito, note_sito) SELECT pkuid, ubicazione_prov, ubicazione_com, id_sln, acoord_x, acoord_y, bcoord_x, bcoord_y, mod_identcoord,
-		desc_modcoord, aquota, bquota, data_sito, note_sito FROM A.sito_lineare;""",
-		"""INSERT INTO 'indagini_lineari'(pkey_indln, id_sln, classe_ind, tipo_ind, ID_INDLN, id_indlnex, arch_ex, note_indln, data_ind, doc_pag, doc_ind)
-		SELECT pkuid, id_sln, classe_ind, tipo_ind, id_indln, id_indlnex, arch_ex, note_indln, data_ind, doc_pag, doc_ind FROM A.indagini_lineari;""",
-		"""INSERT INTO 'parametri_lineari'(pkey_parln, id_indln, tipo_parln, ID_PARLN, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, valore,
-		attend_mis, note_par, data_par) SELECT pkuid, id_indln, tipo_parln, id_parln, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, valore,
-		attend_mis, note_par, data_par FROM A.parametri_lineari;"""]
-
 		self.dir_output.clear()
 		self.alert_text.hide()
 		self.button_box.setEnabled(False)
@@ -63,65 +44,17 @@ class esporta_shp(QtGui.QDialog, FORM_CLASS):
 				in_dir = QgsProject.instance().readPath("./")
 				out_dir = self.dir_output.text()
 				if os.path.exists(out_dir):
-					input_name = out_dir + os.sep + "progetto_shapefile"
-					output_name = out_dir + os.sep + in_dir.split("/")[-1]
-					zip_ref = zipfile.ZipFile(self.plugin_dir + os.sep + "data" + os.sep + "progetto_shapefile.zip", 'r')
-					zip_ref.extractall(out_dir)
-					zip_ref.close()
-					os.rename(input_name, output_name)
 
-					root = QgsProject.instance().layerTreeRoot()
-					root.addGroup("Validazione")
+					# create export worker
+					worker = ExportWorker(in_dir, out_dir, self.plugin_dir)
 
-					for chiave, valore in constants.POSIZIONE.iteritems():
-						sourceLYR = QgsMapLayerRegistry.instance().mapLayersByName(chiave)[0]
-						QgsVectorFileWriter.writeAsVectorFormat(sourceLYR ,output_name + os.sep + valore[0] + os.sep + valore[1],"utf-8",None,"ESRI Shapefile")
-						selected_layer = QgsVectorLayer(output_name + os.sep + valore[0] + os.sep + valore[1] + ".shp", valore[1], 'ogr')
-						if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2" or chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
-							pass
-						if chiave == "Siti lineari" or chiave == "Siti puntuali":
-							self.esporta([0, ['id_spu','id_sln']], selected_layer)
-						else:
-							self.esporta([1, ['pkuid']], selected_layer)
+					# create export log file
+					logfile_path = in_dir + os.sep + "allegati" + os.sep + "log" + os.sep + str(time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_export_log.txt"
+					log_file = open(logfile_path,'a')
+					log_file.write("EXPORT REPORT:" +"\n---------------\n\n")
 
-					for l23_value in LISTA_LIV_2_3:
-						sourceLYR_1 = QgsMapLayerRegistry.instance().mapLayersByName(l23_value[0])[0]
-						QgsVectorFileWriter.writeAsVectorFormat(sourceLYR_1 ,output_name + os.sep + "MS23" + os.sep + l23_value[2],"utf-8",None,"ESRI Shapefile")
-						sourceLYR_2 = QgsMapLayerRegistry.instance().mapLayersByName(l23_value[1])[0]
-						MS23_stab = QgsVectorLayer(output_name + os.sep + "MS23" + os.sep + l23_value[2], l23_value[3], 'ogr')
-						features = []
-						for feature in sourceLYR_2.getFeatures():
-							features.append(feature)
-						MS23_stab.startEditing()
-						data_provider = MS23_stab.dataProvider()
-						data_provider.addFeatures(features)
-						MS23_stab.commitChanges()
-						selected_layer_1 = QgsVectorLayer(output_name + os.sep + "MS23" + os.sep + l23_value[2], l23_value[3], 'ogr')
-						self.esporta([1, ['pkuid']], selected_layer_1)
-
-					if os.path.exists(in_dir + os.sep + "allegati" + os.sep + "Plot"):
-						shutil.copytree(in_dir + os.sep + "allegati" + os.sep + "Plot", output_name + os.sep + "Plot")
-					if os.path.exists(in_dir + os.sep + "allegati" + os.sep + "Documenti"):
-						shutil.copytree(in_dir + os.sep + "allegati" + os.sep + "Documenti", output_name + os.sep + "Indagini" + os.sep + "Documenti")
-					if os.path.exists(in_dir + os.sep + "allegati" + os.sep + "Spettri"):
-						shutil.copytree(in_dir + os.sep + "allegati" + os.sep + "Spettri", output_name + os.sep + "MS23" + os.sep + "Spettri")
-					if os.path.exists(in_dir + os.sep + "allegati" + os.sep + "altro"):
-						shutil.copytree(in_dir + os.sep + "allegati" + os.sep + "altro", output_name + os.sep + "altro")
-
-					for file_name in os.listdir(in_dir + os.sep + "allegati"):
-						if file_name.endswith(".txt"):
-							shutil.copyfile(in_dir + os.sep + "allegati" + os.sep + file_name, output_name + os.sep + file_name)
-
-					dir_gdb = output_name + os.sep + "Indagini" + os.sep + "CdI_Tabelle.sqlite"
-					orig_gdb =  in_dir + os.sep + "db" + os.sep + "indagini.sqlite"
-					conn = sqlite3.connect(dir_gdb)
-					sql = """ATTACH '""" + orig_gdb + """' AS A;"""
-					conn.execute(sql)
-					for query in LISTA_QUERY:
-						conn.execute(query)
-						conn.commit()
-					conn.close()
-					QMessageBox.information(None, u'INFORMATION!', u"The project has been exported!")
+					# start export worker
+					setup_workers().start_worker(worker, self.iface, 'Starting export task...', log_file)
 
 				else:
 					QMessageBox.warning(None, u'WARNING!', u"The selected directory does not exist!")
@@ -157,20 +90,3 @@ class esporta_shp(QtGui.QDialog, FORM_CLASS):
 		else:
 			self.button_box.setEnabled(False)
 			self.alert_text.show()
-
-	def esporta(self, list_attr, selected_layer):
-
-		field_ids = []
-		fieldnames = set(list_attr[1])
-		if list_attr[0] == 0:
-			for field in selected_layer.fields():
-				if field.name() not in fieldnames:
-					field_ids.append(selected_layer.fieldNameIndex(field.name()))
-			selected_layer.dataProvider().deleteAttributes(field_ids)
-			selected_layer.updateFields()
-		elif list_attr[0] == 1:
-			for field in selected_layer.fields():
-				if field.name() in fieldnames:
-					field_ids.append(selected_layer.fieldNameIndex(field.name()))
-			selected_layer.dataProvider().deleteAttributes(field_ids)
-			selected_layer.updateFields()

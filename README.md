@@ -15,6 +15,18 @@ The plugin was created to give the opportunity to quickly perform standard compl
 
 ## Changelog:
 
+### v0.9:		
+-  update table "Indagine stazione singola (HVSR)", "freq.ui" mask and added a new layout ("Carta delle frequenze naturali dei terreni fr");
+-  update constraint "quota_slm_top_verify" and "quota_slm_bot_verify" in "indagini_puntuali", "parametri_puntuali" and "parametri_lineari" tables;	
+-  moved export process to a separate thread;
+-  export progress shown in qgis interface;				
+-  fixed bug in "siti_ind_param.py";
+-  update "New project" tool;
+-  added a new table ("metadati");
+-  added a new video-guide ("Indagine stazione singola (HVSR)");
+-  update project (in particular .ui, .py files);
+-  updated italian manuals.
+
 ### v0.8:
 		
 -  fixed bug in "indagini_puntuali.py";

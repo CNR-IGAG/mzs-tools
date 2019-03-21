@@ -40,27 +40,14 @@ class aggiorna_progetto(QtGui.QDialog, FORM_CLASS):
 				proj_vers = open(vers_data_2,'r').read()
 				pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
 
-				if proj_vers < '0.8' and new_vers == '0.8':
+				if proj_vers < '0.9' and proj_vers != '0.8' and new_vers == '0.9':
 					name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 					shutil.copytree(dir2, dir_output + os.sep + name_output)
-					QgsMessageLog.logMessage(dir_output + os.sep + name_output)
 
 					path_db = dir2 + os.sep + "db" + os.sep + "indagini.sqlite"
-					conn = sqlite3.connect(path_db)
-					cursor = conn.cursor()
-					conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
-					conn.enable_load_extension(True)
-					f = open(self.plugin_dir + os.sep + "query_v08.sql")
-					full_sql = f.read()
-					sql_commands = full_sql.replace('\n', '').split(';;')[:-1]
-					try:
-						conn.execute('SELECT load_extension("mod_spatialite")')
-						for sql_command in sql_commands:
-							cursor.execute(sql_command)
-						cursor.close()
-						conn.commit()
-					finally:
-						conn.close()
+					sql_script = ["query_v08.sql","query_v09.sql"]
+					for x in sql_script:
+						self.sql_command(path_db,x)
 
 					zip_ref = zipfile.ZipFile(pacchetto, 'r')
 					zip_ref.extractall(dir2)
@@ -72,33 +59,85 @@ class aggiorna_progetto(QtGui.QDialog, FORM_CLASS):
 					os.remove(dir2 + os.sep + "progetto_MS.qgs")
 					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto_MS.qgs", dir2 + os.sep + "progetto_MS.qgs")
 					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "loghi" + os.sep + "Legenda_valori_HVSR_rev01.svg", dir2 + os.sep + "progetto" + os.sep + "loghi" + os.sep + "Legenda_valori_HVSR_rev01.svg")
-					project = QgsProject.instance()
-					project.read(QFileInfo(dir2 + os.sep + "progetto_MS.qgs"))
-					zLayer = QgsMapLayerRegistry.instance().mapLayersByName("Comune del progetto")[0]
+					self.new_qgs_file(dir2)
 
-					features = zLayer.getFeatures()
-					for feat in features:
-						attrs = feat.attributes()
-						codice_regio = attrs[1]
-
-					sourceLYR = QgsMapLayerRegistry.instance().mapLayersByName("Limiti comunali")[0]
-					sourceLYR.setSubsetString("cod_regio='" + codice_regio + "'")
-					canvas = iface.mapCanvas()
-					extent = zLayer.extent()
-					canvas.setExtent(extent)
-
-					composers = iface.activeComposers()
-					for composer_view in composers:
-						composition = composer_view.composition()
-						map_item = composition.getComposerItemById('mappa_0')
-						map_item.setMapCanvas(canvas)
-						map_item.zoomToExtent(canvas.extent())
-
-					zLayer.removeSelection()
 					os.remove(dir2 + os.sep + "progetto" + os.sep + "versione.txt")
 					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "versione.txt", dir2 + os.sep + "progetto" + os.sep + "versione.txt")
 					shutil.rmtree(dir2 + os.sep + "progetto_MS")
 					QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output + os.sep + name_output)
 
+				elif proj_vers == '0.8' and new_vers == '0.9':
+					name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
+					shutil.copytree(dir2, dir_output + os.sep + name_output)
+
+					path_db = dir2 + os.sep + "db" + os.sep + "indagini.sqlite"
+					sql_script = "query_v09.sql"
+					self.sql_command(path_db,sql_script)
+
+					percorso = QgsDataSourceURI()
+					percorso.setDatabase(dir2 + os.sep + "db" + os.sep + "indagini.sqlite")
+					percorso.setDataSource('', 'vw_hvsr', 'geom')
+					hvsrLayer = QgsVectorLayer(percorso.uri(), 'Valori HVSR Fr', 'spatialite')
+					QgsMapLayerRegistry.instance().addMapLayer(hvsrLayer)
+
+					zip_ref = zipfile.ZipFile(pacchetto, 'r')
+					zip_ref.extractall(dir2)
+					zip_ref.close()
+					shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "maschere")
+					shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "maschere", dir2 + os.sep + "progetto" + os.sep + "maschere")
+					shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "script")
+					shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "script", dir2 + os.sep + "progetto" + os.sep + "script")
+					os.remove(dir2 + os.sep + "progetto" + os.sep + "versione.txt")
+					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "versione.txt", dir2 + os.sep + "progetto" + os.sep + "versione.txt")
+					os.remove(dir2 + os.sep + "progetto_MS.qgs")
+					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto_MS.qgs", dir2 + os.sep + "progetto_MS.qgs")
+					self.new_qgs_file(dir2)
+
+					shutil.rmtree(dir2 + os.sep + "progetto_MS")
+					QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output + os.sep + name_output)
+
 			except Exception as z:
 				QMessageBox.critical(None, u'ERROR!', u'Error:\n"' + str(z) + '"')
+
+
+	def sql_command(self, path_db,file_sql):
+		conn = sqlite3.connect(path_db)
+		cursor = conn.cursor()
+		conn.text_factory = lambda x: unicode(x, 'utf-8', 'ignore')
+		conn.enable_load_extension(True)
+		f = open(self.plugin_dir + os.sep + file_sql)
+		full_sql = f.read()
+		sql_commands = full_sql.replace('\n', '').split(';;')[:-1]
+		try:
+			conn.execute('SELECT load_extension("mod_spatialite")')
+			for sql_command in sql_commands:
+				cursor.execute(sql_command)
+			cursor.close()
+			conn.commit()
+		finally:
+			conn.close()
+
+	def new_qgs_file(self, dir2):
+		project = QgsProject.instance()
+		project.read(QFileInfo(dir2 + os.sep + "progetto_MS.qgs"))
+		zLayer = QgsMapLayerRegistry.instance().mapLayersByName("Comune del progetto")[0]
+
+		features = zLayer.getFeatures()
+		for feat in features:
+			attrs = feat.attributes()
+			codice_regio = attrs[1]
+
+		sourceLYR = QgsMapLayerRegistry.instance().mapLayersByName("Limiti comunali")[0]
+		sourceLYR.setSubsetString("cod_regio='" + codice_regio + "'")
+		canvas = iface.mapCanvas()
+		extent = zLayer.extent()
+		canvas.setExtent(extent)
+
+		composers = iface.activeComposers()
+		for composer_view in composers:
+			composition = composer_view.composition()
+			map_item = composition.getComposerItemById('mappa_0')
+			map_item.setMapCanvas(canvas)
+			map_item.zoomToExtent(canvas.extent())
+
+		zLayer.removeSelection()

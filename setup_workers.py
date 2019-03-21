@@ -97,7 +97,7 @@ class setup_workers():
 
 		if result is not None:
 			QMessageBox.information(iface.mainWindow(), u'INFORMATION!',
-				u"Import process completed.\n\nImport report was saved in the project folder '...\\allegati\\log'")
+				u"Process completed.\n\nReport was saved in the project folder '...\\allegati\\log'")
 		else:
 			QMessageBox.critical(iface.mainWindow(), u'ERROR!',
 				u"Process interrupted! Read the report saved in the project folder '...\\allegati\\log'")

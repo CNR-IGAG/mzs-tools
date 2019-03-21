@@ -1,10 +1,18 @@
 # -*- coding: utf-8 -*-
+#-------------------------------------------------------------------------------
+# Name:		import_workers.py
+# Author:	  Pennifca F.
+# Created:	 08-02-2018
+#-------------------------------------------------------------------------------
 
-from MzSTools.constants import *
+from PyQt4 import QtGui, uic
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from qgis.utils import *
+from qgis.core import *
+from qgis.gui import *
 import os, shutil, sqlite3, csv
-from qgis.core import QgsVectorLayer, QgsFeatureRequest, QgsField, QgsVectorJoinInfo, QgsExpressionContext, QgsExpressionContextScope
-from qgis.utils import QgsExpression
-
+from MzSTools.constants import *
 from abstract_worker import AbstractWorker, UserAbortedNotification
 
 
@@ -114,8 +122,8 @@ class ImportWorker(AbstractWorker):
 
 			self.current_step = self.current_step + 1
 			self.progress.emit(self.current_step * 100/total_steps)
-		# end for
 
+		# end for
 		if self.killed:
 			raise UserAbortedNotification('USER Killed')
 

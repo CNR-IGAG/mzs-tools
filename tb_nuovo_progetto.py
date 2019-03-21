@@ -11,7 +11,7 @@ from PyQt4.QtGui import *
 from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
-import os, sys, webbrowser, csv, shutil, zipfile, sqlite3
+import os, sys, webbrowser, csv, shutil, zipfile, sqlite3, datetime
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -45,35 +45,45 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 				dict_comuni[cod_istat] = nome_comune
 				dizio_comuni[nome_com] = cod_istat
 
+		data_meta = datetime.datetime.now().strftime("%d/%m/%Y")
+		data_dato = datetime.datetime.now().strftime("%d/%m/%Y")
 		self.dir_output.clear()
 		self.comune.clear()
 		self.cod_istat.clear()
 		self.professionista.clear()
-		self.tel_prof.clear()
 		self.email_prof.clear()
 		self.sito_prof.clear()
-		self.data_meta.clear()
 		self.ufficio.clear()
 		self.propretario.clear()
-		self.tel_prop.clear()
 		self.email_prop.clear()
 		self.sito_prop.clear()
-		self.keyword.clear()
+		self.contatto.clear()
+		self.email_cont.clear()
+		self.sito_cont.clear()
 		self.scala_nom.clear()
 		self.accuratezza.clear()
 		self.lineage.clear()
+		self.descriz.clear()
 		self.button_box.setEnabled(False)
-		self.data_meta.setMinimumDate(QDate.currentDate())
 		self.comune.addItems(sorted(dizio_comuni.keys()))
 		self.comune.model().item(0).setEnabled(False)
 		self.comune.currentIndexChanged.connect(lambda: self.update_cod_istat(dizio_comuni, str(self.comune.currentText()), self.cod_istat))
 		self.scala_nom.textEdited.connect(lambda: self.update_num(self.scala_nom,0,100000))
 		self.comune.currentIndexChanged.connect(self.disableButton)
 		self.professionista.textChanged.connect(self.disableButton)
-		self.propretario.textChanged.connect(self.disableButton)
-		self.scala_nom.textChanged.connect(self.disableButton)
 		self.email_prof.textChanged.connect(self.disableButton)
+		self.sito_prof.textChanged.connect(self.disableButton)
+		self.ufficio.textChanged.connect(self.disableButton)
+		self.propretario.textChanged.connect(self.disableButton)
 		self.email_prop.textChanged.connect(self.disableButton)
+		self.sito_prop.textChanged.connect(self.disableButton)
+		self.contatto.textChanged.connect(self.disableButton)
+		self.sito_cont.textChanged.connect(self.disableButton)
+		self.email_cont.textChanged.connect(self.disableButton)
+		self.scala_nom.textChanged.connect(self.disableButton)
+		self.accuratezza.textChanged.connect(self.disableButton)
+		self.lineage.textChanged.connect(self.disableButton)
+		self.descriz.textChanged.connect(self.disableButton)
 		self.dir_output.textChanged.connect(self.disableButton)
 
 		self.show()
@@ -86,19 +96,19 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 					comune = str(self.comune.currentText())
 					cod_istat = self.cod_istat.text()
 					professionista = self.professionista.text()
-					tel_prof = self.tel_prof.text()
 					email_prof = self.email_prof.text()
 					sito_prof = self.sito_prof.text()
-					data_meta = self.data_meta.text()
 					ufficio = self.ufficio.text()
 					propretario = self.propretario.text()
-					tel_prop = self.tel_prop.text()
 					email_prop = self.email_prop.text()
 					sito_prop = self.sito_prop.text()
-					keyword = self.keyword.text()
+					contatto = self.contatto.text()
+					email_cont = self.email_cont.text()
+					sito_cont = self.sito_cont.text()
 					scala_nom = self.scala_nom.text()
 					accuratezza = self.accuratezza.text()
 					lineage = self.lineage.toPlainText()
+					descriz = self.descriz.toPlainText()
 
 					if not os.path.exists(dir_svg_output):
 						shutil.copytree(dir_svg_input, dir_svg_output)
@@ -117,24 +127,6 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 							comune_nome = (y[6:]).replace("_"," ")
 							path_comune = dir_out + os.sep + y
 							os.rename(dir_out + os.sep + "progetto_MS", path_comune)
-
-					metadata = path_comune + os.sep + "allegati" + os.sep + comune_nome + " metadata.txt"
-					f = open(metadata,'a')
-					f.write("METADATA\nMunicipality of "+ comune_nome +":\n-------------------------------\n\n")
-					f.write("Expert: " + unicode(professionista).encode('utf-8') + "\n")
-					f.write("Expert's phone: " + unicode(tel_prof).encode('utf-8') + "\n")
-					f.write("Expert's email: " + unicode(email_prof).encode('utf-8') + "\n")
-					f.write("Expert's website: " + unicode(sito_prof).encode('utf-8') + "\n")
-					f.write("Date: " + data_meta + "\n")
-					f.write("Office: " + unicode(ufficio).encode('utf-8') + "\n")
-					f.write("Data owner: " + unicode(propretario).encode('utf-8') + "\n")
-					f.write("Owner's phone: " + unicode(tel_prop).encode('utf-8') + "\n")
-					f.write("Owner's email: " + unicode(email_prop).encode('utf-8') + "\n")
-					f.write("Owner's website: " + unicode(sito_prop).encode('utf-8') + "\n")
-					f.write("Keyword: " + unicode(keyword).encode('utf-8') + "\n")
-					f.write("Map scale: 1:" + unicode(scala_nom).encode('utf-8') + "\n")
-					f.write("Map accuracy: " + unicode(accuratezza).encode('utf-8') + "\n")
-					f.write("Lineage: " + unicode(lineage).encode('utf-8') + "\n")
 
 					project = QgsProject.instance()
 					project.read(QFileInfo(path_comune + os.sep + "progetto_MS.qgs"))
@@ -171,7 +163,6 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 					logo_regio_out = os.path.join(path_comune, "progetto" + os.sep + "loghi" + os.sep + "logo_regio.png").replace('\\', '/')
 					shutil.copyfile(logo_regio_in, logo_regio_out)
 
-##					mainPath = (QgsProject.instance().fileName()).split("progetto")[0]
 					mainPath = QgsProject.instance().homePath()
 					self.mappa_insieme(mainPath, sourceLYR)
 
@@ -195,6 +186,7 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 						map_item_5.refreshPicture()
 
 					self.indice_tab_execute(data_meta, regione, codice_regio, provincia, codice_prov, nome, codice_com, professionista, ufficio, propretario)
+					self.metadati_tab_execute(codice_prov, codice_com, professionista, email_prof, sito_prof, data_meta, ufficio, propretario, email_prop, sito_prop, data_dato, descriz, contatto, email_cont, sito_cont, scala_nom, extent, accuratezza, lineage)
 					QMessageBox.information(None, u'INFORMATION!', u"The project has been created!\nSAVE the project, please!")
 ##					project.write()
 
@@ -202,11 +194,14 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 					QMessageBox.critical(None, u'ERROR!', u'Error:\n"' + str(z) + '"')
 					if os.path.exists(dir_out + os.sep + "progetto_MS"):
 						shutil.rmtree(dir_out + os.sep + "progetto_MS")
+##				except ZeroDivisionError:
+##					pass
+
 			else:
 				QMessageBox.warning(iface.mainWindow(), u'WARNING!', u"The selected directory does not exist!")
 
 	def disableButton(self):
-		check_campi = [self.professionista.text(), self.propretario.text(), self.scala_nom.text(), self.email_prof.text(), self.email_prop.text(), self.dir_output.text(), str(self.comune.currentText())]
+		check_campi = [self.professionista.text(), self.email_prof.text(), self.sito_prof.text(), self.propretario.text(), self.ufficio.text(), self.email_prop.text(), self.sito_prop.text(), self.contatto.text(), self.email_cont.text(), self.sito_cont.text(), self.scala_nom.text(), self.dir_output.text(), self.accuratezza.text(), self.lineage.toPlainText(), self.descriz.toPlainText(), str(self.comune.currentText())]
 		check_value = []
 
 		for x in check_campi:
@@ -218,7 +213,7 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 				check_value.append(value_campi)
 
 		campi = sum(check_value)
-		if campi > 6:
+		if campi > 15:
 			self.button_box.setEnabled(True)
 		else:
 			self.button_box.setEnabled(False)
@@ -273,12 +268,29 @@ class nuovo_progetto(QtGui.QDialog, FORM_CLASS):
 		image.save(imageFilename, 'png')
 
 	def indice_tab_execute(self, data_meta, regione, codice_regio, provincia, codice_prov, nome, codice_com, professionista, ufficio, propretario):
-
 		orig_gdb =  QgsProject.instance().readPath("./") + os.sep + "db" + os.sep + "indagini.sqlite"
 		conn = sqlite3.connect(orig_gdb)
 		sql = """ATTACH '""" + orig_gdb + """' AS A;"""
 		conn.execute(sql)
-		conn.execute("""INSERT INTO 'indice'(data_in,regione,cod_reg,provincia,cod_prov,comune,cod_com,soggetto,ufficio,responsabile,ID_MZS) VALUES ('""" + data_meta + """', '""" + regione + """', '""" + codice_regio + """', '""" + self.changeWord(provincia) + """', '""" + codice_prov + """', '""" + self.changeWord(nome) + """', '""" + codice_com + """', '""" + self.changeWord(professionista) + """', '""" + self.changeWord(ufficio) + """', '""" + self.changeWord(propretario) + """', '""" + codice_prov + codice_com + """');""")
+		conn.execute("""INSERT INTO 'indice'(data_in,regione,cod_reg,provincia,cod_prov,comune,cod_com,soggetto,ufficio,responsabile,ID_MZS) VALUES ('""" + data_meta + """', '""" + regione + """', '""" + codice_regio + """',
+			'""" + self.changeWord(provincia) + """', '""" + codice_prov + """', '""" + self.changeWord(nome) + """', '""" + codice_com + """', '""" + self.changeWord(professionista) + """', '""" + self.changeWord(ufficio) + """',
+			'""" + self.changeWord(propretario) + """', '""" + codice_prov + codice_com + """');""")
+		conn.commit()
+		conn.close()
+
+	def metadati_tab_execute(self, codice_prov, codice_com, professionista, email_prof, sito_prof, data_meta, ufficio, propretario, email_prop, sito_prop, data_dato, descriz, contatto, email_cont, sito_cont, scala_nom, extent, accuratezza, lineage):
+		orig_gdb =  QgsProject.instance().readPath("./") + os.sep + "db" + os.sep + "indagini.sqlite"
+		conn = sqlite3.connect(orig_gdb)
+		sql = """ATTACH '""" + orig_gdb + """' AS A;"""
+		conn.execute(sql)
+		conn.execute("""INSERT INTO 'metadati'("id_metadato", "liv_gerarchico", "resp_metadato_nome", "resp_metadato_email", "resp_metadato_sito", "data_metadato", "srs_dati", "proprieta_dato_nome", "proprieta_dato_email", "proprieta_dato_sito",
+			"data_dato", "ruolo", "desc_dato", "formato", "tipo_dato", "contatto_dato_nome", "contatto_dato_email", "contatto_dato_sito", "keywords", "keywords_inspire", "limitazione", "vincoli_accesso", "vincoli_fruibilita", "vincoli_sicurezza",
+			"scala", "categoria_iso", "estensione_ovest", "estensione_est", "estensione_sud", "estensione_nord", "precisione", "genealogia")
+			VALUES ('""" + codice_prov + codice_com + """M1', 'series','""" + self.changeWord(professionista) + """', '""" + self.changeWord(email_prof) + """', '""" + self.changeWord(sito_prof) + """', '""" + self.changeWord(data_meta) + """',
+			32633,'""" +  self.changeWord(ufficio) + """ """ + self.changeWord(propretario) + """', '""" + self.changeWord(email_prop) + """', '""" + self.changeWord(sito_prop) + """', '""" + self.changeWord(data_dato) + """', 'owner',
+			'""" + self.changeWord(descriz) + """', 'mapDigital','vector','""" + self.changeWord(contatto) + """', '""" + self.changeWord(email_cont) + """', '""" + self.changeWord(sito_cont) + """', '(Microzonazione Sismica, Pericolosita Sismica)',
+			'(Zone a rischio naturale, Geologia)','nessuna limitazione','nessuno','nessuno','nessuno','""" + self.changeWord(scala_nom) + """', 'geoscientificInformation',  '""" + str(extent.xMinimum()) + """', '""" + str(extent.xMaximum()) + """',
+            '""" + str(extent.yMinimum()) + """', '""" + str(extent.yMaximum()) + """', '""" + self.changeWord(accuratezza) + """', '""" + self.changeWord(lineage) + """');""")
 		conn.commit()
 		conn.close()
 

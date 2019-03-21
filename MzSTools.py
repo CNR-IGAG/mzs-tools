@@ -9,7 +9,7 @@ from PyQt4.QtGui import *
 from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
-import os, sys, constants
+import os, sys, constants, resources
 from tb_wait import wait
 from tb_aggiorna_progetto import aggiorna_progetto
 from tb_nuovo_progetto import nuovo_progetto
@@ -211,7 +211,7 @@ class MzSTools:
 			vers_data = (QgsProject.instance().fileName()).split("progetto")[0] + os.sep + "progetto" + os.sep + "versione.txt"
 			try:
 				proj_vers = open(vers_data,'r').read()
-				if proj_vers < '0.8':
+				if proj_vers < '0.9':
 					qApp.processEvents()
 					self.dlg1.aggiorna(percorso,dir_output,nome)
 
