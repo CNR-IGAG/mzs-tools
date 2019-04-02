@@ -8,7 +8,7 @@ qgisMinimumVersion=2.16
 
 description=Plugin for Italian seismic microzonation.
 
-version=0.9
+version=1.0
 author=IGAG-CNR
 email=labgis@igag.cnr.it
 
@@ -78,7 +78,7 @@ homepage=https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools
 category=Database
 icon=icon.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
