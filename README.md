@@ -15,6 +15,12 @@ The plugin was created to give the opportunity to quickly perform standard compl
 
 ## Changelog:
 
+### v1.0:
+-  stable version;
+-  added a new video-guide ("Indagine stazione singola (HVSR)");
+-  update project (fixed labels and styles errors, update .py files);
+-  updated italian manuals.
+
 ### v0.9:		
 -  update table "Indagine stazione singola (HVSR)", "freq.ui" mask and added a new layout ("Carta delle frequenze naturali dei terreni fr");
 -  update constraint "quota_slm_top_verify" and "quota_slm_bot_verify" in "indagini_puntuali", "parametri_puntuali" and "parametri_lineari" tables;	
@@ -27,8 +33,7 @@ The plugin was created to give the opportunity to quickly perform standard compl
 -  update project (in particular .ui, .py files);
 -  updated italian manuals.
 
-### v0.8:
-		
+### v0.8:		
 -  fixed bug in "indagini_puntuali.py";
 -  update "siti_puntuali" and "siti_lineari" triggers;
 -  added a new table ("Indagine stazione singola (HVSR)") and a new layout ("Carta delle frequenze naturali dei terreni");
@@ -37,7 +42,6 @@ The plugin was created to give the opportunity to quickly perform standard compl
 -  updated italian manuals.
 		
 ### v0.7:
-
 -  moved import process to a separate thread;
 -  import progress shown in qgis interface;
 -  fixed bug with empty numeric values in csv files during import;
@@ -47,14 +51,12 @@ The plugin was created to give the opportunity to quickly perform standard compl
 -  updated italian manuals.
 		
 ### v0.6:
-
 -  video-guide additions;
 -  update project (in particular .ui, .py files);
 -  resolved bugs;
 -  updated italian manual.
 		
 ### v0.5:
-
 -  improved "Add feature or record" tool;
 -  removed useless tool;
 -  update project (in particular .ui, .py files);
@@ -62,5 +64,4 @@ The plugin was created to give the opportunity to quickly perform standard compl
 -  updated manuals.
 		
 ### v0.4:
-
 -  initial relase.

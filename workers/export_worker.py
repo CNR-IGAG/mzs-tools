@@ -27,8 +27,6 @@ class ExportWorker(AbstractWorker):
 		self.plugin_dir = plugin_dir
 
 		self.current_step = 1
-##		self.check_sito_p = True
-##		self.check_sito_l = True
 
 	def work(self):
 		# calculate steps
