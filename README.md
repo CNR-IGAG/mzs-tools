@@ -15,6 +15,11 @@ The plugin was created to give the opportunity to quickly perform standard compl
 
 ## Changelog:
 
+### v1.1:		
+-  modified the layout layer "CDI - Indagini puntuali";
+-  modified the layout layer "MOPS - HVSR";
+-  updated export database ("CdI_Tabelle.sqlite").
+
 ### v1.0:
 -  stable version;
 -  added a new video-guide ("Indagine stazione singola (HVSR)");
