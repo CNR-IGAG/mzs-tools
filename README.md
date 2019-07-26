@@ -15,6 +15,11 @@ The plugin was created to give the opportunity to quickly perform standard compl
 
 ## Changelog:
 
+### v1.2:
+-  updated layouts ("Carta di Microzonazione Sismica (FA 0.1-0.5 s)", "Carta di Microzonazione Sismica (FA 0.4-0.8 s)", "Carta di Microzonazione Sismica (FA 0.7-1.1 s)");
+-  added "pkey" field in "Indagini" and "Parametri" tables;
+-  removed english manual.	
+
 ### v1.1:		
 -  modified the layout layer "CDI - Indagini puntuali";
 -  modified the layout layer "MOPS - HVSR";

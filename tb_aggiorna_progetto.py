@@ -35,19 +35,19 @@ class aggiorna_progetto(QtGui.QDialog, FORM_CLASS):
 				iface.deleteComposer(c)
 			try:
 				vers_data_1 = self.plugin_dir + os.sep + "versione.txt"
-				new_vers = open(vers_data_1,'r').read()
+				new_vers = open(vers_data_1, 'r').read()
 				vers_data_2 = dir2 + os.sep + "progetto" + os.sep + "versione.txt"
-				proj_vers = open(vers_data_2,'r').read()
+				proj_vers = open(vers_data_2, 'r').read()
 				pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
 
-				if proj_vers < '0.8' and proj_vers != '0.8' and new_vers == '1.1':
+				if proj_vers < '0.8' and proj_vers != '0.8' and new_vers == '1.2':
 					name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 					shutil.copytree(dir2, dir_output + os.sep + name_output)
 
 					path_db = dir2 + os.sep + "db" + os.sep + "indagini.sqlite"
-					sql_script = ["query_v08.sql","query_v09.sql","query_v10.sql"]
+					sql_script = ["query_v08.sql", "query_v09.sql", "query_v10_12.sql"]
 					for x in sql_script:
-						self.sql_command(path_db,x)
+						self.sql_command(path_db, x)
 
 					zip_ref = zipfile.ZipFile(pacchetto, 'r')
 					zip_ref.extractall(dir2)
@@ -66,20 +66,14 @@ class aggiorna_progetto(QtGui.QDialog, FORM_CLASS):
 					shutil.rmtree(dir2 + os.sep + "progetto_MS")
 					QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output + os.sep + name_output)
 
-				elif proj_vers == '0.8' and new_vers == '1.1':
+				elif proj_vers == '0.8' and new_vers == '1.2':
 					name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 					shutil.copytree(dir2, dir_output + os.sep + name_output)
 
 					path_db = dir2 + os.sep + "db" + os.sep + "indagini.sqlite"
-					sql_script = ["query_v09.sql","query_v10.sql"]
+					sql_script = ["query_v09.sql", "query_v10_12.sql"]
 					for x in sql_script:
-						self.sql_command(path_db,x)
-
-##					percorso = QgsDataSourceURI()
-##					percorso.setDatabase(dir2 + os.sep + "db" + os.sep + "indagini.sqlite")
-##					percorso.setDataSource('', 'vw_hvsr', 'geom')
-##					hvsrLayer = QgsVectorLayer(percorso.uri(), 'Valori HVSR Fr', 'spatialite')
-##					QgsMapLayerRegistry.instance().addMapLayer(hvsrLayer)
+						self.sql_command(path_db, x)
 
 					zip_ref = zipfile.ZipFile(pacchetto, 'r')
 					zip_ref.extractall(dir2)
@@ -97,37 +91,13 @@ class aggiorna_progetto(QtGui.QDialog, FORM_CLASS):
 					shutil.rmtree(dir2 + os.sep + "progetto_MS")
 					QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output + os.sep + name_output)
 
-				if proj_vers == '0.9' and new_vers == '1.1':
+				if proj_vers >= '0.9' and new_vers == '1.2':
 					name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 					shutil.copytree(dir2, dir_output + os.sep + name_output)
 
 					path_db = dir2 + os.sep + "db" + os.sep + "indagini.sqlite"
-					sql_script = "query_v10.sql"
-					self.sql_command(path_db,sql_script)
-
-					zip_ref = zipfile.ZipFile(pacchetto, 'r')
-					zip_ref.extractall(dir2)
-					zip_ref.close()
-					shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "maschere")
-					shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "maschere", dir2 + os.sep + "progetto" + os.sep + "maschere")
-					shutil.rmtree(dir2 + os.sep + "progetto" + os.sep + "script")
-					shutil.copytree(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "script", dir2 + os.sep + "progetto" + os.sep + "script")
-					os.remove(dir2 + os.sep + "progetto" + os.sep + "versione.txt")
-					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto" + os.sep + "versione.txt", dir2 + os.sep + "progetto" + os.sep + "versione.txt")
-					os.remove(dir2 + os.sep + "progetto_MS.qgs")
-					shutil.copyfile(dir2 + os.sep + "progetto_MS" + os.sep + "progetto_MS.qgs", dir2 + os.sep + "progetto_MS.qgs")
-					self.new_qgs_file(dir2)
-
-					shutil.rmtree(dir2 + os.sep + "progetto_MS")
-					QMessageBox.information(None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output + os.sep + name_output)
-
-				if proj_vers == '1.0' and new_vers == '1.1':
-					name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
-					shutil.copytree(dir2, dir_output + os.sep + name_output)
-
-					path_db = dir2 + os.sep + "db" + os.sep + "indagini.sqlite"
-					sql_script = "query_v11.sql"
-					self.sql_command(path_db,sql_script)
+					sql_script = "query_v10_12.sql"
+					self.sql_command(path_db, sql_script)
 
 					zip_ref = zipfile.ZipFile(pacchetto, 'r')
 					zip_ref.extractall(dir2)

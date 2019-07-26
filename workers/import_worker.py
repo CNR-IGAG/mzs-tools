@@ -370,8 +370,8 @@ class ImportWorker(AbstractWorker):
 				(pkuid, id_spu, classe_ind, tipo_ind, id_indpu,
 				id_indpuex, arch_ex, note_ind, prof_top, prof_bot,
 				spessore, quota_slm_top, quota_slm_bot, data_ind,
-				doc_pag, doc_ind)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
+				doc_pag, doc_ind,pkey_spu)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
 		select_id_spu = "SELECT pkuid, id_spu FROM sito_puntuale WHERE pkuid = ?"
 		update_indpu_fkey = "UPDATE indagini_puntuali SET id_spu = ? WHERE pkuid = ?"
 
@@ -380,15 +380,15 @@ class ImportWorker(AbstractWorker):
 			INSERT INTO parametri_puntuali
 				(pkuid, id_indpu, tipo_parpu, id_parpu, prof_top, prof_bot,
 				spessore, quota_slm_top, quota_slm_bot, valore, attend_mis,
-				tab_curve, note_par, data_par)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
+				tab_curve, note_par, data_par,pkey_indpu)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
 		select_id_indpu = "SELECT pkuid, id_indpu FROM indagini_puntuali WHERE pkuid = ?"
 		update_parpu_fkey = "UPDATE parametri_puntuali SET id_indpu = ? WHERE pkuid = ?"
 
 		# curve
 		insert_curve = """
-			INSERT INTO curve (pkuid, id_parpu, cond_curve, varx, vary)
-				VALUES (?,?,?,?,?);"""
+			INSERT INTO curve (pkuid, id_parpu, cond_curve, varx, vary,pkey_parpu)
+				VALUES (?,?,?,?,?,?);"""
 		select_id_parpu = "SELECT pkuid, id_parpu FROM parametri_puntuali WHERE pkuid = ?"
 		update_curve_fkey = "UPDATE curve SET id_parpu = ? WHERE pkuid = ?"
 
@@ -396,8 +396,8 @@ class ImportWorker(AbstractWorker):
 		insert_indln = """
 			INSERT INTO indagini_lineari
 				(pkuid, id_sln, classe_ind, tipo_ind, id_indln, id_indlnex,
-				arch_ex, note_indln, data_ind, doc_pag, doc_ind)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?)"""
+				arch_ex, note_indln, data_ind, doc_pag, doc_ind,pkey_sln)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"""
 		select_id_sln = "SELECT pkuid, id_sln FROM sito_lineare WHERE pkuid = ?"
 		update_indln_fkey = "UPDATE indagini_lineari SET id_sln = ? WHERE pkuid = ?"
 
@@ -406,8 +406,8 @@ class ImportWorker(AbstractWorker):
 			INSERT INTO parametri_lineari
 				(pkuid, id_indln, tipo_parln, id_parln, prof_top, prof_bot,
 				spessore, quota_slm_top, quota_slm_bot, valore, attend_mis,
-				note_par, data_par)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"""
+				note_par, data_par,pkey_indln)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)"""
 		select_id_indln = "SELECT pkuid, id_indln FROM indagini_lineari WHERE pkuid = ?"
 		update_parln_fkey = "UPDATE parametri_lineari SET id_indln = ? WHERE pkuid = ?"
 
@@ -432,31 +432,31 @@ class ImportWorker(AbstractWorker):
 							i[k] = None
 
 					if db_table == "indagini_puntuali":
-						to_db = (i['pkey_indpu'], i['pkey_spu'], i['classe_ind'], i['tipo_ind'], i['ID_INDPU'], i['id_indpuex'], i['arch_ex'], i['note_ind'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['data_ind'], i['doc_pag'], i['doc_ind'])
+						to_db = (i['pkey_indpu'], i['pkey_spu'], i['classe_ind'], i['tipo_ind'], i['ID_INDPU'], i['id_indpuex'], i['arch_ex'], i['note_ind'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['data_ind'], i['doc_pag'], i['doc_ind'], i['pkey_spu'])
 						fkey = i['pkey_spu']
 						insert_sql = insert_indpu
 						select_parent_sql = select_id_spu
 						update_sql = update_indpu_fkey
 					elif db_table == "parametri_puntuali":
-						to_db = (i['pkey_parpu'], i['pkey_indpu'], i['tipo_parpu'], i['ID_PARPU'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['tab_curve'], i['note_par'], i['data_par'])
+						to_db = (i['pkey_parpu'], i['pkey_indpu'], i['tipo_parpu'], i['ID_PARPU'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['tab_curve'], i['note_par'], i['data_par'], i['pkey_indpu'])
 						fkey = i['pkey_indpu']
 						insert_sql = insert_parpu
 						select_parent_sql = select_id_indpu
 						update_sql = update_parpu_fkey
 					elif db_table == "curve":
-						to_db = (i['pkey_curve'], i['pkey_parpu'], i['cond_curve'], i['varx'], i['vary'])
+						to_db = (i['pkey_curve'], i['pkey_parpu'], i['cond_curve'], i['varx'], i['vary'], i['pkey_parpu'])
 						fkey = i['pkey_parpu']
 						insert_sql = insert_curve
 						select_parent_sql = select_id_parpu
 						update_sql = update_curve_fkey
 					elif db_table == "indagini_lineari":
-						to_db = (i['pkey_indln'], i['pkey_sln'], i['classe_ind'], i['tipo_ind'], i['ID_INDLN'], i['id_indlnex'], i['arch_ex'], i['note_indln'], i['data_ind'], i['doc_pag'], i['doc_ind'])
+						to_db = (i['pkey_indln'], i['pkey_sln'], i['classe_ind'], i['tipo_ind'], i['ID_INDLN'], i['id_indlnex'], i['arch_ex'], i['note_indln'], i['data_ind'], i['doc_pag'], i['doc_ind'], i['pkey_sln'])
 						fkey = i['pkey_sln']
 						insert_sql = insert_indln
 						select_parent_sql = select_id_sln
 						update_sql = update_indln_fkey
 					elif db_table == "parametri_lineari":
-						to_db = (i['pkey_parln'], i['pkey_indln'], i['tipo_parln'], i['ID_PARLN'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['note_par'], i['data_par'])
+						to_db = (i['pkey_parln'], i['pkey_indln'], i['tipo_parln'], i['ID_PARLN'], i['prof_top'], i['prof_bot'], i['spessore'], i['quota_slm_top'], i['quota_slm_bot'], i['valore'], i['attend_mis'], i['note_par'], i['data_par'], i['pkey_indln'])
 						fkey = i['pkey_indln']
 						insert_sql = insert_parln
 						select_parent_sql = select_id_indln

@@ -211,7 +211,7 @@ class MzSTools:
 			vers_data = (QgsProject.instance().fileName()).split("progetto")[0] + os.sep + "progetto" + os.sep + "versione.txt"
 			try:
 				proj_vers = open(vers_data,'r').read()
-				if proj_vers < '1.1':
+				if proj_vers < '1.2':
 					qApp.processEvents()
 					self.dlg1.aggiorna(percorso,dir_output,nome)
 

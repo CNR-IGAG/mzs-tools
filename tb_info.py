@@ -27,7 +27,7 @@ class info(QtGui.QDialog, FORM_CLASS):
 
 	def help(self):
 		self.pushButton_ita.clicked.connect(lambda: self.open_pdf(self.plugin_dir + os.sep + "manuale.pdf"))
-		self.pushButton_eng.clicked.connect(lambda: self.open_pdf(self.plugin_dir + os.sep + "manual.pdf"))
+		#self.pushButton_eng.clicked.connect(lambda: self.open_pdf(self.plugin_dir + os.sep + "manual.pdf"))
 		self.pushButton_www.clicked.connect(lambda: webbrowser.open('https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools'))
 
 		self.show()

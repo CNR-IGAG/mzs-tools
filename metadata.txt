@@ -8,19 +8,23 @@ qgisMinimumVersion=2.16
 
 description=Plugin for Italian seismic microzonation.
 
-version=1.1
+version=1.2
 author=IGAG-CNR
 email=labgis@igag.cnr.it
 
 
 about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907).
-	<b>NOTE:</b> as described in the GPLv3 license, the software provider does not provide any warranty for the program. In the event of malfunctions or any other defect, it will be the buyer himself who will have to arrange for a repair at his own expense.
+	<b>NOTE:</b> as described in the GPLv3 license, the software provider does not provide any warranty for the program.
 	<b>WARNING: please use QGIS version 2.18.24, because the latest versions have bugs with the "Point Displacement" style.</b> 
 
     Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907).
-	<b>NOTA:</b> come descritto all'interno della licenza GPLv3, il fornitore del software non fornisce alcun tipo di garanzia per il programma. Nel caso di malfunzionamenti o qualunque altro difetto, sarà lo stesso acquirente che dovrà provvedere a sue spese ad una eventuale riparazione.
+	<b>NOTA:</b> come descritto all'interno della licenza GPLv3, il fornitore del software non fornisce alcun tipo di garanzia per il programma.
 	<b>AVVERTENZA: si prega di utilizzare la versione di QGIS 2.18.24, in quanto le ultime versioni hanno dei bug con lo stile "Spostamento Punto".</b>
 changelog=
+		<b>v1.2:</b>		
+				-  updated layouts ("Carta di Microzonazione Sismica (FA 0.1-0.5 s)", "Carta di Microzonazione Sismica (FA 0.4-0.8 s)", "Carta di Microzonazione Sismica (FA 0.7-1.1 s)");
+				-  added "pkey" field in "Indagini" and "Parametri" tables;
+				-  removed english manual.
 		<b>v1.1:</b>		
 				-  modified the layout layer "CDI - Indagini puntuali";
 				-  modified the layout layer "MOPS - HVSR";
@@ -29,7 +33,7 @@ changelog=
 				-  stable version;
 				-  added a new video-guide ("Indagine stazione singola (HVSR)");
 				-  update project (fixed labels and styles errors, update .py files);
-				-  updated italian manuals.				
+				-  updated italian manual.				
 		<b>v0.9:</b>
 				-  update table "Indagine stazione singola (HVSR)", "freq.ui" mask and added a new layout ("Carta delle frequenze naturali dei terreni fr");
 				-  update constraint "quota_slm_top_verify" and "quota_slm_bot_verify" in "indagini_puntuali", "parametri_puntuali" and "parametri_lineari" tables;	
@@ -39,14 +43,14 @@ changelog=
 				-  update "New project" tool;
 				-  added a new table ("metadati");
 				-  update project (in particular .ui, .py files);
-				-  updated italian manuals.
+				-  updated italian manual.
 		<b>v0.8:</b>		
 				-  fixed bug in "siti_ind_param.py.py";
 				-  update "siti_puntuali" and "siti_lineari" triggers;
 				-  added a new table ("Indagine stazione singola (HVSR)") and a new layout ("Carta delle frequenze naturali dei terreni");
 				-  update project (in particular .ui, .py files);
 				-  changed update project process and removed "Update project" tool;
-				-  updated italian manuals.
+				-  updated italian manual.
 		<b>v0.7:</b>
 				-  moved import process to a separate thread;
 				-  import progress shown in qgis interface;
@@ -54,7 +58,7 @@ changelog=
 				-  reimplemented import log file;
 				-  added "Update project" tool;
 				-  update project (in particular .ui, .py files);
-				-  updated italian manuals.
+				-  updated italian manual.
 		<b>v0.6:</b>
 				-  video-guide additions;
 				-  update project (in particular .ui, .py files);
