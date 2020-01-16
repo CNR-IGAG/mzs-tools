@@ -99,23 +99,24 @@ class ImportWorker(AbstractWorker):
 					self.check_sito_l = False
 
 			elif chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2":
-				sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression( " \"LIVELLO\" = 2 " )))
-				self.calc_layer(sourceFeatures, destLYR, commonFields)
+				sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression( " \"LIVELLO\" = 2 " )))	
 				self.set_message.emit("'" + chiave + "' shapefile has been copied!")
 				self.set_log_message.emit("'" + chiave + "' shapefile has been copied!\n")
+				self.calc_layer(sourceFeatures, destLYR, commonFields)
 
 			elif chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
 				sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression( " \"LIVELLO\" = 3 " )))
-				self.calc_layer(sourceFeatures, destLYR, commonFields)
 				self.set_message.emit("'" + chiave + "' shapefile has been copied!")
 				self.set_log_message.emit("'" + chiave + "' shapefile has been copied!\n")
+				self.calc_layer(sourceFeatures, destLYR, commonFields)
 
 			elif chiave == "Comune del progetto":
 				pass
 			else:
 				sourceFeatures = sourceLYR.getFeatures()
-				self.calc_layer(sourceFeatures, destLYR, commonFields)
+				self.set_message.emit("'" + chiave + "' shapefile has been copied!")
 				self.set_log_message.emit("'" + chiave + "' shapefile has been copied!\n")
+				self.calc_layer(sourceFeatures, destLYR, commonFields)
 
 			if self.killed:
 				break

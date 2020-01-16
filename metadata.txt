@@ -8,19 +8,24 @@ qgisMinimumVersion=2.16
 
 description=Plugin for Italian seismic microzonation.
 
-version=1.2
+version=1.3
 author=IGAG-CNR
 email=labgis@igag.cnr.it
 
 
-about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907).
-	<b>NOTE:</b> as described in the GPLv3 license, the software provider does not provide any warranty for the program.
+about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907). The software provider does not provide any warranty for the program (as described in the GPLv3 license).
 	<b>WARNING: please use QGIS version 2.18.24, because the latest versions have bugs with the "Point Displacement" style.</b> 
 
-    Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907).
-	<b>NOTA:</b> come descritto all'interno della licenza GPLv3, il fornitore del software non fornisce alcun tipo di garanzia per il programma.
-	<b>AVVERTENZA: si prega di utilizzare la versione di QGIS 2.18.24, in quanto le ultime versioni hanno dei bug con lo stile "Spostamento Punto".</b>
+    Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907). Il fornitore del software non fornisce alcun tipo di garanzia per il programma (come descritto all'interno della licenza GPLv3).
+	<b>AVVERTENZA: si prega di utilizzare la versione di QGIS 2.18.24, in quanto le ultime versioni presentano dei bug con lo stile "Spostamento Punto".</b>
 changelog=
+		<b>v1.3:</b>		
+				-  updated layout "CDI - Carta delle Indagini" (added legend);
+				-  updated export shapefiles and "Export geodatabase to project folder" tool (to meet the standards);
+				-  removed "Validate project" tool;
+				-  fixed bug in log files;
+				-  update project (fixed labels, update .py files); 
+				-  updated italian manual.
 		<b>v1.2:</b>		
 				-  updated layouts ("Carta di Microzonazione Sismica (FA 0.1-0.5 s)", "Carta di Microzonazione Sismica (FA 0.4-0.8 s)", "Carta di Microzonazione Sismica (FA 0.7-1.1 s)");
 				-  added "pkey" field in "Indagini" and "Parametri" tables;
@@ -45,7 +50,7 @@ changelog=
 				-  update project (in particular .ui, .py files);
 				-  updated italian manual.
 		<b>v0.8:</b>		
-				-  fixed bug in "siti_ind_param.py.py";
+				-  fixed bug in "siti_ind_param.py";
 				-  update "siti_puntuali" and "siti_lineari" triggers;
 				-  added a new table ("Indagine stazione singola (HVSR)") and a new layout ("Carta delle frequenze naturali dei terreni");
 				-  update project (in particular .ui, .py files);

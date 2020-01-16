@@ -17,7 +17,6 @@ from tb_importa_shp import importa_shp
 from tb_esporta_shp import esporta_shp
 from tb_edit_win import edit_win
 from tb_copia_ms import copia_ms
-from tb_valida import valida
 from tb_info import info
 
 
@@ -46,7 +45,6 @@ class MzSTools:
 		self.dlg4 = importa_shp()
 		self.dlg5 = esporta_shp()
 		self.dlg6 = copia_ms()
-		self.dlg7 = valida()
 		self.dlg10 = edit_win()
 
 		self.actions = []
@@ -112,7 +110,6 @@ class MzSTools:
 		icon_path4 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_importa.png'
 		icon_path5 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_esporta.png'
 		icon_path6 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_copia_ms.png'
-		icon_path7 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_valida.png'
 		icon_path8 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_edita.png'
 		icon_path9 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_salva_edita.png'
 		icon_path10 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_xypoint.png'
@@ -162,14 +159,6 @@ class MzSTools:
 		self.toolbar.addSeparator()
 
 		self.add_action(
-			icon_path7,
-			text=self.tr(u'Validate project'),
-			callback=self.run7,
-			parent=self.iface.mainWindow())
-
-		self.toolbar.addSeparator()
-
-		self.add_action(
 			icon_path3,
 			text=self.tr(u'Help'),
 			callback=self.run3,
@@ -211,7 +200,7 @@ class MzSTools:
 			vers_data = (QgsProject.instance().fileName()).split("progetto")[0] + os.sep + "progetto" + os.sep + "versione.txt"
 			try:
 				proj_vers = open(vers_data,'r').read()
-				if proj_vers < '1.2':
+				if proj_vers < '1.3':
 					qApp.processEvents()
 					self.dlg1.aggiorna(percorso,dir_output,nome)
 
@@ -247,12 +236,6 @@ class MzSTools:
 		self.dlg6.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
 		self.dlg6.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
 		self.dlg6.copia()
-
-	def run7(self):
-		self.dlg7.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg7.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg7.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg7.controllo()
 
 	def run8(self):
 		proj = QgsProject.instance()

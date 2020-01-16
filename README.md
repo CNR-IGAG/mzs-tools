@@ -15,6 +15,14 @@ The plugin was created to give the opportunity to quickly perform standard compl
 
 ## Changelog:
 
+### v1.3:		
+-  updated layout "CDI - Carta delle Indagini" (added legend);
+-  updated export shapefiles and "Export geodatabase to project folder" tool (to meet the standards);
+-  removed "Validate project" tool;
+-  fixed bug in log files;
+-  update project (fixed labels, update .py files);
+-  updated italian manual.
+
 ### v1.2:
 -  updated layouts ("Carta di Microzonazione Sismica (FA 0.1-0.5 s)", "Carta di Microzonazione Sismica (FA 0.4-0.8 s)", "Carta di Microzonazione Sismica (FA 0.7-1.1 s)");
 -  added "pkey" field in "Indagini" and "Parametri" tables;

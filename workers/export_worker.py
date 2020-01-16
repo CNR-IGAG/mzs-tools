@@ -179,18 +179,59 @@ class ExportWorker(AbstractWorker):
 		return 'Export completed!'
 
 	def esporta(self, list_attr, selected_layer):
-
 		field_ids = []
 		fieldnames = set(list_attr[1])
 		if list_attr[0] == 0:
 			for field in selected_layer.fields():
 				if field.name() not in fieldnames:
-					field_ids.append(selected_layer.fieldNameIndex(field.name()))
-			selected_layer.dataProvider().deleteAttributes(field_ids)
+					field_ids.append(selected_layer.fieldNameIndex(field.name()))					
+			selected_layer.dataProvider().deleteAttributes(field_ids)				
 			selected_layer.updateFields()
+			self.cambia_nome(list_attr, selected_layer)
 		elif list_attr[0] == 1:
 			for field in selected_layer.fields():
 				if field.name() in fieldnames:
 					field_ids.append(selected_layer.fieldNameIndex(field.name()))
 			selected_layer.dataProvider().deleteAttributes(field_ids)
 			selected_layer.updateFields()
+			if selected_layer.name() == 'Isosub':
+				nome_attr = "Quota"
+				tipo_attr = QVariant.Int
+				self.cambia_tipo(selected_layer, nome_attr, tipo_attr)
+			elif selected_layer.name() in ("Stab","Instab"):
+				nome_attr = "LIVELLO"
+				tipo_attr = QVariant.Double
+				self.cambia_tipo(selected_layer, nome_attr, tipo_attr)
+
+	def cambia_nome(self, list_attr, selected_layer):
+		selected_layer.startEditing()
+		for field in selected_layer.fields():
+			if field.name() in list_attr[1]:
+				selected_layer.renameAttribute(selected_layer.fieldNameIndex(field.name()), field.name().upper())
+		selected_layer.commitChanges()
+
+	def cambia_tipo(self, selected_layer, nome_attr, tipo_attr):
+		selected_layer.startEditing()
+		selected_layer.dataProvider().addAttributes([QgsField("new_col_na", tipo_attr)])	
+		selected_layer.commitChanges()
+
+		selected_layer.startEditing()
+		for feature in selected_layer.getFeatures():
+			feature.setAttribute(feature.fieldNameIndex("new_col_na"), feature[nome_attr])
+			selected_layer.updateFeature(feature)
+		selected_layer.commitChanges()
+
+		selected_layer.startEditing()
+		selected_layer.dataProvider().deleteAttributes([selected_layer.fieldNameIndex(nome_attr)])
+		selected_layer.dataProvider().addAttributes([QgsField(nome_attr, tipo_attr)])
+		selected_layer.commitChanges()
+
+		selected_layer.startEditing()
+		for feature in selected_layer.getFeatures():
+			feature.setAttribute(feature.fieldNameIndex(nome_attr), feature["new_col_na"])
+			selected_layer.updateFeature(feature)
+		selected_layer.commitChanges()
+
+		selected_layer.startEditing()
+		selected_layer.dataProvider().deleteAttributes([selected_layer.fieldNameIndex("new_col_na")])
+		selected_layer.commitChanges()
