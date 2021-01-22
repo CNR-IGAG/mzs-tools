@@ -14,7 +14,10 @@ Seismic Microzonation studies include the following maps:
 The plugin was created to give the opportunity to quickly perform standard compliant Seismic Microzonation studies.
 
 ## Changelog:
-
+### v1.4:	
+-  Updated to new MS 4.2 standards;
+-  update project (fixed labels, update .py files, added new style); 
+-  updated italian manual.
 ### v1.3:		
 -  updated layout "CDI - Carta delle Indagini" (added legend);
 -  updated export shapefiles and "Export geodatabase to project folder" tool (to meet the standards);
