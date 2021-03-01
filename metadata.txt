@@ -4,21 +4,23 @@
 
 name=MzS Tools
 
-qgisMinimumVersion=2.16
+qgisMinimumVersion=3.0
 
 description=Plugin for Italian seismic microzonation.
 
-version=1.4
+version=1.5
 author=IGAG-CNR
 email=labgis@igag.cnr.it
 
 
 about=The plugin allows the creation of the database and the cartographic representation of the Italian seismic microzonation studies for levels 1, 2 and 3 according to the standards of representation and computer archiving version 4.1 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907). The software provider does not provide any warranty for the program (as described in the GPLv3 license).
-	<b>WARNING: please use QGIS version 2.18.24, because the latest versions have bugs with the "Point Displacement" style.</b> 
+	<b>WARNING: please use QGIS version 2.18.24, because the latest versions have bugs with the "Point Displacement" style.</b>
 
     Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana per i livelli 1, 2 e 3 secondo gli Standard di rappresentazione ed archiviazione informatica versione 4.1 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907). Il fornitore del software non fornisce alcun tipo di garanzia per il programma (come descritto all'interno della licenza GPLv3).
 	<b>AVVERTENZA: si prega di utilizzare la versione di QGIS 2.18.24, in quanto le ultime versioni presentano dei bug con lo stile "Spostamento Punto".</b>
 changelog=
+                <b>v1.5:</b>
+                                -  Ported to QGIS 3
 		<b>v1.4:</b>		
 				-  Updated to new MS 4.2 standards;
 				-  update project (fixed labels, update .py files, added new style); 
@@ -28,32 +30,32 @@ changelog=
 				-  updated export shapefiles and "Export geodatabase to project folder" tool (to meet the standards);
 				-  removed "Validate project" tool;
 				-  fixed bug in log files;
-				-  update project (fixed labels, update .py files); 
+				-  update project (fixed labels, update .py files);
 				-  updated italian manual.
-		<b>v1.2:</b>		
+		<b>v1.2:</b>
 				-  updated layouts ("Carta di Microzonazione Sismica (FA 0.1-0.5 s)", "Carta di Microzonazione Sismica (FA 0.4-0.8 s)", "Carta di Microzonazione Sismica (FA 0.7-1.1 s)");
 				-  added "pkey" field in "Indagini" and "Parametri" tables;
 				-  removed english manual.
-		<b>v1.1:</b>		
+		<b>v1.1:</b>
 				-  modified the layout layer "CDI - Indagini puntuali";
 				-  modified the layout layer "MOPS - HVSR";
 				-  updated export database ("CdI_Tabelle.sqlite").
-		<b>v1.0:</b>		
+		<b>v1.0:</b>
 				-  stable version;
 				-  added a new video-guide ("Indagine stazione singola (HVSR)");
 				-  update project (fixed labels and styles errors, update .py files);
-				-  updated italian manual.				
+				-  updated italian manual.
 		<b>v0.9:</b>
 				-  update table "Indagine stazione singola (HVSR)", "freq.ui" mask and added a new layout ("Carta delle frequenze naturali dei terreni fr");
-				-  update constraint "quota_slm_top_verify" and "quota_slm_bot_verify" in "indagini_puntuali", "parametri_puntuali" and "parametri_lineari" tables;	
+				-  update constraint "quota_slm_top_verify" and "quota_slm_bot_verify" in "indagini_puntuali", "parametri_puntuali" and "parametri_lineari" tables;
 				-  moved export process to a separate thread;
-				-  export progress shown in qgis interface;				
+				-  export progress shown in qgis interface;
 				-  fixed bug in "siti_ind_param.py";
 				-  update "New project" tool;
 				-  added a new table ("metadati");
 				-  update project (in particular .ui, .py files);
 				-  updated italian manual.
-		<b>v0.8:</b>		
+		<b>v0.8:</b>
 				-  fixed bug in "siti_ind_param.py";
 				-  update "siti_puntuali" and "siti_lineari" triggers;
 				-  added a new table ("Indagine stazione singola (HVSR)") and a new layout ("Carta delle frequenze naturali dei terreni");
@@ -80,7 +82,7 @@ changelog=
 				-  resolved bugs;
 				-  updated italian manual.
 		<b>v0.4:</b>
-				-  initial relase.		
+				-  initial relase.
 
 tracker=https://github.com/CNR-IGAG/mzs-tools/issues
 

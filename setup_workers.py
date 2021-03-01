@@ -1,3 +1,6 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 # -*- coding: utf-8 -*-
 #-------------------------------------------------------------------------------
 # Name:		setup_workers.py
@@ -5,15 +8,16 @@
 # Created:	 08-02-2018
 #-------------------------------------------------------------------------------
 
-from PyQt4 import QtGui, uic
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from qgis.PyQt import QtGui, uic
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
 from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
 import os, sys, shutil
 
-class setup_workers():
+class setup_workers(object):
 	def __init__(self, parent=None):
 		"""Constructor."""
 		self.iface = iface
