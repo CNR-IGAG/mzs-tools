@@ -1,25 +1,25 @@
-from __future__ import absolute_import
-from builtins import next
-from builtins import str
-# -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
-# Name:		import_workers.py
-# Author:	  Pennifca F.
-# Created:	 08-02-2018
-#-------------------------------------------------------------------------------
+import csv
+import os
+import shutil
+import sqlite3
 
+
+from qgis.core import *
+from qgis.gui import *
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.utils import *
-from qgis.core import *
-from qgis.gui import *
-import os
-import shutil
-import sqlite3
-import csv
+
 from ..constants import *
 from .abstract_worker import AbstractWorker, UserAbortedNotification
+
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------------
+# Name:		import_workers.py
+# Author:	  Pennifca F.
+# Created:	 08-02-2018
+# -------------------------------------------------------------------------------
 
 
 class ImportWorker(AbstractWorker):
@@ -38,7 +38,7 @@ class ImportWorker(AbstractWorker):
         self.check_sito_l = True
 
     def work(self):
-        path_tabelle = self.proj_abs_path + os.sep + "allegati" + os.sep + "altro"
+        path_tabelle = os.path.join(self.proj_abs_path, "allegati", "altro")
         z_list = []
 
         # calculate steps
@@ -48,16 +48,16 @@ class ImportWorker(AbstractWorker):
         ###############################################
         self.set_message.emit('Creating folders...')
 
-        if os.path.exists(path_tabelle + os.sep + "Indagini"):
-            shutil.rmtree(path_tabelle + os.sep + "Indagini")
+        if os.path.exists(path_tabelle, "Indagini"):
+            shutil.rmtree(path_tabelle, "Indagini")
 
-        os.makedirs(path_tabelle + os.sep + "Indagini")
-        self.copy_files(self.in_dir + os.sep + "Indagini",
-                        path_tabelle + os.sep + "Indagini")
+        os.makedirs(path_tabelle, "Indagini")
+        self.copy_files(self.in_dir, "Indagini",
+                        path_tabelle, "Indagini")
 
         for nome_tab in LISTA_TAB:
-            if os.path.exists(path_tabelle + os.sep + nome_tab):
-                os.remove(path_tabelle + os.sep + nome_tab)
+            if os.path.exists(path_tabelle, nome_tab):
+                os.remove(path_tabelle, nome_tab)
 
         self.set_log_message.emit('Folder structure -> OK\n')
 
@@ -74,21 +74,21 @@ class ImportWorker(AbstractWorker):
 
         # step 2 (inserting features)
         ###############################################
-        for chiave, valore in POSIZIONE.items():
+        for chiave, valore in list(POSIZIONE.items()):
 
-            if not os.path.exists(self.in_dir + os.sep + valore[0] + os.sep + valore[1] + ".shp"):
+            if not os.path.exists(self.in_dir, valore[0], valore[1] + ".shp"):
                 self.set_log_message.emit(
                     "'" + chiave + "' shapefile does not exist!\n")
                 continue
 
             sourceLYR = QgsVectorLayer(
-                self.in_dir + os.sep + valore[0] + os.sep + valore[1] + ".shp", valore[1], 'ogr')
+                self.in_dir, valore[0], valore[1] + ".shp", valore[1], 'ogr')
             destLYR = self.map_registry_instance.mapLayersByName(chiave)[0]
 
             commonFields = self.attribute_adaptor(destLYR, sourceLYR)
 
             if chiave == "Siti puntuali":
-                if os.path.exists(path_tabelle + os.sep + 'Sito_Puntuale.txt'):
+                if os.path.exists(path_tabelle, 'Sito_Puntuale.txt'):
                     self.insert_siti(sourceLYR, path_tabelle +
                                      os.sep + 'Sito_Puntuale.txt', "puntuale")
                     self.set_message.emit(
@@ -102,7 +102,7 @@ class ImportWorker(AbstractWorker):
                     self.check_sito_p = False
 
             elif chiave == "Siti lineari":
-                if os.path.exists(path_tabelle + os.sep + 'Sito_Lineare.txt'):
+                if os.path.exists(path_tabelle, 'Sito_Lineare.txt'):
                     self.insert_siti(sourceLYR, path_tabelle +
                                      os.sep + 'Sito_Lineare.txt', "lineare")
                     self.set_message.emit(
@@ -158,24 +158,24 @@ class ImportWorker(AbstractWorker):
 
         # step 3 (inserting indagini_puntuali and related data)
         #######################################################
-        if self.check_sito_p is True and os.path.exists(path_tabelle + os.sep + "Indagini_Puntuali.txt"):
+        if self.check_sito_p is True and os.path.exists(path_tabelle, "Indagini_Puntuali.txt"):
             z_list.append("Indagini_Puntuali")
             self.insert_table("indagini_puntuali",
-                              path_tabelle + os.sep + "Indagini_Puntuali.txt")
+                              path_tabelle, "Indagini_Puntuali.txt")
             self.set_log_message.emit(
                 "'Indagini_Puntuali' table has been copied!\n")
 
-            if os.path.exists(path_tabelle + os.sep + "Parametri_Puntuali.txt"):
+            if os.path.exists(path_tabelle, "Parametri_Puntuali.txt"):
                 z_list.append("Parametri_Puntuali")
                 self.insert_table(
-                    "parametri_puntuali", path_tabelle + os.sep + "Parametri_Puntuali.txt")
+                    "parametri_puntuali", path_tabelle, "Parametri_Puntuali.txt")
                 self.set_log_message.emit(
                     "'Parametri_Puntuali' table has been copied!\n")
 
-                if os.path.exists(path_tabelle + os.sep + "Curve.txt"):
+                if os.path.exists(path_tabelle, "Curve.txt"):
                     z_list.append("Curve")
                     self.insert_table(
-                        "curve", path_tabelle + os.sep + "Curve.txt")
+                        "curve", path_tabelle, "Curve.txt")
                     self.set_log_message.emit(
                         "'Curve' table has been copied!\n")
 
@@ -187,17 +187,17 @@ class ImportWorker(AbstractWorker):
 
         # step 4 (inserting indagini lineari and related data)
         ######################################################
-        if self.check_sito_l is True and os.path.exists(path_tabelle + os.sep + "Indagini_Lineari.txt"):
+        if self.check_sito_l is True and os.path.exists(path_tabelle, "Indagini_Lineari.txt"):
             z_list.append("Indagini_Lineari")
             self.insert_table("indagini_lineari", path_tabelle +
                               os.sep + "Indagini_Lineari.txt")
             self.set_log_message.emit(
                 "'Indagini_Lineari' table has been copied!\n")
 
-            if os.path.exists(path_tabelle + os.sep + "Parametri_Lineari.txt"):
+            if os.path.exists(path_tabelle, "Parametri_Lineari.txt"):
                 z_list.append("Parametri_Lineari")
                 self.insert_table(
-                    "parametri_lineari", path_tabelle + os.sep + "Parametri_Lineari.txt")
+                    "parametri_lineari", path_tabelle, "Parametri_Lineari.txt")
                 self.set_log_message.emit(
                     "'Parametri_Lineari' table has been copied!\n")
 
@@ -223,19 +223,23 @@ class ImportWorker(AbstractWorker):
         ###############################################
         self.set_message.emit('Adding miscellaneous files...')
 
-        dizio_folder = {"Plot": ["OLD_Plot", self.proj_abs_path + os.sep + "allegati" + os.sep + "Plot", self.in_dir + os.sep + "Plot"], "Documenti": ["OLD_Documenti", self.proj_abs_path + os.sep + "allegati" + os.sep +
-                                                                                                                                                       "Documenti", self.in_dir + os.sep + "Indagini" + os.sep + "Documenti"], "Spettri": ["OLD_Spettri", self.proj_abs_path + os.sep + "allegati" + os.sep + "Spettri", self.in_dir + os.sep + "MS23" + os.sep + "Spettri"]}
+        dizio_folder = {
+            "Plot": ["OLD_Plot", os.path.join(self.proj_abs_path, "allegati", "Plot"), os.path.join(self.in_dir, "Plot")],
+            "Documenti": ["OLD_Documenti", os.path.join(self.proj_abs_path, "allegati", "Documenti"), os.path.join(self.in_dir, "Indagini", "Documenti")],
+            "Spettri": ["OLD_Spettri", os.path.join(self.proj_abs_path, "allegati", "Spettri"), os.path.join(self.in_dir, "MS23", "Spettri")]
+        }
 
-        for chiave_fold, valore_fold in dizio_folder.items():
+        for chiave_fold, valore_fold in list(dizio_folder.items()):
             self.set_message.emit("Copying '" + chiave_fold + "' folder")
             if os.path.exists(valore_fold[2]):
-                if os.path.exists(self.proj_abs_path + os.sep + "allegati" + os.sep + chiave_fold):
-                    shutil.rmtree(self.proj_abs_path + os.sep +
-                                  "allegati" + os.sep + chiave_fold)
+                _folder = os.path.join(
+                    self.proj_abs_path, "allegati", chiave_fold)
+                if os.path.exists(_folder):
+                    shutil.rmtree(_folder)
                     shutil.copytree(valore_fold[2], valore_fold[1])
                 else:
-                    shutil.copytree(self.in_dir + os.sep + chiave_fold,
-                                    self.proj_abs_path + os.sep + "allegati" + os.sep + chiave_fold)
+                    shutil.copytree(self.in_dir, chiave_fold,
+                                    self.proj_abs_path, "allegati", chiave_fold)
                 self.set_log_message.emit(
                     "Folder '" + chiave_fold + " has been copied!\n")
             else:
@@ -246,16 +250,15 @@ class ImportWorker(AbstractWorker):
                 break
 
         self.set_message.emit('Final cleanup...')
-        shutil.rmtree(self.proj_abs_path + os.sep +
-                      "allegati" + os.sep + "altro")
-        os.makedirs(self.proj_abs_path + os.sep +
-                    "allegati" + os.sep + "altro")
+        shutil.rmtree(os.path.join(self.proj_abs_path, "allegati", "altro"))
+        os.makedirs(os.path.join(self.proj_abs_path, "allegati", "altro"))
 
         # end miscellaneous files and cleanup
         if self.killed:
             raise UserAbortedNotification('USER Killed')
+
         self.current_step = self.current_step + 1
-        self.progress.emit(self.current_step * 100/total_steps)
+        self.progress.emit(self.current_step * 100 / total_steps)
 
         return 'Import completed!'
 
@@ -343,7 +346,7 @@ class ImportWorker(AbstractWorker):
             id_field_name = "ID_SLN"
             tab_name = "sito_lineare"
 
-        path_db = self.proj_abs_path + os.sep + "db" + os.sep + "indagini.sqlite"
+        path_db = os.path.join(self.proj_abs_path, "db", "indagini.sqlite")
         dict_sito = {}
         conn = sqlite3.connect(path_db)
         conn.text_factory = lambda x: str(x, 'utf-8', 'ignore')
@@ -464,7 +467,7 @@ class ImportWorker(AbstractWorker):
         select_id_indln = "SELECT pkuid, id_indln FROM indagini_lineari WHERE pkuid = ?"
         update_parln_fkey = "UPDATE parametri_lineari SET id_indln = ? WHERE pkuid = ?"
 
-        path_db = self.proj_abs_path + os.sep + "db" + os.sep + "indagini.sqlite"
+        path_db = os.path.join(self.proj_abs_path, "db", "indagini.sqlite")
         conn = sqlite3.connect(path_db)
         conn.text_factory = lambda x: str(x, 'utf-8', 'ignore')
         try:
@@ -537,7 +540,7 @@ class ImportWorker(AbstractWorker):
 
     def calc_join(self, orig_tab, link_tab, temp_field, link_field, orig_field):
 
-        path_db = self.proj_abs_path + os.sep + "db" + os.sep + "indagini.sqlite"
+        path_db = os.path.join(self.proj_abs_path, "db", "indagini.sqlite")
 
         joinObject = QgsVectorJoinInfo()
         joinObject.joinLayerId = link_tab.id()

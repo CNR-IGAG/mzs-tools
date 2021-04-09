@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:		export_workers.py
 # Author:   Tarquini E.
 # Created:	 18-03-2019
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from __future__ import absolute_import
 from qgis.PyQt import QtGui, uic
@@ -74,10 +74,10 @@ class ExportWorker(AbstractWorker):
         ###############################################
         self.set_message.emit('Creating project...')
         self.set_log_message.emit('Creating project...\n')
-        input_name = self.out_dir + os.sep + "progetto_shapefile"
-        output_name = self.out_dir + os.sep + self.in_dir.split("/")[-1]
+        input_name = self.out_dir, "progetto_shapefile"
+        output_name = self.out_dir, self.in_dir.split("/")[-1]
         zip_ref = zipfile.ZipFile(
-            self.plugin_dir + os.sep + "data" + os.sep + "progetto_shapefile.zip", 'r')
+            self.plugin_dir, "data", "progetto_shapefile.zip", 'r')
         zip_ref.extractall(self.out_dir)
         zip_ref.close()
         os.rename(input_name, output_name)
@@ -91,12 +91,12 @@ class ExportWorker(AbstractWorker):
         self.set_message.emit('Creating shapefiles:')
         self.set_log_message.emit('\nCreating shapefiles:\n')
 
-        for chiave, valore in POSIZIONE.items():
+        for chiave, valore in list(POSIZIONE.items()):
             sourceLYR = QgsProject.instance().mapLayersByName(chiave)[0]
             QgsVectorFileWriter.writeAsVectorFormat(
-                sourceLYR, output_name + os.sep + valore[0] + os.sep + valore[1], "utf-8", None, "ESRI Shapefile")
+                sourceLYR, output_name, valore[0], valore[1], "utf-8", None, "ESRI Shapefile")
             selected_layer = QgsVectorLayer(
-                output_name + os.sep + valore[0] + os.sep + valore[1] + ".shp", valore[1], 'ogr')
+                output_name, valore[0], valore[1] + ".shp", valore[1], 'ogr')
             if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2" or chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
                 pass
             if chiave == "Siti lineari" or chiave == "Siti puntuali":
@@ -126,11 +126,11 @@ class ExportWorker(AbstractWorker):
             sourceLYR_1 = QgsProject.instance(
             ).mapLayersByName(l23_value[0])[0]
             QgsVectorFileWriter.writeAsVectorFormat(
-                sourceLYR_1, output_name + os.sep + "MS23" + os.sep + l23_value[2], "utf-8", None, "ESRI Shapefile")
+                sourceLYR_1, output_name, "MS23", l23_value[2], "utf-8", None, "ESRI Shapefile")
             sourceLYR_2 = QgsProject.instance(
             ).mapLayersByName(l23_value[1])[0]
             MS23_stab = QgsVectorLayer(
-                output_name + os.sep + "MS23" + os.sep + l23_value[2], l23_value[3], 'ogr')
+                output_name, "MS23", l23_value[2], l23_value[3], 'ogr')
             features = []
             for feature in sourceLYR_2.getFeatures():
                 features.append(feature)
@@ -139,7 +139,7 @@ class ExportWorker(AbstractWorker):
             data_provider.addFeatures(features)
             MS23_stab.commitChanges()
             selected_layer_1 = QgsVectorLayer(
-                output_name + os.sep + "MS23" + os.sep + l23_value[2], l23_value[3], 'ogr')
+                output_name, "MS23", l23_value[2], l23_value[3], 'ogr')
             self.esporta([1, ['pkuid']], selected_layer_1)
             self.set_message.emit(
                 "'" + chiave + "' shapefile has been created!")
@@ -158,39 +158,39 @@ class ExportWorker(AbstractWorker):
         self.set_message.emit('Adding miscellaneous files...')
         self.set_log_message.emit('\nAdding miscellaneous files...\n')
 
-        if os.path.exists(self.in_dir + os.sep + "allegati" + os.sep + "Plot"):
+        if os.path.exists(self.in_dir, "allegati", "Plot"):
             self.set_message.emit("Copying 'Plot' folder")
             self.set_log_message.emit("  Copying 'Plot' folder\n")
-            shutil.copytree(self.in_dir + os.sep + "allegati" +
-                            os.sep + "Plot", output_name + os.sep + "Plot")
-        if os.path.exists(self.in_dir + os.sep + "allegati" + os.sep + "Documenti"):
+            shutil.copytree(self.in_dir, "allegati" +
+                            os.sep + "Plot", output_name, "Plot")
+        if os.path.exists(self.in_dir, "allegati", "Documenti"):
             self.set_message.emit("Copying 'Documenti' folder")
             self.set_log_message.emit("  Copying 'Documenti' folder\n")
-            shutil.copytree(self.in_dir + os.sep + "allegati" + os.sep + "Documenti",
-                            output_name + os.sep + "Indagini" + os.sep + "Documenti")
-        if os.path.exists(self.in_dir + os.sep + "allegati" + os.sep + "Spettri"):
+            shutil.copytree(self.in_dir, "allegati", "Documenti",
+                            output_name, "Indagini", "Documenti")
+        if os.path.exists(self.in_dir, "allegati", "Spettri"):
             self.set_message.emit("Copying 'Spettri' folder")
             self.set_log_message.emit("  Copying 'Spettri' folder\n")
-            shutil.copytree(self.in_dir + os.sep + "allegati" + os.sep +
-                            "Spettri", output_name + os.sep + "MS23" + os.sep + "Spettri")
-        if os.path.exists(self.in_dir + os.sep + "allegati" + os.sep + "altro"):
+            shutil.copytree(self.in_dir, "allegati" + os.sep +
+                            "Spettri", output_name, "MS23", "Spettri")
+        if os.path.exists(self.in_dir, "allegati", "altro"):
             self.set_message.emit("Copying 'altro' folder")
             self.set_log_message.emit("  Copying 'altro' folder\n")
-            shutil.copytree(self.in_dir + os.sep + "allegati" +
-                            os.sep + "altro", output_name + os.sep + "altro")
+            shutil.copytree(self.in_dir, "allegati" +
+                            os.sep + "altro", output_name, "altro")
 
         self.current_step = self.current_step + 1
         self.progress.emit(self.current_step * 100/total_steps)
 
-        for file_name in os.listdir(self.in_dir + os.sep + "allegati"):
+        for file_name in os.listdir(self.in_dir, "allegati"):
             if file_name.endswith(".txt"):
-                shutil.copyfile(self.in_dir + os.sep + "allegati" +
-                                os.sep + file_name, output_name + os.sep + file_name)
+                shutil.copyfile(self.in_dir, "allegati" +
+                                os.sep + file_name, output_name, file_name)
 
         self.set_message.emit("Creating 'CdI_Tabelle.sqlite'")
         self.set_log_message.emit("\nCreating 'CdI_Tabelle.sqlite'\n")
-        dir_gdb = output_name + os.sep + "Indagini" + os.sep + "CdI_Tabelle.sqlite"
-        orig_gdb = self.in_dir + os.sep + "db" + os.sep + "indagini.sqlite"
+        dir_gdb = os.path.join(output_name, "Indagini", "CdI_Tabelle.sqlite")
+        orig_gdb = os.path.join(self.in_dir, "db", "indagini.sqlite")
         conn = sqlite3.connect(dir_gdb)
         sql = """ATTACH '""" + orig_gdb + """' AS A;"""
         conn.execute(sql)

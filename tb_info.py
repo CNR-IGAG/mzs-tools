@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:		tb_info.py
 # Author:	  Tarquini E.
 # Created:	 08-02-2018
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
@@ -30,8 +30,8 @@ class info(QDialog, FORM_CLASS):
 
     def help(self):
         self.pushButton_ita.clicked.connect(
-            lambda: self.open_pdf(self.plugin_dir + os.sep + "manuale.pdf"))
-        #self.pushButton_eng.clicked.connect(lambda: self.open_pdf(self.plugin_dir + os.sep + "manual.pdf"))
+            lambda: self.open_pdf(self.plugin_dir, "manuale.pdf"))
+        #self.pushButton_eng.clicked.connect(lambda: self.open_pdf(self.plugin_dir, "manual.pdf"))
         self.pushButton_www.clicked.connect(lambda: webbrowser.open(
             'https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools'))
 

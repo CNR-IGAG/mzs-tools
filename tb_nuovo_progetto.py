@@ -1,28 +1,26 @@
-from builtins import str
-from builtins import range
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:		tb_nuovo_progetto.py
 # Author:	  Tarquini E.
 # Created:	 21-02-2018
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
+import csv
+import datetime
+import os
+import shutil
+import sqlite3
+import sys
+import webbrowser
+import zipfile
+
+from qgis.core import *
+from qgis.gui import *
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.utils import *
-from qgis.core import *
-from qgis.gui import *
-import os
-import sys
-import webbrowser
-import csv
-import shutil
-import zipfile
-import sqlite3
-import datetime
-
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'tb_nuovo_progetto.ui'))
@@ -32,20 +30,21 @@ class nuovo_progetto(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         self.iface = iface
-        super(nuovo_progetto, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.plugin_dir = os.path.dirname(__file__)
 
     def nuovo(self):
         self.help_button.clicked.connect(lambda: webbrowser.open(
             'https://www.youtube.com/watch?v=TcaljLE5TCk&t=57s&list=PLM5qQOkOkzgWH2VogqeQIDybylmE4P1TQ&index=2'))
-        dir_svg_input = self.plugin_dir + os.sep + "img" + os.sep + "svg"
+        dir_svg_input = os.path.join(self.plugin_dir, "img", "svg")
         dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
-        tabella_controllo = self.plugin_dir + os.sep + "comuni.csv"
-        pacchetto = self.plugin_dir + os.sep + "data" + os.sep + "progetto_MS.zip"
+        tabella_controllo = self.plugin_dir, "comuni.csv"
+        pacchetto = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
 
         dizio_comuni = {}
         dict_comuni = {}
+
         with open(tabella_controllo, 'r') as csvfile:
             csvreader = csv.reader(csvfile, delimiter=';')
             for row in csvreader:
@@ -56,8 +55,9 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                 dict_comuni[cod_istat] = nome_comune
                 dizio_comuni[nome_com] = cod_istat
 
-        data_meta = datetime.datetime.now().strftime("%d/%m/%Y")
-        data_dato = datetime.datetime.now().strftime("%d/%m/%Y")
+        data_meta = datetime.datetime.now().strftime(r"%d/%m/%Y")
+        data_dato = datetime.datetime.now().strftime(r"%d/%m/%Y")
+
         self.dir_output.clear()
         self.comune.clear()
         self.cod_istat.clear()
@@ -75,6 +75,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
         self.accuratezza.clear()
         self.lineage.clear()
         self.descriz.clear()
+
         self.button_box.setEnabled(False)
         self.comune.addItems(sorted(dizio_comuni.keys()))
         self.comune.model().item(0).setEnabled(False)
@@ -98,6 +99,29 @@ class nuovo_progetto(QDialog, FORM_CLASS):
         self.lineage.textChanged.connect(self.disableButton)
         self.descriz.textChanged.connect(self.disableButton)
         self.dir_output.textChanged.connect(self.disableButton)
+
+        # Sample data for testing purposes
+        # TODO: disable
+        if True:
+            d = QTemporaryDir()
+            d.setAutoRemove(False)
+            self.dir_output.setText(d.path())
+            self.comune.setCurrentText('Luserna San Giovanni')
+            self.cod_istat.setText('001139')
+            self.professionista.setText('itopen')
+            self.email_prof.setText('some text')
+            self.sito_prof.setText('some text')
+            self.ufficio.setText('some text')
+            self.propretario.setText('some text')
+            self.email_prop.setText('some text')
+            self.sito_prop.setText('some text')
+            self.contatto.setText('some text')
+            self.email_cont.setText('some text')
+            self.sito_cont.setText('some text')
+            self.scala_nom.setText('50000')
+            self.accuratezza.setText('some text')
+            self.lineage.setText('some text')
+            self.descriz.setText('some text')
 
         self.show()
         result = self.exec_()
@@ -136,10 +160,10 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     zip_ref = zipfile.ZipFile(pacchetto, 'r')
                     zip_ref.extractall(dir_out)
                     zip_ref.close()
-                    for x, y in dict_comuni.items():
+                    for x, y in list(dict_comuni.items()):
                         if x == cod_istat:
                             comune_nome = (y[6:]).replace("_", " ")
-                            path_comune = dir_out + os.sep + y
+                            path_comune = dir_out, y
                             os.rename(dir_out + os.sep +
                                       "progetto_MS", path_comune)
 
@@ -179,9 +203,9 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                         "cod_regio='" + codice_regio + "'")
 
                     logo_regio_in = os.path.join(
-                        self.plugin_dir, "img" + os.sep + "logo_regio" + os.sep + codice_regio + ".png").replace('\\', '/')
+                        self.plugin_dir, "img", "logo_regio", codice_regio + ".png").replace('\\', '/')
                     logo_regio_out = os.path.join(
-                        path_comune, "progetto" + os.sep + "loghi" + os.sep + "logo_regio.png").replace('\\', '/')
+                        path_comune, "progetto", "loghi", "logo_regio.png").replace('\\', '/')
                     shutil.copyfile(logo_regio_in, logo_regio_out)
 
                     mainPath = QgsProject.instance().homePath()
@@ -191,21 +215,21 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     extent = destLYR.extent()
                     canvas.setExtent(extent)
 
-                    composers = iface.activeComposers()
-                    for composer_view in composers:
-                        composition = composer_view.composition()
-                        map_item = composition.getComposerItemById('mappa_0')
-                        map_item.setMapCanvas(canvas)
-                        map_item.zoomToExtent(canvas.extent())
-                        map_item_2 = composition.getComposerItemById(
+                    layout_manager = QgsProject.instance().layoutManager()
+                    layouts = layout_manager.printLayouts()
+
+                    for layout in layouts:
+                        map_item = layout.itemById('mappa_0')
+                        map_item.setExtent(canvas.extent())
+                        map_item_2 = layout.itemById(
                             'regio_title')
                         map_item_2.setText("Regione " + regione)
-                        map_item_3 = composition.getComposerItemById(
+                        map_item_3 = layout.itemById(
                             'com_title')
                         map_item_3.setText("Comune di " + nome)
-                        map_item_4 = composition.getComposerItemById('logo')
+                        map_item_4 = layout.itemById('logo')
                         map_item_4.refreshPicture()
-                        map_item_5 = composition.getComposerItemById('mappa_1')
+                        map_item_5 = layout.itemById('mappa_1')
                         map_item_5.refreshPicture()
 
                     self.indice_tab_execute(data_meta, regione, codice_regio, provincia,
@@ -219,8 +243,8 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                 except Exception as z:
                     QMessageBox.critical(
                         None, u'ERROR!', u'Error:\n"' + str(z) + '"')
-                    if os.path.exists(dir_out + os.sep + "progetto_MS"):
-                        shutil.rmtree(dir_out + os.sep + "progetto_MS")
+                    if os.path.exists(dir_out, "progetto_MS"):
+                        shutil.rmtree(dir_out, "progetto_MS")
 # except ZeroDivisionError:
 # pass
 
@@ -248,7 +272,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
             self.button_box.setEnabled(False)
 
     def update_cod_istat(self, dizionario, nome_comune_sel, campo):
-        for chiave, valore in dizionario.items():
+        for chiave, valore in list(dizionario.items()):
             if chiave == nome_comune_sel:
                 campo.setText(valore)
 
@@ -262,45 +286,40 @@ class nuovo_progetto(QDialog, FORM_CLASS):
 
     def mappa_insieme(self, mainPath, destLYR):
 
-        destLYR = QgsProject.instance(
-        ).mapLayersByName("Limiti comunali")[0]
+        # TODO: rm
+        #destLYR = QgsProject.instance().mapLayersByName("Limiti comunali")[0]
         canvas = iface.mapCanvas()
         extent = destLYR.extent()
         canvas.setExtent(extent)
 
-        map_settings = iface.mapCanvas().mapSettings()
-        c = QgsComposition(map_settings)
-        c.setPaperSize(1200, 700)
-        c.setPrintResolution(200)
+        p = QgsProject.instance()
+        layout = QgsLayout(p)
+        page = QgsLayoutItemPage(layout)
+        page.setPageSize(QgsLayoutSize(
+            1200, 700, QgsUnitTypes.LayoutMillimeters))
+        collection = layout.pageCollection()
+        collection.addPage(page)
 
-        x, y = 0, 0
-        w, h = c.paperWidth(), c.paperHeight()
-        composerMap = QgsComposerMap(c, x, y, w, h)
-        composerMap.setBackgroundEnabled(False)
-        c.addItem(composerMap)
+        item_map = QgsLayoutItemMap(layout)
+        item_map.setCrs(destLYR.crs())
+        item_map.setExtent(extent)
+        layout.addItem(item_map)
 
         dpmm = 200/25.4
-        width = int(dpmm * c.paperWidth())
-        height = int(dpmm * c.paperHeight())
+        width = int(dpmm * page.pageSize().width())
+        height = int(dpmm * page.pageSize().height())
 
-        image = QImage(QSize(width, height), QImage.Format_ARGB32)
-        image.setDotsPerMeterX(dpmm * 1000)
-        image.setDotsPerMeterY(dpmm * 1000)
-        image.fill(Qt.transparent)
+        size = QSize(width, height)
+        exporter = QgsLayoutExporter(layout)
+        image = exporter.renderPageToImage(0, size)
 
-        imagePainter = QPainter(image)
-
-        c.setPlotStyle(QgsComposition.Print)
-        c.renderPage(imagePainter, 0)
-        imagePainter.end()
-
-        imageFilename = mainPath + os.sep + "progetto" + \
-            os.sep + "loghi" + os.sep + "mappa_reg.png"
-        image.save(imageFilename, 'png')
+        imageFilename = mainPath, "progetto" + \
+            os.sep + "loghi", "mappa_reg.png"
+        image.save(imageFilename, 'PNG')
 
     def indice_tab_execute(self, data_meta, regione, codice_regio, provincia, codice_prov, nome, codice_com, professionista, ufficio, propretario):
-        orig_gdb = QgsProject.instance().readPath("./") + os.sep + \
-            "db" + os.sep + "indagini.sqlite"
+        orig_gdb = QgsProject.instance().readPath("./"), \
+            "db", "indagini.sqlite"
         conn = sqlite3.connect(orig_gdb)
         sql = """ATTACH '""" + orig_gdb + """' AS A;"""
         conn.execute(sql)
@@ -311,8 +330,8 @@ class nuovo_progetto(QDialog, FORM_CLASS):
         conn.close()
 
     def metadati_tab_execute(self, codice_prov, codice_com, professionista, email_prof, sito_prof, data_meta, ufficio, propretario, email_prop, sito_prop, data_dato, descriz, contatto, email_cont, sito_cont, scala_nom, extent, accuratezza, lineage):
-        orig_gdb = QgsProject.instance().readPath("./") + os.sep + \
-            "db" + os.sep + "indagini.sqlite"
+        orig_gdb = QgsProject.instance().readPath("./"), \
+            "db", "indagini.sqlite"
         conn = sqlite3.connect(orig_gdb)
         sql = """ATTACH '""" + orig_gdb + """' AS A;"""
         conn.execute(sql)

@@ -1,29 +1,28 @@
-from __future__ import absolute_import
-from builtins import str
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:		tb_esporta_shp.py
 # Author:	  Tarquini E.
 # Created:	 08-02-2018
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
+import os
+import shutil
+import sqlite3
+import sys
+import webbrowser
+import zipfile
+
+from qgis.core import *
+from qgis.gui import *
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.utils import *
-from qgis.core import *
-from qgis.gui import *
-import os
-import sys
-import webbrowser
-import shutil
-import zipfile
-import sqlite3
-from . import constants
-from .workers.export_worker import ExportWorker
-from .setup_workers import setup_workers
 
+from . import constants
+from .setup_workers import setup_workers
+from .workers.export_worker import ExportWorker
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'tb_esporta_shp.ui'))
@@ -59,9 +58,8 @@ class esporta_shp(QDialog, FORM_CLASS):
                     worker = ExportWorker(in_dir, out_dir, self.plugin_dir)
 
                     # create export log file
-                    logfile_path = in_dir + os.sep + "allegati" + os.sep + "log" + os.sep + \
-                        str(time.strftime("%Y-%m-%d_%H-%M-%S",
-                                          time.gmtime())) + "_export_log.txt"
+                    logfile_path = os.path.join(in_dir, "allegati", "log", str(
+                        time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_export_log.txt")
                     log_file = open(logfile_path, 'a')
                     log_file.write("EXPORT REPORT:" + "\n---------------\n\n")
 
@@ -71,11 +69,11 @@ class esporta_shp(QDialog, FORM_CLASS):
 
                 else:
                     QMessageBox.warning(
-                        None, u'WARNING!', u"The selected directory does not exist!")
+                        None, 'WARNING!', "The selected directory does not exist!")
 
             except Exception as z:
                 QMessageBox.critical(
-                    None, u'ERROR!', u'Error:\n"' + str(z) + '"')
+                    None, 'ERROR!', 'Error:\n"' + str(z) + '"')
 
     def disableButton(self):
         conteggio = 0

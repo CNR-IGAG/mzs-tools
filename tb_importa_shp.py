@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 from builtins import str
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:		tb_importa_shp.py
 # Author:	  Pennifca F., Tarquini E.
 # Created:	 08-02-2018
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
@@ -67,9 +67,9 @@ class importa_shp(QDialog, FORM_CLASS):
                     proj_abs_path, in_dir, tab_dir, map_registry_instance)
 
                 # create import log file
-                logfile_path = proj_abs_path + os.sep + "allegati" + os.sep + "log" + os.sep + \
-                    str(time.strftime("%Y-%m-%d_%H-%M-%S",
-                                      time.gmtime())) + "_import_log.txt"
+                logfile_path = os.path.join(proj_abs_path, "allegati", "log", \)
+                str(time.strftime("%Y-%m-%d_%H-%M-%S",
+                                  time.gmtime())) + "_import_log.txt"
                 log_file = open(logfile_path, 'a')
                 log_file.write("IMPORT REPORT:" + "\n---------------\n\n")
 
