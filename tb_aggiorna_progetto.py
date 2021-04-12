@@ -45,9 +45,10 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                 vers_data_1 = os.path.join(self.plugin_dir, "versione.txt")
                 new_vers = open(vers_data_1, 'r').read()
                 vers_data_2 = os.path.join(dir2, "progetto", "versione.txt")
-                proj_vers = open(vers_data_2, 'r').read()
-                pacchetto = os.path.join(
-                    self.plugin_dir, "data", "progetto_MS.zip")
+                with open(vers_data_2, 'r') as f:
+                    proj_vers = f.read()
+                    pacchetto = os.path.join(
+                        self.plugin_dir, "data", "progetto_MS.zip")
 
                 if proj_vers < '0.8' and new_vers == '1.3':
                     name_output = nome + "_backup_v" + proj_vers + "_" + \

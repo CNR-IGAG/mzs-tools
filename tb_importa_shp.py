@@ -85,7 +85,7 @@ class importa_shp(QDialog, FORM_CLASS):
         check_campi = [self.dir_input.text(), self.tab_input.text()]
         check_value = []
 
-        layers = self.QsProject.instance().mapLayers().values()
+        layers = self.QgsProject.instance().mapLayers().values()
         for layer in layers:
             if layer.name() in constants.LISTA_LAYER:
                 conteggio += 1

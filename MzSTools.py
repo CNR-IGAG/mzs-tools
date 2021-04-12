@@ -56,16 +56,20 @@ class MzSTools():
         self.toolbar.setObjectName('MzSTools')
 
         self.new_project_dlg.dir_output.clear()
-        self.new_project_dlg.pushButton_out.clicked.connect(self.select_output_fld_2)
+        self.new_project_dlg.pushButton_out.clicked.connect(
+            self.select_output_fld_2)
 
         self.import_shp_dlg.dir_input.clear()
-        self.import_shp_dlg.pushButton_in.clicked.connect(self.select_input_fld_4)
+        self.import_shp_dlg.pushButton_in.clicked.connect(
+            self.select_input_fld_4)
 
         self.import_shp_dlg.tab_input.clear()
-        self.import_shp_dlg.pushButton_tab.clicked.connect(self.select_tab_fld_4)
+        self.import_shp_dlg.pushButton_tab.clicked.connect(
+            self.select_tab_fld_4)
 
         self.export_shp_dlg.dir_output.clear()
-        self.export_shp_dlg.pushButton_out.clicked.connect(self.select_output_fld_5)
+        self.export_shp_dlg.pushButton_out.clicked.connect(
+            self.select_output_fld_5)
 
         self.iface.projectRead.connect(self.run1)
 
@@ -145,7 +149,7 @@ class MzSTools():
         self.add_action(
             icon_path8,
             text=self.tr('Add feature or record'),
-            callback=self.add_feature_or_records,
+            callback=self.add_feature_or_record,
             parent=self.iface.mainWindow())
 
         self.add_action(
@@ -215,10 +219,12 @@ class MzSTools():
             vers_data = os.path.join(QgsProject.instance().fileName().split("progetto")[
                 0], "progetto", "versione.txt")
             try:
-                proj_vers = open(vers_data, 'r').read()
-                if proj_vers < '1.3':
-                    qApp.processEvents()
-                    self.project_update_dlg.aggiorna(percorso, dir_output, nome)
+                with open(vers_data, 'r') as f:
+                    proj_vers = f.read()
+                    if proj_vers < '1.3':
+                        qApp.processEvents()
+                        self.project_update_dlg.aggiorna(
+                            percorso, dir_output, nome)
 
             except:
                 pass
@@ -241,7 +247,7 @@ class MzSTools():
 
         self.ms_copy_dlg.copia()
 
-    def add_feature_or_records(self):
+    def add_feature_or_record(self):
         proj = QgsProject.instance()
         proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
         proj.writeEntryDouble('Digitizing', 'DefaultSnapTolerance', 20.0)
@@ -251,29 +257,54 @@ class MzSTools():
                     "Zone stabili liv 3", "Zone instabili liv 3"]
 
         layer = iface.activeLayer()
+
+        # Configure snapping
         if layer != None:
+
+            snapping_config = QgsProject.instance().snappingConfig()
+            snapping_config.clearIndividualLayerSettings()
+
             if layer.name() in POLY_LYR:
 
                 self.wait_dlg.show()
-                for fc in QsProject.instance().mapLayers().values():
+                for fc in QgsProject.instance().mapLayers().values():
                     if fc.name() in POLY_LYR:
-                        proj.setSnapSettingsForLayer(
-                            fc.id(), True, 0, 0, 20, False)
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+
+                        snapping_config.setIndividualLayerSettings(
+                            fc, layer_settings)
+                        snapping_config.setIntersectionSnapping(False)
 
                 for chiave, valore in list(DIZIO_LAYER.items()):
                     if layer.name() == chiave:
-                        OtherLayer = QgsProject.instance().mapLayersByName(valore)[
+                        other_layer = QgsProject.instance().mapLayersByName(valore)[
                             0]
-                        proj.setSnapSettingsForLayer(
-                            layer.id(), True, 0, 0, 20, True)
-                        proj.setSnapSettingsForLayer(
-                            OtherLayer.id(), True, 0, 0, 20, True)
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            layer, layer_settings)
+                        snapping_config.setIndividualLayerSettings(
+                            other_layer, layer_settings)
+
+                        snapping_config.setIntersectionSnapping(True)
+
                     elif layer.name() == "Unita' geologico-tecniche":
-                        proj.setSnapSettingsForLayer(
-                            layer.id(), True, 0, 0, 20, True)
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            layer, layer_settings)
+                        snapping_config.setIntersectionSnapping(True)
+
                     elif layer.name() == "Instabilita' di versante":
-                        proj.setSnapSettingsForLayer(
-                            layer.id(), True, 0, 0, 20, True)
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            layer, layer_settings)
+                        snapping_config.setIntersectionSnapping(True)
 
                 layer.startEditing()
                 iface.actionAddFeature().trigger()
@@ -286,7 +317,7 @@ class MzSTools():
     def save(self):
         proj = QgsProject.instance()
         proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-        proj.writeEntry('Digitizing', 'DefaultSnapTolerance', 20.0)
+        proj.writeEntryDouble('Digitizing', 'DefaultSnapTolerance', 20.0)
         POLIGON_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
                        "Zone stabili liv 3", "Zone instabili liv 3"]
 
@@ -295,11 +326,18 @@ class MzSTools():
             if layer.name() in POLIGON_LYR:
 
                 self.wait_dlg.show()
-                layers = QsProject.instance().mapLayers().values()
+                layers = QgsProject.instance().mapLayers().values()
+                snapping_config = QgsProject.instance().snappingConfig()
+                snapping_config.clearIndividualLayerSettings()
+                snapping_config.setIntersectionSnapping(False)
+
                 for fc in layers:
                     if fc.name() in POLIGON_LYR:
-                        proj.setSnapSettingsForLayer(
-                            fc.id(), True, 0, 0, 20, False)
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            fc, layer_settings)
 
                 layer.commitChanges()
                 self.wait_dlg.hide()

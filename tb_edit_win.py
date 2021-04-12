@@ -26,7 +26,7 @@ class edit_win(QDialog, FORM_CLASS):
 
     def __init__(self, parent=None):
         """Constructor."""
-        super(edit_win, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.plugin_dir = os.path.dirname(__file__)
 
