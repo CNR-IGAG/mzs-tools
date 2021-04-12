@@ -72,7 +72,8 @@ class edit_win(QDialog, FORM_CLASS):
 
         proj = QgsProject.instance()
         proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-        proj.writeEntry('Digitizing', 'DefaultSnapTolerance', 20.0)
+        proj.writeEntryDouble(
+            'Digitizing', 'DefaultSnapTolerance', 20.0)
 
         self.show()
         result = self.exec_()

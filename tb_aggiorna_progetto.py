@@ -152,7 +152,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
 
                     shutil.rmtree(os.path.join(dir2, "progetto_MS"))
                     QMessageBox.information(
-                        None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
+                        None, 'INFORMATION!', "The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
 
                 elif proj_vers >= '1.2' and new_vers == '1.3':
                     name_output = nome + "_backup_v" + proj_vers + "_" + \
@@ -181,11 +181,11 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
 
                     shutil.rmtree(os.path.join(dir2, "progetto_MS"))
                     QMessageBox.information(
-                        None, u'INFORMATION!', u"The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
+                        None, 'INFORMATION!', "The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
 
             except Exception as z:
                 QMessageBox.critical(
-                    None, u'ERROR!', u'Error:\n"' + str(z) + '"')
+                    None, 'ERROR!', 'Error:\n"' + str(z) + '"')
 
     def sql_command(self, path_db, file_sql):
         conn = sqlite3.connect(path_db)

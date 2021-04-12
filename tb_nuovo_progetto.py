@@ -22,12 +22,15 @@ from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.utils import *
 
+from .utils import save_map_image
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'tb_nuovo_progetto.ui'))
 
 
 class nuovo_progetto(QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+
+    def __init__(self, iface, parent=None):
         """Constructor."""
         self.iface = iface
         super().__init__(parent)
@@ -39,7 +42,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
             'https://www.youtube.com/watch?v=TcaljLE5TCk&t=57s&list=PLM5qQOkOkzgWH2VogqeQIDybylmE4P1TQ&index=2'))
         dir_svg_input = os.path.join(self.plugin_dir, "img", "svg")
         dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
-        tabella_controllo = self.plugin_dir, "comuni.csv"
+        tabella_controllo = os.path.join(self.plugin_dir, "comuni.csv")
         pacchetto = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
 
         dizio_comuni = {}
@@ -125,6 +128,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
 
         self.show()
         result = self.exec_()
+
         if result:
 
             dir_out = self.dir_output.text()
@@ -163,31 +167,35 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     for x, y in list(dict_comuni.items()):
                         if x == cod_istat:
                             comune_nome = (y[6:]).replace("_", " ")
-                            path_comune = dir_out, y
-                            os.rename(dir_out + os.sep +
-                                      "progetto_MS", path_comune)
+                            path_comune = os.path.join(dir_out, y)
+                            os.rename(os.path.join(
+                                dir_out, "progetto_MS"), path_comune)
 
                     project = QgsProject.instance()
                     project.read(os.path.join(path_comune, "progetto_MS.qgs"))
 
-                    sourceLYR = QgsProject.instance(
+                    layer_limiti_comunali = QgsProject.instance(
                     ).mapLayersByName("Limiti comunali")[0]
-                    selection = sourceLYR.getFeatures(QgsFeatureRequest().setFilterExpression(
-                        '"cod_istat" = \'%s\'' % cod_istat))
-                    sourceLYR.selectByIds([k.id() for k in selection])
+                    req = QgsFeatureRequest()
+                    req.setFilterExpression('"cod_istat" = \'%s\'' % cod_istat)
+                    selection = layer_limiti_comunali.getFeatures(req)
+                    layer_limiti_comunali.selectByIds(
+                        [k.id() for k in selection])
 
-                    destLYR = QgsProject.instance(
+                    layer_comune_progetto = QgsProject.instance(
                     ).mapLayersByName("Comune del progetto")[0]
-                    selected_features = sourceLYR.selectedFeatures()
+                    selected_features = layer_limiti_comunali.selectedFeatures()
+
                     features = []
                     for i in selected_features:
                         features.append(i)
-                    destLYR.startEditing()
-                    data_provider = destLYR.dataProvider()
-                    data_provider.addFeatures(features)
-                    destLYR.commitChanges()
 
-                    features = destLYR.getFeatures()
+                    layer_comune_progetto.startEditing()
+                    data_provider = layer_comune_progetto.dataProvider()
+                    data_provider.addFeatures(features)
+                    layer_comune_progetto.commitChanges()
+
+                    features = layer_comune_progetto.getFeatures()
                     for feat in features:
                         attrs = feat.attributes()
                         codice_regio = attrs[1]
@@ -197,9 +205,9 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                         regione = attrs[7]
                         provincia = attrs[6]
 
-                    sourceLYR.removeSelection()
+                    layer_limiti_comunali.removeSelection()
 
-                    sourceLYR.setSubsetString(
+                    layer_limiti_comunali.setSubsetString(
                         "cod_regio='" + codice_regio + "'")
 
                     logo_regio_in = os.path.join(
@@ -209,11 +217,25 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     shutil.copyfile(logo_regio_in, logo_regio_out)
 
                     mainPath = QgsProject.instance().homePath()
-                    self.mappa_insieme(mainPath, sourceLYR)
+                    canvas = self.iface.mapCanvas()
 
-                    canvas = iface.mapCanvas()
-                    extent = destLYR.extent()
+                    QgsMessageLog.logMessage(
+                        'Canvas WKT %s' % canvas.extent().asWktPolygon())
+                    QgsMessageLog.logMessage(
+                        'layer_limiti_comunali WKT %s' % layer_limiti_comunali.extent().asWktPolygon())
+
+                    imageFilename = os.path.join(
+                        mainPath, "progetto", "loghi", "mappa_reg.png")
+                    save_map_image(
+                        imageFilename, layer_limiti_comunali, canvas)
+
+                    extent = layer_comune_progetto.dataProvider().extent()
                     canvas.setExtent(extent)
+
+                    QgsMessageLog.logMessage(
+                        'Canvas WKT %s' % canvas.extent().asWktPolygon())
+                    QgsMessageLog.logMessage(
+                        'layer_comune_progetto data provider WKT %s' % extent.asWktPolygon())
 
                     layout_manager = QgsProject.instance().layoutManager()
                     layouts = layout_manager.printLayouts()
@@ -237,20 +259,18 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     self.metadati_tab_execute(codice_prov, codice_com, professionista, email_prof, sito_prof, data_meta, ufficio, propretario,
                                               email_prop, sito_prop, data_dato, descriz, contatto, email_cont, sito_cont, scala_nom, extent, accuratezza, lineage)
                     QMessageBox.information(
-                        None, u'INFORMATION!', u"The project has been created!\nSAVE the project, please!")
-# project.write()
+                        None, 'INFORMATION!', "The project has been created!\nSAVE the project, please!")
 
                 except Exception as z:
+                    raise z
                     QMessageBox.critical(
-                        None, u'ERROR!', u'Error:\n"' + str(z) + '"')
-                    if os.path.exists(dir_out, "progetto_MS"):
-                        shutil.rmtree(dir_out, "progetto_MS")
-# except ZeroDivisionError:
-# pass
+                        None, 'ERROR!', 'Error:\n"' + str(z) + '"')
+                    if os.path.exists(os.path.join(dir_out, "progetto_MS")):
+                        shutil.rmtree(os.path.join(dir_out, "progetto_MS"))
 
             else:
                 QMessageBox.warning(
-                    iface.mainWindow(), u'WARNING!', u"The selected directory does not exist!")
+                    self.iface.mainWindow(), 'WARNING!', "The selected directory does not exist!")
 
     def disableButton(self):
         check_campi = [self.professionista.text(), self.email_prof.text(), self.sito_prof.text(), self.propretario.text(), self.ufficio.text(), self.email_prop.text(), self.sito_prop.text(), self.contatto.text(
@@ -284,42 +304,9 @@ class nuovo_progetto(QDialog, FORM_CLASS):
         except:
             value.setText('')
 
-    def mappa_insieme(self, mainPath, destLYR):
-
-        # TODO: rm
-        #destLYR = QgsProject.instance().mapLayersByName("Limiti comunali")[0]
-        canvas = iface.mapCanvas()
-        extent = destLYR.extent()
-        canvas.setExtent(extent)
-
-        p = QgsProject.instance()
-        layout = QgsLayout(p)
-        page = QgsLayoutItemPage(layout)
-        page.setPageSize(QgsLayoutSize(
-            1200, 700, QgsUnitTypes.LayoutMillimeters))
-        collection = layout.pageCollection()
-        collection.addPage(page)
-
-        item_map = QgsLayoutItemMap(layout)
-        item_map.setCrs(destLYR.crs())
-        item_map.setExtent(extent)
-        layout.addItem(item_map)
-
-        dpmm = 200/25.4
-        width = int(dpmm * page.pageSize().width())
-        height = int(dpmm * page.pageSize().height())
-
-        size = QSize(width, height)
-        exporter = QgsLayoutExporter(layout)
-        image = exporter.renderPageToImage(0, size)
-
-        imageFilename = mainPath, "progetto" + \
-            os.sep + "loghi", "mappa_reg.png"
-        image.save(imageFilename, 'PNG')
-
     def indice_tab_execute(self, data_meta, regione, codice_regio, provincia, codice_prov, nome, codice_com, professionista, ufficio, propretario):
-        orig_gdb = QgsProject.instance().readPath("./"), \
-            "db", "indagini.sqlite"
+        orig_gdb = QgsProject.instance().readPath(
+            os.path.join("db", "indagini.sqlite"))
         conn = sqlite3.connect(orig_gdb)
         sql = """ATTACH '""" + orig_gdb + """' AS A;"""
         conn.execute(sql)
@@ -330,8 +317,8 @@ class nuovo_progetto(QDialog, FORM_CLASS):
         conn.close()
 
     def metadati_tab_execute(self, codice_prov, codice_com, professionista, email_prof, sito_prof, data_meta, ufficio, propretario, email_prop, sito_prop, data_dato, descriz, contatto, email_cont, sito_cont, scala_nom, extent, accuratezza, lineage):
-        orig_gdb = QgsProject.instance().readPath("./"), \
-            "db", "indagini.sqlite"
+        orig_gdb = QgsProject.instance().readPath(
+            os.path.join("db", "indagini.sqlite"))
         conn = sqlite3.connect(orig_gdb)
         sql = """ATTACH '""" + orig_gdb + """' AS A;"""
         conn.execute(sql)

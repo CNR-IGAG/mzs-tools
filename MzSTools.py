@@ -28,6 +28,7 @@ from .tb_wait import wait
 class MzSTools():
 
     def __init__(self, iface):
+
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
         locale = QSettings().value('locale/userLocale')[0:2]
@@ -40,31 +41,31 @@ class MzSTools():
             self.translator = QTranslator()
             self.translator.load(locale_path)
 
-        self.dlg0 = wait()
-        self.dlg1 = aggiorna_progetto()
-        self.dlg2 = nuovo_progetto()
-        self.dlg3 = info()
-        self.dlg4 = importa_shp()
-        self.dlg5 = esporta_shp()
-        self.dlg6 = copia_ms()
-        self.dlg10 = edit_win()
+        self.wait_dlg = wait()
+        self.project_update_dlg = aggiorna_progetto()
+        self.new_project_dlg = nuovo_progetto(self.iface)
+        self.info_dlg = info()
+        self.import_shp_dlg = importa_shp()
+        self.export_shp_dlg = esporta_shp()
+        self.ms_copy_dlg = copia_ms()
+        self.edit_win_dlg = edit_win()
 
         self.actions = []
         self.menu = self.tr('&MzS Tools')
         self.toolbar = self.iface.addToolBar('MzSTools')
         self.toolbar.setObjectName('MzSTools')
 
-        self.dlg2.dir_output.clear()
-        self.dlg2.pushButton_out.clicked.connect(self.select_output_fld_2)
+        self.new_project_dlg.dir_output.clear()
+        self.new_project_dlg.pushButton_out.clicked.connect(self.select_output_fld_2)
 
-        self.dlg4.dir_input.clear()
-        self.dlg4.pushButton_in.clicked.connect(self.select_input_fld_4)
+        self.import_shp_dlg.dir_input.clear()
+        self.import_shp_dlg.pushButton_in.clicked.connect(self.select_input_fld_4)
 
-        self.dlg4.tab_input.clear()
-        self.dlg4.pushButton_tab.clicked.connect(self.select_tab_fld_4)
+        self.import_shp_dlg.tab_input.clear()
+        self.import_shp_dlg.pushButton_tab.clicked.connect(self.select_tab_fld_4)
 
-        self.dlg5.dir_output.clear()
-        self.dlg5.pushButton_out.clicked.connect(self.select_output_fld_5)
+        self.export_shp_dlg.dir_output.clear()
+        self.export_shp_dlg.pushButton_out.clicked.connect(self.select_output_fld_5)
 
         self.iface.projectRead.connect(self.run1)
 
@@ -144,7 +145,7 @@ class MzSTools():
         self.add_action(
             icon_path8,
             text=self.tr('Add feature or record'),
-            callback=self.run8,
+            callback=self.add_feature_or_records,
             parent=self.iface.mainWindow())
 
         self.add_action(
@@ -183,28 +184,28 @@ class MzSTools():
 
     def select_output_fld_2(self):
         out_dir = QFileDialog.getExistingDirectory(
-            self.dlg2, "", "", QFileDialog.ShowDirsOnly)
-        self.dlg2.dir_output.setText(out_dir)
+            self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.new_project_dlg.dir_output.setText(out_dir)
 
     def select_input_fld_4(self):
         in_dir = QFileDialog.getExistingDirectory(
-            self.dlg4, "", "", QFileDialog.ShowDirsOnly)
-        self.dlg4.dir_input.setText(in_dir)
+            self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.import_shp_dlg.dir_input.setText(in_dir)
 
     def select_tab_fld_4(self):
         tab_dir = QFileDialog.getExistingDirectory(
-            self.dlg4, "", "", QFileDialog.ShowDirsOnly)
-        self.dlg4.tab_input.setText(tab_dir)
+            self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.import_shp_dlg.tab_input.setText(tab_dir)
 
     def select_input_fld_5(self):
         in_dir = QFileDialog.getExistingDirectory(
-            self.dlg5, "", "", QFileDialog.ShowDirsOnly)
-        self.dlg5.dir_input.setText(in_dir)
+            self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.export_shp_dlg.dir_input.setText(in_dir)
 
     def select_output_fld_5(self):
         out_dir = QFileDialog.getExistingDirectory(
-            self.dlg5, "", "", QFileDialog.ShowDirsOnly)
-        self.dlg5.dir_output.setText(out_dir)
+            self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.export_shp_dlg.dir_output.setText(out_dir)
 
     def run1(self):
         percorso = QgsProject.instance().homePath()
@@ -217,33 +218,33 @@ class MzSTools():
                 proj_vers = open(vers_data, 'r').read()
                 if proj_vers < '1.3':
                     qApp.processEvents()
-                    self.dlg1.aggiorna(percorso, dir_output, nome)
+                    self.project_update_dlg.aggiorna(percorso, dir_output, nome)
 
             except:
                 pass
 
     def new_project(self):
-        self.dlg2.nuovo()
+        self.new_project_dlg.nuovo()
 
     def help(self):
-        self.dlg3.help()
+        self.info_dlg.help()
 
     def import_project(self):
 
-        self.dlg4.importa_prog()
+        self.import_shp_dlg.importa_prog()
 
     def export_project(self):
 
-        self.dlg5.esporta_prog()
+        self.export_shp_dlg.esporta_prog()
 
     def copy_stab(self):
 
-        self.dlg6.copia()
+        self.ms_copy_dlg.copia()
 
-    def run8(self):
+    def add_feature_or_records(self):
         proj = QgsProject.instance()
         proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-        proj.writeEntry('Digitizing', 'DefaultSnapTolerance', 20.0)
+        proj.writeEntryDouble('Digitizing', 'DefaultSnapTolerance', 20.0)
         DIZIO_LAYER = {"Zone stabili liv 1": "Zone instabili liv 1", "Zone instabili liv 1": "Zone stabili liv 1", "Zone stabili liv 2": "Zone instabili liv 2", "Zone instabili liv 2": "Zone stabili liv 2",
                        "Zone stabili liv 3": "Zone instabili liv 3", "Zone instabili liv 3": "Zone stabili liv 3"}
         POLY_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
@@ -253,8 +254,8 @@ class MzSTools():
         if layer != None:
             if layer.name() in POLY_LYR:
 
-                self.dlg0.show()
-                for fc in iface.legendInterface().layers():
+                self.wait_dlg.show()
+                for fc in QsProject.instance().mapLayers().values():
                     if fc.name() in POLY_LYR:
                         proj.setSnapSettingsForLayer(
                             fc.id(), True, 0, 0, 20, False)
@@ -276,7 +277,7 @@ class MzSTools():
 
                 layer.startEditing()
                 iface.actionAddFeature().trigger()
-                self.dlg0.hide()
+                self.wait_dlg.hide()
 
             else:
                 layer.startEditing()
@@ -293,18 +294,18 @@ class MzSTools():
         if layer != None:
             if layer.name() in POLIGON_LYR:
 
-                self.dlg0.show()
-                layers = iface.legendInterface().layers()
+                self.wait_dlg.show()
+                layers = QsProject.instance().mapLayers().values()
                 for fc in layers:
                     if fc.name() in POLIGON_LYR:
                         proj.setSnapSettingsForLayer(
                             fc.id(), True, 0, 0, 20, False)
 
                 layer.commitChanges()
-                self.dlg0.hide()
+                self.wait_dlg.hide()
 
             else:
                 layer.commitChanges()
 
     def add_site(self):
-        self.dlg10.edita()
+        self.edit_win_dlg.edita()

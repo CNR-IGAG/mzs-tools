@@ -67,9 +67,8 @@ class importa_shp(QDialog, FORM_CLASS):
                     proj_abs_path, in_dir, tab_dir, map_registry_instance)
 
                 # create import log file
-                logfile_path = os.path.join(proj_abs_path, "allegati", "log", \)
-                str(time.strftime("%Y-%m-%d_%H-%M-%S",
-                                  time.gmtime())) + "_import_log.txt"
+                logfile_path = os.path.join(proj_abs_path, "allegati", "log", str(
+                    time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_import_log.txt")
                 log_file = open(logfile_path, 'a')
                 log_file.write("IMPORT REPORT:" + "\n---------------\n\n")
 
@@ -86,7 +85,7 @@ class importa_shp(QDialog, FORM_CLASS):
         check_campi = [self.dir_input.text(), self.tab_input.text()]
         check_value = []
 
-        layers = self.iface.legendInterface().layers()
+        layers = self.QsProject.instance().mapLayers().values()
         for layer in layers:
             if layer.name() in constants.LISTA_LAYER:
                 conteggio += 1
