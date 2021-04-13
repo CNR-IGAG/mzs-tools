@@ -27,12 +27,14 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class importa_shp(QDialog, FORM_CLASS):
+
     def __init__(self, parent=None):
         """Constructor."""
         self.iface = iface
-        super(importa_shp, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.plugin_dir = os.path.dirname(__file__)
+        self.logfile_path = None  # Will be set later
 
     def importa_prog(self):
         self.help_button.clicked.connect(lambda: webbrowser.open(
@@ -44,15 +46,8 @@ class importa_shp(QDialog, FORM_CLASS):
         self.dir_input.textChanged.connect(self.disableButton)
         self.tab_input.textChanged.connect(self.disableButton)
 
-        ###############################
-        # DEBUG ONLY!
-        # self.dir_input.setText(r"C:\Users\Emanuele Tarquini\Desktop\test\MONTEDINOVE\44034_Montedinove")
-        # self.tab_input.setText(r"C:\Users\Emanuele Tarquini\Desktop\test\MONTEDINOVE\tab_montedinove")
-        # self.dir_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\54051_Spoleto")
-        # self.tab_input.setText("C:\\Users\\Francesco\\Documents\\da_importare\\tab_spoleto")
-        ###############################
-
         self.show()
+        self.adjustSize()
         result = self.exec_()
         if result:
 
@@ -67,17 +62,17 @@ class importa_shp(QDialog, FORM_CLASS):
                     proj_abs_path, in_dir, tab_dir, map_registry_instance)
 
                 # create import log file
-                logfile_path = os.path.join(proj_abs_path, "allegati", "log", str(
+                self.logfile_path = os.path.join(proj_abs_path, "Allegati", "log", str(
                     time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_import_log.txt")
-                log_file = open(logfile_path, 'a')
+                log_file = open(self.logfile_path, 'a')
                 log_file.write("IMPORT REPORT:" + "\n---------------\n\n")
 
                 # start import worker
                 setup_workers().start_worker(worker, self.iface,
-                                             'Starting import task...', log_file)
+                                             'Starting import task...', log_file, self.logfile_path)
             else:
                 QMessageBox.warning(
-                    iface.mainWindow(), u'WARNING!', u"The selected directory does not exist!")
+                    iface.mainWindow(), 'WARNING!', "The selected directory does not exist!")
 
     def disableButton(self):
 
@@ -85,7 +80,7 @@ class importa_shp(QDialog, FORM_CLASS):
         check_campi = [self.dir_input.text(), self.tab_input.text()]
         check_value = []
 
-        layers = self.QgsProject.instance().mapLayers().values()
+        layers = QgsProject.instance().mapLayers().values()
         for layer in layers:
             if layer.name() in constants.LISTA_LAYER:
                 conteggio += 1

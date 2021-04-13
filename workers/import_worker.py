@@ -10,7 +10,6 @@ from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.utils import *
-
 from ..constants import *
 from .abstract_worker import AbstractWorker, UserAbortedNotification
 
@@ -20,6 +19,9 @@ from .abstract_worker import AbstractWorker, UserAbortedNotification
 # Author:	  Pennifca F.
 # Created:	 08-02-2018
 # -------------------------------------------------------------------------------
+
+
+TESTING = True
 
 
 class ImportWorker(AbstractWorker):
@@ -38,7 +40,7 @@ class ImportWorker(AbstractWorker):
         self.check_sito_l = True
 
     def work(self):
-        path_tabelle = os.path.join(self.proj_abs_path, "allegati", "altro")
+        path_tabelle = os.path.join(self.proj_abs_path, "Allegati", "Altro")
         z_list = []
 
         # calculate steps
@@ -48,16 +50,16 @@ class ImportWorker(AbstractWorker):
         ###############################################
         self.set_message.emit('Creating folders...')
 
-        if os.path.exists(path_tabelle, "Indagini"):
-            shutil.rmtree(path_tabelle, "Indagini")
+        if os.path.exists(os.path.join(path_tabelle, "Indagini")):
+            shutil.rmtree(os.path.join(path_tabelle, "Indagini"))
 
-        os.makedirs(path_tabelle, "Indagini")
-        self.copy_files(self.in_dir, "Indagini",
-                        path_tabelle, "Indagini")
+        os.makedirs(os.path.join(path_tabelle, "Indagini"))
+        self.copy_files(os.path.join(self.in_dir, "Indagini"),
+                        os.path.join(path_tabelle, "Indagini"))
 
         for nome_tab in LISTA_TAB:
-            if os.path.exists(path_tabelle, nome_tab):
-                os.remove(path_tabelle, nome_tab)
+            if os.path.exists(os.path.join(path_tabelle, nome_tab)):
+                os.remove(os.path.join(path_tabelle, nome_tab))
 
         self.set_log_message.emit('Folder structure -> OK\n')
 
@@ -76,21 +78,21 @@ class ImportWorker(AbstractWorker):
         ###############################################
         for chiave, valore in list(POSIZIONE.items()):
 
-            if not os.path.exists(self.in_dir, valore[0], valore[1] + ".shp"):
+            if not os.path.exists(os.path.join(self.in_dir, valore[0], valore[1] + ".shp")):
                 self.set_log_message.emit(
                     "'" + chiave + "' shapefile does not exist!\n")
                 continue
 
-            sourceLYR = QgsVectorLayer(
-                self.in_dir, valore[0], valore[1] + ".shp", valore[1], 'ogr')
+            sourceLYR = QgsVectorLayer(os.path.join(
+                self.in_dir, valore[0], valore[1] + ".shp"), valore[1], 'ogr')
             destLYR = self.map_registry_instance.mapLayersByName(chiave)[0]
 
             commonFields = self.attribute_adaptor(destLYR, sourceLYR)
 
             if chiave == "Siti puntuali":
-                if os.path.exists(path_tabelle, 'Sito_Puntuale.txt'):
-                    self.insert_siti(sourceLYR, path_tabelle +
-                                     os.sep + 'Sito_Puntuale.txt', "puntuale")
+                if os.path.exists(os.path.join(path_tabelle, 'Sito_Puntuale.txt')):
+                    self.insert_siti(sourceLYR, os.path.join(
+                        path_tabelle, 'Sito_Puntuale.txt'), "puntuale")
                     self.set_message.emit(
                         "'" + chiave + "' shapefile has been copied!")
                     self.set_log_message.emit(
@@ -102,9 +104,9 @@ class ImportWorker(AbstractWorker):
                     self.check_sito_p = False
 
             elif chiave == "Siti lineari":
-                if os.path.exists(path_tabelle, 'Sito_Lineare.txt'):
-                    self.insert_siti(sourceLYR, path_tabelle +
-                                     os.sep + 'Sito_Lineare.txt', "lineare")
+                if os.path.exists(os.path.join(path_tabelle, 'Sito_Lineare.txt')):
+                    self.insert_siti(sourceLYR, os.path.join(
+                        path_tabelle, 'Sito_Lineare.txt'), "lineare")
                     self.set_message.emit(
                         "'" + chiave + "' shapefile has been copied!")
                     self.set_log_message.emit(
@@ -158,24 +160,25 @@ class ImportWorker(AbstractWorker):
 
         # step 3 (inserting indagini_puntuali and related data)
         #######################################################
-        if self.check_sito_p is True and os.path.exists(path_tabelle, "Indagini_Puntuali.txt"):
+        if self.check_sito_p is True and os.path.exists(os.path.join(path_tabelle, "Indagini_Puntuali.txt")):
             z_list.append("Indagini_Puntuali")
             self.insert_table("indagini_puntuali",
-                              path_tabelle, "Indagini_Puntuali.txt")
+                              os.path.join(
+                                  path_tabelle, "Indagini_Puntuali.txt"))
             self.set_log_message.emit(
                 "'Indagini_Puntuali' table has been copied!\n")
 
-            if os.path.exists(path_tabelle, "Parametri_Puntuali.txt"):
+            if os.path.exists(os.path.join(path_tabelle, "Parametri_Puntuali.txt")):
                 z_list.append("Parametri_Puntuali")
                 self.insert_table(
-                    "parametri_puntuali", path_tabelle, "Parametri_Puntuali.txt")
+                    "parametri_puntuali", os.path.join(path_tabelle, "Parametri_Puntuali.txt"))
                 self.set_log_message.emit(
                     "'Parametri_Puntuali' table has been copied!\n")
 
-                if os.path.exists(path_tabelle, "Curve.txt"):
+                if os.path.exists(os.path.join(path_tabelle, "Curve.txt")):
                     z_list.append("Curve")
                     self.insert_table(
-                        "curve", path_tabelle, "Curve.txt")
+                        "curve", os.path.join(path_tabelle, "Curve.txt"))
                     self.set_log_message.emit(
                         "'Curve' table has been copied!\n")
 
@@ -187,26 +190,29 @@ class ImportWorker(AbstractWorker):
 
         # step 4 (inserting indagini lineari and related data)
         ######################################################
-        if self.check_sito_l is True and os.path.exists(path_tabelle, "Indagini_Lineari.txt"):
+        if self.check_sito_l is True and os.path.exists(os.path.join(path_tabelle, "Indagini_Lineari.txt")):
             z_list.append("Indagini_Lineari")
-            self.insert_table("indagini_lineari", path_tabelle +
-                              os.sep + "Indagini_Lineari.txt")
+            self.insert_table("indagini_lineari", os.path.join(
+                path_tabelle, "Indagini_Lineari.txt"))
             self.set_log_message.emit(
                 "'Indagini_Lineari' table has been copied!\n")
 
-            if os.path.exists(path_tabelle, "Parametri_Lineari.txt"):
+            if os.path.exists(os.path.join(path_tabelle, "Parametri_Lineari.txt")):
                 z_list.append("Parametri_Lineari")
                 self.insert_table(
-                    "parametri_lineari", path_tabelle, "Parametri_Lineari.txt")
+                    "parametri_lineari", os.path.join(
+                        path_tabelle, "Parametri_Lineari.txt"))
                 self.set_log_message.emit(
                     "'Parametri_Lineari' table has been copied!\n")
 
         if self.check_sito_p is False:
             self.set_log_message.emit(
                 "'Ind_pu' layer and/or 'Sito_Puntuale' table are not present! The correlated surveys and parameters tables will not be copied!\n\n")
+
         if self.check_sito_l is False:
             self.set_log_message.emit(
                 "'Ind_ln' layer and/or 'Sito_Lineare' table are not present! The correlated surveys and parameters tables will not be copied!\n\n")
+
         if self.check_sito_p is True and self.check_sito_l is True:
             tab_mancanti = list(set(LISTA_TAB) - set(z_list))
             for t_lost in tab_mancanti:
@@ -216,6 +222,7 @@ class ImportWorker(AbstractWorker):
         # end inserting indagini lineari
         if self.killed:
             raise UserAbortedNotification('USER Killed')
+
         self.current_step = self.current_step + 1
         self.progress.emit(self.current_step * 100/total_steps)
 
@@ -224,22 +231,29 @@ class ImportWorker(AbstractWorker):
         self.set_message.emit('Adding miscellaneous files...')
 
         dizio_folder = {
-            "Plot": ["OLD_Plot", os.path.join(self.proj_abs_path, "allegati", "Plot"), os.path.join(self.in_dir, "Plot")],
-            "Documenti": ["OLD_Documenti", os.path.join(self.proj_abs_path, "allegati", "Documenti"), os.path.join(self.in_dir, "Indagini", "Documenti")],
-            "Spettri": ["OLD_Spettri", os.path.join(self.proj_abs_path, "allegati", "Spettri"), os.path.join(self.in_dir, "MS23", "Spettri")]
+            "Plot": ["OLD_Plot", os.path.join(self.proj_abs_path, "Allegati", "Plot"), os.path.join(self.in_dir, "Plot")],
+            "Documenti": ["OLD_Documenti", os.path.join(self.proj_abs_path, "Allegati", "Documenti"), os.path.join(self.in_dir, "Indagini", "Documenti")],
+            "Spettri": ["OLD_Spettri", os.path.join(self.proj_abs_path, "Allegati", "Spettri"), os.path.join(self.in_dir, "MS23", "Spettri")]
         }
 
         for chiave_fold, valore_fold in list(dizio_folder.items()):
             self.set_message.emit("Copying '" + chiave_fold + "' folder")
+            QgsMessageLog.logMessage("Copying: %s - %s" %
+                                     (chiave_fold, valore_fold))
             if os.path.exists(valore_fold[2]):
                 _folder = os.path.join(
-                    self.proj_abs_path, "allegati", chiave_fold)
+                    self.proj_abs_path, "Allegati", chiave_fold)
+                QgsMessageLog.logMessage("_folder: %s" % _folder)
                 if os.path.exists(_folder):
                     shutil.rmtree(_folder)
                     shutil.copytree(valore_fold[2], valore_fold[1])
                 else:
-                    shutil.copytree(self.in_dir, chiave_fold,
-                                    self.proj_abs_path, "allegati", chiave_fold)
+                    QgsMessageLog.logMessage("ELSE _folder: %s -> %s" % (os.path.join(self.in_dir, chiave_fold),
+                                                                         os.path.join(self.proj_abs_path,
+                                                                                      "Allegati", chiave_fold)))
+                    shutil.copytree(os.path.join(self.in_dir, chiave_fold),
+                                    os.path.join(self.proj_abs_path,
+                                                 "Allegati", chiave_fold))
                 self.set_log_message.emit(
                     "Folder '" + chiave_fold + " has been copied!\n")
             else:
@@ -250,8 +264,8 @@ class ImportWorker(AbstractWorker):
                 break
 
         self.set_message.emit('Final cleanup...')
-        shutil.rmtree(os.path.join(self.proj_abs_path, "allegati", "altro"))
-        os.makedirs(os.path.join(self.proj_abs_path, "allegati", "altro"))
+        shutil.rmtree(os.path.join(self.proj_abs_path, "Allegati", "Altro"))
+        os.makedirs(os.path.join(self.proj_abs_path, "Allegati", "Altro"))
 
         # end miscellaneous files and cleanup
         if self.killed:
@@ -326,12 +340,14 @@ class ImportWorker(AbstractWorker):
 
         data_provider = destLYR.dataProvider()
         current_feature = 1
+
         for f in featureList:
             self.set_message.emit(destLYR.name(
             ) + ": inserting feature " + str(current_feature) + "/" + str(len(featureList)))
             data_provider.addFeatures([f])
             current_feature = current_feature + 1
-            if self.killed:
+            #TODO: remove
+            if self.killed or current_feature > 2:
                 break
 
         if self.killed:
@@ -380,31 +396,57 @@ class ImportWorker(AbstractWorker):
                     for key in list(i.keys()):
                         dict_sito[key] = i[key]
                         if key == id_field_name:
-                            for feature in vector_layer.getFeatures():
-                                if feature[id_field_name] == dict_sito[id_field_name]:
-                                    geom = feature.geometry().exportToWkt()
+                            exp = '"{field_name}" = \'{field_value}\''.format(
+                                field_name=id_field_name, field_value=dict_sito[id_field_name])
+                            req = QgsFeatureRequest(QgsExpression(exp))
+                            feature = next(vector_layer.getFeatures(req))
+                            geometry = feature.geometry()
+
+                            # Convert to single part
+                            if geometry.isMultipart():
+                                parts = geometry.asGeometryCollection()
+                                geometry = parts[0]
+                                if len(parts) > 1:
+                                    self.set_log_message.emit(
+                                        'Geometry from layer %s is multipart with more than one part: taking first part only - %s' % (vector_layer.name(), geom))
+
+                            geom = geometry.asWkt()
+                            if not geometry.isGeosValid():
+                                self.set_log_message.emit(
+                                    'Wrong geometry from layer %s, expression: %s: %s' % (vector_layer.name(), exp, geom))
+                            if geometry.isNull():
+                                self.set_log_message.emit(
+                                    'Null geometry from layer %s, expression: %s: %s' % (vector_layer.name(), exp, geom))
 
                     if sito_type == "puntuale":
-                        cur.execute(
-                            "INSERT INTO sito_puntuale (id_spu, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SPU"], geom))
-                        lastid = cur.lastrowid
-                        cur.execute('''UPDATE sito_puntuale SET pkuid = ?, indirizzo = ?, mod_identcoord = ?,
-							desc_modcoord = ?, quota_slm = ?, modo_quota = ?, data_sito = ?, note_sito = ?
-							WHERE pkuid = ?;''',  (dict_sito["pkey_spu"], dict_sito["indirizzo"], dict_sito["mod_identcoord"],
-                              dict_sito["desc_modcoord"], dict_sito["quota_slm"], dict_sito["modo_quota"],
-                              dict_sito["data_sito"], dict_sito["note_sito"], lastid))
+                        try:
+                            cur.execute(
+                                "INSERT INTO sito_puntuale (id_spu, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SPU"], geom))
+                            lastid = cur.lastrowid
+                            cur.execute('''UPDATE sito_puntuale SET pkuid = ?, indirizzo = ?, mod_identcoord = ?,
+                                desc_modcoord = ?, quota_slm = ?, modo_quota = ?, data_sito = ?, note_sito = ?
+                                WHERE pkuid = ?;''',  (dict_sito["pkey_spu"], dict_sito["indirizzo"], dict_sito["mod_identcoord"],
+                                                       dict_sito["desc_modcoord"], dict_sito["quota_slm"], dict_sito["modo_quota"],
+                                                       dict_sito["data_sito"], dict_sito["note_sito"], lastid))
+                        except Exception as ex:
+                            self.set_log_message.emit(
+                                "Error inserting geometry in sito_puntuale %s: %s - %s" % (dict_sito["ID_SPU"], geom, str(ex)))
                     elif sito_type == "lineare":
-                        cur.execute(
-                            "INSERT INTO sito_lineare (id_sln, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SLN"], geom))
-                        lastid = cur.lastrowid
-                        cur.execute('''UPDATE sito_lineare SET pkuid = ?, mod_identcoord = ?,
-							desc_modcoord = ?, aquota = ?, bquota = ?, data_sito = ?, note_sito = ?
-							WHERE pkuid = ?;''',  (dict_sito["pkey_sln"], dict_sito["mod_identcoord"],
-                              dict_sito["desc_modcoord"], dict_sito["Aquota"], dict_sito["Bquota"],
-                              dict_sito["data_sito"], dict_sito["note_sito"], lastid))
+                        try:
+                            cur.execute(
+                                "INSERT INTO sito_lineare (id_sln, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SLN"], geom))
+                            lastid = cur.lastrowid
+                            cur.execute('''UPDATE sito_lineare SET pkuid = ?, mod_identcoord = ?,
+                                desc_modcoord = ?, aquota = ?, bquota = ?, data_sito = ?, note_sito = ?
+                                WHERE pkuid = ?;''',  (dict_sito["pkey_sln"], dict_sito["mod_identcoord"],
+                                                       dict_sito["desc_modcoord"], dict_sito["Aquota"], dict_sito["Bquota"],
+                                                       dict_sito["data_sito"], dict_sito["note_sito"], lastid))
+                        except Exception as ex:
+                            self.set_log_message.emit(
+                                "Error inserting geometry in sito_lineare %s: %s - %s" % (dict_sito["ID_SLN"], geom, str(ex)))
 
                     current_feature = current_feature + 1
-                    if self.killed:
+                    if self.killed or (TESTING and current_feature > 10):
                         break
 
             # restore insert trigger
@@ -480,6 +522,7 @@ class ImportWorker(AbstractWorker):
                 table.seek(0)
                 next(dr)
                 for i in dr:
+
                     self.set_message.emit(
                         "Table %s: inserting record %s/%s" % (db_table, str(current_record), str(row_num)))
 
@@ -524,14 +567,18 @@ class ImportWorker(AbstractWorker):
                         select_parent_sql = select_id_indln
                         update_sql = update_parln_fkey
 
-                    cur.execute(insert_sql, to_db)
-                    id_last_insert = cur.lastrowid
-                    cur.execute(select_parent_sql, (fkey,))
-                    id_parent = cur.fetchone()[1]
-                    cur.execute(update_sql, (id_parent, id_last_insert))
+                    try:
+                        cur.execute(insert_sql, to_db)
+                        id_last_insert = cur.lastrowid
+                        cur.execute(select_parent_sql, (fkey,))
+                        id_parent = cur.fetchone()[1]
+                        cur.execute(update_sql, (id_parent, id_last_insert))
+                    except Exception as ex:
+                        self.set_log_message.emit(
+                            "Error inserting table %s SQL: %s" % (str(ex), insert_sql))
 
                     current_record = current_record + 1
-                    if self.killed:
+                    if self.killed or (TESTING and current_record > 10):
                         break
 
             conn.commit()

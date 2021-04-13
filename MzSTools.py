@@ -134,7 +134,7 @@ class MzSTools():
 
         self.add_action(
             icon_path4,
-            text=self.tr('Import project folder to geodatabase'),
+            text=self.tr('Import project folder from geodatabase'),
             callback=self.import_project,
             parent=self.iface.mainWindow())
 
@@ -248,9 +248,15 @@ class MzSTools():
         self.ms_copy_dlg.copia()
 
     def add_feature_or_record(self):
+
         proj = QgsProject.instance()
-        proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-        proj.writeEntryDouble('Digitizing', 'DefaultSnapTolerance', 20.0)
+
+        snapping_config = proj.instance().snappingConfig()
+        snapping_config.clearIndividualLayerSettings()
+
+        snapping_config.setTolerance(20.0)
+        snapping_config.setMode(QgsSnappingConfig.AllLayers)
+
         DIZIO_LAYER = {"Zone stabili liv 1": "Zone instabili liv 1", "Zone instabili liv 1": "Zone stabili liv 1", "Zone stabili liv 2": "Zone instabili liv 2", "Zone instabili liv 2": "Zone stabili liv 2",
                        "Zone stabili liv 3": "Zone instabili liv 3", "Zone instabili liv 3": "Zone stabili liv 3"}
         POLY_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
@@ -261,13 +267,10 @@ class MzSTools():
         # Configure snapping
         if layer != None:
 
-            snapping_config = QgsProject.instance().snappingConfig()
-            snapping_config.clearIndividualLayerSettings()
-
             if layer.name() in POLY_LYR:
 
                 self.wait_dlg.show()
-                for fc in QgsProject.instance().mapLayers().values():
+                for fc in proj.mapLayers().values():
                     if fc.name() in POLY_LYR:
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
                             True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
@@ -278,7 +281,7 @@ class MzSTools():
 
                 for chiave, valore in list(DIZIO_LAYER.items()):
                     if layer.name() == chiave:
-                        other_layer = QgsProject.instance().mapLayersByName(valore)[
+                        other_layer = proj.mapLayersByName(valore)[
                             0]
 
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
@@ -315,24 +318,30 @@ class MzSTools():
                 iface.actionAddFeature().trigger()
 
     def save(self):
+
         proj = QgsProject.instance()
-        proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-        proj.writeEntryDouble('Digitizing', 'DefaultSnapTolerance', 20.0)
-        POLIGON_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
+
+        snapping_config = proj.snappingConfig()
+        snapping_config.clearIndividualLayerSettings()
+
+        snapping_config.setTolerance(20.0)
+        snapping_config.setMode(QgsSnappingConfig.AllLayers)
+
+        POLYGON_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
                        "Zone stabili liv 3", "Zone instabili liv 3"]
 
         layer = iface.activeLayer()
         if layer != None:
-            if layer.name() in POLIGON_LYR:
+            if layer.name() in POLYGON_LYR:
 
                 self.wait_dlg.show()
-                layers = QgsProject.instance().mapLayers().values()
-                snapping_config = QgsProject.instance().snappingConfig()
+                layers = proj.mapLayers().values()
+                snapping_config = proj.snappingConfig()
                 snapping_config.clearIndividualLayerSettings()
                 snapping_config.setIntersectionSnapping(False)
 
                 for fc in layers:
-                    if fc.name() in POLIGON_LYR:
+                    if fc.name() in POLYGON_LYR:
 
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
                             True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)

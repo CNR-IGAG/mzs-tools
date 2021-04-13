@@ -46,6 +46,7 @@ class esporta_shp(QDialog, FORM_CLASS):
         self.dir_output.textChanged.connect(self.disableButton)
 
         self.show()
+        self.adjustSize()
         result = self.exec_()
         if result:
 
@@ -58,7 +59,7 @@ class esporta_shp(QDialog, FORM_CLASS):
                     worker = ExportWorker(in_dir, out_dir, self.plugin_dir)
 
                     # create export log file
-                    logfile_path = os.path.join(in_dir, "allegati", "log", str(
+                    logfile_path = os.path.join(in_dir, "Allegati", "log", str(
                         time.strftime("%Y-%m-%d_%H-%M-%S", time.gmtime())) + "_export_log.txt")
                     log_file = open(logfile_path, 'a')
                     log_file.write("EXPORT REPORT:" + "\n---------------\n\n")
@@ -80,7 +81,7 @@ class esporta_shp(QDialog, FORM_CLASS):
         check_campi = [self.dir_output.text()]
         check_value = []
 
-        layers = self.QgsProject.instance().mapLayers().values()
+        layers = QgsProject.instance().mapLayers().values()
         for layer in layers:
             if layer.name() in constants.LISTA_LAYER:
                 conteggio += 1

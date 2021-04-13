@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
@@ -74,13 +75,19 @@ class ExportWorker(AbstractWorker):
         ###############################################
         self.set_message.emit('Creating project...')
         self.set_log_message.emit('Creating project...\n')
-        input_name = self.out_dir, "progetto_shapefile"
-        output_name = self.out_dir, self.in_dir.split("/")[-1]
+        input_name = os.path.join(self.out_dir, "progetto_shapefile")
+        output_name = os.path.join(self.out_dir, self.in_dir.split("/")[-1])
         zip_ref = zipfile.ZipFile(
-            self.plugin_dir, "data", "progetto_shapefile.zip", 'r')
+            os.path.join(self.plugin_dir, "data", "progetto_shapefile.zip"), 'r')
         zip_ref.extractall(self.out_dir)
         zip_ref.close()
-        os.rename(input_name, output_name)
+
+        try:
+            os.rename(input_name, output_name)
+        except Exception as ex:
+            QMessageBox.critical(iface.mainWindow(), 'ERROR!',
+                                 "Error creating zip file: %s" % ex)
+
         self.set_log_message.emit('Done!\n')
 
         self.current_step = self.current_step + 1
@@ -91,12 +98,26 @@ class ExportWorker(AbstractWorker):
         self.set_message.emit('Creating shapefiles:')
         self.set_log_message.emit('\nCreating shapefiles:\n')
 
+        options = QgsVectorFileWriter.SaveVectorOptions()
+        options.driverName = "ESRI Shapefile"
+        options.fileEncoding = "utf-8"
+
         for chiave, valore in list(POSIZIONE.items()):
             sourceLYR = QgsProject.instance().mapLayersByName(chiave)[0]
-            QgsVectorFileWriter.writeAsVectorFormat(
-                sourceLYR, output_name, valore[0], valore[1], "utf-8", None, "ESRI Shapefile")
+            # QgsVectorFileWriter.writeAsVectorFormat(
+            #    sourceLYR, os.path.join(output_name, valore[0], valore[1]), "utf-8", None, "ESRI Shapefile")
+
+            err, msg = QgsVectorFileWriter.writeAsVectorFormatV2(sourceLYR, os.path.join(
+                output_name, valore[0], valore[1]), QgsProject.instance().transformContext(), options)
+
+            if err != QgsVectorFileWriter.NoError:
+                self.set_log_message.emit(
+                    "Error creating shapefile %s: %s!\n" % (output_name, msg))
+                continue
+
             selected_layer = QgsVectorLayer(
-                output_name, valore[0], valore[1] + ".shp", valore[1], 'ogr')
+                os.path.join(
+                    output_name, valore[0], valore[1] + ".shp"), valore[1], 'ogr')
             if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2" or chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
                 pass
             if chiave == "Siti lineari" or chiave == "Siti puntuali":
@@ -125,12 +146,22 @@ class ExportWorker(AbstractWorker):
         for l23_value in LISTA_LIV_2_3:
             sourceLYR_1 = QgsProject.instance(
             ).mapLayersByName(l23_value[0])[0]
-            QgsVectorFileWriter.writeAsVectorFormat(
-                sourceLYR_1, output_name, "MS23", l23_value[2], "utf-8", None, "ESRI Shapefile")
+            # QgsVectorFileWriter.writeAsVectorFormat(
+            #    sourceLYR_1, os.path.join(
+            #        output_name, "MS23", l23_value[2]), "utf-8", None, "ESRI Shapefile")
+
+            err, msg = QgsVectorFileWriter.writeAsVectorFormatV2(sourceLYR_1, os.path.join(
+                output_name, "MS23", l23_value[2]), QgsProject.instance().transformContext(), options)
+
+            if err != QgsVectorFileWriter.NoError:
+                self.set_log_message.emit(
+                    "Error creating shapefile %s: %s!\n" % (output_name, msg))
+                continue
+
             sourceLYR_2 = QgsProject.instance(
             ).mapLayersByName(l23_value[1])[0]
-            MS23_stab = QgsVectorLayer(
-                output_name, "MS23", l23_value[2], l23_value[3], 'ogr')
+            MS23_stab = QgsVectorLayer(os.path.join(
+                output_name, "MS23", l23_value[2]), l23_value[3], 'ogr')
             features = []
             for feature in sourceLYR_2.getFeatures():
                 features.append(feature)
@@ -139,7 +170,8 @@ class ExportWorker(AbstractWorker):
             data_provider.addFeatures(features)
             MS23_stab.commitChanges()
             selected_layer_1 = QgsVectorLayer(
-                output_name, "MS23", l23_value[2], l23_value[3], 'ogr')
+                os.path.join(output_name, "MS23",
+                             l23_value[2]), l23_value[3], 'ogr')
             self.esporta([1, ['pkuid']], selected_layer_1)
             self.set_message.emit(
                 "'" + chiave + "' shapefile has been created!")
@@ -158,34 +190,37 @@ class ExportWorker(AbstractWorker):
         self.set_message.emit('Adding miscellaneous files...')
         self.set_log_message.emit('\nAdding miscellaneous files...\n')
 
-        if os.path.exists(self.in_dir, "allegati", "Plot"):
+        if os.path.exists(os.path.join(self.in_dir, "Allegati", "Plot")):
             self.set_message.emit("Copying 'Plot' folder")
             self.set_log_message.emit("  Copying 'Plot' folder\n")
-            shutil.copytree(self.in_dir, "allegati" +
-                            os.sep + "Plot", output_name, "Plot")
-        if os.path.exists(self.in_dir, "allegati", "Documenti"):
+            shutil.copytree(os.path.join(self.in_dir, "Allegati",
+                                         "Plot"), os.path.join(output_name, "Plot"))
+
+        if os.path.exists(os.path.join(self.in_dir, "Allegati", "Documenti")):
             self.set_message.emit("Copying 'Documenti' folder")
             self.set_log_message.emit("  Copying 'Documenti' folder\n")
-            shutil.copytree(self.in_dir, "allegati", "Documenti",
-                            output_name, "Indagini", "Documenti")
-        if os.path.exists(self.in_dir, "allegati", "Spettri"):
+            shutil.copytree(os.path.join(self.in_dir, "Allegati", "Documenti"),
+                            os.path.join(output_name, "Indagini", "Documenti"))
+
+        if os.path.exists(os.path.join(self.in_dir, "Allegati", "Spettri")):
             self.set_message.emit("Copying 'Spettri' folder")
             self.set_log_message.emit("  Copying 'Spettri' folder\n")
-            shutil.copytree(self.in_dir, "allegati" + os.sep +
-                            "Spettri", output_name, "MS23", "Spettri")
-        if os.path.exists(self.in_dir, "allegati", "altro"):
+            shutil.copytree(os.path.join(self.in_dir, "Allegati", "Spettri"), os.path.join(
+                output_name, "MS23", "Spettri"))
+
+        if os.path.exists(os.path.join(self.in_dir, "Allegati", "Altro")):
             self.set_message.emit("Copying 'altro' folder")
             self.set_log_message.emit("  Copying 'altro' folder\n")
-            shutil.copytree(self.in_dir, "allegati" +
-                            os.sep + "altro", output_name, "altro")
+            shutil.copytree(os.path.join(self.in_dir, "Allegati",
+                                         "Altro"), os.path.join(output_name, "Altro"))
 
         self.current_step = self.current_step + 1
         self.progress.emit(self.current_step * 100/total_steps)
 
-        for file_name in os.listdir(self.in_dir, "allegati"):
+        for file_name in os.listdir(os.path.join(self.in_dir, "Allegati")):
             if file_name.endswith(".txt"):
-                shutil.copyfile(self.in_dir, "allegati" +
-                                os.sep + file_name, output_name, file_name)
+                shutil.copyfile(os.path.join(
+                    self.in_dir, "Allegati", file_name), os.path.join(output_name, file_name))
 
         self.set_message.emit("Creating 'CdI_Tabelle.sqlite'")
         self.set_log_message.emit("\nCreating 'CdI_Tabelle.sqlite'\n")
@@ -211,7 +246,7 @@ class ExportWorker(AbstractWorker):
             for field in selected_layer.fields():
                 if field.name() not in fieldnames:
                     field_ids.append(
-                        selected_layer.fieldNameIndex(field.name()))
+                        selected_layer.fields().lookupField(field.name()))
             selected_layer.dataProvider().deleteAttributes(field_ids)
             selected_layer.updateFields()
             self.cambia_nome(list_attr, selected_layer)
@@ -219,7 +254,7 @@ class ExportWorker(AbstractWorker):
             for field in selected_layer.fields():
                 if field.name() in fieldnames:
                     field_ids.append(
-                        selected_layer.fieldNameIndex(field.name()))
+                        selected_layer.fields().lookupField(field.name()))
             selected_layer.dataProvider().deleteAttributes(field_ids)
             selected_layer.updateFields()
             if selected_layer.name() == 'Isosub':
@@ -236,7 +271,7 @@ class ExportWorker(AbstractWorker):
         for field in selected_layer.fields():
             if field.name() in list_attr[1]:
                 selected_layer.renameAttribute(
-                    selected_layer.fieldNameIndex(field.name()), field.name().upper())
+                    selected_layer.fields().lookupField(field.name()), field.name().upper())
         selected_layer.commitChanges()
 
     def cambia_tipo(self, selected_layer, nome_attr, tipo_attr):
@@ -247,26 +282,26 @@ class ExportWorker(AbstractWorker):
 
         selected_layer.startEditing()
         for feature in selected_layer.getFeatures():
-            feature.setAttribute(feature.fieldNameIndex(
+            feature.setAttribute(feature.fields().lookupField(
                 "new_col_na"), feature[nome_attr])
             selected_layer.updateFeature(feature)
         selected_layer.commitChanges()
 
         selected_layer.startEditing()
         selected_layer.dataProvider().deleteAttributes(
-            [selected_layer.fieldNameIndex(nome_attr)])
+            [selected_layer.fields().lookupField(nome_attr)])
         selected_layer.dataProvider().addAttributes(
             [QgsField(nome_attr, tipo_attr)])
         selected_layer.commitChanges()
 
         selected_layer.startEditing()
         for feature in selected_layer.getFeatures():
-            feature.setAttribute(feature.fieldNameIndex(
+            feature.setAttribute(feature.fields().lookupField(
                 nome_attr), feature["new_col_na"])
             selected_layer.updateFeature(feature)
         selected_layer.commitChanges()
 
         selected_layer.startEditing()
         selected_layer.dataProvider().deleteAttributes(
-            [selected_layer.fieldNameIndex("new_col_na")])
+            [selected_layer.fields().lookupField("new_col_na")])
         selected_layer.commitChanges()

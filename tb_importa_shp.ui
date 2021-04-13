@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>520</width>
-    <height>367</height>
+    <height>358</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+   <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
@@ -29,7 +29,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Import project folder to geodatabase</string>
+   <string>Import project folder from geodatabase</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
@@ -53,7 +53,7 @@
       </font>
      </property>
      <property name="title">
-      <string>Import project folder to geodatabase</string>
+      <string>Import project folder from geodatabase</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="1">

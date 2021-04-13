@@ -21,7 +21,6 @@ from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.utils import *
-
 from .utils import save_map_image
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -127,6 +126,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
             self.descriz.setText('some text')
 
         self.show()
+        self.adjustSize()
         result = self.exec_()
 
         if result:
@@ -258,8 +258,12 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                                             codice_prov, nome, codice_com, professionista, ufficio, propretario)
                     self.metadati_tab_execute(codice_prov, codice_com, professionista, email_prof, sito_prof, data_meta, ufficio, propretario,
                                               email_prop, sito_prop, data_dato, descriz, contatto, email_cont, sito_cont, scala_nom, extent, accuratezza, lineage)
+
+                    # Save the project!
+                    project.write(os.path.join(path_comune, "progetto_MS.qgs"))
+
                     QMessageBox.information(
-                        None, 'INFORMATION!', "The project has been created!\nSAVE the project, please!")
+                        None, 'INFORMATION!', "The project has been created successfully.")
 
                 except Exception as z:
                     raise z

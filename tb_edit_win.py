@@ -1,10 +1,10 @@
 from builtins import range
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:		tb_edit_win.py
 # Author:	  Tarquini E.
 # Created:	 08-02-2018
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
@@ -76,24 +76,24 @@ class edit_win(QDialog, FORM_CLASS):
             'Digitizing', 'DefaultSnapTolerance', 20.0)
 
         self.show()
+        self.adjustSize()
         result = self.exec_()
         if result:
 
-            vectorLyr = QgsProject.instance(
-            ).mapLayersByName("Siti puntuali")[0]
+            vectorLyr = QgsProject.instance().mapLayersByName("Siti puntuali")[0]
             it = vectorLyr.getFeatures()
             vpr = vectorLyr.dataProvider()
 
-            idx1 = vpr.fieldNameIndex("indirizzo")
-            idx2 = vpr.fieldNameIndex("desc_modcoord")
-            idx3 = vpr.fieldNameIndex("quota_slm")
-            idx4 = vpr.fieldNameIndex("data_sito")
-            idx5 = vpr.fieldNameIndex("note_sito")
-            idx6 = vpr.fieldNameIndex("mod_identcoord")
-            idx7 = vpr.fieldNameIndex("modo_quota")
-            idx8 = vpr.fieldNameIndex("ubicazione_prov")
-            idx9 = vpr.fieldNameIndex("ubicazione_com")
-            idx10 = vpr.fieldNameIndex("id_spu")
+            idx1 = vpr.fields().lookupField("indirizzo")
+            idx2 = vpr.fields().lookupField("desc_modcoord")
+            idx3 = vpr.fields().lookupField("quota_slm")
+            idx4 = vpr.fields().lookupField("data_sito")
+            idx5 = vpr.fields().lookupField("note_sito")
+            idx6 = vpr.fields().lookupField("mod_identcoord")
+            idx7 = vpr.fields().lookupField("modo_quota")
+            idx8 = vpr.fields().lookupField("ubicazione_prov")
+            idx9 = vpr.fields().lookupField("ubicazione_com")
+            idx10 = vpr.fields().lookupField("id_spu")
 
             attr = [None] * len(vpr.fields())
 

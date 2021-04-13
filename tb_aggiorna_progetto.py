@@ -36,6 +36,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
     def aggiorna(self, dir2, dir_output, nome):
 
         self.show()
+        self.adjustSize()
         result = self.exec_()
         if result == QDialog.Accepted:
 

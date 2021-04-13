@@ -1,16 +1,3 @@
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
-import shutil
-import sys
-import os
-from qgis.gui import *
-from qgis.core import *
-from qgis.utils import *
-from qgis.PyQt.QtWidgets import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtCore import *
-from qgis.PyQt import QtGui, uic
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------------
 # Name:		setup_workers.py
@@ -18,14 +5,28 @@ from qgis.PyQt import QtGui, uic
 # Created:	 08-02-2018
 # -------------------------------------------------------------------------------
 
+import os
+import shutil
+import sys
+from builtins import object
+
+from qgis.core import *
+from qgis.gui import *
+from qgis.PyQt import QtGui, uic
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
+from qgis.utils import *
+
 
 class setup_workers(object):
+
     def __init__(self, parent=None):
         """Constructor."""
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
 
-    def start_worker(self, worker, iface, message, log_file=None):
+    def start_worker(self, worker, iface, message, log_file=None, logfile_path=None):
         ############################################
         # DEBUG ONLY
         # self.import_reset()
@@ -40,7 +41,8 @@ class setup_workers(object):
         cancel_button.clicked.connect(worker.kill)
         message_bar_item.layout().addWidget(progress_bar)
         message_bar_item.layout().addWidget(cancel_button)
-        iface.messageBar().pushWidget(message_bar_item, iface.messageBar().INFO)
+        iface.messageBar().pushWidget(message_bar_item, Qgis.Info)
+        self.logfile_path = logfile_path
 
         # start the worker in a new thread
         thread = QThread(iface.mainWindow())
@@ -87,7 +89,7 @@ class setup_workers(object):
                 log_file.write("\n\nProcess interrupted!")
             iface.messageBar().pushMessage(
                 'Process cancelled.',
-                level=QgsMessageBar.WARNING,
+                level=Qgis.Warning,
                 duration=3)
 
         # clean up the worker and thread
@@ -102,22 +104,22 @@ class setup_workers(object):
             log_file.close()
 
         if result is not None:
-            QMessageBox.information(iface.mainWindow(), u'INFORMATION!',
-                                    u"Process completed.\n\nReport was saved in the project folder '...\\allegati\\log'")
+            QMessageBox.information(iface.mainWindow(), 'INFORMATION!',
+                                    "Process completed.\n\nReport was saved in the project folder: %s" % self.logfile_path)
         else:
-            QMessageBox.critical(iface.mainWindow(), u'ERROR!',
-                                 u"Process interrupted! Read the report saved in the project folder '...\\allegati\\log'")
+            QMessageBox.critical(iface.mainWindow(), 'ERROR!',
+                                 "Process interrupted! Read the report saved in the project folder: %s" % self.logfile_path)
 
     def worker_error(self, e, exception_string, iface, log_file=None):
         # notify the user that something went wrong
         iface.messageBar().pushMessage(
             'Something went wrong! See the message log for more information.',
-            level=QgsMessageBar.CRITICAL,
+            level=Qgis.Critical,
             duration=3)
         QgsMessageLog.logMessage(
             'Worker thread raised an exception: %s' % exception_string,
             'Worker',
-            level=QgsMessageLog.CRITICAL)
+            level=Qgis.Critical)
 
         log_file.write(
             "\n\n!!! Worker thread raised an exception:\n\n" + exception_string)
@@ -126,6 +128,7 @@ class setup_workers(object):
         message_bar_item.setText(message)
 
     def set_worker_log_message(self, message, log_file):
+        QgsMessageLog.logMessage(message, 'MzS Tools')
         log_file.write(message)
 
     def toggle_worker_progress(self, show_progress, progress_bar):
@@ -142,7 +145,7 @@ class setup_workers(object):
     ############################################
     # DEBUG ONLY
     def import_reset(self):
-        #	 nome = ['altro', 'documenti', 'plot', 'spettri']
+        #	 nome = ['Altro', 'Documenti', 'Plot', 'Spettri']
         lista_layer = ["Siti puntuali", "Indagini puntuali", "Parametri puntuali", "Curve di riferimento", "Siti lineari", "Indagini lineari", "Parametri lineari",
                        "Elementi geologici e idrogeologici puntuali", "Elementi puntuali", "Elementi lineari", "Forme", "Unita' geologico-tecniche", "Instabilita' di versante", "Isobate liv 1",
                        "Zone stabili liv 1", "Zone instabili liv 1", "Isobate liv 2", "Zone stabili liv 2", "Zone instabili liv 2", "Isobate liv 3", "Zone stabili liv 3", "Zone instabili liv 3"]

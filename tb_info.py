@@ -36,6 +36,7 @@ class info(QDialog, FORM_CLASS):
             'https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools'))
 
         self.show()
+        self.adjustSize()
 
     def open_pdf(self, pdf_path):
         os.startfile(pdf_path)

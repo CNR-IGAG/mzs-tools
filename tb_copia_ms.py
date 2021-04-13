@@ -48,6 +48,7 @@ class copia_ms(QDialog, FORM_CLASS):
         self.radio_instab.toggled.connect(self.radio_instab_clicked)
 
         self.show()
+        self.adjustSize()
         result = self.exec_()
         if result:
 
@@ -68,7 +69,7 @@ class copia_ms(QDialog, FORM_CLASS):
             self.input_ms.clear()
             self.output_ms.clear()
 
-            layers = self.QgsProject.instance().mapLayers().values()
+            layers = QgsProject.instance().mapLayers().values()
             layer_stab = []
             for layer in layers:
                 if str(layer.name()).startswith("Stab") or str(layer.name()).startswith("Zone stabili"):
@@ -83,7 +84,7 @@ class copia_ms(QDialog, FORM_CLASS):
             self.input_ms.clear()
             self.output_ms.clear()
 
-            layers = self.QgsProject.instance().mapLayers().values()
+            layers = QgsProject.instance().mapLayers().values()
             layer_instab = []
             for layer in layers:
                 if str(layer.name()).startswith("Instab") or str(layer.name()).startswith("Zone instabili") or str(layer.name()).startswith("Instabilita' di versante"):
