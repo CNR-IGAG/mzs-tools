@@ -21,7 +21,9 @@ from .abstract_worker import AbstractWorker, UserAbortedNotification
 # -------------------------------------------------------------------------------
 
 
-TESTING = True
+# FOR TESTING ONLY!!!
+# When testing export: only import a few features to make the testing process faster
+TESTING = False
 
 
 class ImportWorker(AbstractWorker):
@@ -346,12 +348,12 @@ class ImportWorker(AbstractWorker):
             ) + ": inserting feature " + str(current_feature) + "/" + str(len(featureList)))
             data_provider.addFeatures([f])
             current_feature = current_feature + 1
-            #TODO: remove
-            if self.killed or current_feature > 2:
+            if self.killed:
                 break
 
         if self.killed:
             raise UserAbortedNotification('USER Killed')
+
 
     def insert_siti(self, vector_layer, txt_table, sito_type):
 

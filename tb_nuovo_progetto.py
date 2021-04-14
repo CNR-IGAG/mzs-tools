@@ -104,7 +104,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
 
         # Sample data for testing purposes
         # TODO: disable
-        if True:
+        if False:
             d = QTemporaryDir()
             d.setAutoRemove(False)
             self.dir_output.setText(d.path())
