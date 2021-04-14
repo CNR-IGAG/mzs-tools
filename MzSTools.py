@@ -31,7 +31,12 @@ class MzSTools():
 
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
-        locale = QSettings().value('locale/userLocale')[0:2]
+
+        locale = QgsSettings().value('locale/userLocale', '')[0:2]
+
+        if locale == '':
+            locale = QSettings().value('locale/globalLocale')[0:2]
+
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
