@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4.QtCore import QVariant
+from qgis.PyQt.QtCore import QVariant
 
 POSIZIONE = {"Comune del progetto":["BasiDati","Comune","id_com"], "Elementi lineari":["GeoTec","Elineari","ID_el"], "Elementi puntuali":["GeoTec","Epuntuali","ID_ep"],
              "Forme":["GeoTec","Forme","ID_f"], "Elementi geologici e idrogeologici puntuali":["GeoTec","Geoidr","ID_gi"], "Unita' geologico-tecniche":["GeoTec","Geotec","ID_gt"],
