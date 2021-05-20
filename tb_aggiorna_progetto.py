@@ -33,35 +33,24 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         self.setupUi(self)
         self.plugin_dir = os.path.dirname(__file__)
 
-    def aggiorna(self, dir2, dir_output, nome):
+    def aggiorna(self, dir2, dir_output, nome, proj_vers, new_proj_vers):
 
         self.show()
         self.adjustSize()
         result = self.exec_()
         if result == QDialog.Accepted:
 
-            QgsProject.instance().clear()
-
             try:
-                vers_data_1 = os.path.join(self.plugin_dir, "versione.txt")
-                new_vers = open(vers_data_1, 'r').read()
-                vers_data_2 = os.path.join(dir2, "progetto", "versione.txt")
-                with open(vers_data_2, 'r') as f:
-                    proj_vers = f.read()
-                    pacchetto = os.path.join(
-                        self.plugin_dir, "data", "progetto_MS.zip")
 
-                if proj_vers < '0.8' and new_vers == '1.3':
+                pacchetto = os.path.join(
+                    self.plugin_dir, "data", "progetto_MS.zip")
+
+                if proj_vers < new_proj_vers:
+
                     name_output = nome + "_backup_v" + proj_vers + "_" + \
                         datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
                     shutil.copytree(dir2, os.path.join(
                         dir_output, name_output))
-
-                    path_db = os.path.join(dir2, "db", "indagini.sqlite")
-                    sql_script = ["query_v08.sql",
-                                  "query_v09.sql", "query_v10_12.sql"]
-                    for x in sql_script:
-                        self.sql_command(path_db, x)
 
                     zip_ref = zipfile.ZipFile(pacchetto, 'r')
                     zip_ref.extractall(dir2)
@@ -73,22 +62,23 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                     shutil.rmtree(os.path.join(dir2, "progetto", "script"))
                     shutil.copytree(os.path.join(dir2, "progetto_MS", "progetto", "script"), os.path.join(
                         dir2, "progetto", "script"))
-                    os.remove(os.path.join(dir2, "progetto", "versione.txt"))
-                    shutil.copyfile(os.path.join(dir2, "progetto_MS", "progetto", "versione.txt"), os.path.join(
+                    shutil.copyfile(os.path.join(os.path.dirname(__file__), 'versione.txt'), os.path.join(
                         dir2, "progetto", "versione.txt"))
                     os.remove(os.path.join(dir2, "progetto_MS.qgs"))
                     shutil.copyfile(os.path.join(
                         dir2, "progetto_MS", "progetto_MS.qgs"), os.path.join(dir2, "progetto_MS.qgs"))
-                    shutil.copyfile(os.path.join(dir2, "progetto_MS", "progetto", "loghi", "Legenda_valori_HVSR_rev01.svg"), os.path.join(
-                        dir2, "progetto", "loghi", "Legenda_valori_HVSR_rev01.svg"))
-
-                    self.load_new_qgs_file(dir2)
+                    shutil.rmtree(os.path.join(dir2, "progetto", "loghi"))
+                    shutil.copytree(os.path.join(dir2, "progetto_MS", "progetto", "loghi"), os.path.join(
+                        dir2, "progetto", "loghi"))
 
                     shutil.rmtree(os.path.join(dir2, "progetto_MS"))
-                    QMessageBox.information(
-                        None, 'INFORMATION!', "The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
 
-                elif proj_vers == '0.8' and new_vers == '1.3':
+                    QMessageBox.information(
+                        None, 'INFORMATION!', "The project structure has been updated!\nThe backup copy has been saved in the following directory: " + name_output)
+
+                    QgsProject.instance().read(QgsProject.instance().fileName())
+
+                elif proj_vers == '0.8' and new_proj_vers == '1.3':
                     name_output = nome + "_backup_v" + proj_vers + "_" + \
                         datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
                     shutil.copytree(dir2, os.path.join(
@@ -121,9 +111,9 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
 
                     shutil.rmtree(os.path.join(dir2, "progetto_MS"))
                     QMessageBox.information(
-                        None, 'INFORMATION!', "The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
+                        None, 'INFORMATION!', "The project structure has been updated!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
 
-                elif proj_vers >= '0.9' and proj_vers < '1.2' and new_vers == '1.3':
+                elif proj_vers >= '0.9' and proj_vers < '1.2' and new_proj_vers == '1.3':
                     name_output = nome + "_backup_v" + proj_vers + "_" + \
                         datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
                     shutil.copytree(dir2, os.path.join(
@@ -156,7 +146,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                     QMessageBox.information(
                         None, 'INFORMATION!', "The project structure has been updated!\nSAVE the project, please!\nThe backup copy has been saved in the following directory: " + dir_output, name_output)
 
-                elif proj_vers >= '1.2' and new_vers == '1.3':
+                elif proj_vers >= '1.2' and new_proj_vers == '1.3':
                     name_output = nome + "_backup_v" + proj_vers + "_" + \
                         datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
                     shutil.copytree(dir2, os.path.join(

@@ -76,7 +76,9 @@ class MzSTools():
         self.export_shp_dlg.pushButton_out.clicked.connect(
             self.select_output_fld_5)
 
-        self.iface.projectRead.connect(self.run1)
+        QgsSettings().setValue("qgis/enableMacros", 3)
+
+        self.iface.projectRead.connect(self.check_new_version)
 
     def tr(self, message):
         return QCoreApplication.translate('MzSTools', message)
@@ -216,23 +218,26 @@ class MzSTools():
             self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
         self.export_shp_dlg.dir_output.setText(out_dir)
 
-    def run1(self):
+    def check_new_version(self):
         percorso = QgsProject.instance().homePath()
         dir_output = '/'.join(percorso.split('/')[:-1])
         nome = percorso.split('/')[-1]
-        if os.path.exists(os.path.join(percorso, "progetto")):
-            vers_data = os.path.join(QgsProject.instance().fileName().split("progetto")[
-                0], "progetto", "versione.txt")
+        if os.path.exists(percorso + os.sep + "progetto"):
+            vers_data = os.path.join(
+                os.path.dirname(QgsProject.instance().fileName()), "progetto", "versione.txt")
+
             try:
                 with open(vers_data, 'r') as f:
                     proj_vers = f.read()
-                    if proj_vers < '1.3':
-                        qApp.processEvents()
-                        self.project_update_dlg.aggiorna(
-                            percorso, dir_output, nome)
+                    with open(os.path.join(os.path.dirname(__file__), 'versione.txt')) as nf:
+                        new_proj_vers = nf.read()
+                        if proj_vers < new_proj_vers:
+                            qApp.processEvents()
+                            self.project_update_dlg.aggiorna(
+                                percorso, dir_output, nome, proj_vers, new_proj_vers)
 
-            except:
-                pass
+            except Exception as ex:
+                QgsMessageLog.logMessage('Error: %s' % ex, 'MZS Tools')
 
     def new_project(self):
         self.new_project_dlg.nuovo()
