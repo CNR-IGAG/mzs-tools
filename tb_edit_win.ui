@@ -436,7 +436,7 @@
                             </widget>
                         </item>
                         <item row="12" column="1">
-                            <widget class="QgsDateTimeEdit" name="data_sito">
+                            <widget class="QDateEdit" name="data_sito">
                                 <property name="font">
                                     <font>
                                         <weight>50</weight>
