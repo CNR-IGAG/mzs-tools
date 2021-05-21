@@ -283,7 +283,7 @@ class MzSTools():
                 for fc in proj.mapLayers().values():
                     if fc.name() in POLY_LYR:
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
 
                         snapping_config.setIndividualLayerSettings(
                             fc, layer_settings)
@@ -295,7 +295,7 @@ class MzSTools():
                             0]
 
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
                         snapping_config.setIndividualLayerSettings(
                             layer, layer_settings)
                         snapping_config.setIndividualLayerSettings(
@@ -306,7 +306,7 @@ class MzSTools():
                     elif layer.name() == "Unita' geologico-tecniche":
 
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
                         snapping_config.setIndividualLayerSettings(
                             layer, layer_settings)
                         snapping_config.setIntersectionSnapping(True)
@@ -314,7 +314,7 @@ class MzSTools():
                     elif layer.name() == "Instabilita' di versante":
 
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
                         snapping_config.setIndividualLayerSettings(
                             layer, layer_settings)
                         snapping_config.setIntersectionSnapping(True)
@@ -354,7 +354,7 @@ class MzSTools():
                     if fc.name() in POLYGON_LYR:
 
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-                            True, QgsSnappingConfig.Vertex, 20, QgsTolerance.ProjectUnits)
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
                         snapping_config.setIndividualLayerSettings(
                             fc, layer_settings)
 
