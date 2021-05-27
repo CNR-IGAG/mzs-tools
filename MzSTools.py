@@ -1,303 +1,368 @@
 # -*- coding: utf-8 -*-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # Name:		MzSTools.py
 # Author:	  Tarquini E.
 # Created:	 20-11-2017
-#-------------------------------------------------------------------------------
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from qgis.utils import *
+# -------------------------------------------------------------------------------
+import os
+import sys
+
 from qgis.core import *
 from qgis.gui import *
-import os, sys, constants, resources
-from tb_wait import wait
-from tb_aggiorna_progetto import aggiorna_progetto
-from tb_nuovo_progetto import nuovo_progetto
-from tb_importa_shp import importa_shp
-from tb_esporta_shp import esporta_shp
-from tb_edit_win import edit_win
-from tb_copia_ms import copia_ms
-from tb_info import info
+from qgis.PyQt.QtCore import *
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import *
+from qgis.utils import *
+
+from . import constants
+from .tb_aggiorna_progetto import aggiorna_progetto
+from .tb_copia_ms import copia_ms
+from .tb_edit_win import edit_win
+from .tb_esporta_shp import esporta_shp
+from .tb_importa_shp import importa_shp
+from .tb_info import info
+from .tb_nuovo_progetto import nuovo_progetto
+from .tb_wait import wait
 
 
-class MzSTools:
+class MzSTools():
 
-	def __init__(self, iface):
-		self.iface = iface
-		self.plugin_dir = os.path.dirname(__file__)
-		locale = QSettings().value('locale/userLocale')[0:2]
-		locale_path = os.path.join(
-			self.plugin_dir,
-			'i18n',
-			'MzSTools_{}.qm'.format(locale))
+    def __init__(self, iface):
 
-		if os.path.exists(locale_path):
-			self.translator = QTranslator()
-			self.translator.load(locale_path)
+        self.iface = iface
+        self.plugin_dir = os.path.dirname(__file__)
 
-			if qVersion() > '4.3.3':
-				QCoreApplication.installTranslator(self.translator)
+        locale = QgsSettings().value('locale/userLocale', '')[0:2]
 
-		self.dlg0 = wait()
-		self.dlg1 = aggiorna_progetto()
-		self.dlg2 = nuovo_progetto()
-		self.dlg3 = info()
-		self.dlg4 = importa_shp()
-		self.dlg5 = esporta_shp()
-		self.dlg6 = copia_ms()
-		self.dlg10 = edit_win()
+        if locale == '':
+            locale = QSettings().value('locale/globalLocale')[0:2]
 
-		self.actions = []
-		self.menu = self.tr(u'&MzS Tools')
-		self.toolbar = self.iface.addToolBar(u'MzSTools')
-		self.toolbar.setObjectName(u'MzSTools')
+        locale_path = os.path.join(
+            self.plugin_dir,
+            'i18n',
+            'MzSTools_{}.qm'.format(locale))
 
-		self.dlg2.dir_output.clear()
-		self.dlg2.pushButton_out.clicked.connect(self.select_output_fld_2)
+        if os.path.exists(locale_path):
+            self.translator = QTranslator()
+            self.translator.load(locale_path)
 
-		self.dlg4.dir_input.clear()
-		self.dlg4.pushButton_in.clicked.connect(self.select_input_fld_4)
+        self.wait_dlg = wait()
+        self.project_update_dlg = aggiorna_progetto()
+        self.new_project_dlg = nuovo_progetto(self.iface)
+        self.info_dlg = info()
+        self.import_shp_dlg = importa_shp()
+        self.export_shp_dlg = esporta_shp()
+        self.ms_copy_dlg = copia_ms()
+        self.edit_win_dlg = edit_win()
 
-		self.dlg4.tab_input.clear()
-		self.dlg4.pushButton_tab.clicked.connect(self.select_tab_fld_4)
+        self.actions = []
+        self.menu = self.tr('&MzS Tools')
+        self.toolbar = self.iface.addToolBar('MzSTools')
+        self.toolbar.setObjectName('MzSTools')
 
-		self.dlg5.dir_output.clear()
-		self.dlg5.pushButton_out.clicked.connect(self.select_output_fld_5)
+        self.new_project_dlg.dir_output.clear()
+        self.new_project_dlg.pushButton_out.clicked.connect(
+            self.select_output_fld_2)
 
-		self.iface.projectRead.connect(self.run1)
+        self.import_shp_dlg.dir_input.clear()
+        self.import_shp_dlg.pushButton_in.clicked.connect(
+            self.select_input_fld_4)
 
-	def tr(self, message):
-		return QCoreApplication.translate('MzSTools', message)
+        self.import_shp_dlg.tab_input.clear()
+        self.import_shp_dlg.pushButton_tab.clicked.connect(
+            self.select_tab_fld_4)
 
-	def add_action(
-		self,
-		icon_path,
-		text,
-		callback,
-		enabled_flag=True,
-		add_to_menu=True,
-		add_to_toolbar=True,
-		status_tip=None,
-		whats_this=None,
-		parent=None):
+        self.export_shp_dlg.dir_output.clear()
+        self.export_shp_dlg.pushButton_out.clicked.connect(
+            self.select_output_fld_5)
 
-		icon = QIcon(icon_path)
-		action = QAction(icon, text, parent)
-		action.triggered.connect(callback)
-		action.setEnabled(enabled_flag)
+        QgsSettings().setValue("qgis/enableMacros", 3)
 
-		if status_tip is not None:
-			action.setStatusTip(status_tip)
+        self.iface.projectRead.connect(self.check_new_version)
 
-		if whats_this is not None:
-			action.setWhatsThis(whats_this)
+    def tr(self, message):
+        return QCoreApplication.translate('MzSTools', message)
 
-		if add_to_toolbar:
-			self.toolbar.addAction(action)
+    def add_action(
+            self,
+            icon_path,
+            text,
+            callback,
+            enabled_flag=True,
+            add_to_menu=True,
+            add_to_toolbar=True,
+            status_tip=None,
+            whats_this=None,
+            parent=None):
 
-		if add_to_menu:
-			self.iface.addPluginToDatabaseMenu(
-				self.menu,
-				action)
+        icon = QIcon(icon_path)
+        action = QAction(icon, text, parent)
+        action.triggered.connect(callback)
+        action.setEnabled(enabled_flag)
 
-		self.actions.append(action)
+        if status_tip is not None:
+            action.setStatusTip(status_tip)
 
-		return action
+        if whats_this is not None:
+            action.setWhatsThis(whats_this)
 
-	def initGui(self):
-		icon_path2 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_nuovo_progetto.png'
-		icon_path3 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_info.png'
-		icon_path4 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_importa.png'
-		icon_path5 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_esporta.png'
-		icon_path6 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_copia_ms.png'
-		icon_path8 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_edita.png'
-		icon_path9 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_salva_edita.png'
-		icon_path10 = self.plugin_dir + os.sep + "img" + os.sep + 'ico_xypoint.png'
+        if add_to_toolbar:
+            self.toolbar.addAction(action)
 
-		self.add_action(
-			icon_path2,
-			text=self.tr(u'New project'),
-			callback=self.run2,
-			parent=self.iface.mainWindow())
+        if add_to_menu:
+            self.iface.addPluginToDatabaseMenu(
+                self.menu,
+                action)
 
-		self.toolbar.addSeparator()
+        self.actions.append(action)
 
-		self.add_action(
-			icon_path4,
-			text=self.tr(u'Import project folder to geodatabase'),
-			callback=self.run4,
-			parent=self.iface.mainWindow())
-		self.add_action(
-			icon_path5,
-			text=self.tr(u'Export geodatabase to project folder'),
-			callback=self.run5,
-			parent=self.iface.mainWindow())
+        return action
 
-		self.toolbar.addSeparator()
+    def initGui(self):
 
-		self.add_action(
-			icon_path8,
-			text=self.tr(u'Add feature or record'),
-			callback=self.run8,
-			parent=self.iface.mainWindow())
-		self.add_action(
-			icon_path9,
-			text=self.tr(u'Save'),
-			callback=self.run9,
-			parent=self.iface.mainWindow())
-		self.add_action(
-			icon_path10,
-			text=self.tr(u'Add "Sito puntuale" using XY coordinates'),
-			callback=self.run10,
-			parent=self.iface.mainWindow())
-		self.add_action(
-			icon_path6,
-			text=self.tr(u'Copy "Stab" or "Instab" layer'),
-			callback=self.run6,
-			parent=self.iface.mainWindow())
+        icon_path2 = os.path.join(
+            self.plugin_dir, "img", 'ico_nuovo_progetto.png')
+        icon_path3 = os.path.join(self.plugin_dir, "img", 'ico_info.png')
+        icon_path4 = os.path.join(self.plugin_dir, "img", 'ico_importa.png')
+        icon_path5 = os.path.join(self.plugin_dir, "img", 'ico_esporta.png')
+        icon_path6 = os.path.join(self.plugin_dir, "img", 'ico_copia_ms.png')
+        icon_path8 = os.path.join(self.plugin_dir, "img", 'ico_edita.png')
+        icon_path9 = os.path.join(
+            self.plugin_dir, "img", 'ico_salva_edita.png')
+        icon_path10 = os.path.join(self.plugin_dir, "img", 'ico_xypoint.png')
 
-		self.toolbar.addSeparator()
+        self.add_action(
+            icon_path2,
+            text=self.tr('New project'),
+            callback=self.new_project,
+            parent=self.iface.mainWindow())
 
-		self.add_action(
-			icon_path3,
-			text=self.tr(u'Help'),
-			callback=self.run3,
-			parent=self.iface.mainWindow())
+        self.toolbar.addSeparator()
 
-	def unload(self):
-		for action in self.actions:
-			self.iface.removePluginDatabaseMenu(
-				self.tr(u'&MzS Tools'),
-				action)
-			self.iface.removeToolBarIcon(action)
-		del self.toolbar
+        self.add_action(
+            icon_path4,
+            text=self.tr('Import project folder from geodatabase'),
+            callback=self.import_project,
+            parent=self.iface.mainWindow())
 
-	def select_output_fld_2(self):
-		out_dir = QFileDialog.getExistingDirectory(self.dlg2, "","", QFileDialog.ShowDirsOnly)
-		self.dlg2.dir_output.setText(out_dir)
+        self.add_action(
+            icon_path5,
+            text=self.tr('Export geodatabase to project folder'),
+            callback=self.export_project,
+            parent=self.iface.mainWindow())
 
-	def select_input_fld_4(self):
-		in_dir = QFileDialog.getExistingDirectory(self.dlg4, "","", QFileDialog.ShowDirsOnly)
-		self.dlg4.dir_input.setText(in_dir)
+        self.toolbar.addSeparator()
 
-	def select_tab_fld_4(self):
-		tab_dir = QFileDialog.getExistingDirectory(self.dlg4, "","", QFileDialog.ShowDirsOnly)
-		self.dlg4.tab_input.setText(tab_dir)
+        self.add_action(
+            icon_path8,
+            text=self.tr('Add feature or record'),
+            callback=self.add_feature_or_record,
+            parent=self.iface.mainWindow())
 
-	def select_input_fld_5(self):
-		in_dir = QFileDialog.getExistingDirectory(self.dlg5, "","", QFileDialog.ShowDirsOnly)
-		self.dlg5.dir_input.setText(in_dir)
+        self.add_action(
+            icon_path9,
+            text=self.tr('Save'),
+            callback=self.save,
+            parent=self.iface.mainWindow())
 
-	def select_output_fld_5(self):
-		out_dir = QFileDialog.getExistingDirectory(self.dlg5, "","", QFileDialog.ShowDirsOnly)
-		self.dlg5.dir_output.setText(out_dir)
+        self.add_action(
+            icon_path10,
+            text=self.tr('Add "Sito puntuale" using XY coordinates'),
+            callback=self.add_site,
+            parent=self.iface.mainWindow())
 
-	def run1(self):
-		percorso = QgsProject.instance().homePath()
-		dir_output = '/'.join(percorso.split('/')[:-1])
-		nome = percorso.split('/')[-1]
-		if os.path.exists(percorso + os.sep + "progetto"):
-			vers_data = (QgsProject.instance().fileName()).split("progetto")[0] + os.sep + "progetto" + os.sep + "versione.txt"
-			try:
-				proj_vers = open(vers_data,'r').read()
-				if proj_vers < '1.3':
-					qApp.processEvents()
-					self.dlg1.aggiorna(percorso,dir_output,nome)
+        self.add_action(
+            icon_path6,
+            text=self.tr('Copy "Stab" or "Instab" layer'),
+            callback=self.copy_stab,
+            parent=self.iface.mainWindow())
 
-			except:
-				pass
+        self.toolbar.addSeparator()
 
-	def run2(self):
-		self.dlg2.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg2.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg2.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg2.nuovo()
+        self.add_action(
+            icon_path3,
+            text=self.tr('Help'),
+            callback=self.help,
+            parent=self.iface.mainWindow())
 
-	def run3(self):
-		self.dlg3.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg3.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg3.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg3.help()
+    def unload(self):
+        for action in self.actions:
+            self.iface.removePluginDatabaseMenu(
+                self.tr('&MzS Tools'),
+                action)
+            self.iface.removeToolBarIcon(action)
+        del self.toolbar
 
-	def run4(self):
-		self.dlg4.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg4.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg4.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg4.importa_prog()
+    def select_output_fld_2(self):
+        out_dir = QFileDialog.getExistingDirectory(
+            self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.new_project_dlg.dir_output.setText(out_dir)
 
-	def run5(self):
-		self.dlg5.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg5.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg5.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg5.esporta_prog()
+    def select_input_fld_4(self):
+        in_dir = QFileDialog.getExistingDirectory(
+            self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.import_shp_dlg.dir_input.setText(in_dir)
 
-	def run6(self):
-		self.dlg6.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg6.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg6.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg6.copia()
+    def select_tab_fld_4(self):
+        tab_dir = QFileDialog.getExistingDirectory(
+            self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.import_shp_dlg.tab_input.setText(tab_dir)
 
-	def run8(self):
-		proj = QgsProject.instance()
-		proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-		proj.writeEntry('Digitizing','DefaultSnapTolerance', 20.0)
-		DIZIO_LAYER = {"Zone stabili liv 1":"Zone instabili liv 1", "Zone instabili liv 1":"Zone stabili liv 1", "Zone stabili liv 2":"Zone instabili liv 2", "Zone instabili liv 2":"Zone stabili liv 2",
-		"Zone stabili liv 3":"Zone instabili liv 3", "Zone instabili liv 3":"Zone stabili liv 3"}
-		POLY_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
-		"Zone stabili liv 3", "Zone instabili liv 3"]
+    def select_input_fld_5(self):
+        in_dir = QFileDialog.getExistingDirectory(
+            self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.export_shp_dlg.dir_input.setText(in_dir)
 
-		layer = iface.activeLayer()
-		if layer != None:
-			if layer.name() in POLY_LYR:
+    def select_output_fld_5(self):
+        out_dir = QFileDialog.getExistingDirectory(
+            self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
+        self.export_shp_dlg.dir_output.setText(out_dir)
 
-				self.dlg0.show()
-				for fc in iface.legendInterface().layers():
-					if fc.name() in POLY_LYR:
-						proj.setSnapSettingsForLayer(fc.id(), True, 0, 0, 20, False)
+    def check_new_version(self):
+        percorso = QgsProject.instance().homePath()
+        dir_output = '/'.join(percorso.split('/')[:-1])
+        nome = percorso.split('/')[-1]
+        if os.path.exists(percorso + os.sep + "progetto"):
+            vers_data = os.path.join(
+                os.path.dirname(QgsProject.instance().fileName()), "progetto", "versione.txt")
 
-				for chiave, valore in DIZIO_LAYER.iteritems():
-					if layer.name() == chiave:
-						OtherLayer = QgsMapLayerRegistry.instance().mapLayersByName(valore)[0]
-						proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
-						proj.setSnapSettingsForLayer(OtherLayer.id(), True, 0, 0, 20, True)
-					elif layer.name() == "Unita' geologico-tecniche":
-						proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
-					elif layer.name() == "Instabilita' di versante":
-						proj.setSnapSettingsForLayer(layer.id(), True, 0, 0, 20, True)
+            try:
+                with open(vers_data, 'r') as f:
+                    proj_vers = f.read()
+                    with open(os.path.join(os.path.dirname(__file__), 'versione.txt')) as nf:
+                        new_proj_vers = nf.read()
+                        if proj_vers < new_proj_vers:
+                            qApp.processEvents()
+                            self.project_update_dlg.aggiorna(
+                                percorso, dir_output, nome, proj_vers, new_proj_vers)
 
-				layer.startEditing()
-				iface.actionAddFeature().trigger()
-				self.dlg0.hide()
+            except Exception as ex:
+                QgsMessageLog.logMessage('Error: %s' % ex, 'MZS Tools')
 
-			else:
-				layer.startEditing()
-				iface.actionAddFeature().trigger()
+    def new_project(self):
+        self.new_project_dlg.nuovo()
 
-	def run9(self):
-		proj = QgsProject.instance()
-		proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-		proj.writeEntry('Digitizing','DefaultSnapTolerance', 20.0)
-		POLIGON_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
-		"Zone stabili liv 3", "Zone instabili liv 3"]
+    def help(self):
+        self.info_dlg.help()
 
-		layer = iface.activeLayer()
-		if layer != None:
-			if layer.name() in POLIGON_LYR:
+    def import_project(self):
 
-				self.dlg0.show()
-				layers = iface.legendInterface().layers()
-				for fc in layers:
-					if fc.name() in POLIGON_LYR:
-						proj.setSnapSettingsForLayer(fc.id(), True, 0, 0, 20, False)
+        self.import_shp_dlg.importa_prog()
 
-				layer.commitChanges()
-				self.dlg0.hide()
+    def export_project(self):
 
-			else:
-				layer.commitChanges()
+        self.export_shp_dlg.esporta_prog()
 
-	def run10(self):
-		self.dlg10.igag.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-igag.png'))
-		self.dlg10.cnr.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-cnr.png'))
-		self.dlg10.labgis.setPixmap(QPixmap(self.plugin_dir + os.sep + "img" + os.sep + 'logo-labgis.png'))
-		self.dlg10.edita()
+    def copy_stab(self):
+
+        self.ms_copy_dlg.copia()
+
+    def add_feature_or_record(self):
+
+        proj = QgsProject.instance()
+
+        snapping_config = proj.instance().snappingConfig()
+        snapping_config.clearIndividualLayerSettings()
+
+        snapping_config.setTolerance(20.0)
+        snapping_config.setMode(QgsSnappingConfig.AllLayers)
+
+        DIZIO_LAYER = {"Zone stabili liv 1": "Zone instabili liv 1", "Zone instabili liv 1": "Zone stabili liv 1", "Zone stabili liv 2": "Zone instabili liv 2", "Zone instabili liv 2": "Zone stabili liv 2",
+                       "Zone stabili liv 3": "Zone instabili liv 3", "Zone instabili liv 3": "Zone stabili liv 3"}
+        POLY_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
+                    "Zone stabili liv 3", "Zone instabili liv 3"]
+
+        layer = iface.activeLayer()
+
+        # Configure snapping
+        if layer != None:
+
+            if layer.name() in POLY_LYR:
+
+                self.wait_dlg.show()
+                for fc in proj.mapLayers().values():
+                    if fc.name() in POLY_LYR:
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
+
+                        snapping_config.setIndividualLayerSettings(
+                            fc, layer_settings)
+                        snapping_config.setIntersectionSnapping(False)
+
+                for chiave, valore in list(DIZIO_LAYER.items()):
+                    if layer.name() == chiave:
+                        other_layer = proj.mapLayersByName(valore)[
+                            0]
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            layer, layer_settings)
+                        snapping_config.setIndividualLayerSettings(
+                            other_layer, layer_settings)
+
+                        snapping_config.setIntersectionSnapping(True)
+
+                    elif layer.name() == "Unita' geologico-tecniche":
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            layer, layer_settings)
+                        snapping_config.setIntersectionSnapping(True)
+
+                    elif layer.name() == "Instabilita' di versante":
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            layer, layer_settings)
+                        snapping_config.setIntersectionSnapping(True)
+
+                layer.startEditing()
+                iface.actionAddFeature().trigger()
+                self.wait_dlg.hide()
+
+            else:
+                layer.startEditing()
+                iface.actionAddFeature().trigger()
+
+    def save(self):
+
+        proj = QgsProject.instance()
+
+        snapping_config = proj.snappingConfig()
+        snapping_config.clearIndividualLayerSettings()
+
+        snapping_config.setTolerance(20.0)
+        snapping_config.setMode(QgsSnappingConfig.AllLayers)
+
+        POLYGON_LYR = ["Unita' geologico-tecniche", "Instabilita' di versante", "Zone stabili liv 1", "Zone instabili liv 1", "Zone stabili liv 2", "Zone instabili liv 2",
+                       "Zone stabili liv 3", "Zone instabili liv 3"]
+
+        layer = iface.activeLayer()
+        if layer != None:
+            if layer.name() in POLYGON_LYR:
+
+                self.wait_dlg.show()
+                layers = proj.mapLayers().values()
+                snapping_config = proj.snappingConfig()
+                snapping_config.clearIndividualLayerSettings()
+                snapping_config.setIntersectionSnapping(False)
+
+                for fc in layers:
+                    if fc.name() in POLYGON_LYR:
+
+                        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                            True, QgsSnappingConfig.VertexFlag, 20, QgsTolerance.ProjectUnits)
+                        snapping_config.setIndividualLayerSettings(
+                            fc, layer_settings)
+
+                layer.commitChanges()
+                self.wait_dlg.hide()
+
+            else:
+                layer.commitChanges()
+
+    def add_site(self):
+        self.edit_win_dlg.edita()
