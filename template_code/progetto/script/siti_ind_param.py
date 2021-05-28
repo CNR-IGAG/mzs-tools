@@ -135,7 +135,7 @@ def indagini_lineari(dialog, layer, feature):
     doc_ind = dialog.findChild(QLineEdit, "doc_ind")
     button_doc = dialog.findChild(QPushButton, "pushButton")
     data_ind = dialog.findChild(QDateTimeEdit, "data_ind")
-    alert_text = dialog.findChild(QLabel, "alert_text")
+    # alert_text = dialog.findChild(QLabel, "alert_text")
     buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
     today = QDate.currentDate()
     tab = dialog.findChild(QTabWidget, "tabWidget")
@@ -144,7 +144,9 @@ def indagini_lineari(dialog, layer, feature):
     nome_layer(tab, layer, il_name)
     data_ind.setDate(today)
     buttonBox.setEnabled(False)
-    alert_text.hide()
+    # alert_text.hide()
+
+    # button_doc.setEnabled(layer.isEditable())
 
     pkey_sln.setText(id_sln.currentText().split('L')[-1])
     id_sln.currentIndexChanged.connect(
@@ -154,11 +156,11 @@ def indagini_lineari(dialog, layer, feature):
     classe_ind.currentIndexChanged.connect(partial(update_box_ind,
                                                    classe_ind, tipo_ind_box, codici_indagini))
     tipo_ind_box.currentIndexChanged.connect(partial(update_tipo_ind_l,
-                                                     tipo_ind, tipo_ind_box, alert_text, doc_ind, buttonBox, classe_ind, id_sln))
+                                                     tipo_ind, tipo_ind_box, doc_ind, buttonBox, layer))
     classe_ind.currentIndexChanged.connect(partial(update_tipo_ind_l,
-                                                   tipo_ind, tipo_ind_box, alert_text, doc_ind, buttonBox, classe_ind, id_sln))
+                                                   tipo_ind, tipo_ind_box, doc_ind, buttonBox, layer))
     id_sln.currentIndexChanged.connect(partial(update_tipo_ind_l,
-                                               tipo_ind, tipo_ind_box, alert_text, doc_ind, buttonBox, classe_ind, id_sln))
+                                               tipo_ind, tipo_ind_box, doc_ind, buttonBox, layer))
     button_doc.clicked.connect(
         partial(select_output_file, button_doc, doc_ind))
     doc_ind.textChanged.connect(partial(document, doc_ind, buttonBox))
@@ -532,37 +534,24 @@ def update_box_ind(parent_box, tipo_ind_box, codici_indagini):
             tipo_ind_box.addItem(row[2])
 
 
-def update_tipo_ind_l(tipo_ind, tipo_ind_box, alert_text, doc_ind, buttonBox, classe_ind, id_sln):
+def update_tipo_ind_l(tipo_ind, tipo_ind_box, doc_ind, buttonBox, layer):
 
-    TipoIndagine = str(tipo_ind_box.currentText().strip()).split(" - ")[0]
+    saved_tipo_ind = tipo_ind.text()
+    selected_tipo_ind = str(tipo_ind_box.currentText().strip()).split(" - ")[0]
 
-    check_campi = [tipo_ind_box.currentText(
-    ), classe_ind.currentText(), id_sln.currentText()]
-    check_value = []
-
-    for x in check_campi:
-        if len(x) > 0:
-            value_campi = 1
-            check_value.append(value_campi)
-        else:
-            value_campi = 0
-            check_value.append(value_campi)
-
-    campi = sum(check_value)
-    tipo_ind.setText(TipoIndagine)
-
-    if campi > 2:
-        if tipo_ind.text() in ("ERT", "PR", "SEO", "SEV", "RAD", "SL", "SR", "SGE", "STP"):
-            alert_text.show()
-            if len(doc_ind.text()) < 5:
-                buttonBox.setEnabled(False)
-            else:
-                buttonBox.setEnabled(True)
-        else:
-            alert_text.hide()
-            buttonBox.setEnabled(True)
+    if layer.isEditable():
+        tipo_ind_box.setEnabled(True)
+        if (saved_tipo_ind and selected_tipo_ind) or (not saved_tipo_ind and selected_tipo_ind): 
+            tipo_ind.setText(selected_tipo_ind)
     else:
+        tipo_ind_box.setEnabled(False)
+
+    doc_ind_required = tipo_ind.text() in ("ERT", "PR", "SEO", "SEV", "RAD", "SL", "SR", "SGE", "STP")
+
+    if not tipo_ind.text() or (doc_ind_required and not doc_ind.text()):
         buttonBox.setEnabled(False)
+    else:
+        buttonBox.setEnabled(True)
 
 
 def define_param(codici_parametri, nome_tabella):
