@@ -35,7 +35,7 @@ class info(QDialog, FORM_CLASS):
             lambda: self.open_pdf(os.path.join(self.plugin_dir, "manuale.pdf")))
         #self.pushButton_eng.clicked.connect(lambda: self.open_pdf(self.plugin_dir, "manual.pdf"))
         self.pushButton_www.clicked.connect(lambda: webbrowser.open(
-            'https://github.com/CNR-IGAG/mzs-tools/wiki/MzS-Tools'))
+            'https://github.com/CNR-IGAG/mzs-tools/'))
 
         self.show()
         self.adjustSize()

@@ -32,19 +32,19 @@ class MzSTools():
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
 
-        locale = QgsSettings().value('locale/userLocale', '')[0:2]
-
-        if locale == '':
-            locale = QSettings().value('locale/globalLocale')[0:2]
-
+        # initialize locale
+        try:
+            locale = QSettings().value("locale/userLocale", "en", type=str)[0:2]
+        except Exception:
+            locale = "en"
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
             'MzSTools_{}.qm'.format(locale))
-
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
+            QCoreApplication.installTranslator(self.translator)
 
         self.wait_dlg = wait()
         self.project_update_dlg = aggiorna_progetto()

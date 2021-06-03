@@ -29,7 +29,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Import project folder from geodatabase</string>
+   <string>Import project folder to geodatabase</string>
   </property>
   <property name="locale">
    <locale language="English" country="UnitedStates"/>
@@ -53,7 +53,7 @@
       </font>
      </property>
      <property name="title">
-      <string>Import project folder from geodatabase</string>
+      <string>Import project folder to geodatabase</string>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="1">
@@ -126,7 +126,7 @@
          </palette>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Location of a standard (4.0 or later), shapefile based MS project&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -216,7 +216,7 @@
          </palette>
         </property>
         <property name="toolTip">
-         <string/>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Folder containing the txt files exported from a &amp;quot;CdI_Tabelle.mdb&amp;quot; database &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
        </widget>
       </item>
@@ -302,7 +302,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;Use only an EMPTY StandardMS project version 4.0 or higher.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;Use this tool only in a NEW and EMPTY project.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="textFormat">
           <enum>Qt::RichText</enum>
@@ -322,7 +322,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;One or more fundamental layers have been removed / renamed within QGIS LAYER PANEL. Or the Seismic Microzonation project has not started. Fix the problem before running this tool again.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;One or more fundamental layers have been removed / renamed within QGIS LAYER PANEL. Create a new project and do not modify it before running this tool.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="textFormat">
           <enum>Qt::RichText</enum>
