@@ -48,8 +48,12 @@ class edit_win(QDialog, FORM_CLASS):
 
         # set calendar locale
         self.data_sito.clear()
-        qgis_qlocale = QLocale(QSettings().value("locale/userLocale"))
-        self.data_sito.setLocale(qgis_qlocale)
+        try:
+            locale = QSettings().value("locale/userLocale")
+        except Exception:
+            locale = "en_US"
+        qlocale = QLocale(locale)
+        self.data_sito.setLocale(qlocale)
         today = QDate.currentDate()
         self.data_sito.setDate(today)
 
