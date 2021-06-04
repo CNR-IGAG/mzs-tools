@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0" language="it" sourcelanguage="">
+<!DOCTYPE TS>
+<TS version="2.1" language="it">
 <context>
     <name>MzSTools</name>
     <message>
@@ -46,6 +47,225 @@
         <location filename="../MzSTools.py" line="182"/>
         <source>Help</source>
         <translation>Aiuto</translation>
+    </message>
+</context>
+<context>
+    <name>copia_ms</name>
+    <message>
+        <location filename="../tb_copia_ms.ui" line="50"/>
+        <source>Copy &quot;Stab&quot; or &quot;Instab&quot; layer</source>
+        <translation type="obsolete">Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
+    </message>
+    <message>
+        <location filename="../tb_copia_ms.ui" line="62"/>
+        <source>Input</source>
+        <translation>Sorgente</translation>
+    </message>
+    <message>
+        <location filename="../tb_copia_ms.ui" line="94"/>
+        <source>Output</source>
+        <translation>Destinazione</translation>
+    </message>
+    <message>
+        <location filename="../tb_copia_ms.ui" line="109"/>
+        <source>Zone stabili</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_copia_ms.ui" line="122"/>
+        <source>Zone instabili</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_copia_ms.ui" line="221"/>
+        <source>Help</source>
+        <translation>Aiuto</translation>
+    </message>
+    <message>
+        <location filename="../tb_copia_ms.ui" line="50"/>
+        <source>Copy features between &quot;Stab&quot; or &quot;Instab&quot; layers</source>
+        <translation>Copia gli oggetti tra i layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
+    </message>
+</context>
+<context>
+    <name>edit_win</name>
+    <message>
+        <location filename="../tb_edit_win.ui" line="20"/>
+        <source>Add &quot;Sito puntuale&quot; using XY coordinates</source>
+        <translation>Aggiungi un Sito Puntuale utilizzando le coordinate XY</translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="99"/>
+        <source>Sito puntuale</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="111"/>
+        <source>ID</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="258"/>
+        <source>0</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="207"/>
+        <source>Ubicazione_prov</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="239"/>
+        <source>Ubicazione_com</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="271"/>
+        <source>Indirizzo</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="291"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Coordinate&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="304"/>
+        <source>Mod_identcoord</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="336"/>
+        <source>Desc_modcoord</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="356"/>
+        <source>&lt;b&gt;Quota&lt;/b&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="369"/>
+        <source>Quota_slm</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="395"/>
+        <source>Modo_quota</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="421"/>
+        <source>&lt;b&gt;Altro&lt;/b&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="434"/>
+        <source>Data_sito</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="450"/>
+        <source>yyyy-MM-dd</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="466"/>
+        <source>Note_sito</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="510"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(*): Coordinate System &amp;quot;WGS 84 UTM zone 33N&amp;quot; (EPSG 32633).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;(*): Sistema di coordinate &amp;quot;WGS 84 UTM zone 33N&amp;quot; (EPSG 32633).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="525"/>
+        <source>Y (*)</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="538"/>
+        <source>X (*)</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="570"/>
+        <source>Coordinate</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="598"/>
+        <source>Message box</source>
+        <translation>Informazioni</translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="613"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;Acceptable coordinate values: X (-170000, 801000); Y (0, 5220000)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;Valori di coordinate ammissibili: X (-170000, 801000); Y (0, 5220000)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.ui" line="706"/>
+        <source>Help</source>
+        <translation>Aiuto</translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.py" line="28"/>
+        <source>WARNING!</source>
+        <translation>ATTENZIONE!</translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.py" line="28"/>
+        <source>The tool must be used within an opened MS project!</source>
+        <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
+    </message>
+</context>
+<context>
+    <name>esporta_shp</name>
+    <message>
+        <location filename="../tb_esporta_shp.ui" line="32"/>
+        <source>Export as shapefile</source>
+        <translation>Esporta dati in shapefile</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.ui" line="56"/>
+        <source>Export geodatabase to project folder</source>
+        <translation>Esporta i dati in una strutura di progetto standard</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.ui" line="68"/>
+        <source>Output</source>
+        <translation>Destinazione</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.ui" line="94"/>
+        <source>...</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.ui" line="116"/>
+        <source>Message box</source>
+        <translation>Informazioni</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.ui" line="128"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;One or more fundamental layers have been removed / renamed within QGIS LAYER PANEL. Or the Seismic Microzonation project has not started. Fix the problem before running this tool again.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;Uno o piu&apos; layer fondamentali sono stati eliminati o rinominati all&apos;interno del pannello dei layer di QGIS. Non modificare la struttura iniziale dei layer del progetto generato dal plugin.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.ui" line="221"/>
+        <source>Help</source>
+        <translation>Aiuto</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.py" line="72"/>
+        <source>WARNING!</source>
+        <translation>ATTENZIONE!</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.py" line="72"/>
+        <source>The selected directory does not exist!</source>
+        <translation>La cartella selezionata non esiste!</translation>
     </message>
 </context>
 <context>
@@ -144,6 +364,159 @@ p, li { white-space: pre-wrap; }
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;MzS Tools By Cosentino G., Pennica F., Tarquini E., Stigliano F.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt;With the contribution of/con il contributo di: Monia Coltella&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation></translation>
+    </message>
+</context>
+<context>
+    <name>nuovo_progetto</name>
+    <message>
+        <location filename="../tb_nuovo_progetto.py" line="265"/>
+        <source>Notice</source>
+        <translation>Avviso</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.py" line="265"/>
+        <source>The project has been created successfully.</source>
+        <translation>Il progetto è stato creato correttamente.</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.py" line="276"/>
+        <source>WARNING!</source>
+        <translation>ATTENZIONE!</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.py" line="276"/>
+        <source>The selected directory does not exist!</source>
+        <translation>La cartella selezionata non esiste!</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="20"/>
+        <source>New project</source>
+        <translation>Nuovo progetto</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="38"/>
+        <source>Project metadata</source>
+        <translation>Metadati di progetto</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="377"/>
+        <source>Website</source>
+        <translation>Sito web</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="74"/>
+        <source>&lt;b&gt;Owner&apos;s details&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Informazioni sul proprietario&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="81"/>
+        <source>&lt;b&gt;Other data&lt;/b&gt;</source>
+        <translation>Altri dati</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="94"/>
+        <source>All fields are mandatory!</source>
+        <translation>Tutti i campi sono richiesti!</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="455"/>
+        <source>Name</source>
+        <translation>Nome</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="156"/>
+        <source>&lt;b&gt;Expert data&lt;/b&gt;</source>
+        <translation type="obsolete">&lt;b&gt;Dati del professionista incaricato&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="176"/>
+        <source>Municipality</source>
+        <translation>Comune</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="189"/>
+        <source>Lineage</source>
+        <translation>Storico del set di dati</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="281"/>
+        <source>1 : </source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="297"/>
+        <source>&lt;b&gt;Point of Contact&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Punto di Contatto&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="517"/>
+        <source>Email</source>
+        <translation>Email</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="336"/>
+        <source>Map scale</source>
+        <translation>Scala di riferimento</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="349"/>
+        <source>Name </source>
+        <translation>Nome </translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="411"/>
+        <source>&lt;b&gt;Notice&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Informazione&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="478"/>
+        <source>Description</source>
+        <translation>Descrizione</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="530"/>
+        <source>Office</source>
+        <translation>Ufficio</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="550"/>
+        <source>Map accuracy</source>
+        <translation>Precisione della mappa</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="566"/>
+        <source>Output directory</source>
+        <translation>Cartella di destinazione</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="593"/>
+        <source>...</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="657"/>
+        <source>MzS Tools By Cosentino G., Pennica F., Tarquini E., Stigliano F.</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="706"/>
+        <source>Help</source>
+        <translation>Aiuto</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="156"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Study author&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Autore dello studio&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="390"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Description (abstract) of the study&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Descrizione (abstract) dello studio&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="442"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;History of the data set, and the life cycle from collection and acquisition through compilation and derivation to its current form, in accordance with EN ISO 19101&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;La storia del set di dati e il suo ciclo di vita, dalla rilevazione e l&apos;acquisizione mediante compilazione e derivazione fino alla forma attuale, conformemente alla norma EN ISO 19101&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 </TS>

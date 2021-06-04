@@ -70,7 +70,7 @@ class esporta_shp(QDialog, FORM_CLASS):
 
                 else:
                     QMessageBox.warning(
-                        None, 'WARNING!', "The selected directory does not exist!")
+                        None, self.tr('WARNING!'), self.tr("The selected directory does not exist!"))
 
             except Exception as z:
                 QMessageBox.critical(
@@ -104,3 +104,6 @@ class esporta_shp(QDialog, FORM_CLASS):
         else:
             self.button_box.setEnabled(False)
             self.alert_text.show()
+
+    def tr(self, message):
+        return QCoreApplication.translate('esporta_shp', message)
