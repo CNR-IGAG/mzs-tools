@@ -62,8 +62,10 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                 path_db = os.path.join(proj_path, "db", "indagini.sqlite")
 
                 for upgrade_script in sql_scripts:
+                    QgsMessageLog.logMessage(f'Executing: {upgrade_script}', level=Qgis.Info)
                     self.exec_db_upgrade_sql(path_db, upgrade_script)
 
+                QgsMessageLog.logMessage('Sql upgrades ok', level=Qgis.Info)
                 zip_ref = zipfile.ZipFile(pacchetto, 'r')
                 zip_ref.extractall(proj_path)
                 zip_ref.close()
@@ -116,17 +118,22 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
 
     def load_new_qgs_file(self, proj_path):
 
+        QgsMessageLog.logMessage('Loading new project', level=Qgis.Info)
+
         project = QgsProject.instance()
         project.read(os.path.join(proj_path, "progetto_MS.qgs"))
         comune_layer = QgsProject.instance().mapLayersByName(
             "Comune del progetto")[0]
 
         features = comune_layer.getFeatures()
-        for feat in features:
-            attrs = feat.attributes()
-            codice_regio = attrs[1]
-            nome = attrs[4]
-            regione = attrs[7]
+        try:
+            for feat in features:
+                attrs = feat.attributes()
+                codice_regio = attrs[1]
+                nome = attrs[4]
+                regione = attrs[7]
+        except IndexError as e:
+            regione = ""
 
         sourceLYR = QgsProject.instance().mapLayersByName("Limiti comunali")[0]
         sourceLYR.setSubsetString("cod_regio='" + codice_regio + "'")
