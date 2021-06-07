@@ -50,6 +50,31 @@
     </message>
 </context>
 <context>
+    <name>aggiorna_progetto</name>
+    <message>
+        <location filename="../tb_aggiorna_progetto.ui" line="56"/>
+        <source>Update project</source>
+        <translation>Aggiorna progetto</translation>
+    </message>
+    <message>
+        <location filename="../tb_aggiorna_progetto.ui" line="94"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;The project can be updated to the latest version.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;If you want to update it, press the OK button! &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Otherwise press the CANCEL button.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;The previous project will be preserved.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Il progetto può essere aggiornato all&apos;ultima versione.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Se vuoi procedere con l&apos;aggiornamento clicca su OK! &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Altrimenti clicca su Annulla.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;La versione precedente verrà conservata in una cartella a parte.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_aggiorna_progetto.py" line="92"/>
+        <source>INFORMATION!</source>
+        <translation>Attenzione!</translation>
+    </message>
+    <message>
+        <location filename="../tb_aggiorna_progetto.py" line="92"/>
+        <source>The project structure has been updated!
+The backup copy has been saved in the following directory: </source>
+        <translation>La struttura del progetto è stata aggiornata!
+Una copia di backup è stata conservata nella seguente cartella: </translation>
+    </message>
+</context>
+<context>
     <name>copia_ms</name>
     <message>
         <location filename="../tb_copia_ms.ui" line="50"/>
