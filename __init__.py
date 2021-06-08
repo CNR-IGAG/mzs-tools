@@ -7,7 +7,7 @@
                              -------------------
         begin                : 2018-07-09
         copyright            : (C) 2018 by IGAG - CNR
-        email                : emanuele.tarquini@igag.cnr.it
+        email                : labgis@igag.cnr.it
         git sha              : $Format:%H$
  ***************************************************************************/
 
@@ -31,5 +31,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :type iface: QgisInterface
     """
     #
-    from .MzSTools import MzSTools
+    from .mzs_tools import MzSTools
     return MzSTools(iface)

@@ -1,4 +1,4 @@
-SOURCES = MzSTools.py \
+SOURCES = mzs_tools.py \
           tb_nuovo_progetto.py \
           tb_esporta_shp.py \
           tb_edit_win.py \

@@ -1,50 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="it">
+<!DOCTYPE TS><TS version="2.0" language="it" sourcelanguage="">
 <context>
     <name>MzSTools</name>
     <message>
-        <location filename="../MzSTools.py" line="190"/>
+        <location filename="../mzs_tools.py" line="190"/>
         <source>&amp;MzS Tools</source>
         <translation>&amp;MzS Tools</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="134"/>
+        <location filename="../mzs_tools.py" line="134"/>
         <source>New project</source>
         <translation>Nuovo progetto</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="142"/>
+        <location filename="../mzs_tools.py" line="142"/>
         <source>Import project folder from geodatabase</source>
         <translation>Importa dati da un progetto esistente</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="148"/>
+        <location filename="../mzs_tools.py" line="148"/>
         <source>Export geodatabase to project folder</source>
         <translation>Esporta i dati in una strutura di progetto standard</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="156"/>
+        <location filename="../mzs_tools.py" line="156"/>
         <source>Add feature or record</source>
         <translation>Aggiungi una feature o un record</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="162"/>
+        <location filename="../mzs_tools.py" line="162"/>
         <source>Save</source>
         <translation>Salva</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="168"/>
+        <location filename="../mzs_tools.py" line="168"/>
         <source>Add &quot;Sito puntuale&quot; using XY coordinates</source>
         <translation>Aggiungi un Sito Puntuale utilizzando le coordinate XY</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="174"/>
+        <location filename="../mzs_tools.py" line="174"/>
         <source>Copy &quot;Stab&quot; or &quot;Instab&quot; layer</source>
         <translation>Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
     </message>
     <message>
-        <location filename="../MzSTools.py" line="182"/>
+        <location filename="../mzs_tools.py" line="182"/>
         <source>Help</source>
         <translation>Aiuto</translation>
     </message>

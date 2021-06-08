@@ -46,7 +46,7 @@ class MzSTools():
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
 
-        self.wait_dlg = wait()
+        # self.wait_dlg = wait()
         self.project_update_dlg = aggiorna_progetto()
         self.new_project_dlg = nuovo_progetto(self.iface)
         self.info_dlg = info()
@@ -279,7 +279,7 @@ class MzSTools():
 
             if layer.name() in POLY_LYR:
 
-                self.wait_dlg.show()
+                # self.wait_dlg.show()
                 for fc in proj.mapLayers().values():
                     if fc.name() in POLY_LYR:
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
@@ -321,7 +321,7 @@ class MzSTools():
 
                 layer.startEditing()
                 iface.actionAddFeature().trigger()
-                self.wait_dlg.hide()
+                # self.wait_dlg.hide()
 
             else:
                 layer.startEditing()
@@ -344,7 +344,7 @@ class MzSTools():
         if layer != None:
             if layer.name() in POLYGON_LYR:
 
-                self.wait_dlg.show()
+                # self.wait_dlg.show()
                 layers = proj.mapLayers().values()
                 snapping_config = proj.snappingConfig()
                 snapping_config.clearIndividualLayerSettings()
@@ -359,7 +359,7 @@ class MzSTools():
                             fc, layer_settings)
 
                 layer.commitChanges()
-                self.wait_dlg.hide()
+                # self.wait_dlg.hide()
 
             else:
                 layer.commitChanges()
