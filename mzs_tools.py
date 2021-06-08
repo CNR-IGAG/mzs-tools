@@ -22,7 +22,7 @@ from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
 from .tb_info import info
 from .tb_nuovo_progetto import nuovo_progetto
-from .tb_wait import wait
+# from .tb_wait import wait
 
 
 class MzSTools():
