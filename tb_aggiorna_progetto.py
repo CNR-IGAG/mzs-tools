@@ -166,7 +166,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
 
         for layout in layouts:
             map_item = layout.itemById('mappa_0')
-            map_item.setExtent(canvas.extent())
+            map_item.zoomToExtent(canvas.extent())
             map_item_2 = layout.itemById(
                 'regio_title')
             map_item_2.setText("Regione " + regione)

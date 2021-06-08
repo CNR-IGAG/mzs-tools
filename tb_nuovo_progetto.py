@@ -219,10 +219,10 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     mainPath = QgsProject.instance().homePath()
                     canvas = self.iface.mapCanvas()
 
-                    QgsMessageLog.logMessage(
-                        'Canvas WKT %s' % canvas.extent().asWktPolygon())
-                    QgsMessageLog.logMessage(
-                        'layer_limiti_comunali WKT %s' % layer_limiti_comunali.extent().asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'Canvas WKT %s' % canvas.extent().asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'layer_limiti_comunali WKT %s' % layer_limiti_comunali.extent().asWktPolygon())
 
                     imageFilename = os.path.join(
                         mainPath, "progetto", "loghi", "mappa_reg.png")
@@ -232,10 +232,10 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     extent = layer_comune_progetto.dataProvider().extent()
                     canvas.setExtent(extent)
 
-                    QgsMessageLog.logMessage(
-                        'Canvas WKT %s' % canvas.extent().asWktPolygon())
-                    QgsMessageLog.logMessage(
-                        'layer_comune_progetto data provider WKT %s' % extent.asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'Canvas WKT %s' % canvas.extent().asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'layer_comune_progetto data provider WKT %s' % extent.asWktPolygon())
 
                     layout_manager = QgsProject.instance().layoutManager()
                     layouts = layout_manager.printLayouts()
@@ -266,7 +266,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                         None, self.tr("Notice"), self.tr("The project has been created successfully."))
 
                 except Exception as z:
-                    raise z
+                    # raise z
                     QMessageBox.critical(
                         None, 'ERROR!', 'Error:\n"' + str(z) + '"')
                     if os.path.exists(os.path.join(dir_out, "progetto_MS")):

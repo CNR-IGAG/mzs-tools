@@ -1,2 +1,5 @@
 *.pyc
 *.qgs~
+
+# pb_tool build directory
+zip_build
