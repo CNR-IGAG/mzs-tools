@@ -1,23 +1,17 @@
 # MZS TOOLS
 
-This plugin was created to realize a project based on a light and fast SpatiaLite geodatabase for data storage and maps production according to the italian "Criteria for Seismic Microzonation".
-
-Seismic Microzonation studies are carried out in order to define zones, in urban areas, which have a homogeneous seismic behavior.
-
-Seismic Microzonation studies include the following maps:
-
-- Investigation map ("Carta delle Indagini"); 
-- Geological-Technical Map for Seismic Microzonation ("Carta Geologico-Tecnica"); 
-- Map of Seismically Homogeneous Microzones ("Carta delle Microzone Omogenee in Prospettiva sismica"); 
-- Seismic Microzonation Map ("Carta di Microzonazione Sismica"). 
-
-The plugin was created to give the opportunity to quickly perform standard compliant Seismic Microzonation studies.
+QGIS plugin for italian Seismic Microzonation.
 
 ## Changelog:
+
+### v1.5:
+- Ported to QGIS 3
+
 ### v1.4:	
 -  Updated to new MS 4.2 standards;
 -  update project (fixed labels, update .py files, added new style); 
 -  updated italian manual.
+
 ### v1.3:		
 -  updated layout "CDI - Carta delle Indagini" (added legend);
 -  updated export shapefiles and "Export geodatabase to project folder" tool (to meet the standards);

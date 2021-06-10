@@ -10,4 +10,5 @@
         "--ignore=F405",
     ],
     "editor.formatOnType": true,
+    "restructuredtext.confPath": "${workspaceFolder}/help/source",
 }
