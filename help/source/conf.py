@@ -216,11 +216,17 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-latex_babel = '\\usepackage[italian]{babel}'
+latex_babel = '\\usepackage[english,italian]{babel}'
+
+cover_path = os.path.abspath("cover.pdf")
 
 latex_elements = {
     'papersize': 'a4paper',
     # 'babel': '\\usepackage[italian]{babel}',
+    # 'preamble': '\\usepackage{pdfpages}',
+    'extrapackages': r'\usepackage{pdfpages}',  # New in version 2.3. - altrimenti usare 'preamble'
+    # "maketitle": f"\\input{{{cover.tex}}}"
+    "maketitle": f"\\includepdf[pages={{1,2}}]{{{cover_path}}}\n\\sphinxmaketitle"
 }
 
 # -- Options for manual page output --------------------------------------------
