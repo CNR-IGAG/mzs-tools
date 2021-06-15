@@ -1,6 +1,8 @@
 import os
+import shutil
 
 from qgis.core import (
+    Qgis,
     QgsMessageLog,
     QgsProject,
     QgsSettings,
@@ -69,7 +71,7 @@ class MzSTools:
 
         QgsSettings().setValue("qgis/enableMacros", 3)
 
-        self.iface.projectRead.connect(self.check_new_version)
+        self.iface.projectRead.connect(self.check_project)
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)
@@ -217,11 +219,39 @@ class MzSTools:
         )
         self.export_shp_dlg.dir_output.setText(out_dir)
 
-    def check_new_version(self):
+    def check_project(self):
         percorso = QgsProject.instance().homePath()
         dir_output = "/".join(percorso.split("/")[:-1])
         nome = percorso.split("/")[-1]
-        if os.path.exists(percorso + os.sep + "progetto"):
+
+        # detect MzSTools project
+        if os.path.exists(os.path.join(percorso, "progetto")) and os.path.exists(
+            os.path.join(percorso, "progetto", "versione.txt")
+        ):
+            QgsMessageLog.logMessage("MzSTools project detected", "MzSTools", Qgis.Info)
+            QgsMessageLog.logMessage("Checking svg symbols...", "MzSTools", Qgis.Info)
+
+            dir_svg_input = os.path.join(self.plugin_dir, "img", "svg")
+            dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
+
+            if not os.path.exists(dir_svg_output):
+                QgsMessageLog.logMessage(
+                    f"Copying svg symbols in {dir_svg_output}", "MzSTools", Qgis.Info
+                )
+                shutil.copytree(dir_svg_input, dir_svg_output)
+            else:
+                QgsMessageLog.logMessage(
+                    f"Updating svg symbols in {dir_svg_output}", "MzSTools", Qgis.Info
+                )
+                src_files = os.listdir(dir_svg_input)
+                for file_name in src_files:
+                    full_file_name = os.path.join(dir_svg_input, file_name)
+                    if os.path.isfile(full_file_name):
+                        shutil.copy(full_file_name, dir_svg_output)
+
+            QgsMessageLog.logMessage(
+                "Comparing project and plugin versions", "MzSTools", Qgis.Info
+            )
             vers_data = os.path.join(
                 os.path.dirname(QgsProject.instance().fileName()),
                 "progetto",
@@ -236,13 +266,16 @@ class MzSTools:
                     ) as nf:
                         new_proj_vers = nf.read()
                         if proj_vers < new_proj_vers:
+                            QgsMessageLog.logMessage(
+                                "Project needs updating!", "MzSTools", Qgis.Info
+                            )
                             qApp.processEvents()
                             self.project_update_dlg.aggiorna(
                                 percorso, dir_output, nome, proj_vers, new_proj_vers
                             )
 
             except Exception as ex:
-                QgsMessageLog.logMessage("Error: %s" % ex, "MZS Tools")
+                QgsMessageLog.logMessage(f"Error: {ex}", "MzSTools", Qgis.Critical)
 
     def new_project(self):
         self.new_project_dlg.nuovo()
