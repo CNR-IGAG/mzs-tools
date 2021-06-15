@@ -1,2 +1,9 @@
 *.pyc
 *.qgs~
+
+# pb_tool build directory
+zip_build
+
+# shpinx build
+help/build
+help/source/_build

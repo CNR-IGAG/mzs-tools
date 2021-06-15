@@ -219,10 +219,10 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     mainPath = QgsProject.instance().homePath()
                     canvas = self.iface.mapCanvas()
 
-                    QgsMessageLog.logMessage(
-                        'Canvas WKT %s' % canvas.extent().asWktPolygon())
-                    QgsMessageLog.logMessage(
-                        'layer_limiti_comunali WKT %s' % layer_limiti_comunali.extent().asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'Canvas WKT %s' % canvas.extent().asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'layer_limiti_comunali WKT %s' % layer_limiti_comunali.extent().asWktPolygon())
 
                     imageFilename = os.path.join(
                         mainPath, "progetto", "loghi", "mappa_reg.png")
@@ -232,17 +232,17 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     extent = layer_comune_progetto.dataProvider().extent()
                     canvas.setExtent(extent)
 
-                    QgsMessageLog.logMessage(
-                        'Canvas WKT %s' % canvas.extent().asWktPolygon())
-                    QgsMessageLog.logMessage(
-                        'layer_comune_progetto data provider WKT %s' % extent.asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'Canvas WKT %s' % canvas.extent().asWktPolygon())
+                    # QgsMessageLog.logMessage(
+                    #     'layer_comune_progetto data provider WKT %s' % extent.asWktPolygon())
 
                     layout_manager = QgsProject.instance().layoutManager()
                     layouts = layout_manager.printLayouts()
 
                     for layout in layouts:
                         map_item = layout.itemById('mappa_0')
-                        map_item.setExtent(canvas.extent())
+                        map_item.zoomToExtent(canvas.extent())
                         map_item_2 = layout.itemById(
                             'regio_title')
                         map_item_2.setText("Regione " + regione)
@@ -263,10 +263,10 @@ class nuovo_progetto(QDialog, FORM_CLASS):
                     project.write(os.path.join(path_comune, "progetto_MS.qgs"))
 
                     QMessageBox.information(
-                        None, 'INFORMATION!', "The project has been created successfully.")
+                        None, self.tr("Notice"), self.tr("The project has been created successfully."))
 
                 except Exception as z:
-                    raise z
+                    # raise z
                     QMessageBox.critical(
                         None, 'ERROR!', 'Error:\n"' + str(z) + '"')
                     if os.path.exists(os.path.join(dir_out, "progetto_MS")):
@@ -274,7 +274,7 @@ class nuovo_progetto(QDialog, FORM_CLASS):
 
             else:
                 QMessageBox.warning(
-                    self.iface.mainWindow(), 'WARNING!', "The selected directory does not exist!")
+                    self.iface.mainWindow(), self.tr("WARNING!"), self.tr("The selected directory does not exist!"))
 
     def disableButton(self):
         check_campi = [self.professionista.text(), self.email_prof.text(), self.sito_prof.text(), self.propretario.text(), self.ufficio.text(), self.email_prop.text(), self.sito_prop.text(), self.contatto.text(
@@ -342,3 +342,6 @@ class nuovo_progetto(QDialog, FORM_CLASS):
             if letter == "'":
                 word = word.replace(letter, "''")
         return word
+
+    def tr(self, message):
+        return QCoreApplication.translate('nuovo_progetto', message)

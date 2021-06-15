@@ -1,0 +1,13 @@
+@import url("theme.css");
+
+.wy-nav-content {
+    max-width: unset;
+}
+
+p {
+    text-align: justify;
+}
+
+ul {
+    text-align: justify;
+}

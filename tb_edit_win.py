@@ -1,21 +1,13 @@
-from builtins import range
-# -*- coding: utf-8 -*-
-# -------------------------------------------------------------------------------
-# Name:		tb_edit_win.py
-# Author:	  Tarquini E.
-# Created:	 08-02-2018
-# -------------------------------------------------------------------------------
+import os
+import webbrowser
 
+from qgis.core import *
+from qgis.gui import *
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import *
 from qgis.utils import *
-from qgis.core import *
-from qgis.gui import *
-import os
-import sys
-import webbrowser
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -31,12 +23,20 @@ class edit_win(QDialog, FORM_CLASS):
         self.plugin_dir = os.path.dirname(__file__)
 
     def edita(self):
+
+        if len(QgsProject.instance().mapLayersByName("Siti puntuali")) == 0:
+            QMessageBox.warning(
+                None, self.tr('WARNING!'), self.tr("The tool must be used within an opened MS project!"))
+            return
+
         self.help_button.clicked.connect(lambda: webbrowser.open(
             'https://www.youtube.com/watch?v=4jQ9OacJ71w&t=4s'))
+        
         codici_mod_identcoord = []
         lista_mod_identcoord = []
         codici_modo_quota = []
         lista_modo_quota = []
+        
         self.coord_x.clear()
         self.coord_y.clear()
         self.indirizzo.clear()
@@ -44,18 +44,31 @@ class edit_win(QDialog, FORM_CLASS):
         self.desc_modcoord.clear()
         self.quota_slm.clear()
         self.modo_quota.clear()
-        self.data_sito.clear()
         self.note_sito.clear()
+
+        # set calendar locale
+        self.data_sito.clear()
+        try:
+            locale = QSettings().value("locale/userLocale")
+        except Exception:
+            locale = "en_US"
+        qlocale = QLocale(locale)
+        self.data_sito.setLocale(qlocale)
         today = QDate.currentDate()
         self.data_sito.setDate(today)
+
         self.alert_text.hide()
         self.button_box.setEnabled(False)
-        self.coord_x.textEdited.connect(
-            lambda: self.update_num(self.coord_x, -170000, 801000))
-        self.coord_y.textEdited.connect(
-            lambda: self.update_num(self.coord_y, 0, 5220000))
-        self.quota_slm.textEdited.connect(
-            lambda: self.update_num(self.quota_slm, 0, 4900))
+
+        self.coord_x.setValidator(QDoubleValidator(-170000, 801000, 2))
+        self.coord_x.setMaxLength(9)
+
+        self.coord_y.setValidator(QDoubleValidator(0, 5220000, 2))
+        self.coord_y.setMaxLength(9)
+
+        self.quota_slm.setValidator(QDoubleValidator(0, 4900, 0))
+        self.quota_slm.setMaxLength(4)
+
         self.coord_x.textChanged.connect(self.disableButton)
         self.coord_y.textChanged.connect(self.disableButton)
 
@@ -108,8 +121,8 @@ class edit_win(QDialog, FORM_CLASS):
             attr[idx9] = self.ubicazione_com.text()
             attr[idx10] = self.id_spu.text()
 
-            pnt = QgsGeometry.fromPoint(
-                QgsPoint(float(self.coord_x.text()), float(self.coord_y.text())))
+            pnt = QgsGeometry.fromPointXY(
+                QgsPointXY(float(self.coord_x.text()), float(self.coord_y.text())))
             f = QgsFeature()
             f.setGeometry(pnt)
             f.setAttributes(attr)
@@ -125,29 +138,12 @@ class edit_win(QDialog, FORM_CLASS):
             value.setText('')
 
     def disableButton(self):
-        check_campi = [self.coord_x.text(), self.coord_y.text()]
-        check_value = []
-
-        for x in check_campi:
-            if len(x) > 0:
-                value_campi = 1
-                check_value.append(value_campi)
-            else:
-                value_campi = 0
-                check_value.append(value_campi)
-        campi = sum(check_value)
-
-        try:
-            QgsProject.instance().mapLayersByName("Siti puntuali")[0]
+        if self.coord_x.hasAcceptableInput() and self.coord_y.hasAcceptableInput():
             self.alert_text.hide()
-            if campi > 1:
-                self.button_box.setEnabled(True)
-            else:
-                self.button_box.setEnabled(False)
-
-        except IndexError:
-            self.button_box.setEnabled(False)
+            self.button_box.setEnabled(True)
+        else:
             self.alert_text.show()
+            self.button_box.setEnabled(False)
 
     def define_mod(self, codici_mod, nome, lista):
         codici_mod_layer = QgsProject.instance().mapLayersByName(nome)[
@@ -164,3 +160,6 @@ class edit_win(QDialog, FORM_CLASS):
         mod_box.model().item(0).setEnabled(False)
         for row in codici_mod:
             mod_box.addItem(row[1])
+
+    def tr(self, message):
+        return QCoreApplication.translate('edit_win', message)
