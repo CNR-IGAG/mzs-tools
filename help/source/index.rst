@@ -7,7 +7,7 @@ Benvenuto nella documentazione di MzsTools
 ==========================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    intro
    plugin
