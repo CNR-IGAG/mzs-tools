@@ -20,8 +20,8 @@ Secondo gli "ICMS 2008" e gli "Standard MS", i principali prodotti cartografici 
 In generale, per ognuno di questi elaborati cartografici gli Standard indicano:
 
 * le **tipologie di dati** necessari per la realizzazione delle carte (ad esempio indagini puntuali, indagini lineari, poligoni che rappresentano i terreni di copertura ed il substrato geologico, ecc.);
-* i **simboli grafici** con cui rappresentare gli oggetti georeferenziati (in Figura 3 e 4, ad esempio, sono riportati alcuni dei simboli per la rappresentazione delle indagini puntuali e dei terreni di copertura); è da evidenziare che gli standard riportano, per ogni simbolo, un esempio grafico con relativo codice e descrizione, ma non forniscono specifiche tecniche precise per la loro costruzione tramite un programma di grafica o GIS (vedi Appendice A);
-* i **layout delle carte**, riferibili ai diversi formati (A0, A1, A2), con specifiche riguardanti le dimensioni e la composizione di alcuni elementi quali ad esempio il cartiglio, la legenda ed il posizionamento delle informazioni relative all’autore o agli autori che hanno condotto gli studi (Figura 5); queste indicazioni servono alla costruzione dei layout per la produzione delle carte all’interno di specifici software GIS o di grafica, a discrezione dell’autore dello studio.
+* i **simboli grafici** con cui rappresentare gli oggetti georeferenziati; è da evidenziare che gli standard riportano, per ogni simbolo, un esempio grafico con relativo codice e descrizione, ma non forniscono specifiche tecniche precise per la loro costruzione tramite un programma di grafica o GIS;
+* i **layout delle carte**, riferibili ai diversi formati (A0, A1, A2), con specifiche riguardanti le dimensioni e la composizione di alcuni elementi quali ad esempio il cartiglio, la legenda ed il posizionamento delle informazioni relative all’autore o agli autori che hanno condotto gli studi; queste indicazioni servono alla costruzione dei layout per la produzione delle carte all’interno di specifici software GIS o di grafica, a discrezione dell’autore dello studio.
 
 .. image:: img/intro_carte_ms.png
 

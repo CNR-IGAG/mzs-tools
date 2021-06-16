@@ -1,3 +1,5 @@
+.. _importazione:
+
 Importazione dati da un progetto standard
 -----------------------------------------
 

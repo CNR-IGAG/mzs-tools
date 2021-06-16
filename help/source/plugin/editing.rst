@@ -1,3 +1,5 @@
+.. _editing:
+
 Inserimento dati ed editing
 ---------------------------
 

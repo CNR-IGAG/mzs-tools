@@ -1,3 +1,5 @@
+.. _nuovo-progetto:
+
 Creazione di un nuovo progetto
 ------------------------------
 

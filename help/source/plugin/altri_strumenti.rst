@@ -1,6 +1,8 @@
 Altri strumenti
 ---------------
 
+.. _sito-xy:
+
 Inserimento Sito Puntuale tramite coordinate
 """"""""""""""""""""""""""""""""""""""""""""
 
@@ -34,6 +36,8 @@ Lo strumento della toolbar *Aggiungi un Sito Puntuale utilizzando le coordinate 
   :width: 450
   :align: center
 
+.. _copia-oggetti:
+
 Copia di oggetti fra i layer Stab e Instab
 """"""""""""""""""""""""""""""""""""""""""
 
@@ -50,6 +54,8 @@ Nella finestra viene richiesto di selezionare:
 * i layer su cui lavorare (*“Zone stabili”* o *“Zone instabili”*);
 * all’interno del campo *Sorgente*, il layer dal quale copiare le feature;
 * all’interno del campo *Destinazione*, il layer nel quale verranno copiate le feature.
+
+.. _esportazione:
 
 Esportazione del progetto in una struttura standard
 """""""""""""""""""""""""""""""""""""""""""""""""""

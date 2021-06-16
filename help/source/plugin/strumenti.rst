@@ -1,6 +1,9 @@
 Strumenti del plugin
 --------------------
 
+Toolbar
+"""""""
+
 All'attivazione del plugin MzSTools viene visualizzata nell'interfaccia di QGIS una **toolbar** contenente una serie di strumenti:
 
 .. image:: ../img/plugin_toolbar.png
@@ -34,18 +37,32 @@ Gli strumenti richiamabili tramite la toolbar sono:
 .. |ico8| image:: ../../../img/ico_info.png
   :height: 25
 
-|ico1| **Nuovo progetto**
+|ico1| **Nuovo progetto** → :ref:`nuovo-progetto`
 
-|ico2| **Importa dati da un progetto esistente**
+|ico2| **Importa dati da un progetto esistente** → :ref:`importazione`
 
-|ico3| **Esporta dati in una struttura di progetto standard**
+|ico3| **Esporta dati in una struttura di progetto standard** → :ref:`esportazione`
 
-|ico4| **Aggiungi una feature o un record**
+|ico4| **Aggiungi una feature o un record** → :ref:`editing`
 
-|ico5| **Salva**
+|ico5| **Salva** → :ref:`editing`
 
-|ico6| **Aggiungi un Sito Puntuale utilizzando le coordinate XY**
+|ico6| **Aggiungi un Sito Puntuale utilizzando le coordinate XY** → :ref:`sito-xy`
 
-|ico7| **Copia gli oggetti dai layer Stab o Instab**
+|ico7| **Copia gli oggetti dai layer Stab o Instab** → :ref:`copia-oggetti`
 
 |ico8| **Aiuto**
+
+Interfacce di inserimento dati
+""""""""""""""""""""""""""""""
+
+Per ogni layer di un progetto generato dal plugin, all’interno del quale è previsto l’inserimento dati, sono impostate una serie di funzionalità di QGIS che permettono al software di utilizzare **interfacce grafiche semplificate e guidate** per l’inserimento delle informazioni alfanumeriche relative alle geometrie selezionate in fase di editing.
+
+Per maggiori informazioni vai a: :ref:`editing`
+
+Layout di stampa
+""""""""""""""""
+
+Il plugin mette a disposizione una serie di layout di stampa predisposti per i principali output cartografici degli studi di MS. I layout sono accessibili tramite il menu “Progetto – Layout” di QGIS, all'interno di un progetto generato dal plugin. 
+
+Per maggiori informazioni vai a: :ref:`layout-stampa`
