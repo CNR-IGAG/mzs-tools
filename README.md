@@ -1,11 +1,19 @@
-# MZS TOOLS
+# MzS Tools
 
-QGIS plugin for italian Seismic Microzonation.
+[![Documentation Status](https://readthedocs.org/projects/mzs-tools/badge/?version=latest)](https://mzs-tools.readthedocs.io/it/latest/?badge=latest)
+
+**QGIS plugin for italian Seismic Microzonation.**
+
+Download and install from the QGIS 3.16+ plugin manager or directly from the [plugin repository](https://plugins.qgis.org/plugins/MzSTools/).
+
+Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.io)
 
 ## Changelog:
 
 ### v1.5:
 - Ported to QGIS 3
+- [Enhancements and fixes](https://github.com/CNR-IGAG/mzs-tools/milestone/1?closed=1)
+- [Online documentation](https://mzs-tools.readthedocs.io) with sphinx and Read The Docs
 
 ### v1.4:	
 -  Updated to new MS 4.2 standards;
