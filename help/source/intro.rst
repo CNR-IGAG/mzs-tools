@@ -76,7 +76,7 @@ Credits
     :width: 18%
     :target: https://www.igag.cnr.it
 
-.. |logo_cnr| image:: ../../img/Logo\ CNR-2010-Quadrato-ITA-high.png
+.. |logo_cnr| image:: ./img/logo_cnr.png
     :width: 30%
 
 Il plugin viene sviluppato nell'ambito delle attività del 
