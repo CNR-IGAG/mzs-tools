@@ -70,7 +70,7 @@ La generazione di una struttura conforme agli Standard deve quindi essere consid
 
 La finestra di dialogo dello strumento richiede semplicemente di selezionare una cartella  in cui effettuare l’esportazione. Le principali operazioni effettuate dallo strumento consistono in:
 
-* esportazione dal geodatabase SQLite/Spatialite dei dati georeferenziati e tabellari verso file in formato *shapefile* ed un database Access “CdI_tabelle.mdb”, conformi agli Standard;
+* esportazione dal geodatabase SQLite/Spatialite dei dati georeferenziati e tabellari verso file in formato *shapefile* ed un database “CdI_tabelle.sqlite”, conformi agli Standard;
 * copia dei file e documenti allegati presenti nella cartella “allegati”.   
 
 Al termine delle operazioni, il tool genera un **report testuale**, contenente l’esito dell’esportazione del progetto, all’interno della cartella di progetto ``/allegati/log``. Il nome del report sarà caratterizzato dalla data e dall’ora di esecuzione del tool, e dalla la dicitura “export_log” (ad esempio ``2018-06-13_09-06-23_export_log.txt``).
