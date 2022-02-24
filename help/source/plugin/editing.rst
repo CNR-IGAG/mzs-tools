@@ -20,8 +20,6 @@ La procedura per **inserire nuovi dati** consiste in:
 * dopo aver inserito gli attributi, premere il tasto “OK” della maschera di inserimento;
 * per salvare, cliccare il tool del plugin “Save” |ico5|.
 
-.. note:: È possibile attivare l’editing anche tramite le funzionalità native di QGIS, ma il pulsante |ico4| della toolbar di MzSTools consente di impostare automaticamente, per determinati layer, una configurazione di *snapping* che consente di evitare **errori topologici** quali intersezioni ed auto-intersezioni fra geometrie, anche di layer diversi, come indicato negli Standard MS.
-
 Per **modificare gli attributi** di una feature già esistente, è possibile procedere in questo modo:
 
 * selezionare il layer da editare;
@@ -53,6 +51,21 @@ Per **modificare gli attributi** di una feature già esistente, è possibile pro
 
   * pulsante della toolbar di QGIS “Salva modifiche vettore”;
   * oppure pulsante della barra del plugin |ico5|.
+
+Editing topologico
+""""""""""""""""""
+
+In un progetto creato tramite il plugin sono attive per default alcune impostazioni per l'editing, raggiungibili tramite il menu **"Progetto" - "Opzioni di aggancio"**, che aiutano ad evitare di incorrere in **errori topologici**; in particolare le impostazioni presenti non permettono la sovrapposizione tra elementi poligonali appartenenti allo stesso layer o a layer diversi.
+
+Per poter effettuare correttamente l’editing degli oggetti dei layer: **"Forme"** ed **"Instabilità di versante"** della Carta Geologico Tecnica, come da Standard MS versione 4.2, è possibile attivare la "Barra degli strumenti di aggancio" che permette di settare le modifiche topologiche, e successivamente impostare l’opzione **"Evita sovrapposizione sul layer attivo"** nell’apposito menu a tendina.
+
+.. image:: ../img/editing3.png
+  :width: 840
+  :align: center
+
+.. image:: ../img/editing4.png
+  :width: 473
+  :align: center
 
 Inserimento indagini puntuali e lineari
 """""""""""""""""""""""""""""""""""""""
