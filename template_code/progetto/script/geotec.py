@@ -57,6 +57,9 @@ def define_stato(codici_stato):
 
 def update_box_stato(tipo_gt, stato_box, codici_stato):
 
+    if not tipo_gt.currentText():
+        return
+
     curIndex = str(tipo_gt.currentText().strip()).split(" - ")[1]
 
     stato_box.clear()
@@ -86,6 +89,9 @@ def define_gen(codici_gen):
 
 
 def update_box_gen(tipo_gt, gen_box, codici_gen):
+
+    if not tipo_gt.currentText():
+        return
 
     curIndex = str(tipo_gt.currentText().strip()).split(" - ")[1]
 

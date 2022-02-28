@@ -94,6 +94,10 @@ Riferimenti
 Changelog
 ---------
 
+v1.6
+    - Fix Python error in geotec editing
+    - Update project template (snapping options, symbols)
+
 v1.5
     - Ported to QGIS v3
 
