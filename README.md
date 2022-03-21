@@ -1,6 +1,6 @@
 # MzS Tools
 
-[![Documentation Status](https://readthedocs.org/projects/mzs-tools/badge/?version=latest)](https://mzs-tools.readthedocs.io/it/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6372834.svg)](https://doi.org/10.5281/zenodo.6372834) [![Documentation Status](https://readthedocs.org/projects/mzs-tools/badge/?version=latest)](https://mzs-tools.readthedocs.io/it/latest/?badge=latest)
 
 **QGIS plugin for italian Seismic Microzonation.**
 
