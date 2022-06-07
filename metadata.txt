@@ -21,6 +21,8 @@ changelog=
 
 		<b>v1.7:</b>
                 -  Update ISTAT administrative boundaries and codes to the latest 2022 version
+				-  Update styles for editing layers
+				-  Add QGIS action for punctual and linear surveys layers to directly search for available survey documents in the project folder
 		<b>v1.6:</b>
                 -  Fix Python error in geotec editing
 				-  Update project template (snapping options, symbols)
