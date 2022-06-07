@@ -94,6 +94,11 @@ Riferimenti
 Changelog
 ---------
 
+v1.7
+    - Update ISTAT administrative boundaries and codes to the `latest 2022 version <https://www.istat.it/it/archivio/222527>`_
+    - Update styles for editing layers
+    - Add QGIS action for punctual and linear surveys layers to directly search for available survey documents in the project folder
+
 v1.6
     - Fix Python error in geotec editing
     - Update project template (snapping options, symbols)
