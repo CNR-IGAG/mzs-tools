@@ -10,6 +10,10 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 
 ## Changelog
 
+### v1.8
+
+- QGIS project template improvements
+
 ### v1.7
 
 - Update ISTAT administrative boundaries and codes to the [latest 2022 version](https://www.istat.it/it/archivio/222527)
