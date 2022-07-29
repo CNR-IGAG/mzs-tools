@@ -94,6 +94,9 @@ Riferimenti
 Changelog
 ---------
 
+v1.8.1
+    - Fix problem with version strings in project update
+
 v1.8
     - QGIS project template improvements
 

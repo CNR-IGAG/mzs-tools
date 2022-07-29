@@ -260,11 +260,11 @@ class MzSTools:
 
             try:
                 with open(vers_data, "r") as f:
-                    proj_vers = f.read()
+                    proj_vers = f.readline().strip()
                     with open(
                         os.path.join(os.path.dirname(__file__), "versione.txt")
                     ) as nf:
-                        new_proj_vers = nf.read()
+                        new_proj_vers = nf.readline().strip()
                         if proj_vers < new_proj_vers:
                             QgsMessageLog.logMessage(
                                 "Project needs updating!", "MzSTools", Qgis.Info
