@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mzs-tools"
-version = "1.8.1"
+version = "1.8.2"
 description = "QGIS plugin for italian seismic microzonation"
 authors = ["CNR IGAG LabGIS <labgis@igag.cnr.it>"]
 license = "GPL-3.0-or-later"

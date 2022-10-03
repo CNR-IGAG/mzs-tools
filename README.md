@@ -10,6 +10,10 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 
 ## Changelog
 
+### v1.8.2
+
+- Fix progressbar in import tool
+
 ### v1.8.1
 
 - Fix problem with version strings in project update

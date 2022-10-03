@@ -72,7 +72,7 @@ class ImportWorker(AbstractWorker):
         if self.killed:
             raise UserAbortedNotification('USER Killed')
         self.current_step = self.current_step + 1
-        self.progress.emit(self.current_step * 100/total_steps)
+        self.progress.emit(int(self.current_step * 100/total_steps))
 
 ##		self.set_log_message.emit('Tables copy -> OK\n')
 
@@ -151,7 +151,7 @@ class ImportWorker(AbstractWorker):
                 break
 
             self.current_step = self.current_step + 1
-            self.progress.emit(self.current_step * 100/total_steps)
+            self.progress.emit(int(self.current_step * 100/total_steps))
 
         # end for
         if self.killed:
@@ -188,7 +188,7 @@ class ImportWorker(AbstractWorker):
         if self.killed:
             raise UserAbortedNotification('USER Killed')
         self.current_step = self.current_step + 1
-        self.progress.emit(self.current_step * 100/total_steps)
+        self.progress.emit(int(self.current_step * 100/total_steps))
 
         # step 4 (inserting indagini lineari and related data)
         ######################################################
@@ -226,7 +226,7 @@ class ImportWorker(AbstractWorker):
             raise UserAbortedNotification('USER Killed')
 
         self.current_step = self.current_step + 1
-        self.progress.emit(self.current_step * 100/total_steps)
+        self.progress.emit(int(self.current_step * 100/total_steps))
 
         # step 5 (miscellaneous files and cleanup)
         ###############################################
@@ -274,7 +274,7 @@ class ImportWorker(AbstractWorker):
             raise UserAbortedNotification('USER Killed')
 
         self.current_step = self.current_step + 1
-        self.progress.emit(self.current_step * 100 / total_steps)
+        self.progress.emit(int(self.current_step * 100 / total_steps))
 
         return 'Import completed!'
 
