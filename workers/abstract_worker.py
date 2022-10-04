@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import traceback
 
 from qgis.PyQt import QtCore
+
 
 class AbstractWorker(QtCore.QObject):
     """Based on https://github.com/mbernasocchi/pyqtExperiments/blob/master/qgis_thread_example.py"""

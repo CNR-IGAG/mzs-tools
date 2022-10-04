@@ -1,12 +1,8 @@
 from __future__ import absolute_import
-from builtins import str
-# -*- coding: utf-8 -*-
-# -------------------------------------------------------------------------------
-# Name:		tb_importa_shp.py
-# Author:	  Pennifca F., Tarquini E.
-# Created:	 08-02-2018
-# -------------------------------------------------------------------------------
+import os
+import webbrowser
 
+from builtins import str
 from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
@@ -14,9 +10,6 @@ from qgis.PyQt.QtWidgets import *
 from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
-import os
-import sys
-import webbrowser
 from . import constants
 from .workers.import_worker import ImportWorker
 from .setup_workers import setup_workers

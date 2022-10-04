@@ -2,7 +2,7 @@ import csv
 import os
 import shutil
 import sqlite3
-
+import re
 
 from qgis.core import *
 from qgis.gui import *
@@ -12,13 +12,6 @@ from qgis.PyQt.QtGui import *
 from qgis.utils import *
 from ..constants import *
 from .abstract_worker import AbstractWorker, UserAbortedNotification
-
-# -*- coding: utf-8 -*-
-# -------------------------------------------------------------------------------
-# Name:		import_workers.py
-# Author:	  Pennifca F.
-# Created:	 08-02-2018
-# -------------------------------------------------------------------------------
 
 
 # FOR TESTING ONLY!!!
@@ -31,7 +24,7 @@ class ImportWorker(AbstractWorker):
 
     def __init__(self, proj_abs_path, in_dir, tab_dir, map_registry_instance):
         AbstractWorker.__init__(self)
-#		 self.steps = steps
+        # self.steps = steps
         self.proj_abs_path = proj_abs_path
         self.in_dir = in_dir
         self.tab_dir = tab_dir
@@ -40,6 +33,78 @@ class ImportWorker(AbstractWorker):
         self.current_step = 1
         self.check_sito_p = True
         self.check_sito_l = True
+
+        self.db_path = os.path.join(self.proj_abs_path, "db", "indagini.sqlite")
+
+        self.current_trig_name = None
+        self.current_trig_table = None
+        self.current_trig_sql = None
+
+    def drop_trigger(self, lyr_name):
+        tab_name = LAYER_DB_TAB[lyr_name]
+        self.set_log_message.emit(f'Dropping {tab_name} insert trigger...')
+
+        conn = sqlite3.connect(self.db_path)
+
+        try:
+            cur = conn.cursor()
+
+            res = cur.execute(f"SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'")
+            if res is not None:
+                self.current_trig_name, self.current_trig_table, self.current_trig_sql = res.fetchone()
+
+                cur.execute(f"DROP TRIGGER {self.current_trig_name}")
+                cur.close()
+                conn.commit()
+            else:
+                self.current_trig_name = self.current_trig_table = self.current_trig_sql = None
+
+        # except:
+        #     self.set_log_message.emit('ERRRRRROEREE...')
+        #     cur.execute("rollback")
+        finally:
+            conn.close()
+
+    def update_values_and_restore_trigger(self, lyr_name):
+        self.set_log_message.emit(f'Updating {lyr_name} values and restoring insert trigger...')
+
+        conn = sqlite3.connect(self.db_path)
+        conn.text_factory = lambda x: str(x, 'utf-8', 'ignore')
+        conn.enable_load_extension(True)
+        conn.execute('SELECT load_extension("mod_spatialite")')
+        
+        try:
+            cur = conn.cursor()
+            self.set_log_message.emit(f'current_trig_sql: {self.current_trig_sql}')
+            
+            # update table data
+            if lyr_name == "Siti puntuali":
+                trig_queries_list = SITO_PUNTUALE_INS_TRIG_QUERIES.split(";")
+            elif lyr_name == "Siti lineari":
+                trig_queries_list = SITO_LINEARE_INS_TRIG_QUERIES.split(";")
+            else:
+                # re.BLACKMAGIC
+                search_res = re.search("BEGIN(.*)(?=^END|\Z)", self.current_trig_sql, re.DOTALL)
+                trig_queries = search_res.group(1)
+                trig_queries_list = trig_queries.split(";")
+
+            for query in trig_queries_list:
+                if query:
+                    self.set_log_message.emit(f'executing query: {query}')
+                    cur.execute(query)
+
+            # restore trigger
+            cur.execute(self.current_trig_sql)
+            
+            cur.close()
+            conn.commit()
+
+        # except:
+        #     self.set_log_message.emit('ERRRRRROEREE...')
+        #     cur.execute("rollback")
+        finally:
+            conn.close()
+
 
     def work(self):
         path_tabelle = os.path.join(self.proj_abs_path, "Allegati", "Altro")
@@ -73,9 +138,7 @@ class ImportWorker(AbstractWorker):
             raise UserAbortedNotification('USER Killed')
         self.current_step = self.current_step + 1
         self.progress.emit(int(self.current_step * 100/total_steps))
-
-##		self.set_log_message.emit('Tables copy -> OK\n')
-
+        
         # step 2 (inserting features)
         ###############################################
         for chiave, valore in list(POSIZIONE.items()):
@@ -90,6 +153,8 @@ class ImportWorker(AbstractWorker):
             destLYR = self.map_registry_instance.mapLayersByName(chiave)[0]
 
             commonFields = self.attribute_adaptor(destLYR, sourceLYR)
+
+            self.drop_trigger(chiave)
 
             if chiave == "Siti puntuali":
                 if os.path.exists(os.path.join(path_tabelle, 'Sito_Puntuale.txt')):
@@ -140,12 +205,21 @@ class ImportWorker(AbstractWorker):
             elif chiave == "Comune del progetto":
                 pass
             else:
+                # self.drop_trigger(chiave)
+
                 sourceFeatures = sourceLYR.getFeatures()
                 self.set_message.emit(
                     "'" + chiave + "' shapefile has been copied!")
                 self.set_log_message.emit(
                     "'" + chiave + "' shapefile has been copied!\n")
                 self.calc_layer(sourceFeatures, destLYR, commonFields)
+
+                # if self.current_trig_sql is not None:
+                #     self.update_values_and_restore_trigger(chiave)
+
+            # restore insert trigger
+            if self.current_trig_sql is not None:
+                self.update_values_and_restore_trigger(chiave)
 
             if self.killed:
                 break
@@ -164,16 +238,22 @@ class ImportWorker(AbstractWorker):
         #######################################################
         if self.check_sito_p is True and os.path.exists(os.path.join(path_tabelle, "Indagini_Puntuali.txt")):
             z_list.append("Indagini_Puntuali")
+            self.drop_trigger("Indagini puntuali")
             self.insert_table("indagini_puntuali",
                               os.path.join(
                                   path_tabelle, "Indagini_Puntuali.txt"))
+            if self.current_trig_sql is not None:
+                self.update_values_and_restore_trigger("Indagini puntuali")
             self.set_log_message.emit(
                 "'Indagini_Puntuali' table has been copied!\n")
 
             if os.path.exists(os.path.join(path_tabelle, "Parametri_Puntuali.txt")):
                 z_list.append("Parametri_Puntuali")
+                self.drop_trigger("Parametri puntuali")
                 self.insert_table(
                     "parametri_puntuali", os.path.join(path_tabelle, "Parametri_Puntuali.txt"))
+                if self.current_trig_sql is not None:
+                    self.update_values_and_restore_trigger("Parametri puntuali")
                 self.set_log_message.emit(
                     "'Parametri_Puntuali' table has been copied!\n")
 
@@ -194,16 +274,22 @@ class ImportWorker(AbstractWorker):
         ######################################################
         if self.check_sito_l is True and os.path.exists(os.path.join(path_tabelle, "Indagini_Lineari.txt")):
             z_list.append("Indagini_Lineari")
+            self.drop_trigger("Indagini lineari")
             self.insert_table("indagini_lineari", os.path.join(
                 path_tabelle, "Indagini_Lineari.txt"))
+            if self.current_trig_sql is not None:
+                self.update_values_and_restore_trigger("Indagini lineari")
             self.set_log_message.emit(
                 "'Indagini_Lineari' table has been copied!\n")
 
             if os.path.exists(os.path.join(path_tabelle, "Parametri_Lineari.txt")):
                 z_list.append("Parametri_Lineari")
+                self.drop_trigger("Parametri lineari")
                 self.insert_table(
                     "parametri_lineari", os.path.join(
                         path_tabelle, "Parametri_Lineari.txt"))
+                if self.current_trig_sql is not None:
+                    self.update_values_and_restore_trigger("Parametri lineari")
                 self.set_log_message.emit(
                     "'Parametri_Lineari' table has been copied!\n")
 
@@ -340,20 +426,28 @@ class ImportWorker(AbstractWorker):
                     self.set_log_message.emit(
                         "  Geometry error (feature %d will not be copied)\n" % (feature.id()+1))
 
-        data_provider = destLYR.dataProvider()
+        # data_provider = destLYR.dataProvider()
         current_feature = 1
 
+        # data_provider.addFeatures(featureList)
+        destLYR.startEditing()
         for f in featureList:
             self.set_message.emit(destLYR.name(
             ) + ": inserting feature " + str(current_feature) + "/" + str(len(featureList)))
-            data_provider.addFeatures([f])
+            # data_provider.addFeatures([f])
+            
+            destLYR.addFeatures([f])            
+
             current_feature = current_feature + 1
+
             if self.killed:
+                destLYR.rollBack()
                 break
+
+        destLYR.commitChanges()
 
         if self.killed:
             raise UserAbortedNotification('USER Killed')
-
 
     def insert_siti(self, vector_layer, txt_table, sito_type):
 
@@ -373,6 +467,8 @@ class ImportWorker(AbstractWorker):
         try:
             conn.execute('SELECT load_extension("mod_spatialite")')
             cur = conn.cursor()
+
+            cur.execute("begin")
 
             # drop insert trigger to speed up import process
             # TODO: causes QGIS crash
@@ -453,12 +549,17 @@ class ImportWorker(AbstractWorker):
 
             # restore insert trigger
             # TODO: causes QGIS crash
-            # cur.execute(ins_data_s_point if tab_name == "sito_puntuale" else ins_data_s_line)
+            # cur.execute(self.ins_data_s_point if tab_name == "sito_puntuale" else self.ins_data_s_line)
 
-            conn.commit()
+            # conn.commit()
+            cur.execute("commit")
 
             # check if spatial index needs rebuild
             cur.execute('SELECT RecoverSpatialIndex(?, ?)', (tab_name, 'geom'))
+
+            cur.close()
+        # except:
+        #     cur.execute("rollback")
         finally:
             conn.close()
 
@@ -516,6 +617,9 @@ class ImportWorker(AbstractWorker):
         conn.text_factory = lambda x: str(x, 'utf-8', 'ignore')
         try:
             cur = conn.cursor()
+
+            cur.execute("begin")
+
             with open(txt_table, 'r') as table:
                 dr = csv.DictReader(table, delimiter=';', quotechar='"')
                 current_record = 1
@@ -583,7 +687,11 @@ class ImportWorker(AbstractWorker):
                     if self.killed or (TESTING and current_record > 10):
                         break
 
-            conn.commit()
+            # conn.commit()
+            cur.execute("commit")
+            cur.close()
+        # except:
+        #     cur.execute("rollback")
         finally:
             conn.close()
 

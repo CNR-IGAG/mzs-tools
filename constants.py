@@ -91,4 +91,135 @@ LAYER_DB_TAB = {
     "Siti lineari": "sito_lineare",
     "Indagini lineari": "indagini_lineari",
     "Parametri lineari": "parametri_lineari",
+    "Elementi lineari": "elineari",
+    "Elementi puntuali": "epuntuali",
+    "Forme": "forme",
+    "Elementi geologici e idrogeologici puntuali": "geoidr",
+    "Unita' geologico-tecniche": "geotec",
+    "Instabilita' di versante": "instab_geotec",
+    "Zone instabili liv 1": "instab_l1",
+    "Zone stabili liv 1": "stab_l1",
+    "Isobate liv 1": "isosub_l1",
+    "Zone instabili liv 2": "instab_l2",
+    "Zone stabili liv 2": "stab_l2",
+    "Isobate liv 2": "isosub_l2",
+    "Zone instabili liv 3": "instab_l3",
+    "Zone stabili liv 3": "stab_l3",
+    "Isobate liv 3": "isosub_l3",
 }
+
+SITO_PUNTUALE_INS_TRIG_QUERIES = """
+    UPDATE sito_puntuale 
+    SET ubicazione_com = (
+        SELECT CASE WHEN EXISTS (SELECT 1 FROM comune_progetto) 
+            THEN ( 
+                SELECT "cod_com " 
+                FROM comune_progetto
+                )
+            ELSE (
+                SELECT comuni.cod_com 
+                FROM sito_puntuale, comuni 
+                WHERE pkuid = sito_puntuale.pkuid AND
+                intersects(sito_puntuale.geom, comuni.Geometry)
+                )
+        END
+    );
+
+    UPDATE sito_puntuale 
+    SET ubicazione_prov = (
+        SELECT CASE WHEN EXISTS (SELECT 1 FROM comune_progetto) 
+            THEN ( 
+                SELECT cod_prov 
+                FROM comune_progetto	
+                )
+            ELSE ( 
+                SELECT comuni.cod_prov 
+                FROM sito_puntuale, comuni 
+                WHERE pkuid = sito_puntuale.pkuid AND 
+                intersects(sito_puntuale.geom, comuni.Geometry)
+                )
+        END
+    );
+    
+    UPDATE sito_puntuale 
+    SET id_spu = ubicazione_prov || ubicazione_com || 'P' || pkuid; 
+
+    UPDATE sito_puntuale 
+    SET coord_x = ( 
+        SELECT round(X(geom)) 
+        FROM sito_puntuale 
+        WHERE pkuid = sito_puntuale.pkuid 
+    );
+    
+    UPDATE sito_puntuale 
+    SET coord_y = ( 
+        SELECT round(Y(geom)) 
+        FROM sito_puntuale 
+        WHERE pkuid = sito_puntuale.pkuid
+    ); 
+"""
+
+SITO_LINEARE_INS_TRIG_QUERIES = """
+    UPDATE sito_lineare 
+    SET ubicazione_com = (
+        SELECT CASE WHEN EXISTS (SELECT 1 FROM comune_progetto) 
+            THEN ( 
+                SELECT "cod_com " 
+                FROM comune_progetto
+                )
+            ELSE (
+                SELECT comuni.cod_com 
+                FROM sito_lineare, comuni 
+                WHERE pkuid = sito_lineare.pkuid AND
+                intersects(sito_lineare.geom, comuni.Geometry)
+                )
+        END
+        );
+
+    UPDATE sito_lineare 
+    SET ubicazione_prov = (
+        SELECT CASE WHEN EXISTS (SELECT 1 FROM comune_progetto) 
+            THEN ( 
+                SELECT cod_prov 
+                FROM comune_progetto	
+                )
+            ELSE ( 
+                SELECT comuni.cod_prov 
+                FROM sito_lineare, comuni 
+                WHERE pkuid = sito_lineare.pkuid AND
+                intersects(sito_lineare.geom, comuni.Geometry)
+                )
+        END
+        );
+
+    UPDATE sito_lineare 
+    SET id_sln = ubicazione_prov || ubicazione_com || 'L' || pkuid; 
+
+    UPDATE sito_lineare 
+    SET acoord_x = ( 
+    SELECT round(X(StartPoint(geom))) 
+    FROM sito_lineare 
+    WHERE pkuid = sito_lineare.pkuid
+    );
+
+    UPDATE sito_lineare 
+    SET acoord_y = ( 
+    SELECT round(Y(StartPoint(geom))) 
+    FROM sito_lineare 
+    WHERE pkuid = sito_lineare.pkuid 
+    );
+    
+    UPDATE sito_lineare 
+    SET bcoord_x = ( 
+    SELECT round(X(EndPoint(geom))) 
+    FROM sito_lineare 
+    WHERE pkuid = sito_lineare.pkuid
+    ); 
+
+    UPDATE sito_lineare 
+    SET bcoord_y = ( 
+    SELECT round(Y(EndPoint(geom))) 
+    FROM sito_lineare 
+    WHERE pkuid = sito_lineare.pkuid
+    ); 
+"""
