@@ -42,7 +42,7 @@ class ImportWorker(AbstractWorker):
 
     def drop_trigger(self, lyr_name):
         tab_name = LAYER_DB_TAB[lyr_name]
-        self.set_log_message.emit(f'Dropping {tab_name} insert trigger...')
+        self.set_log_message.emit(f"\nDropping {tab_name} insert trigger...\n")
 
         conn = sqlite3.connect(self.db_path)
 
@@ -66,8 +66,8 @@ class ImportWorker(AbstractWorker):
             conn.close()
 
     def update_values_and_restore_trigger(self, lyr_name):
-        self.set_log_message.emit(f'Updating {lyr_name} values and restoring insert trigger...')
-
+        self.set_log_message.emit(f"\nUpdating {lyr_name} values and restoring insert trigger...\n")
+        
         conn = sqlite3.connect(self.db_path)
         conn.text_factory = lambda x: str(x, 'utf-8', 'ignore')
         conn.enable_load_extension(True)
@@ -75,7 +75,7 @@ class ImportWorker(AbstractWorker):
         
         try:
             cur = conn.cursor()
-            self.set_log_message.emit(f'current_trig_sql: {self.current_trig_sql}')
+            self.set_log_message.emit(f"\ncurrent_trig_sql: {self.current_trig_sql}\n")
             
             # update table data
             if lyr_name == "Siti puntuali":
@@ -84,13 +84,13 @@ class ImportWorker(AbstractWorker):
                 trig_queries_list = SITO_LINEARE_INS_TRIG_QUERIES.split(";")
             else:
                 # re.BLACKMAGIC
-                search_res = re.search("BEGIN(.*)(?=^END|\Z)", self.current_trig_sql, re.DOTALL)
+                search_res = re.search(r"BEGIN(.*)(?=^END|\Z)", self.current_trig_sql, re.DOTALL)
                 trig_queries = search_res.group(1)
                 trig_queries_list = trig_queries.split(";")
 
             for query in trig_queries_list:
-                if query:
-                    self.set_log_message.emit(f'executing query: {query}')
+                if query and "END" not in query:
+                    self.set_log_message.emit(f"\nexecuting query: {query}\n")
                     cur.execute(query)
 
             # restore trigger
@@ -111,7 +111,7 @@ class ImportWorker(AbstractWorker):
         z_list = []
 
         # calculate steps
-        total_steps = len(POSIZIONE) + 5
+        total_steps = len(POSIZIONE) + 4
 
         # step 1 (preparing data)
         ###############################################
@@ -184,30 +184,34 @@ class ImportWorker(AbstractWorker):
                         "Table 'Sito_Lineare.txt' does not exist!\n")
                     self.check_sito_l = False
 
-            elif chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2":
-                sourceFeatures = sourceLYR.getFeatures(
-                    QgsFeatureRequest(QgsExpression(" \"LIVELLO\" = 2 ")))
-                self.set_message.emit(
-                    "'" + chiave + "' shapefile has been copied!")
-                self.set_log_message.emit(
-                    "'" + chiave + "' shapefile has been copied!\n")
-                self.calc_layer(sourceFeatures, destLYR, commonFields)
+            # elif chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2":
+            #     sourceFeatures = sourceLYR.getFeatures(
+            #         QgsFeatureRequest(QgsExpression(" \"LIVELLO\" = 2 ")))
+            #     self.set_message.emit(
+            #         "'" + chiave + "' shapefile has been copied!")
+            #     self.set_log_message.emit(
+            #         "'" + chiave + "' shapefile has been copied!\n")
+            #     self.calc_layer(sourceFeatures, destLYR, commonFields)
 
-            elif chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
-                sourceFeatures = sourceLYR.getFeatures(
-                    QgsFeatureRequest(QgsExpression(" \"LIVELLO\" = 3 ")))
-                self.set_message.emit(
-                    "'" + chiave + "' shapefile has been copied!")
-                self.set_log_message.emit(
-                    "'" + chiave + "' shapefile has been copied!\n")
-                self.calc_layer(sourceFeatures, destLYR, commonFields)
+            # elif chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
+            #     sourceFeatures = sourceLYR.getFeatures(
+            #         QgsFeatureRequest(QgsExpression(" \"LIVELLO\" = 3 ")))
+            #     self.set_message.emit(
+            #         "'" + chiave + "' shapefile has been copied!")
+            #     self.set_log_message.emit(
+            #         "'" + chiave + "' shapefile has been copied!\n")
+            #     self.calc_layer(sourceFeatures, destLYR, commonFields)
 
             elif chiave == "Comune del progetto":
                 pass
             else:
-                # self.drop_trigger(chiave)
-
-                sourceFeatures = sourceLYR.getFeatures()
+                if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2":
+                    sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression(" \"LIVELLO\" = 2 ")))
+                elif chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
+                    sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression(" \"LIVELLO\" = 3 ")))
+                else:
+                    sourceFeatures = sourceLYR.getFeatures()
+                
                 self.set_message.emit(
                     "'" + chiave + "' shapefile has been copied!")
                 self.set_log_message.emit(
@@ -430,24 +434,30 @@ class ImportWorker(AbstractWorker):
         current_feature = 1
 
         # data_provider.addFeatures(featureList)
-        destLYR.startEditing()
-        for f in featureList:
-            self.set_message.emit(destLYR.name(
-            ) + ": inserting feature " + str(current_feature) + "/" + str(len(featureList)))
-            # data_provider.addFeatures([f])
-            
-            destLYR.addFeatures([f])            
+        # destLYR.startEditing()
+        
+        # DOES NOT MAKE ANY SENSE -
+        # but insert will fail when there's only one feature
+        if len(featureList) == 1:
+            test = featureList[0]
+            featureList.append(test)
 
-            current_feature = current_feature + 1
+        with edit(destLYR):
+            for f in featureList:
+                self.set_message.emit(f"{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
+                # data_provider.addFeatures([f])
 
-            if self.killed:
-                destLYR.rollBack()
-                break
+                destLYR.addFeature(f)
 
-        destLYR.commitChanges()
+                current_feature = current_feature + 1
+
+                if self.killed:
+                    break
 
         if self.killed:
             raise UserAbortedNotification('USER Killed')
+        
+        # destLYR.commitChanges()
 
     def insert_siti(self, vector_layer, txt_table, sito_type):
 

@@ -370,7 +370,7 @@ def freq(dialog, layer, feature):
     fr = dialog.findChild(QLineEdit, "fr")
     ar = dialog.findChild(QLineEdit, "ar")
     help_button = dialog.findChild(QPushButton, "help_button")
-    doc_ind = dialog.findChild(QLineEdit, "doc_ind")
+    # doc_ind = dialog.findChild(QLineEdit, "doc_ind")
 
     buttonBox.setEnabled(False)
     id_indpu.currentIndexChanged.connect(
@@ -388,13 +388,13 @@ def freq(dialog, layer, feature):
 
     if id_indpu.currentText() != '':
         id_indpu.currentIndexChanged.connect(
-            partial(disableButton_freq, id_indpu, qualita, doc_ind, buttonBox))
+            partial(disableButton_freq, id_indpu, qualita, buttonBox))
         qualita.currentIndexChanged.connect(
             partial(disable_tipo, qualita, tipo))
-        disableButton_freq(id_indpu, qualita, doc_ind, buttonBox)
+        disableButton_freq(id_indpu, qualita, buttonBox)
     else:
         id_indpu.currentIndexChanged.connect(
-            partial(disableButton_freq, id_indpu, qualita, doc_ind, buttonBox))
+            partial(disableButton_freq, id_indpu, qualita, buttonBox))
         qualita.currentIndexChanged.connect(
             partial(disable_tipo, qualita, tipo))
 
@@ -712,11 +712,11 @@ def disableButton_curve(id_parpu, buttonBox):
         buttonBox.setEnabled(True)
 
 
-def disableButton_freq(id_indpu, qualita, doc_ind, buttonBox):
+def disableButton_freq(id_indpu, qualita, buttonBox):
 
     if len(id_indpu.currentText()) < 1:
-        if len(doc_ind.text()) < 1:
-            buttonBox.setEnabled(False)
+        # if len(doc_ind.text()) < 1:
+        buttonBox.setEnabled(False)
     else:
         if str(id_indpu.currentText().strip("1234567890P")) == 'HVSR':
             buttonBox.setEnabled(True)
