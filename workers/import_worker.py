@@ -42,7 +42,7 @@ class ImportWorker(AbstractWorker):
 
     def drop_trigger(self, lyr_name):
         tab_name = LAYER_DB_TAB[lyr_name]
-        self.set_log_message.emit(f"\nDropping {tab_name} insert trigger...\n")
+        self.set_message.emit(f"\nDropping {tab_name} insert trigger...\n")
 
         conn = sqlite3.connect(self.db_path)
 
@@ -59,52 +59,53 @@ class ImportWorker(AbstractWorker):
             else:
                 self.current_trig_name = self.current_trig_table = self.current_trig_sql = None
 
-        # except:
-        #     self.set_log_message.emit('ERRRRRROEREE...')
-        #     cur.execute("rollback")
         finally:
             conn.close()
 
     def update_values_and_restore_trigger(self, lyr_name):
+        self.set_message.emit(f"\nUpdating {lyr_name} values and restoring insert trigger...\n")
         self.set_log_message.emit(f"\nUpdating {lyr_name} values and restoring insert trigger...\n")
         
         conn = sqlite3.connect(self.db_path)
         conn.text_factory = lambda x: str(x, 'utf-8', 'ignore')
         conn.enable_load_extension(True)
         conn.execute('SELECT load_extension("mod_spatialite")')
-        
-        try:
-            cur = conn.cursor()
-            self.set_log_message.emit(f"\ncurrent_trig_sql: {self.current_trig_sql}\n")
+
+        cur = conn.cursor()
+
+        # self.set_log_message.emit(f"\ncurrent_trig_sql: {self.current_trig_sql}\n")
             
-            # update table data
-            if lyr_name == "Siti puntuali":
-                trig_queries_list = SITO_PUNTUALE_INS_TRIG_QUERIES.split(";")
-            elif lyr_name == "Siti lineari":
-                trig_queries_list = SITO_LINEARE_INS_TRIG_QUERIES.split(";")
-            else:
-                # re.BLACKMAGIC
-                search_res = re.search(r"BEGIN(.*)(?=^END|\Z)", self.current_trig_sql, re.DOTALL)
-                trig_queries = search_res.group(1)
-                trig_queries_list = trig_queries.split(";")
+        # update table data
+        if lyr_name == "Siti puntuali":
+            trig_queries_list = SITO_PUNTUALE_INS_TRIG_QUERIES.split(";")
+        elif lyr_name == "Siti lineari":
+            trig_queries_list = SITO_LINEARE_INS_TRIG_QUERIES.split(";")
+        else:
+            # extract update queries from trigger
+            search_res = re.search(r"BEGIN(.*)(?=^END|\Z)", self.current_trig_sql, re.DOTALL)
+            trig_queries = search_res.group(1)
+            trig_queries_list = trig_queries.split(";")
 
-            for query in trig_queries_list:
-                if query and "END" not in query:
-                    self.set_log_message.emit(f"\nexecuting query: {query}\n")
+        for query in trig_queries_list:
+            if query and "END" not in query and query.strip() != "":
+                # self.set_log_message.emit(f"\nExecuting query: {query}\n")
+                try:
                     cur.execute(query)
+                except Exception as err:
+                    self.set_log_message.emit(f"\nError while executing query: {query}\n{err}\n")
+                finally:
+                    conn.commit()
 
+        # self.set_log_message.emit(f"\nRestoring trigger: {self.current_trig_sql}\n")
+        try:
             # restore trigger
             cur.execute(self.current_trig_sql)
             
             cur.close()
             conn.commit()
-
-        # except:
-        #     self.set_log_message.emit('ERRRRRROEREE...')
-        #     cur.execute("rollback")
+        
         finally:
             conn.close()
-
 
     def work(self):
         path_tabelle = os.path.join(self.proj_abs_path, "Allegati", "Altro")
@@ -218,9 +219,6 @@ class ImportWorker(AbstractWorker):
                     "'" + chiave + "' shapefile has been copied!\n")
                 self.calc_layer(sourceFeatures, destLYR, commonFields)
 
-                # if self.current_trig_sql is not None:
-                #     self.update_values_and_restore_trigger(chiave)
-
             # restore insert trigger
             if self.current_trig_sql is not None:
                 self.update_values_and_restore_trigger(chiave)
@@ -235,7 +233,6 @@ class ImportWorker(AbstractWorker):
         if self.killed:
             raise UserAbortedNotification('USER Killed')
 
-##		self.set_log_message.emit('Insert features -> OK\n')
         # end inserting features
 
         # step 3 (inserting indagini_puntuali and related data)
@@ -628,8 +625,6 @@ class ImportWorker(AbstractWorker):
         try:
             cur = conn.cursor()
 
-            cur.execute("begin")
-
             with open(txt_table, 'r') as table:
                 dr = csv.DictReader(table, delimiter=';', quotechar='"')
                 current_record = 1
@@ -684,24 +679,25 @@ class ImportWorker(AbstractWorker):
                         update_sql = update_parln_fkey
 
                     try:
+                        cur.execute("begin")
                         cur.execute(insert_sql, to_db)
                         id_last_insert = cur.lastrowid
                         cur.execute(select_parent_sql, (fkey,))
                         id_parent = cur.fetchone()[1]
                         cur.execute(update_sql, (id_parent, id_last_insert))
+                        cur.execute("commit")
                     except Exception as ex:
-                        self.set_log_message.emit(
-                            "Error inserting table %s SQL: %s" % (str(ex), insert_sql))
-
+                        self.set_log_message.emit(f"\n{'!'*80}\nERROR inserting or updating record in {db_table}: {ex}\n Data: {to_db}\n")
+                        self.set_log_message.emit("\nThis record, along with possible related data (eg. parametri or curve), WILL NOT be imported\n")
+                        self.set_log_message.emit(f"\nCheck the original Microsoft Access database for errors before importing data!\n{'!'*80}\n")
+                        cur.execute("rollback")
+                        
                     current_record = current_record + 1
                     if self.killed or (TESTING and current_record > 10):
                         break
-
-            # conn.commit()
-            cur.execute("commit")
+                    
             cur.close()
-        # except:
-        #     cur.execute("rollback")
+        
         finally:
             conn.close()
 
@@ -735,7 +731,6 @@ class ImportWorker(AbstractWorker):
                     pass
                 else:
                     nome_tab = LAYER_DB_TAB[orig_tab.name()]
-#					 cur.execute("UPDATE %s SET %s  = %s WHERE pkuid = %s;" % nome_tab, orig_field, value, str(feature['pkuid']))
                     cur.execute("UPDATE ? SET ?  = ? WHERE pkuid = ?",
                                 (nome_tab, orig_field, value, str(feature['pkuid'])))
 
