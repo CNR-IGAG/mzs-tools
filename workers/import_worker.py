@@ -49,9 +49,9 @@ class ImportWorker(AbstractWorker):
         try:
             cur = conn.cursor()
 
-            res = cur.execute(f"SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'")
-            if res is not None:
-                self.current_trig_name, self.current_trig_table, self.current_trig_sql = res.fetchone()
+            res = cur.execute(f"SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'").fetchone()
+            if res:
+                (self.current_trig_name, self.current_trig_table, self.current_trig_sql) = res
 
                 cur.execute(f"DROP TRIGGER {self.current_trig_name}")
                 cur.close()
@@ -63,7 +63,7 @@ class ImportWorker(AbstractWorker):
             conn.close()
 
     def update_values_and_restore_trigger(self, lyr_name):
-        self.set_message.emit(f"\nUpdating {lyr_name} values and restoring insert trigger...\n")
+        self.set_message.emit(f"Updating {lyr_name} values and restoring insert trigger...")
         self.set_log_message.emit(f"\nUpdating {lyr_name} values and restoring insert trigger...\n")
         
         conn = sqlite3.connect(self.db_path)
@@ -213,11 +213,12 @@ class ImportWorker(AbstractWorker):
                 else:
                     sourceFeatures = sourceLYR.getFeatures()
                 
+                self.calc_layer(sourceFeatures, destLYR, commonFields)
+
                 self.set_message.emit(
                     "'" + chiave + "' shapefile has been copied!")
                 self.set_log_message.emit(
                     "'" + chiave + "' shapefile has been copied!\n")
-                self.calc_layer(sourceFeatures, destLYR, commonFields)
 
             # restore insert trigger
             if self.current_trig_sql is not None:
@@ -433,21 +434,31 @@ class ImportWorker(AbstractWorker):
         # data_provider.addFeatures(featureList)
         # destLYR.startEditing()
         
-        # DOES NOT MAKE ANY SENSE -
-        # but insert will fail when there's only one feature
-        if len(featureList) == 1:
-            test = featureList[0]
-            featureList.append(test)
+        ##################################################################################################
+        # THIS IS A TERRIBLE HACK!
+        # for some reason, the first feature insert always fail:
+        # - if the original layer has only one feature, the whole process fail with sqlite3 "unknown" error;
+        # - if the original layer has more than one feature, the first will not be inserted, but the error
+        #   will get swallowed and the process will go on
+        if featureList:
+            dup = featureList[0]
+            featureList.append(dup)
+        ##################################################################################################
+
+        # for f in featureList:
+        #     self.set_log_message.emit(f"feature (of {len(featureList)}): {f.attributeMap()} - {f.geometry().asWkt()}")
 
         with edit(destLYR):
             for f in featureList:
                 self.set_message.emit(f"{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
+                self.set_log_message.emit(f"{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
                 # data_provider.addFeatures([f])
-
+                
                 destLYR.addFeature(f)
 
+                self.set_log_message.emit(f"feature {current_feature} added")
                 current_feature = current_feature + 1
-
+                
                 if self.killed:
                     break
 
