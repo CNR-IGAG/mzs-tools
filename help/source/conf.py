@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'MzsTools'
-copyright = u'2022, CNR-IGAG LabGIS'
+copyright = u'2023, CNR-IGAG LabGIS'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

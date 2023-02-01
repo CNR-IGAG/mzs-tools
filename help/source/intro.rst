@@ -94,6 +94,11 @@ Riferimenti
 Changelog
 ---------
 
+v1.8.2
+    - Experimental fixes for slow data import and export processes
+    - Updated styles and expressions in QGIS project
+    - Updated and improved print layouts
+
 v1.8.1
     - Fix problem with version strings in project update
 
