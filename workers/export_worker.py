@@ -1,12 +1,4 @@
-# -*- coding: utf-8 -*-
-# -------------------------------------------------------------------------------
-# Name:		export_workers.py
-# Author:   Tarquini E.
-# Created:	 18-03-2019
-# -------------------------------------------------------------------------------
-
 from __future__ import absolute_import
-from qgis.PyQt import QtGui, uic
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.PyQt.QtWidgets import QMessageBox
@@ -14,8 +6,6 @@ from qgis.utils import *
 from qgis.core import *
 from qgis.gui import *
 import os
-import sys
-import webbrowser
 import shutil
 import zipfile
 import sqlite3
@@ -86,18 +76,14 @@ class ExportWorker(AbstractWorker):
         self.set_log_message.emit("Creating project...\n")
         input_name = os.path.join(self.out_dir, "progetto_shapefile")
         output_name = os.path.join(self.out_dir, self.in_dir.split("/")[-1])
-        zip_ref = zipfile.ZipFile(
-            os.path.join(self.plugin_dir, "data", "progetto_shapefile.zip"), "r"
-        )
+        zip_ref = zipfile.ZipFile(os.path.join(self.plugin_dir, "data", "progetto_shapefile.zip"), "r")
         zip_ref.extractall(self.out_dir)
         zip_ref.close()
 
         try:
             os.rename(input_name, output_name)
         except Exception as ex:
-            QMessageBox.critical(
-                iface.mainWindow(), "ERROR!", "Error creating zip file: %s" % ex
-            )
+            QMessageBox.critical(iface.mainWindow(), "ERROR!", "Error creating zip file: %s" % ex)
 
         self.set_log_message.emit("Done!\n")
 
@@ -126,9 +112,7 @@ class ExportWorker(AbstractWorker):
             )
 
             if err != QgsVectorFileWriter.NoError:
-                self.set_log_message.emit(
-                    "Error creating shapefile %s: %s!\n" % (output_name, msg)
-                )
+                self.set_log_message.emit("Error creating shapefile %s: %s!\n" % (output_name, msg))
                 continue
 
             selected_layer = QgsVectorLayer(
@@ -136,25 +120,16 @@ class ExportWorker(AbstractWorker):
                 valore[1],
                 "ogr",
             )
-            if (
-                chiave == "Zone stabili liv 2"
-                or chiave == "Zone instabili liv 2"
-                or chiave == "Zone stabili liv 3"
-                or chiave == "Zone instabili liv 3"
-            ):
+            if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2" or chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
                 pass
             if chiave == "Siti lineari" or chiave == "Siti puntuali":
                 self.esporta([0, ["id_spu", "id_sln"]], selected_layer)
                 self.set_message.emit("'" + chiave + "' shapefile has been created!")
-                self.set_log_message.emit(
-                    "  '" + chiave + "' shapefile has been created!\n"
-                )
+                self.set_log_message.emit("  '" + chiave + "' shapefile has been created!\n")
             else:
                 self.esporta([1, ["pkuid"]], selected_layer)
                 self.set_message.emit("'" + chiave + "' shapefile has been created!")
-                self.set_log_message.emit(
-                    "  '" + chiave + "' shapefile has been created!\n"
-                )
+                self.set_log_message.emit("  '" + chiave + "' shapefile has been created!\n")
 
             if self.killed:
                 break
@@ -180,15 +155,11 @@ class ExportWorker(AbstractWorker):
             )
 
             if err != QgsVectorFileWriter.NoError:
-                self.set_log_message.emit(
-                    "Error creating shapefile %s: %s!\n" % (output_name, msg)
-                )
+                self.set_log_message.emit("Error creating shapefile %s: %s!\n" % (output_name, msg))
                 continue
 
             sourceLYR_2 = QgsProject.instance().mapLayersByName(l23_value[1])[0]
-            MS23_stab = QgsVectorLayer(
-                os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr"
-            )
+            MS23_stab = QgsVectorLayer(os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr")
             features = []
             for feature in sourceLYR_2.getFeatures():
                 features.append(feature)
@@ -196,14 +167,10 @@ class ExportWorker(AbstractWorker):
             data_provider = MS23_stab.dataProvider()
             data_provider.addFeatures(features)
             MS23_stab.commitChanges()
-            selected_layer_1 = QgsVectorLayer(
-                os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr"
-            )
+            selected_layer_1 = QgsVectorLayer(os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr")
             self.esporta([1, ["pkuid"]], selected_layer_1)
             self.set_message.emit("'" + chiave + "' shapefile has been created!")
-            self.set_log_message.emit(
-                "  '" + chiave + "' shapefile has been created!\n"
-            )
+            self.set_log_message.emit("  '" + chiave + "' shapefile has been created!\n")
 
         # end for
         if self.killed:
@@ -273,9 +240,7 @@ class ExportWorker(AbstractWorker):
             for tab_name, insert_query in QUERY_DICT.items():
                 cur = conn.cursor()
 
-                trigger_data = cur.execute(
-                    f"SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'"
-                ).fetchone()
+                trigger_data = cur.execute(f"SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'").fetchone()
 
                 # drop insert trigger
                 if trigger_data:
@@ -340,29 +305,21 @@ class ExportWorker(AbstractWorker):
 
         selected_layer.startEditing()
         for feature in selected_layer.getFeatures():
-            feature.setAttribute(
-                feature.fields().lookupField("new_col_na"), feature[nome_attr]
-            )
+            feature.setAttribute(feature.fields().lookupField("new_col_na"), feature[nome_attr])
             selected_layer.updateFeature(feature)
         selected_layer.commitChanges()
 
         selected_layer.startEditing()
-        selected_layer.dataProvider().deleteAttributes(
-            [selected_layer.fields().lookupField(nome_attr)]
-        )
+        selected_layer.dataProvider().deleteAttributes([selected_layer.fields().lookupField(nome_attr)])
         selected_layer.dataProvider().addAttributes([QgsField(nome_attr, tipo_attr)])
         selected_layer.commitChanges()
 
         selected_layer.startEditing()
         for feature in selected_layer.getFeatures():
-            feature.setAttribute(
-                feature.fields().lookupField(nome_attr), feature["new_col_na"]
-            )
+            feature.setAttribute(feature.fields().lookupField(nome_attr), feature["new_col_na"])
             selected_layer.updateFeature(feature)
         selected_layer.commitChanges()
 
         selected_layer.startEditing()
-        selected_layer.dataProvider().deleteAttributes(
-            [selected_layer.fields().lookupField("new_col_na")]
-        )
+        selected_layer.dataProvider().deleteAttributes([selected_layer.fields().lookupField("new_col_na")])
         selected_layer.commitChanges()
