@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-
 import traceback
 
 from qgis.PyQt import QtCore
+
 
 class AbstractWorker(QtCore.QObject):
     """Based on https://github.com/mbernasocchi/pyqtExperiments/blob/master/qgis_thread_example.py"""
@@ -10,7 +9,7 @@ class AbstractWorker(QtCore.QObject):
     # available signals to be used in the concrete worker
     finished = QtCore.pyqtSignal(object)
     error = QtCore.pyqtSignal(Exception, str)
-    progress = QtCore.pyqtSignal(float)
+    progress = QtCore.pyqtSignal(int)
     toggle_show_progress = QtCore.pyqtSignal(bool)
     set_message = QtCore.pyqtSignal(str)
     set_log_message = QtCore.pyqtSignal(str)

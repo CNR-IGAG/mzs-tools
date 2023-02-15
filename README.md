@@ -4,11 +4,17 @@
 
 **QGIS plugin for italian Seismic Microzonation.**
 
-Download and install from the QGIS 3.16+ plugin manager or directly from the [plugin repository](https://plugins.qgis.org/plugins/MzSTools/).
+Download and install from the QGIS 3.22+ plugin manager or directly from the [plugin repository](https://plugins.qgis.org/plugins/MzSTools/).
 
 Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.io)
 
 ## Changelog
+
+### v1.8.2
+
+- Experimental fixes for slow data import and export processes
+- Updated styles and expressions in QGIS project
+- Updated and improved print layouts
 
 ### v1.8.1
 

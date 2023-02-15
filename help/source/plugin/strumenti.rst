@@ -66,3 +66,42 @@ Layout di stampa
 Il plugin mette a disposizione una serie di layout di stampa predisposti per i principali output cartografici degli studi di MS. I layout sono accessibili tramite il menu “Progetto – Layout” di QGIS, all'interno di un progetto generato dal plugin. 
 
 Per maggiori informazioni vai a: :ref:`layout-stampa`
+
+Strumento di consultazione rapida indagini
+""""""""""""""""""""""""""""""""""""""""""
+
+Secondo gli Standard MS le informazioni relative alle indagini devono essere
+organizzate in una struttura dati composta da:
+    
+- "siti" di indagine contenenti le geometrie georeferenziate lineari e puntuali;
+- "indagini" vere e proprie, in rapporto n-1 con i siti;
+- "parametri", ovvero i valori registrati per ogni tipologia di indagine, in
+  rapporto n-1 con le indagini.
+
+Questo rende difficoltoso l’accesso alle informazioni delle indagini a partire
+dall’interrogazione dei siti collocati su mappa, in quanto ad ogni sito possono
+essere correlate n indagini, ciascuna contenente un riferimento ad un file pdf
+contenente le informazioni di dettaglio.
+
+Per semplificare l’accesso a queste informazioni è stato realizzato un apposito
+strumento basato sul meccanismo delle "azioni" associate ad un layer. Questa
+funzionalità di QGIS permette di associare ad un layer vettoriale delle “azioni”
+basate sugli attributi associati ai singoli elementi del vettore.
+
+In questo caso è stata sviluppata un'azione che permette di accedere a tutti i
+file pdf archiviati nel progetto ed associati ad ogni indagine, semplicemente
+cliccando su un "sito" d'indagine e selezionando il file pdf da aprire tramite
+una apposita interfaccia grafica.
+
+.. image:: ../img/pdf_search.png
+  :align: center
+
+Per l'utilizzo dello strumento è possibile procedere in questo modo:
+
+1. Selezionare il layer "Siti puntuali" o "Siti Lineari";
+2. Selezionare l’icona "Azione" e fare clic su "Cerca documenti PDF delle
+   indagini associate ai siti"; 
+3. una volta attivato lo strumento è possibile cliccare su un sito d'indagine
+   visualizzato sulla mappa per effettuare la ricerca dei documenti associati;
+4. i risultati della ricerca vengono presentati in una apposita finestra
+   contenente la lista dei file trovati.

@@ -3,12 +3,21 @@
     "python.linting.flake8Enabled": true,
     "python.linting.enabled": true,
     "python.formatting.provider": "black",
-    
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "200"
+    ],
     "python.linting.flake8Args": [
         "--max-line-length=200",
         "--ignore=E402",
         "--ignore=F405",
     ],
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
     "editor.formatOnType": true,
+    "[python]": {
+        "editor.formatOnPaste": false,
+        "editor.formatOnSave": false,
+    },
     "esbonio.sphinx.confDir": "${workspaceFolder}/help/source",
 }
