@@ -40,7 +40,11 @@ class ImportWorker(AbstractWorker):
         self.current_trig_sql = None
 
     def drop_trigger(self, lyr_name):
-        tab_name = LAYER_DB_TAB[lyr_name]
+        tab_name = LAYER_DB_TAB.get(lyr_name)
+        if not tab_name:
+            self.set_log_message.emit(f"\n{lyr_name} is not a db table, ignored.\n")
+            return
+
         self.set_message.emit(f"\nDropping {tab_name} insert trigger...\n")
 
         conn = sqlite3.connect(self.db_path)
@@ -154,7 +158,7 @@ class ImportWorker(AbstractWorker):
                 if os.path.exists(os.path.join(path_tabelle, "Sito_Puntuale.txt")):
                     self.insert_siti(sourceLYR, os.path.join(path_tabelle, "Sito_Puntuale.txt"), "puntuale")
                     self.set_message.emit("'" + chiave + "' shapefile has been copied!")
-                    self.set_log_message.emit("'" + chiave + "' shapefile has been copied!\n")
+                    self.set_log_message.emit("\n'" + chiave + "' shapefile has been copied!\n")
                     z_list.append("Sito_Puntuale")
                 else:
                     self.set_log_message.emit("Table 'Sito_Puntuale.txt' does not exist!\n")
@@ -164,7 +168,7 @@ class ImportWorker(AbstractWorker):
                 if os.path.exists(os.path.join(path_tabelle, "Sito_Lineare.txt")):
                     self.insert_siti(sourceLYR, os.path.join(path_tabelle, "Sito_Lineare.txt"), "lineare")
                     self.set_message.emit("'" + chiave + "' shapefile has been copied!")
-                    self.set_log_message.emit("'" + chiave + "' shapefile has been copied!\n")
+                    self.set_log_message.emit("\n'" + chiave + "' shapefile has been copied!\n")
                     z_list.append("Sito_Lineare")
                 else:
                     self.set_log_message.emit("Table 'Sito_Lineare.txt' does not exist!\n")
@@ -184,7 +188,7 @@ class ImportWorker(AbstractWorker):
                 self.calc_layer(sourceFeatures, destLYR, commonFields)
 
                 self.set_message.emit("'" + chiave + "' shapefile has been copied!")
-                self.set_log_message.emit("'" + chiave + "' shapefile has been copied!\n")
+                self.set_log_message.emit("\n'" + chiave + "' shapefile has been copied!\n")
 
             # restore insert trigger
             if self.current_trig_sql is not None:
@@ -289,9 +293,9 @@ class ImportWorker(AbstractWorker):
                 else:
                     QgsMessageLog.logMessage("ELSE _folder: %s -> %s" % (os.path.join(self.in_dir, chiave_fold), os.path.join(self.proj_abs_path, "Allegati", chiave_fold)))
                     shutil.copytree(os.path.join(self.in_dir, chiave_fold), os.path.join(self.proj_abs_path, "Allegati", chiave_fold))
-                self.set_log_message.emit("Folder '" + chiave_fold + " has been copied!\n")
+                self.set_log_message.emit("\nFolder '" + chiave_fold + " has been copied!\n")
             else:
-                self.set_log_message.emit("Folder '" + chiave_fold + "' does not exist!")
+                self.set_log_message.emit("\nFolder '" + chiave_fold + "' does not exist!")
 
             if self.killed:
                 break
@@ -384,7 +388,7 @@ class ImportWorker(AbstractWorker):
         with edit(destLYR):
             for f in featureList:
                 self.set_message.emit(f"{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
-                self.set_log_message.emit(f"{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
+                self.set_log_message.emit(f"\n{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
                 # data_provider.addFeatures([f])
 
                 destLYR.addFeature(f)
