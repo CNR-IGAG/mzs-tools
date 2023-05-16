@@ -10,6 +10,13 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 
 ## Changelog
 
+### v1.8.3
+
+- Updated styles and expressions in QGIS project
+- Updated and improved print layouts
+- Added available regional CTR WMS services
+- Fix potential problems in import process
+
 ### v1.8.2
 
 - Experimental fixes for slow data import and export processes
@@ -44,7 +51,7 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 ### v1.4
 
 - Updated to new MS 4.2 standards;
-- update project (fixed labels, update .py files, added new style); 
+- update project (fixed labels, update .py files, added new style);
 - updated italian manual.
 
 ### v1.3
@@ -60,7 +67,7 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 
 - updated layouts ("Carta di Microzonazione Sismica (FA 0.1-0.5 s)", "Carta di Microzonazione Sismica (FA 0.4-0.8 s)", "Carta di Microzonazione Sismica (FA 0.7-1.1 s)");
 - added "pkey" field in "Indagini" and "Parametri" tables;
-- removed english manual.	
+- removed english manual.
 
 ### v1.1
 

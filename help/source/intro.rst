@@ -94,6 +94,12 @@ Riferimenti
 Changelog
 ---------
 
+v1.8.3
+    - Updated styles and expressions in QGIS project
+    - Updated and improved print layouts
+    - Added available regional CTR WMS services
+    - Fix potential problems in import process
+
 v1.8.2
     - Experimental fixes for slow data import and export processes
     - Updated styles and expressions in QGIS project
