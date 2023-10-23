@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-# -------------------------------------------------------------------------------
-# Name:		tb_aggiorna_progetto.py
-# Author:	  Tarquini E.
-# Created:	 24-09-2018
-# -------------------------------------------------------------------------------
-
 import datetime
 import os
 import shutil
@@ -19,9 +12,7 @@ from qgis.utils import iface
 
 from .utils import save_map_image
 
-FORM_CLASS, _ = uic.loadUiType(
-    os.path.join(os.path.dirname(__file__), "tb_aggiorna_progetto.ui")
-)
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_aggiorna_progetto.ui"))
 
 
 class aggiorna_progetto(QDialog, FORM_CLASS):
@@ -39,33 +30,25 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
 
             pacchetto = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
 
-            name_output = (
-                nome
-                + "_backup_v"
-                + proj_vers
-                + "_"
-                + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
-            )
+            name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
 
-            if proj_vers < "0.8" and new_proj_vers >= "1.3":
-                sql_scripts = ["query_v08.sql", "query_v09.sql", "query_v10_12.sql"]
-            elif proj_vers == "0.8" and new_proj_vers >= "1.3":
-                sql_scripts = ["query_v09.sql", "query_v10_12.sql"]
-            elif proj_vers >= "0.9" and proj_vers < "1.2" and new_proj_vers >= "1.3":
-                sql_scripts = ["query_v10_12.sql"]
-            else:
-                sql_scripts = []
+            sql_scripts = []
+            if proj_vers < "0.8":
+                sql_scripts.append("query_v08.sql")
+            if proj_vers < "0.9":
+                sql_scripts.append("query_v09.sql")
+            if proj_vers < "1.2":
+                sql_scripts.append("query_v10_12.sql")
+            if proj_vers < "1.9":
+                sql_scripts.append("query_v19.sql")
 
             try:
-
                 shutil.copytree(proj_path, os.path.join(dir_output, name_output))
 
                 path_db = os.path.join(proj_path, "db", "indagini.sqlite")
 
                 for upgrade_script in sql_scripts:
-                    QgsMessageLog.logMessage(
-                        f"Executing: {upgrade_script}", "MzSTools", level=Qgis.Info
-                    )
+                    QgsMessageLog.logMessage(f"Executing: {upgrade_script}", "MzSTools", level=Qgis.Info)
                     self.exec_db_upgrade_sql(path_db, upgrade_script)
 
                 QgsMessageLog.logMessage("Sql upgrades ok", "MzSTools", level=Qgis.Info)
@@ -105,10 +88,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                 QMessageBox.information(
                     None,
                     self.tr("INFORMATION!"),
-                    self.tr(
-                        "The project structure has been updated!\nThe backup copy has been saved in the following directory: "
-                    )
-                    + name_output,
+                    self.tr("The project structure has been updated!\nThe backup copy has been saved in the following directory: ") + name_output,
                 )
 
                 # QgsProject.instance().read(QgsProject.instance().fileName())
@@ -161,12 +141,8 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         layouts = layout_manager.printLayouts()
 
         # replace region logo
-        logo_regio_in = os.path.join(
-            self.plugin_dir, "img", "logo_regio", codice_regio + ".png"
-        ).replace("\\", "/")
-        logo_regio_out = os.path.join(
-            proj_path, "progetto", "loghi", "logo_regio.png"
-        ).replace("\\", "/")
+        logo_regio_in = os.path.join(self.plugin_dir, "img", "logo_regio", codice_regio + ".png").replace("\\", "/")
+        logo_regio_out = os.path.join(proj_path, "progetto", "loghi", "logo_regio.png").replace("\\", "/")
         shutil.copyfile(logo_regio_in, logo_regio_out)
 
         # replace region map
@@ -174,12 +150,8 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         project_layers = layer_tree_root.layerOrder()
         for layer in project_layers:
             layer_tree_root.findLayer(layer.id()).setItemVisibilityChecked(False)
-        layer_limiti_comunali = QgsProject.instance().mapLayersByName(
-            "Limiti comunali"
-        )[0]
-        layer_tree_root.findLayer(layer_limiti_comunali.id()).setItemVisibilityChecked(
-            True
-        )
+        layer_limiti_comunali = QgsProject.instance().mapLayersByName("Limiti comunali")[0]
+        layer_tree_root.findLayer(layer_limiti_comunali.id()).setItemVisibilityChecked(True)
         layer_tree_root.findLayer(comune_layer.id()).setItemVisibilityChecked(True)
         imageFilename = os.path.join(proj_path, "progetto", "loghi", "mappa_reg.png")
         save_map_image(imageFilename, layer_limiti_comunali, canvas)

@@ -10,6 +10,11 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 
 ## Changelog
 
+### v1.9.0
+
+- Updated styles and print layouts
+- Improved compatibility with MS standard v4.2
+
 ### v1.8.3
 
 - Updated styles and expressions in QGIS project
