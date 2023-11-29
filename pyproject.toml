@@ -9,13 +9,12 @@ license = "GPL-3.0-or-later"
 python = "^3.8.1"
 
 [tool.poetry.dev-dependencies]
-pb_tool = "^3.1.0"
-flake8 = "^6.0.0"
-black = "^21.5b2"
-sphinx-rtd-theme = "^0.5.2"
-rstcheck = "^3.3.1"
-toml = "^0.10.2"
-autoflake = "^2.0.1"
+pb_tool = "*"
+black = "*"
+sphinx-rtd-theme = "*"
+rstcheck = "*"
+toml = "*"
+autoflake = "*"
 
 [build-system]
 requires = ["poetry>=0.12"]
