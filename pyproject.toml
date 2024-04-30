@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mzs-tools"
-version = "1.9.0"
+version = "1.9.1"
 description = "QGIS plugin for italian seismic microzonation"
 authors = ["CNR IGAG LabGIS <labgis@igag.cnr.it>"]
 license = "GPL-3.0-or-later"
@@ -15,6 +15,7 @@ sphinx-rtd-theme = "*"
 rstcheck = "*"
 toml = "*"
 autoflake = "*"
+setuptools = "^69.5.1" # required by pb_tool with python 3.12 https://stackoverflow.com/a/77284076
 
 [build-system]
 requires = ["poetry>=0.12"]

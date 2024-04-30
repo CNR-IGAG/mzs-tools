@@ -94,6 +94,9 @@ Riferimenti
 Changelog
 ---------
 
+v1.9.1
+    - Updated style expressions for MS level 2-3 layers
+
 v1.9.0
     - Updated styles and print layouts
     - Improved compatibility with MS standard v4.2
