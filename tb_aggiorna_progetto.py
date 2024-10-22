@@ -27,7 +27,6 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         self.adjustSize()
         result = self.exec_()
         if result == QDialog.Accepted:
-
             pacchetto = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
 
             name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
@@ -41,6 +40,8 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                 sql_scripts.append("query_v10_12.sql")
             if proj_vers < "1.9":
                 sql_scripts.append("query_v19.sql")
+            if proj_vers < "1.9.2":
+                sql_scripts.append("query_v192.sql")
 
             try:
                 shutil.copytree(proj_path, os.path.join(dir_output, name_output))
@@ -88,7 +89,10 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                 QMessageBox.information(
                     None,
                     self.tr("INFORMATION!"),
-                    self.tr("The project structure has been updated!\nThe backup copy has been saved in the following directory: ") + name_output,
+                    self.tr(
+                        "The project structure has been updated!\nThe backup copy has been saved in the following directory: "
+                    )
+                    + name_output,
                 )
 
                 # QgsProject.instance().read(QgsProject.instance().fileName())
@@ -104,18 +108,19 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
 
         with open(os.path.join(self.plugin_dir, upgrade_script), "r") as f:
             full_sql = f.read()
-            sql_commands = full_sql.replace("\n", "").split(";;")[:-1]
+            sql_commands = full_sql.split(";;")
             try:
                 conn.execute('SELECT load_extension("mod_spatialite")')
                 for sql_command in sql_commands:
-                    cursor.execute(sql_command)
+                    sql_command = sql_command.strip()
+                    if sql_command:
+                        cursor.execute(sql_command)
                 cursor.close()
                 conn.commit()
             finally:
                 conn.close()
 
     def load_new_qgs_file(self, proj_path):
-
         QgsMessageLog.logMessage("Loading new project", "MzSTools", level=Qgis.Info)
 
         project = QgsProject.instance()
