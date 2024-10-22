@@ -8,7 +8,7 @@ qgisMinimumVersion=3.16
 
 description=Plugin for Italian seismic microzonation.
 
-version=1.9.1
+version=1.9.2
 author=IGAG-CNR
 email=labgis@igag.cnr.it
 
@@ -19,6 +19,8 @@ about=The plugin allows the creation of the database and the cartographic repres
     
 changelog=
 
+        <b>v1.9.2:</b>
+                - Temp 
         <b>v1.9.1:</b>
                 - Updated style expressions for MS level 2-3 layers 
         <b>v1.9.0:</b>

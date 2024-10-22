@@ -10,6 +10,10 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 
 ## Changelog
 
+### v1.9.2
+
+- Temp
+
 ### v1.9.1
 
 - Updated style expressions for MS level 2-3 layers

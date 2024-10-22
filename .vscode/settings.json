@@ -1,10 +1,12 @@
 {
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "[python]": {
     "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
-    "[python]": {
-        "editor.formatOnPaste": false,
-        "editor.formatOnSave": false,
-    },
-    "esbonio.sphinx.confDir": "${workspaceFolder}/help/source",
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "esbonio.sphinx.confDir": "${workspaceFolder}/help/source",
+  "makefile.configureOnOpen": false
 }
