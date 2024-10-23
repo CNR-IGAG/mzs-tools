@@ -67,6 +67,13 @@ Il plugin MzSTools riunisce in un unico ambiente una serie di strumenti utili al
 
 Il plugin MzSTools è pubblicato tramite il `repository ufficiale <https://plugins.qgis.org/plugins/MzSTools/>`_ dei plugin di QGIS ed è scaricabile direttamente tramite l’interfaccia di gestione delle estensioni di QGIS. Inoltre lo sviluppo del Plugin è aperto e i contributi, sotto forma di codice, suggerimenti e segnalazioni, possono essere proposti da chiunque tramite la piattaforma `GitHub <https://github.com/CNR-IGAG/mzs-tools>`_. 
 
+Videoguide
+----------
+
+Il plugin MzSTools è corredato da una serie di videoguide che illustrano le principali funzionalità del plugin. 
+
+Le videoguide sono disponibili sul `canale YouTube del plugin <https://youtube.com/playlist?list=PLM5qQOkOkzgWH2VogqeQIDybylmE4P1TQ&feature=shared>`_.
+
 Credits
 -------
 
