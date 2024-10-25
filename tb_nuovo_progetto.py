@@ -1,6 +1,6 @@
-import csv
 import datetime
 import os
+import tempfile
 import shutil
 import sqlite3
 import webbrowser
@@ -9,138 +9,41 @@ import zipfile
 from qgis.PyQt import uic
 from qgis.core import QgsProject, QgsFeatureRequest
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QCompleter
-from qgis.PyQt.QtCore import QTemporaryDir, QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication
 from .utils import save_map_image
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_nuovo_progetto.ui"))
 
 
-class nuovo_progetto(QDialog, FORM_CLASS):
+class NewProject(QDialog, FORM_CLASS):
     def __init__(self, iface, parent=None):
         """Constructor."""
         self.iface = iface
         super().__init__(parent)
         self.setupUi(self)
+
         self.plugin_dir = os.path.dirname(__file__)
+        self.project_template_path = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
+        self.connect_signals()
+
+    def run_new_project_tool(self):
+        # check if there is a project already open
+        if QgsProject.instance().fileName():
+            QMessageBox.warning(
+                self.iface.mainWindow(),
+                self.tr("WARNING!"),
+                self.tr("Close the current project before creating a new one."),
+            )
+            return
 
         # Load comuni data for autocomplete
         self.load_comuni_data()
 
-    def load_comuni_data(self):
-        tabella_controllo = os.path.join(self.plugin_dir, "comuni.csv")
-        self.dizio_comuni = {}
-        self.dict_comuni = {}
-        comuni_list = []
+        # check and update QGIS svg symbols cache
+        self.check_svg_cache()
 
-        with open(tabella_controllo, "r") as csvfile:
-            csvreader = csv.reader(csvfile, delimiter=";")
-            for row in csvreader:
-                cod_istat = str(row[2])
-                nome_com = row[3]
-                cod_com = row[4]
-                nome_comune = cod_istat + "_" + cod_com
-                self.dict_comuni[cod_istat] = nome_comune
-                self.dizio_comuni[nome_com] = cod_istat
-                comuni_list.append(nome_com)
-
-        # Set up the completer
-        completer = QCompleter(comuni_list, self)
-        completer.setCaseSensitivity(False)
-        self.comuneField.setCompleter(completer)
-
-    def nuovo(self):
-        self.help_button.clicked.connect(
-            lambda: webbrowser.open("https://mzs-tools.readthedocs.io/it/latest/plugin/nuovo_progetto.html")
-        )
-        dir_svg_input = os.path.join(self.plugin_dir, "img", "svg")
-        dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
-        # tabella_controllo = os.path.join(self.plugin_dir, "comuni.csv")
-        pacchetto = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
-
-        # dizio_comuni = {}
-        # dict_comuni = {}
-
-        # with open(tabella_controllo, "r") as csvfile:
-        #     csvreader = csv.reader(csvfile, delimiter=";")
-        #     for row in csvreader:
-        #         cod_istat = str(row[2])
-        #         nome_com = row[3]
-        #         cod_com = row[4]
-        #         nome_comune = cod_istat + "_" + cod_com
-        #         dict_comuni[cod_istat] = nome_comune
-        #         dizio_comuni[nome_com] = cod_istat
-
-        data_meta = datetime.datetime.now().strftime(r"%d/%m/%Y")
-        data_dato = datetime.datetime.now().strftime(r"%d/%m/%Y")
-
-        self.comuneField.clear()
-        self.dir_output.clear()
-        # self.comune.clear()
-        self.cod_istat.clear()
-        self.professionista.clear()
-        self.email_prof.clear()
-        self.sito_prof.clear()
-        # self.ufficio.clear()
-        # self.propretario.clear()
-        # self.email_prop.clear()
-        # self.sito_prop.clear()
-        # self.contatto.clear()
-        # self.email_cont.clear()
-        # self.sito_cont.clear()
-        # self.scala_nom.clear()
-        # self.accuratezza.clear()
-        # self.lineage.clear()
-        # self.descriz.clear()
-
+        self.clear_fields()
         self.button_box.setEnabled(False)
-        # self.comune.addItems(sorted(dizio_comuni.keys()))
-        # self.comune.model().item(0).setEnabled(False)
-        # self.comune.currentIndexChanged.connect(
-        #     lambda: self.update_cod_istat(dizio_comuni, str(self.comune.currentText()), self.cod_istat)
-        # )
-        self.comuneField.textChanged.connect(
-            lambda: self.update_cod_istat(self.dizio_comuni, str(self.comuneField.text()), self.cod_istat)
-        )
-        # self.scala_nom.textEdited.connect(lambda: self.update_num(self.scala_nom, 0, 100000))
-        # self.comune.currentIndexChanged.connect(self.disableButton)
-        self.professionista.textChanged.connect(self.validate_input)
-        self.email_prof.textChanged.connect(self.validate_input)
-        self.sito_prof.textChanged.connect(self.validate_input)
-        # self.ufficio.textChanged.connect(self.disableButton)
-        # self.propretario.textChanged.connect(self.disableButton)
-        # self.email_prop.textChanged.connect(self.disableButton)
-        # self.sito_prop.textChanged.connect(self.disableButton)
-        # self.contatto.textChanged.connect(self.disableButton)
-        # self.sito_cont.textChanged.connect(self.disableButton)
-        # self.email_cont.textChanged.connect(self.disableButton)
-        # self.scala_nom.textChanged.connect(self.disableButton)
-        # self.accuratezza.textChanged.connect(self.disableButton)
-        # self.lineage.textChanged.connect(self.disableButton)
-        # self.descriz.textChanged.connect(self.disableButton)
-        self.dir_output.textChanged.connect(self.validate_input)
-
-        # Sample data for testing purposes
-        # TODO: disable
-        if False:
-            d = QTemporaryDir()
-            d.setAutoRemove(False)
-            self.dir_output.setText(d.path())
-            self.comune.setCurrentText("Luserna San Giovanni")
-            self.cod_istat.setText("001139")
-            self.professionista.setText("itopen")
-            self.email_prof.setText("some text")
-            self.sito_prof.setText("some text")
-            self.ufficio.setText("some text")
-            self.propretario.setText("some text")
-            self.email_prop.setText("some text")
-            self.sito_prop.setText("some text")
-            self.contatto.setText("some text")
-            self.email_cont.setText("some text")
-            self.sito_cont.setText("some text")
-            self.scala_nom.setText("50000")
-            self.accuratezza.setText("some text")
-            self.lineage.setText("some text")
-            self.descriz.setText("some text")
 
         self.show()
         self.adjustSize()
@@ -150,265 +53,225 @@ class nuovo_progetto(QDialog, FORM_CLASS):
             dir_out = self.dir_output.text()
             if os.path.isdir(dir_out):
                 try:
-                    # comune = str(self.comune.currentText())
-                    cod_istat = self.cod_istat.text()
-                    professionista = self.professionista.text()
-                    email_prof = self.email_prof.text()
-                    sito_prof = self.sito_prof.text()
-                    ufficio = self.ufficio.text()
-                    propretario = self.propretario.text()
-                    email_prop = self.email_prop.text()
-                    sito_prop = self.sito_prop.text()
-                    contatto = self.contatto.text()
-                    email_cont = self.email_cont.text()
-                    sito_cont = self.sito_cont.text()
-                    scala_nom = self.scala_nom.text()
-                    accuratezza = self.accuratezza.text()
-                    lineage = self.lineage.toPlainText()
-                    descriz = self.descriz.toPlainText()
-
-                    if not os.path.exists(dir_svg_output):
-                        shutil.copytree(dir_svg_input, dir_svg_output)
-                    else:
-                        src_files = os.listdir(dir_svg_input)
-                        for file_name in src_files:
-                            full_file_name = os.path.join(dir_svg_input, file_name)
-                            if os.path.isfile(full_file_name):
-                                shutil.copy(full_file_name, dir_svg_output)
-
-                    zip_ref = zipfile.ZipFile(pacchetto, "r")
-                    zip_ref.extractall(dir_out)
-                    zip_ref.close()
-                    for x, y in list(self.dict_comuni.items()):
-                        if x == cod_istat:
-                            comune_nome = (y[6:]).replace("_", " ")
-                            path_comune = os.path.join(dir_out, y)
-                            os.rename(os.path.join(dir_out, "progetto_MS"), path_comune)
-
-                    project = QgsProject.instance()
-                    project.read(os.path.join(path_comune, "progetto_MS.qgs"))
-
-                    layer_limiti_comunali = QgsProject.instance().mapLayersByName("Limiti comunali")[0]
-                    req = QgsFeatureRequest()
-                    req.setFilterExpression("\"cod_istat\" = '%s'" % cod_istat)
-                    selection = layer_limiti_comunali.getFeatures(req)
-                    layer_limiti_comunali.selectByIds([k.id() for k in selection])
-
-                    layer_comune_progetto = QgsProject.instance().mapLayersByName("Comune del progetto")[0]
-                    selected_features = layer_limiti_comunali.selectedFeatures()
-
-                    features = []
-                    for i in selected_features:
-                        features.append(i)
-
-                    layer_comune_progetto.startEditing()
-                    data_provider = layer_comune_progetto.dataProvider()
-                    data_provider.addFeatures(features)
-                    layer_comune_progetto.commitChanges()
-
-                    features = layer_comune_progetto.getFeatures()
-                    for feat in features:
-                        attrs = feat.attributes()
-                        codice_regio = attrs[1]
-                        codice_prov = attrs[2]
-                        codice_com = attrs[3]
-                        nome = attrs[4]
-                        regione = attrs[7]
-                        provincia = attrs[6]
-
-                    layer_limiti_comunali.removeSelection()
-
-                    layer_limiti_comunali.setSubsetString("cod_regio='" + codice_regio + "'")
-
-                    logo_regio_in = os.path.join(self.plugin_dir, "img", "logo_regio", codice_regio + ".png").replace(
-                        "\\", "/"
-                    )
-                    logo_regio_out = os.path.join(path_comune, "progetto", "loghi", "logo_regio.png").replace(
-                        "\\", "/"
-                    )
-                    shutil.copyfile(logo_regio_in, logo_regio_out)
-
-                    mainPath = QgsProject.instance().homePath()
-                    canvas = self.iface.mapCanvas()
-
-                    # QgsMessageLog.logMessage(
-                    #     'Canvas WKT %s' % canvas.extent().asWktPolygon())
-                    # QgsMessageLog.logMessage(
-                    #     'layer_limiti_comunali WKT %s' % layer_limiti_comunali.extent().asWktPolygon())
-
-                    imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
-                    save_map_image(imageFilename, layer_limiti_comunali, canvas)
-
-                    extent = layer_comune_progetto.dataProvider().extent()
-                    canvas.setExtent(extent)
-
-                    # QgsMessageLog.logMessage(
-                    #     'Canvas WKT %s' % canvas.extent().asWktPolygon())
-                    # QgsMessageLog.logMessage(
-                    #     'layer_comune_progetto data provider WKT %s' % extent.asWktPolygon())
-
-                    layout_manager = QgsProject.instance().layoutManager()
-                    layouts = layout_manager.printLayouts()
-
-                    for layout in layouts:
-                        map_item = layout.itemById("mappa_0")
-                        map_item.zoomToExtent(canvas.extent())
-                        map_item_2 = layout.itemById("regio_title")
-                        map_item_2.setText("Regione " + regione)
-                        map_item_3 = layout.itemById("com_title")
-                        map_item_3.setText("Comune di " + nome)
-                        map_item_4 = layout.itemById("logo")
-                        map_item_4.refreshPicture()
-                        map_item_5 = layout.itemById("mappa_1")
-                        map_item_5.refreshPicture()
-
-                    # self.indice_tab_execute(data_meta, regione, codice_regio, provincia,
-                    #                         codice_prov, nome, codice_com, professionista, ufficio, propretario)
-                    # self.metadati_tab_execute(codice_prov, codice_com, professionista, email_prof, sito_prof, data_meta, ufficio, propretario,
-                    #                           email_prop, sito_prop, data_dato, descriz, contatto, email_cont, sito_cont, scala_nom, extent, accuratezza, lineage)
-
-                    # save metadata in metadati table
-                    orig_gdb = QgsProject.instance().readPath(os.path.join("db", "indagini.sqlite"))
-                    conn = sqlite3.connect(orig_gdb)
-
-                    # sql = """ATTACH '""" + orig_gdb + """' AS A;"""
-                    # conn.execute(sql)
-
-                    values = {
-                        "id_metadato": f"{codice_prov}{codice_com}M1",
-                        "liv_gerarchico": "series",
-                        "resp_metadato_nome": professionista,
-                        "resp_metadato_email": email_prof,
-                        "resp_metadato_sito": sito_prof,
-                        "data_metadato": data_meta,
-                        "srs_dati": 32633,
-                        "proprieta_dato_nome": f"{ufficio} {propretario}",
-                        "proprieta_dato_email": email_prop,
-                        "proprieta_dato_sito": sito_prop,
-                        "data_dato": data_dato,
-                        "ruolo": "owner",
-                        "desc_dato": descriz,
-                        "formato": "mapDigital",
-                        "tipo_dato": "vector",
-                        "contatto_dato_nome": contatto,
-                        "contatto_dato_email": email_cont,
-                        "contatto_dato_sito": sito_cont,
-                        "keywords": "Microzonazione Sismica, Pericolosita Sismica",
-                        "keywords_inspire": "Zone a rischio naturale, Geologia",
-                        "limitazione": "nessuna limitazione",
-                        "vincoli_accesso": "nessuno",
-                        "vincoli_fruibilita": "nessuno",
-                        "vincoli_sicurezza": "nessuno",
-                        "scala": scala_nom,
-                        "categoria_iso": "geoscientificInformation",
-                        "estensione_ovest": str(extent.xMinimum()),
-                        "estensione_est": str(extent.xMaximum()),
-                        "estensione_sud": str(extent.yMinimum()),
-                        "estensione_nord": str(extent.yMaximum()),
-                        "precisione": accuratezza,
-                        "genealogia": lineage,
-                    }
-
-                    conn.execute(
-                        """
-                        INSERT INTO metadati (
-                            id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, resp_metadato_sito, data_metadato, srs_dati, 
-                            proprieta_dato_nome, proprieta_dato_email, proprieta_dato_sito, data_dato, ruolo, desc_dato, formato, tipo_dato, 
-                            contatto_dato_nome, contatto_dato_email, contatto_dato_sito, keywords, keywords_inspire, limitazione, vincoli_accesso, 
-                            vincoli_fruibilita, vincoli_sicurezza, scala, categoria_iso, estensione_ovest, estensione_est, estensione_sud, 
-                            estensione_nord, precisione, genealogia
-                        ) VALUES (
-                            :id_metadato, :liv_gerarchico, :resp_metadato_nome, :resp_metadato_email, :resp_metadato_sito, :data_metadato, :srs_dati, 
-                            :proprieta_dato_nome, :proprieta_dato_email, :proprieta_dato_sito, :data_dato, :ruolo, :desc_dato, :formato, :tipo_dato, 
-                            :contatto_dato_nome, :contatto_dato_email, :contatto_dato_sito, :keywords, :keywords_inspire, :limitazione, :vincoli_accesso, 
-                            :vincoli_fruibilita, :vincoli_sicurezza, :scala, :categoria_iso, :estensione_ovest, :estensione_est, :estensione_sud, 
-                            :estensione_nord, :precisione, :genealogia
-                        );
-                        """,
-                        values,
-                    )
-
-                    conn.commit()
-                    conn.close()
-
-                    # Save the project!
-                    project.write(os.path.join(path_comune, "progetto_MS.qgs"))
-
-                    QMessageBox.information(
-                        None, self.tr("Notice"), self.tr("The project has been created successfully.")
-                    )
-
+                    self.create_project(dir_out)
                 except Exception as z:
-                    # raise z
-                    QMessageBox.critical(None, "ERROR!", 'Error:\n"' + str(z) + '"')
+                    QMessageBox.critical(None, "ERROR!", f'Error:\n"{str(z)}"')
                     if os.path.exists(os.path.join(dir_out, "progetto_MS")):
                         shutil.rmtree(os.path.join(dir_out, "progetto_MS"))
-
             else:
                 QMessageBox.warning(
                     self.iface.mainWindow(), self.tr("WARNING!"), self.tr("The selected directory does not exist!")
                 )
+
+    def connect_signals(self):
+        self.help_button.clicked.connect(
+            lambda: webbrowser.open("https://mzs-tools.readthedocs.io/it/latest/plugin/nuovo_progetto.html")
+        )
+        self.comuneField.textChanged.connect(self.update_cod_istat)
+        self.professionista.textChanged.connect(self.validate_input)
+        self.email_prof.textChanged.connect(self.validate_input)
+        self.dir_output.textChanged.connect(self.validate_input)
+
+    def load_comuni_data(self):
+        # Load comuni data from the project template
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with zipfile.ZipFile(self.project_template_path, "r") as zip_ref:
+                temp_db_path = zip_ref.extract("progetto_MS/db/indagini.sqlite", temp_dir)
+
+            # Load comuni data from temp db
+            conn = sqlite3.connect(temp_db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT comune, cod_istat, provincia, regione FROM comuni")
+            self.comuni = cursor.fetchall()
+            conn.close()
+
+        # Create a list of comuni names for the completer
+        self.comuni_names = [f"{comune[0]} ({comune[2]} - {comune[3]})" for comune in self.comuni]
+
+        # Set up the completer
+        completer = QCompleter(self.comuni_names, self)
+        completer.setCaseSensitivity(False)
+        self.comuneField.setCompleter(completer)
+
+    def check_svg_cache(self):
+        dir_svg_input = os.path.join(self.plugin_dir, "img", "svg")
+        dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
+
+        if not os.path.exists(dir_svg_output):
+            shutil.copytree(dir_svg_input, dir_svg_output)
+        else:
+            src_files = os.listdir(dir_svg_input)
+            for file_name in src_files:
+                full_file_name = os.path.join(dir_svg_input, file_name)
+                if os.path.isfile(full_file_name):
+                    shutil.copy(full_file_name, dir_svg_output)
+
+    def create_project(self, dir_out):
+        comune_name = self.comuneField.text()
+        cod_istat = self.cod_istat.text()
+        professionista = self.professionista.text()
+        email_prof = self.email_prof.text()
+
+        self.extract_project_template(dir_out)
+
+        comune_name = self.sanitize_comune_name(comune_name)
+        new_project_path = os.path.join(dir_out, f"{cod_istat}_{comune_name}")
+        os.rename(os.path.join(dir_out, "progetto_MS"), new_project_path)
+
+        project = QgsProject.instance()
+        project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
+
+        self.customize_project(project, cod_istat, new_project_path)
+        self.save_basic_metadata(cod_istat, professionista, email_prof)
+
+        # Save the project
+        project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
+
+        QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
+
+    def extract_project_template(self, dir_out):
+        with zipfile.ZipFile(self.project_template_path, "r") as zip_ref:
+            zip_ref.extractall(dir_out)
+
+    def sanitize_comune_name(self, comune_name):
+        return comune_name.split(" (")[0].replace(" ", "_").replace("'", "_")
+
+    def customize_project(self, project, cod_istat, new_project_path):
+        """Customize the project with the selected comune data."""
+        layer_limiti_comunali = project.mapLayersByName("Limiti comunali")[0]
+        req = QgsFeatureRequest()
+        req.setFilterExpression(f"\"cod_istat\" = '{cod_istat}'")
+        selection = layer_limiti_comunali.getFeatures(req)
+        layer_limiti_comunali.selectByIds([k.id() for k in selection])
+
+        layer_comune_progetto = project.mapLayersByName("Comune del progetto")[0]
+        selected_features = layer_limiti_comunali.selectedFeatures()
+
+        features = [i for i in selected_features]
+
+        layer_comune_progetto.startEditing()
+        data_provider = layer_comune_progetto.dataProvider()
+        data_provider.addFeatures(features)
+        layer_comune_progetto.commitChanges()
+
+        features = layer_comune_progetto.getFeatures()
+        for feat in features:
+            attrs = feat.attributes()
+            codice_regio = attrs[1]
+            nome = attrs[4]
+            regione = attrs[7]
+
+        layer_limiti_comunali.removeSelection()
+        layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
+
+        logo_regio_in = os.path.join(self.plugin_dir, "img", "logo_regio", codice_regio + ".png").replace("\\", "/")
+        logo_regio_out = os.path.join(new_project_path, "progetto", "loghi", "logo_regio.png").replace("\\", "/")
+        shutil.copyfile(logo_regio_in, logo_regio_out)
+
+        mainPath = QgsProject.instance().homePath()
+        canvas = self.iface.mapCanvas()
+
+        imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
+        save_map_image(imageFilename, layer_limiti_comunali, canvas)
+
+        extent = layer_comune_progetto.dataProvider().extent()
+        canvas.setExtent(extent)
+
+        layout_manager = QgsProject.instance().layoutManager()
+        layouts = layout_manager.printLayouts()
+
+        for layout in layouts:
+            map_item = layout.itemById("mappa_0")
+            map_item.zoomToExtent(canvas.extent())
+            map_item_2 = layout.itemById("regio_title")
+            map_item_2.setText("Regione " + regione)
+            map_item_3 = layout.itemById("com_title")
+            map_item_3.setText("Comune di " + nome)
+            map_item_4 = layout.itemById("logo")
+            map_item_4.refreshPicture()
+            map_item_5 = layout.itemById("mappa_1")
+            map_item_5.refreshPicture()
+
+    def save_basic_metadata(self, cod_istat, professionista, email_prof):
+        """Save the basic metadata of the project."""
+        orig_gdb = QgsProject.instance().readPath(os.path.join("db", "indagini.sqlite"))
+        conn = sqlite3.connect(orig_gdb)
+
+        date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
+
+        extent = QgsProject.instance().mapLayersByName("Comune del progetto")[0].dataProvider().extent()
+
+        values = {
+            "id_metadato": f"{cod_istat}M1",
+            "liv_gerarchico": "series",
+            "resp_metadato_nome": professionista,
+            "resp_metadato_email": email_prof,
+            "data_metadato": date_now,
+            "srs_dati": 32633,
+            "ruolo": "owner",
+            "formato": "mapDigital",
+            "tipo_dato": "vector",
+            "keywords": "Microzonazione Sismica, Pericolosita Sismica",
+            "keywords_inspire": "Zone a rischio naturale, Geologia",
+            "limitazione": "nessuna limitazione",
+            "vincoli_accesso": "nessuno",
+            "vincoli_fruibilita": "nessuno",
+            "vincoli_sicurezza": "nessuno",
+            "categoria_iso": "geoscientificInformation",
+            "estensione_ovest": str(extent.xMinimum()),
+            "estensione_est": str(extent.xMaximum()),
+            "estensione_sud": str(extent.yMinimum()),
+            "estensione_nord": str(extent.yMaximum()),
+        }
+
+        conn.execute(
+            """
+            INSERT INTO metadati (
+                id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, data_metadato, srs_dati, 
+                ruolo, formato, tipo_dato, keywords, keywords_inspire, limitazione, vincoli_accesso, vincoli_fruibilita, 
+                vincoli_sicurezza, categoria_iso, estensione_ovest, estensione_est, estensione_sud, estensione_nord
+            ) VALUES (
+                :id_metadato, :liv_gerarchico, :resp_metadato_nome, :resp_metadato_email, :data_metadato, :srs_dati, 
+                :ruolo, :formato, :tipo_dato, :keywords, :keywords_inspire, :limitazione, :vincoli_accesso, :vincoli_fruibilita,
+                :vincoli_sicurezza, :categoria_iso, :estensione_ovest, :estensione_est, :estensione_sud, :estensione_nord
+            );
+            """,
+            values,
+        )
+
+        conn.commit()
+        conn.close()
+
+    def clear_fields(self):
+        self.comuneField.clear()
+        self.dir_output.clear()
+        self.cod_istat.clear()
+        self.professionista.clear()
+        self.email_prof.clear()
 
     def validate_input(self):
         if (
             self.cod_istat
             and self.professionista.text()
             and self.email_prof.text()
-            and self.sito_prof.text()
             and self.dir_output.text()
+            and os.path.isdir(self.dir_output.text())
         ):
             self.button_box.setEnabled(True)
         else:
             self.button_box.setEnabled(False)
-        # check_campi = [
-        #     self.professionista.text(),
-        #     self.email_prof.text(),
-        #     self.sito_prof.text(),
-        #     # self.propretario.text(),
-        #     # self.ufficio.text(),
-        #     # self.email_prop.text(),
-        #     # self.sito_prop.text(),
-        #     # self.contatto.text(),
-        #     # self.email_cont.text(),
-        #     # self.sito_cont.text(),
-        #     # self.scala_nom.text(),
-        #     # self.dir_output.text(),
-        #     # self.accuratezza.text(),
-        #     # self.lineage.toPlainText(),
-        #     # self.descriz.toPlainText(),
-        #     str(self.comune.currentText()),
-        # ]
-        # check_value = []
 
-        # for x in check_campi:
-        #     if len(x) > 0:
-        #         value_campi = 1
-        #         check_value.append(value_campi)
-        #     else:
-        #         value_campi = 0
-        #         check_value.append(value_campi)
+    def update_cod_istat(self):
+        comune_name = self.comuneField.text()
 
-        # campi = sum(check_value)
-        # if campi > 15:
-        #     self.button_box.setEnabled(True)
-        # else:
-        #     self.button_box.setEnabled(False)
-
-    def update_cod_istat(self, dizionario, nome_comune_sel, campo):
-        if nome_comune_sel not in list(dizionario.keys()):
-            campo.setText("")
+        if comune_name not in self.comuni_names:
+            self.cod_istat.clear()
             self.button_box.setEnabled(False)
-        for chiave, valore in list(dizionario.items()):
-            if chiave == nome_comune_sel:
-                campo.setText(valore)
-
-    # def update_num(self, value, n1, n2):
-    #     try:
-    #         valore = int(value.text())
-    #         if valore not in list(range(n1, n2)):
-    #             value.setText("")
-    #     except:
-    #         value.setText("")
+        else:
+            comune_record = next((comune for comune in self.comuni if comune[0] == comune_name.split(" (")[0]), None)
+            if comune_record:
+                self.cod_istat.setText(comune_record[1])
+                self.validate_input()
 
     def tr(self, message):
-        return QCoreApplication.translate("nuovo_progetto", message)
+        return QCoreApplication.translate("NewProject", message)

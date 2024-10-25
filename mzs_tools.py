@@ -12,6 +12,7 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, qApp
+from .tb_edit_metadata import EditMetadataDialog
 
 from .tb_aggiorna_progetto import aggiorna_progetto
 from .tb_copia_ms import copia_ms
@@ -19,14 +20,11 @@ from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
 from .tb_info import info
-from .tb_nuovo_progetto import nuovo_progetto
-
-# from .tb_wait import wait
+from .tb_nuovo_progetto import NewProject
 
 
 class MzSTools:
     def __init__(self, iface):
-
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
 
@@ -35,9 +33,7 @@ class MzSTools:
             locale = QSettings().value("locale/userLocale", "en", type=str)[0:2]
         except Exception:
             locale = "en"
-        locale_path = os.path.join(
-            self.plugin_dir, "i18n", "MzSTools_{}.qm".format(locale)
-        )
+        locale_path = os.path.join(self.plugin_dir, "i18n", "MzSTools_{}.qm".format(locale))
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
@@ -45,7 +41,8 @@ class MzSTools:
 
         # self.wait_dlg = wait()
         self.project_update_dlg = aggiorna_progetto()
-        self.new_project_dlg = nuovo_progetto(self.iface)
+        self.new_project_dlg = NewProject(self.iface)
+        self.edit_metadata_dlg = EditMetadataDialog(self.iface)
         self.info_dlg = info()
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
@@ -88,7 +85,6 @@ class MzSTools:
         whats_this=None,
         parent=None,
     ):
-
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
@@ -111,7 +107,6 @@ class MzSTools:
         return action
 
     def initGui(self):
-
         icon_path2 = os.path.join(self.plugin_dir, "img", "ico_nuovo_progetto.png")
         icon_path3 = os.path.join(self.plugin_dir, "img", "ico_info.png")
         icon_path4 = os.path.join(self.plugin_dir, "img", "ico_importa.png")
@@ -125,6 +120,13 @@ class MzSTools:
             icon_path2,
             text=self.tr("New project"),
             callback=self.new_project,
+            parent=self.iface.mainWindow(),
+        )
+
+        self.add_action(
+            icon_path2,
+            text=self.tr("Edit project metadata"),
+            callback=self.edit_metadata,
             parent=self.iface.mainWindow(),
         )
 
@@ -190,33 +192,23 @@ class MzSTools:
         del self.toolbar
 
     def select_output_fld_2(self):
-        out_dir = QFileDialog.getExistingDirectory(
-            self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly
-        )
+        out_dir = QFileDialog.getExistingDirectory(self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly)
         self.new_project_dlg.dir_output.setText(out_dir)
 
     def select_input_fld_4(self):
-        in_dir = QFileDialog.getExistingDirectory(
-            self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly
-        )
+        in_dir = QFileDialog.getExistingDirectory(self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
         self.import_shp_dlg.dir_input.setText(in_dir)
 
     def select_tab_fld_4(self):
-        tab_dir = QFileDialog.getExistingDirectory(
-            self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly
-        )
+        tab_dir = QFileDialog.getExistingDirectory(self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
         self.import_shp_dlg.tab_input.setText(tab_dir)
 
     def select_input_fld_5(self):
-        in_dir = QFileDialog.getExistingDirectory(
-            self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly
-        )
+        in_dir = QFileDialog.getExistingDirectory(self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
         self.export_shp_dlg.dir_input.setText(in_dir)
 
     def select_output_fld_5(self):
-        out_dir = QFileDialog.getExistingDirectory(
-            self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly
-        )
+        out_dir = QFileDialog.getExistingDirectory(self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
         self.export_shp_dlg.dir_output.setText(out_dir)
 
     def check_project(self):
@@ -235,23 +227,17 @@ class MzSTools:
             dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
 
             if not os.path.exists(dir_svg_output):
-                QgsMessageLog.logMessage(
-                    f"Copying svg symbols in {dir_svg_output}", "MzSTools", Qgis.Info
-                )
+                QgsMessageLog.logMessage(f"Copying svg symbols in {dir_svg_output}", "MzSTools", Qgis.Info)
                 shutil.copytree(dir_svg_input, dir_svg_output)
             else:
-                QgsMessageLog.logMessage(
-                    f"Updating svg symbols in {dir_svg_output}", "MzSTools", Qgis.Info
-                )
+                QgsMessageLog.logMessage(f"Updating svg symbols in {dir_svg_output}", "MzSTools", Qgis.Info)
                 src_files = os.listdir(dir_svg_input)
                 for file_name in src_files:
                     full_file_name = os.path.join(dir_svg_input, file_name)
                     if os.path.isfile(full_file_name):
                         shutil.copy(full_file_name, dir_svg_output)
 
-            QgsMessageLog.logMessage(
-                "Comparing project and plugin versions", "MzSTools", Qgis.Info
-            )
+            QgsMessageLog.logMessage("Comparing project and plugin versions", "MzSTools", Qgis.Info)
             vers_data = os.path.join(
                 os.path.dirname(QgsProject.instance().fileName()),
                 "progetto",
@@ -261,42 +247,35 @@ class MzSTools:
             try:
                 with open(vers_data, "r") as f:
                     proj_vers = f.readline().strip()
-                    with open(
-                        os.path.join(os.path.dirname(__file__), "versione.txt")
-                    ) as nf:
+                    with open(os.path.join(os.path.dirname(__file__), "versione.txt")) as nf:
                         new_proj_vers = nf.readline().strip()
                         if proj_vers < new_proj_vers:
-                            QgsMessageLog.logMessage(
-                                "Project needs updating!", "MzSTools", Qgis.Info
-                            )
+                            QgsMessageLog.logMessage("Project needs updating!", "MzSTools", Qgis.Info)
                             qApp.processEvents()
-                            self.project_update_dlg.aggiorna(
-                                percorso, dir_output, nome, proj_vers, new_proj_vers
-                            )
+                            self.project_update_dlg.aggiorna(percorso, dir_output, nome, proj_vers, new_proj_vers)
 
             except Exception as ex:
                 QgsMessageLog.logMessage(f"Error: {ex}", "MzSTools", Qgis.Critical)
 
     def new_project(self):
-        self.new_project_dlg.nuovo()
+        self.new_project_dlg.run_new_project_tool()
+
+    def edit_metadata(self):
+        self.edit_metadata_dlg.run_edit_metadata_dialog()
 
     def help(self):
         self.info_dlg.help()
 
     def import_project(self):
-
         self.import_shp_dlg.importa_prog()
 
     def export_project(self):
-
         self.export_shp_dlg.esporta_prog()
 
     def copy_stab(self):
-
         self.ms_copy_dlg.copia()
 
     def add_feature_or_record(self):
-
         proj = QgsProject.instance()
 
         snapping_config = proj.instance().snappingConfig()
@@ -328,9 +307,7 @@ class MzSTools:
 
         # Configure snapping
         if layer is not None:
-
             if layer.name() in POLY_LYR:
-
                 # self.wait_dlg.show()
                 for fc in proj.mapLayers().values():
                     if fc.name() in POLY_LYR:
@@ -354,39 +331,29 @@ class MzSTools:
                             20,
                             QgsTolerance.ProjectUnits,
                         )
-                        snapping_config.setIndividualLayerSettings(
-                            layer, layer_settings
-                        )
-                        snapping_config.setIndividualLayerSettings(
-                            other_layer, layer_settings
-                        )
+                        snapping_config.setIndividualLayerSettings(layer, layer_settings)
+                        snapping_config.setIndividualLayerSettings(other_layer, layer_settings)
 
                         snapping_config.setIntersectionSnapping(True)
 
                     elif layer.name() == "Unita' geologico-tecniche":
-
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
                             True,
                             QgsSnappingConfig.VertexFlag,
                             20,
                             QgsTolerance.ProjectUnits,
                         )
-                        snapping_config.setIndividualLayerSettings(
-                            layer, layer_settings
-                        )
+                        snapping_config.setIndividualLayerSettings(layer, layer_settings)
                         snapping_config.setIntersectionSnapping(True)
 
                     elif layer.name() == "Instabilita' di versante":
-
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
                             True,
                             QgsSnappingConfig.VertexFlag,
                             20,
                             QgsTolerance.ProjectUnits,
                         )
-                        snapping_config.setIndividualLayerSettings(
-                            layer, layer_settings
-                        )
+                        snapping_config.setIndividualLayerSettings(layer, layer_settings)
                         snapping_config.setIntersectionSnapping(True)
 
                 layer.startEditing()
@@ -398,7 +365,6 @@ class MzSTools:
                 self.iface.actionAddFeature().trigger()
 
     def save(self):
-
         proj = QgsProject.instance()
 
         snapping_config = proj.snappingConfig()
@@ -421,7 +387,6 @@ class MzSTools:
         layer = self.iface.activeLayer()
         if layer is not None:
             if layer.name() in POLYGON_LYR:
-
                 # self.wait_dlg.show()
                 layers = proj.mapLayers().values()
                 snapping_config = proj.snappingConfig()
@@ -430,7 +395,6 @@ class MzSTools:
 
                 for fc in layers:
                     if fc.name() in POLYGON_LYR:
-
                         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
                             True,
                             QgsSnappingConfig.VertexFlag,

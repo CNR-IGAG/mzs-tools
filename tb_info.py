@@ -1,13 +1,7 @@
-# -*- coding: utf-8 -*-
-# -------------------------------------------------------------------------------
-# Name:		tb_info.py
-# Author:	  Tarquini E.
-# Created:	 08-02-2018
-# -------------------------------------------------------------------------------
-
 import os
 import webbrowser
 
+import pyplugin_installer
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.utils import iface
@@ -26,8 +20,19 @@ class info(QDialog, FORM_CLASS):
 
     def help(self):
         # version info from plugin metadata
-        version_installed = self.iface.pluginManagerInterface().pluginMetadata("MzSTools")["version_installed"]
-        version_available = self.iface.pluginManagerInterface().pluginMetadata("MzSTools")["version_available"]
+        plugin_metadata = self.iface.pluginManagerInterface().pluginMetadata("MzSTools")
+        if not plugin_metadata:
+            # try refreshing the plugin manager cache
+            pyplugin_installer.instance().reloadAndExportData()
+
+        plugin_metadata = self.iface.pluginManagerInterface().pluginMetadata("MzSTools")
+        if plugin_metadata:
+            version_installed = plugin_metadata["version_installed"]
+            version_available = plugin_metadata["version_available"]
+        else:
+            with open(os.path.join(os.path.dirname(__file__), "versione.txt")) as version_file:
+                version_installed = version_file.readline().strip()
+                version_available = version_installed
 
         label_text = self.label.text().replace("[[]]", version_installed)
         self.label.setText(label_text)
@@ -40,16 +45,8 @@ class info(QDialog, FORM_CLASS):
                 self.label_version_warning.setText(f"New version available: {version_available}")
                 self.label_version_warning.setStyleSheet("font-style: italic; font-weight: bold; color: green;")
 
-        # self.pushButton_ita.clicked.connect(lambda: self.open_pdf(os.path.join(self.plugin_dir, "manuale.pdf")))
         self.pushButton_ita.clicked.connect(lambda: webbrowser.open("https://mzs-tools.readthedocs.io"))
         self.pushButton_www.clicked.connect(lambda: webbrowser.open("https://github.com/CNR-IGAG/mzs-tools/"))
 
         self.show()
         self.adjustSize()
-
-    # def open_pdf(self, pdf_path):
-    #     if sys.platform == "win32":
-    #         os.startfile(pdf_path)
-    #     else:
-    #         opener = "open" if sys.platform == "darwin" else "xdg-open"
-    #         subprocess.call([opener, pdf_path])
