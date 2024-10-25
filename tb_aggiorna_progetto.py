@@ -21,6 +21,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         super().__init__(parent)
         self.setupUi(self)
         self.plugin_dir = os.path.dirname(__file__)
+        self.sql_scripts_dir = os.path.join(self.plugin_dir, "data", "sql_scripts")
 
     def aggiorna(self, proj_path, dir_output, nome, proj_vers, new_proj_vers):
         self.show()
@@ -106,7 +107,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         conn.text_factory = lambda x: str(x, "utf-8", "ignore")
         conn.enable_load_extension(True)
 
-        with open(os.path.join(self.plugin_dir, upgrade_script), "r") as f:
+        with open(os.path.join(self.sql_scripts_dir, upgrade_script), "r") as f:
             full_sql = f.read()
             sql_commands = full_sql.split(";;")
             try:
