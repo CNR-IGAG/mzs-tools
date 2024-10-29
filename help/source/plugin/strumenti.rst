@@ -9,6 +9,8 @@ All'attivazione del plugin MzSTools viene visualizzata nell'interfaccia di QGIS 
 .. image:: ../img/plugin_toolbar.png
   :align: center
 
+|
+
 .. Note:: Se la toolbar non è presente nell'interfaccia di QGIS, è possibile riattivarla tramite il menu **Visualizza → Barre degli strumenti**.
 
 Gli strumenti richiamabili tramite la toolbar sono:
@@ -37,7 +39,12 @@ Gli strumenti richiamabili tramite la toolbar sono:
 .. |ico8| image:: ../../../img/ico_info.png
   :height: 25
 
+.. |ico9| image:: ../../../img/mActionAddHtml.png
+  :height: 25
+
 |ico1| **Nuovo progetto** → :ref:`nuovo-progetto`
+
+|ico9| **Modifica metadati di progetto** → :ref:`metadata-edit`
 
 |ico2| **Importa dati da un progetto esistente** → :ref:`importazione`
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>751</width>
-    <height>590</height>
+    <height>488</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -17,34 +17,34 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Edit Metadati</string>
+   <string>SM Project Metadata</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab_4">
       <attribute name="title">
        <string>Informazioni sui metadati</string>
       </attribute>
       <layout class="QFormLayout" name="formLayout_4">
-       <item row="0" column="0">
+       <item row="1" column="0">
         <widget class="QLabel" name="label_id_metadato">
          <property name="text">
           <string>ID Metadato</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
+       <item row="1" column="1">
         <widget class="QLineEdit" name="id_metadato">
          <property name="enabled">
           <bool>false</bool>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="2" column="1">
         <widget class="QLineEdit" name="liv_gerarchico">
          <property name="enabled">
           <bool>false</bool>
@@ -54,49 +54,49 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="label_liv_gerarchico">
          <property name="text">
           <string>Liv. Gerarchico</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="label_data_metadato">
          <property name="text">
           <string>Data Metadato</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="4" column="1">
         <widget class="QLineEdit" name="resp_metadato_nome">
          <property name="toolTip">
           <string>Inserire il nome e cognome dell'autore dello studio</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="label_resp_metadato_nome">
          <property name="text">
           <string>Resp. Metadato Nome</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QLineEdit" name="resp_metadato_email">
          <property name="toolTip">
           <string>Email dell'autore dello studio</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="label_resp_metadato_email">
          <property name="text">
           <string>Resp. Metadato Email</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
+       <item row="6" column="1">
         <widget class="QLineEdit" name="resp_metadato_sito">
          <property name="toolTip">
           <string>Inserire eventuale sito web dell'autore dello studio</string>
@@ -106,17 +106,37 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="0">
+       <item row="6" column="0">
         <widget class="QLabel" name="label_resp_metadato_sito">
          <property name="text">
           <string>Resp. Metadato Sito</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="3" column="1">
         <widget class="QgsDateTimeEdit" name="data_metadato">
          <property name="displayFormat">
           <string>dd/MM/yyyy</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="comuneLabel">
+         <property name="text">
+          <string>Comune</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="comune_info">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>
@@ -168,7 +188,7 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="label_desc_dato">
          <property name="text">
           <string>Descrizione Dato</string>
@@ -192,24 +212,7 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
-        <widget class="QLineEdit" name="precisione">
-         <property name="toolTip">
-          <string>Precisione del dato (errore in metri)</string>
-         </property>
-         <property name="placeholderText">
-          <string>0.2</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="0">
-        <widget class="QLabel" name="label_precisione">
-         <property name="text">
-          <string>Precisione</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0">
+       <item row="7" column="0">
         <widget class="QLabel" name="label_genealogia">
          <property name="text">
           <string>Genealogia</string>
@@ -223,8 +226,14 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QTextEdit" name="desc_dato">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>99</height>
+          </size>
+         </property>
          <property name="toolTip">
           <string>Descrizione dei dati</string>
          </property>
@@ -236,13 +245,36 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="7" column="1">
         <widget class="QTextEdit" name="genealogia">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>100</height>
+          </size>
+         </property>
          <property name="toolTip">
           <string>Descrizione della provenienza e dei processi di elaborazione dei dati</string>
          </property>
          <property name="acceptRichText">
           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="precisione">
+         <property name="toolTip">
+          <string>Precisione del dato (errore in metri)</string>
+         </property>
+         <property name="placeholderText">
+          <string>0.2</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="label_precisione">
+         <property name="text">
+          <string>Precisione</string>
          </property>
         </widget>
        </item>
@@ -410,7 +442,7 @@
        <item row="4" column="0">
         <widget class="QLabel" name="label_vincoli_fruibilita">
          <property name="text">
-          <string>Vincoli Fruibilita</string>
+          <string>Vincoli Fruibilità</string>
          </property>
         </widget>
        </item>
@@ -538,83 +570,88 @@
        <string>Distribuzione</string>
       </attribute>
       <layout class="QFormLayout" name="formLayout">
-       <item row="1" column="0">
+       <item row="0" column="0">
         <widget class="QLabel" name="label_formato_dati">
          <property name="text">
           <string>Formato Dati</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="0" column="1">
         <widget class="QLineEdit" name="formato_dati"/>
        </item>
-       <item row="2" column="0">
+       <item row="1" column="0">
         <widget class="QLabel" name="label_distributore_dato_nome">
          <property name="text">
           <string>Distributore Dato Nome</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="1" column="1">
         <widget class="QLineEdit" name="distributore_dato_nome"/>
        </item>
-       <item row="3" column="0">
+       <item row="2" column="0">
         <widget class="QLabel" name="label_distributore_dato_telefono">
          <property name="text">
           <string>Distributore Dato Telefono</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="2" column="1">
         <widget class="QLineEdit" name="distributore_dato_telefono"/>
        </item>
-       <item row="4" column="0">
+       <item row="3" column="0">
         <widget class="QLabel" name="label_distributore_dato_email">
          <property name="text">
           <string>Distributore Dato Email</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="3" column="1">
         <widget class="QLineEdit" name="distributore_dato_email"/>
        </item>
-       <item row="5" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="label_distributore_dato_sito">
          <property name="text">
           <string>Distributore Dato Sito</string>
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
+       <item row="4" column="1">
         <widget class="QLineEdit" name="distributore_dato_sito"/>
        </item>
-       <item row="6" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="label_url_accesso_dato">
          <property name="text">
           <string>URL Accesso Dato</string>
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="5" column="1">
         <widget class="QLineEdit" name="url_accesso_dato"/>
        </item>
-       <item row="7" column="0">
+       <item row="6" column="0">
         <widget class="QLabel" name="label_funzione_accesso_dato">
          <property name="text">
           <string>Funzione Accesso Dato</string>
          </property>
         </widget>
        </item>
-       <item row="7" column="1">
+       <item row="6" column="1">
         <widget class="QLineEdit" name="funzione_accesso_dato"/>
        </item>
-       <item row="0" column="0" colspan="2">
+       <item row="7" column="0" colspan="2">
         <widget class="QLabel" name="label">
+         <property name="font">
+          <font>
+           <italic>true</italic>
+          </font>
+         </property>
          <property name="text">
-          <string>Attenzione: questi campi dovranno essere compilati dal soggetto distributore dei dati stessi (ad es. DPC, Regione, ecc.)</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#e01b24;&quot;&gt;Attenzione: questi campi dovranno essere compilati dal soggetto distributore dei dati stessi (ad es. DPC, Regione, ecc.)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="wordWrap">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -623,107 +660,124 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0,0,0">
-     <property name="sizeConstraint">
-      <enum>QLayout::SetDefaultConstraint</enum>
+    <widget class="QFrame" name="footer">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>60</height>
+      </size>
      </property>
-     <item>
-      <widget class="QLabel" name="label_25">
-       <property name="maximumSize">
-        <size>
-         <width>81</width>
-         <height>60</height>
-        </size>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="pixmap">
-        <pixmap>img/Logo CNR-2010-Quadrato-ITA-high.png</pixmap>
-       </property>
-       <property name="scaledContents">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_24">
-       <property name="maximumSize">
-        <size>
-         <width>70</width>
-         <height>60</height>
-        </size>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="pixmap">
-        <pixmap>img/IGAG-CMYK.png</pixmap>
-       </property>
-       <property name="scaledContents">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
-       <property name="sizeConstraint">
-        <enum>QLayout::SetDefaultConstraint</enum>
-       </property>
-       <item>
-        <widget class="QDialogButtonBox" name="button_box">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="cursor">
-          <cursorShape>PointingHandCursor</cursorShape>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="standardButtons">
-          <set>QDialogButtonBox::Ok</set>
-         </property>
-         <property name="centerButtons">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="help_button">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="cursor">
-          <cursorShape>PointingHandCursor</cursorShape>
-         </property>
-         <property name="text">
-          <string>Help</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <property name="leftMargin">
+       <number>0</number>
+      </property>
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="label_25">
+        <property name="maximumSize">
+         <size>
+          <width>81</width>
+          <height>60</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap>img/Logo CNR-2010-Quadrato-ITA-high.png</pixmap>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_24">
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>60</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap>img/IGAG-CMYK.png</pixmap>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
+        </property>
+        <item>
+         <widget class="QDialogButtonBox" name="button_box">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="standardButtons">
+           <set>QDialogButtonBox::Ok</set>
+          </property>
+          <property name="centerButtons">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="help_button">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="cursor">
+           <cursorShape>PointingHandCursor</cursorShape>
+          </property>
+          <property name="text">
+           <string>Help</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
    </item>
   </layout>
  </widget>
@@ -743,12 +797,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>699</x>
-     <y>521</y>
+     <x>700</x>
+     <y>433</y>
     </hint>
     <hint type="destinationlabel">
      <x>375</x>
-     <y>291</y>
+     <y>243</y>
     </hint>
    </hints>
   </connection>
@@ -759,12 +813,12 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>699</x>
-     <y>521</y>
+     <x>700</x>
+     <y>433</y>
     </hint>
     <hint type="destinationlabel">
      <x>375</x>
-     <y>291</y>
+     <y>243</y>
     </hint>
    </hints>
   </connection>

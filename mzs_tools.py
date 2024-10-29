@@ -8,6 +8,7 @@ from qgis.core import (
     QgsSettings,
     QgsSnappingConfig,
     QgsTolerance,
+    QgsApplication,
 )
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
@@ -124,7 +125,7 @@ class MzSTools:
         )
 
         self.add_action(
-            icon_path2,
+            QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
             text=self.tr("Edit project metadata"),
             callback=self.edit_metadata,
             parent=self.iface.mainWindow(),

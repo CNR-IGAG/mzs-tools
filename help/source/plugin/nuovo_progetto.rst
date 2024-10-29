@@ -9,27 +9,28 @@ Creazione di un nuovo progetto
 Il primo strumento, **Nuovo progetto**, permette di generare un progetto QGIS ed uno spazio di archiviazione adatti ad un **comune** oggetto di studio. 
 
 .. figure:: ../img/nuovo_progetto.png
-  :width: 400
   :align: center
+
+|
 
 Dopo aver selezionato il pulsante “Nuovo progetto” |ico1|, viene aperta una finestra contenente una serie di campi da compilare con informazioni relative a:
 
-* il Comune oggetto degli studi, da selezionare tramite un menu a tendina;
-* il professionista incaricato di eseguire gli studi;
-* l’Ente di riferimento e/o proprietario del dato;
-* altre informazioni.
+* il Comune oggetto degli studi: cominciare a digitare il nome del comune e selezionare uno dei risultati della ricerca;
+* il nome e cognome dell'autore dello studio;
+* un indirizzo email di riferimento dell'autore dello studio;
+* la cartella di destinazione del progetto: cliccare sul pulsante "..." e selezionare una cartella sul proprio PC.
 
-.. Note:: Con la selezione del comune oggetto di studio, il plugin esegue una serie di impostazioni fondamentali del progetto: il database viene predisposto, tramite viste (tabelle “virtuali” basate su query SQL), al filtraggio dei dati in base al comune, e sia la mappa principale di QGIS che i layout di stampa vengono automaticamente centrati ed impostati ad un livello di zoom opportuno. 
+.. Note:: Con la selezione del comune oggetto di studio, il plugin esegue una serie di impostazioni fondamentali del progetto: il **database** viene predisposto, tramite viste (tabelle “virtuali” basate su query SQL), al filtraggio dei dati in base al comune, e sia la **mappa** principale di QGIS che i **layout di stampa** vengono automaticamente centrati ed impostati ad un livello di zoom opportuno. 
     
-  Gli altri elementi da compilare sulla scheda riguardano i metadati del progetto previsti dagli Standard MS, e quindi si tratta di informazioni sull’autore dello studio, sulla proprietà dei dati e su caratteristiche quali la scala di riferimento.
-
-Nel campo "Cartella di destinazione" viene definita la cartella che conterrà l'intera struttura di file del progetto.
+  Vengono inoltre compilati alcuni dei **metadati** di base del progetto previsti dagli Standard MS. Questi possono essere in seguito modificati e completati utilizzando lo strumento della toolbar :ref:`metadata-edit`
 
 Dopo aver compilato tutti i campi richiesti, il pulsante “OK” risulterà selezionabile e verrà creata la struttura del progetto nella cartella selezionata.
 
 Il tool, infine, aprirà automaticamente il progetto all'interno di QGIS ed eseguirà uno zoom all'estensione dell'area di studio del comune.
 
 .. figure:: ../img/progetto_qgis.png
+  :width: 700
+  :align: center
 
 .. Tip:: È molto importante selezionare una cartella vuota, e successivamente avere cura di mantenerne il contenuto inalterato, effettuando periodicamente copie di backup in modo da poter ripristinare il progetto nell’eventualità di perdite di dati o altre modifiche accidentali.
 

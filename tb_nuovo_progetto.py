@@ -10,7 +10,7 @@ from qgis.PyQt import uic
 from qgis.core import QgsProject, QgsFeatureRequest
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QCompleter
 from qgis.PyQt.QtCore import QCoreApplication
-from .utils import save_map_image
+from .utils import save_map_image, create_basic_sm_metadata
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_nuovo_progetto.ui"))
 
@@ -122,7 +122,7 @@ class NewProject(QDialog, FORM_CLASS):
         project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
 
         self.customize_project(project, cod_istat, new_project_path)
-        self.save_basic_metadata(cod_istat, professionista, email_prof)
+        create_basic_sm_metadata(cod_istat, professionista, email_prof)
 
         # Save the project
         project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
@@ -191,56 +191,6 @@ class NewProject(QDialog, FORM_CLASS):
             map_item_4.refreshPicture()
             map_item_5 = layout.itemById("mappa_1")
             map_item_5.refreshPicture()
-
-    def save_basic_metadata(self, cod_istat, professionista, email_prof):
-        """Save the basic metadata of the project."""
-        orig_gdb = QgsProject.instance().readPath(os.path.join("db", "indagini.sqlite"))
-        conn = sqlite3.connect(orig_gdb)
-
-        date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
-
-        extent = QgsProject.instance().mapLayersByName("Comune del progetto")[0].dataProvider().extent()
-
-        values = {
-            "id_metadato": f"{cod_istat}M1",
-            "liv_gerarchico": "series",
-            "resp_metadato_nome": professionista,
-            "resp_metadato_email": email_prof,
-            "data_metadato": date_now,
-            "srs_dati": 32633,
-            "ruolo": "owner",
-            "formato": "mapDigital",
-            "tipo_dato": "vector",
-            "keywords": "Microzonazione Sismica, Pericolosita Sismica",
-            "keywords_inspire": "Zone a rischio naturale, Geologia",
-            "limitazione": "nessuna limitazione",
-            "vincoli_accesso": "nessuno",
-            "vincoli_fruibilita": "nessuno",
-            "vincoli_sicurezza": "nessuno",
-            "categoria_iso": "geoscientificInformation",
-            "estensione_ovest": str(extent.xMinimum()),
-            "estensione_est": str(extent.xMaximum()),
-            "estensione_sud": str(extent.yMinimum()),
-            "estensione_nord": str(extent.yMaximum()),
-        }
-
-        conn.execute(
-            """
-            INSERT INTO metadati (
-                id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, data_metadato, srs_dati, 
-                ruolo, formato, tipo_dato, keywords, keywords_inspire, limitazione, vincoli_accesso, vincoli_fruibilita, 
-                vincoli_sicurezza, categoria_iso, estensione_ovest, estensione_est, estensione_sud, estensione_nord
-            ) VALUES (
-                :id_metadato, :liv_gerarchico, :resp_metadato_nome, :resp_metadato_email, :data_metadato, :srs_dati, 
-                :ruolo, :formato, :tipo_dato, :keywords, :keywords_inspire, :limitazione, :vincoli_accesso, :vincoli_fruibilita,
-                :vincoli_sicurezza, :categoria_iso, :estensione_ovest, :estensione_est, :estensione_sud, :estensione_nord
-            );
-            """,
-            values,
-        )
-
-        conn.commit()
-        conn.close()
 
     def clear_fields(self):
         self.comuneField.clear()

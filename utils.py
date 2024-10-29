@@ -1,5 +1,5 @@
 # coding=utf-8
-""""Utilities for MzS plugin
+""" "Utilities for MzS Tools plugin
 
 .. note:: This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -8,11 +8,9 @@
 
 """
 
-__author__ = 'elpaso@itopen.it'
-__date__ = '2021-04-09'
-__copyright__ = 'Copyright 2021, ItOpen'
-
+import datetime
 import os
+import sqlite3
 
 from qgis.core import (
     QgsLayout,
@@ -21,7 +19,9 @@ from qgis.core import (
     QgsLayoutSize,
     QgsLayoutItemMap,
     QgsLayoutItemPage,
-    QgsProject
+    QgsProject,
+    QgsMessageLog,
+    Qgis,
 )
 from qgis.PyQt.QtCore import QSize, QRectF
 
@@ -44,8 +44,7 @@ def save_map_image(image_path, zoom_to_layer, canvas):
     p = QgsProject.instance()
     layout = QgsLayout(p)
     page = QgsLayoutItemPage(layout)
-    page.setPageSize(QgsLayoutSize(
-        1200, 700, QgsUnitTypes.LayoutMillimeters))
+    page.setPageSize(QgsLayoutSize(1200, 700, QgsUnitTypes.LayoutMillimeters))
     collection = layout.pageCollection()
     collection.addPage(page)
 
@@ -55,11 +54,78 @@ def save_map_image(image_path, zoom_to_layer, canvas):
     item_map.zoomToExtent(extent)
     layout.addItem(item_map)
 
-    dpmm = 200/25.4
+    dpmm = 200 / 25.4
     width = int(dpmm * page.pageSize().width())
     height = int(dpmm * page.pageSize().height())
 
     size = QSize(width, height)
     exporter = QgsLayoutExporter(layout)
     image = exporter.renderPageToImage(0, size)
-    image.save(image_path, 'PNG')
+    image.save(image_path, "PNG")
+
+
+def qgs_log(message, level="info"):
+    """Log a MzSTools plugin message to the QGIS log panel.
+
+    :param message: message to log
+    :type message: str
+    :param level: log level ('info', 'warning', 'error' - default is 'info')
+    :type level: str
+    """
+    if level == "info":
+        QgsMessageLog.logMessage(message, "MzSTools", level=Qgis.Info)
+    elif level == "warning":
+        QgsMessageLog.logMessage(message, "MzSTools", level=Qgis.Warning)
+    elif level == "error":
+        QgsMessageLog.logMessage(message, "MzSTools", level=Qgis.Critical)
+
+
+def create_basic_sm_metadata(cod_istat, study_author=None, author_email=None):
+    """Create a basic metadata record for a MzSTools project."""
+    orig_gdb = QgsProject.instance().readPath(os.path.join("db", "indagini.sqlite"))
+    conn = sqlite3.connect(orig_gdb)
+
+    date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
+
+    extent = QgsProject.instance().mapLayersByName("Comune del progetto")[0].dataProvider().extent()
+
+    values = {
+        "id_metadato": f"{cod_istat}M1",
+        "liv_gerarchico": "series",
+        "resp_metadato_nome": study_author,
+        "resp_metadato_email": author_email,
+        "data_metadato": date_now,
+        "srs_dati": 32633,
+        "ruolo": "owner",
+        "formato": "mapDigital",
+        "tipo_dato": "vector",
+        "keywords": "Microzonazione Sismica, Pericolosita Sismica",
+        "keywords_inspire": "Zone a rischio naturale, Geologia",
+        "limitazione": "nessuna limitazione",
+        "vincoli_accesso": "nessuno",
+        "vincoli_fruibilita": "nessuno",
+        "vincoli_sicurezza": "nessuno",
+        "categoria_iso": "geoscientificInformation",
+        "estensione_ovest": str(extent.xMinimum()),
+        "estensione_est": str(extent.xMaximum()),
+        "estensione_sud": str(extent.yMinimum()),
+        "estensione_nord": str(extent.yMaximum()),
+    }
+
+    conn.execute(
+        """
+        INSERT INTO metadati (
+            id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, data_metadato, srs_dati, 
+            ruolo, formato, tipo_dato, keywords, keywords_inspire, limitazione, vincoli_accesso, vincoli_fruibilita, 
+            vincoli_sicurezza, categoria_iso, estensione_ovest, estensione_est, estensione_sud, estensione_nord
+        ) VALUES (
+            :id_metadato, :liv_gerarchico, :resp_metadato_nome, :resp_metadato_email, :data_metadato, :srs_dati, 
+            :ruolo, :formato, :tipo_dato, :keywords, :keywords_inspire, :limitazione, :vincoli_accesso, :vincoli_fruibilita,
+            :vincoli_sicurezza, :categoria_iso, :estensione_ovest, :estensione_est, :estensione_sud, :estensione_nord
+        );
+        """,
+        values,
+    )
+
+    conn.commit()
+    conn.close()

@@ -1,11 +1,6 @@
 Altri strumenti
 ---------------
 
-.. _sito-xy:
-
-Inserimento Sito Puntuale tramite coordinate
-""""""""""""""""""""""""""""""""""""""""""""
-
 .. |ico1| image:: ../../../img/ico_nuovo_progetto.png
   :height: 25
 
@@ -30,11 +25,40 @@ Inserimento Sito Puntuale tramite coordinate
 .. |ico8| image:: ../../../img/ico_info.png
   :height: 25
 
+.. |ico9| image:: ../../../img/mActionAddHtml.png
+  :height: 25
+
+.. _metadata-edit:
+
+Inserimento e modifica dei metadati
+"""""""""""""""""""""""""""""""""""
+
+Lo strumento della toolbar *Modifica metadati di progetto* |ico9| consente di inserire e modificare i metadati del progetto.
+
+Al momento della creazione di un nuovo progetto, il plugin MzSTools richiede di inserire alcuni dati di base, tra i quali il nome ed indirizzo email 
+dell'autore dello studio. Questi dati, insieme ad altri dati ricavati dal progetto, vengono inseriti in una tabella del database in modo conforme a quanto 
+definito negli **Standard MS**.
+
+Tramite lo strumento *Modifica metadati di progetto* è possibile modificare i dati inseriti in fase di creazione del progetto, e inserire  o modificare 
+ulteriori informazioni.
+
+.. image:: ../img/edit_metadata.png
+  :align: center
+
+|
+
+.. _sito-xy:
+
+Inserimento Sito Puntuale tramite coordinate
+""""""""""""""""""""""""""""""""""""""""""""
+
 Lo strumento della toolbar *Aggiungi un Sito Puntuale utilizzando le coordinate XY* |ico6| consente di inserire un nuovo sito puntuale tramite l'indicazione delle coordinate X e Y (nel sistema **WGS84 UTM33N** - EPSG: 32633), senza dover digitalizzare il punto su mappa. 
 
 .. image:: ../img/sito_xy.png
   :width: 450
   :align: center
+
+|
 
 .. _copia-oggetti:
 
