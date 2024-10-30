@@ -7,7 +7,7 @@ SOURCES = mzs_tools.py \
 
 FORMS = tb_info.ui \
         tb_importa_shp.ui \
-        tb_nuovo_progetto.py \
+        tb_nuovo_progetto.ui \
         tb_edit_metadata.ui \
         tb_esporta_shp.ui \
         tb_edit_win.ui \

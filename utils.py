@@ -11,19 +11,20 @@
 import datetime
 import os
 import sqlite3
+from pathlib import Path
 
 from qgis.core import (
+    Qgis,
     QgsLayout,
     QgsLayoutExporter,
-    QgsUnitTypes,
-    QgsLayoutSize,
     QgsLayoutItemMap,
     QgsLayoutItemPage,
-    QgsProject,
+    QgsLayoutSize,
     QgsMessageLog,
-    Qgis,
+    QgsProject,
+    QgsUnitTypes,
 )
-from qgis.PyQt.QtCore import QSize, QRectF
+from qgis.PyQt.QtCore import QRectF, QSize
 
 
 def save_map_image(image_path, zoom_to_layer, canvas):
@@ -129,3 +130,31 @@ def create_basic_sm_metadata(cod_istat, study_author=None, author_email=None):
 
     conn.commit()
     conn.close()
+
+
+def detect_mzs_tools_project():
+    """Detect if the current project is a MzSTools project.
+
+    :return: A dictionary with project info if it's a MzSTools project, None otherwise
+    """
+    project = QgsProject.instance()
+    project_file_name = project.baseName()
+    project_path = Path(project.absolutePath())
+    db_path = project_path / "db" / "indagini.sqlite"
+
+    if project_file_name != "progetto_MS" or not db_path.exists():
+        return None
+
+    # Get project version from file versione.txt
+    version_file = project_path / "progetto" / "versione.txt"
+    if not version_file.exists():
+        return None
+    with version_file.open("r") as f:
+        version = f.read().strip()
+
+    project_info = {
+        "project_path": str(project_path),
+        "db_path": str(db_path),
+        "version": version,
+    }
+    return project_info

@@ -1,4 +1,3 @@
-import datetime
 import os
 import tempfile
 import shutil
@@ -10,15 +9,16 @@ from qgis.PyQt import uic
 from qgis.core import QgsProject, QgsFeatureRequest
 from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QCompleter
 from qgis.PyQt.QtCore import QCoreApplication
+from qgis.utils import iface
+
 from .utils import save_map_image, create_basic_sm_metadata
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_nuovo_progetto.ui"))
 
 
 class NewProject(QDialog, FORM_CLASS):
-    def __init__(self, iface, parent=None):
+    def __init__(self, parent=None):
         """Constructor."""
-        self.iface = iface
         super().__init__(parent)
         self.setupUi(self)
 
@@ -30,7 +30,7 @@ class NewProject(QDialog, FORM_CLASS):
         # check if there is a project already open
         if QgsProject.instance().fileName():
             QMessageBox.warning(
-                self.iface.mainWindow(),
+                iface.mainWindow(),
                 self.tr("WARNING!"),
                 self.tr("Close the current project before creating a new one."),
             )
@@ -60,7 +60,7 @@ class NewProject(QDialog, FORM_CLASS):
                         shutil.rmtree(os.path.join(dir_out, "progetto_MS"))
             else:
                 QMessageBox.warning(
-                    self.iface.mainWindow(), self.tr("WARNING!"), self.tr("The selected directory does not exist!")
+                    iface.mainWindow(), self.tr("WARNING!"), self.tr("The selected directory does not exist!")
                 )
 
     def connect_signals(self):
@@ -169,7 +169,7 @@ class NewProject(QDialog, FORM_CLASS):
         shutil.copyfile(logo_regio_in, logo_regio_out)
 
         mainPath = QgsProject.instance().homePath()
-        canvas = self.iface.mapCanvas()
+        canvas = iface.mapCanvas()
 
         imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
         save_map_image(imageFilename, layer_limiti_comunali, canvas)

@@ -3,21 +3,20 @@ import sqlite3
 import webbrowser
 from datetime import datetime
 
-from qgis.core import QgsProject
 from qgis.gui import QgsDateTimeEdit
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QMessageBox, QTextEdit
+from qgis.utils import iface
 
-from .utils import create_basic_sm_metadata, qgs_log
+from .utils import create_basic_sm_metadata, detect_mzs_tools_project, qgs_log
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_edit_metadata.ui"))
 
 
 class EditMetadataDialog(QDialog, FORM_CLASS):
-    def __init__(self, iface, parent=None):
+    def __init__(self, parent=None):
         """Constructor."""
-        self.iface = iface
         super().__init__(parent)
         self.setupUi(self)
 
@@ -72,18 +71,17 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
 
     def run_edit_metadata_dialog(self):
         """Run the metadata edit tool."""
-
-        self.home_path = QgsProject.instance().homePath()
-        self.db_path = os.path.join(self.home_path, "db", "indagini.sqlite")
-
-        if not (os.path.exists(self.home_path) and os.path.exists(self.db_path)):
-            self.show_error("This tool can only be used with MzSTools projects.")
+        project_info = detect_mzs_tools_project()
+        if not project_info:
+            self.show_error(self.tr("The tool must be used within an opened MS project!"))
             return
+
+        self.db_path = project_info["db_path"]
 
         # get comune_progetto data
         comune_record = self.get_comune_progetto()
         if not comune_record:
-            self.show_error("There was a problem reading comune_progetto from database!")
+            self.show_error(self.tr("There was a problem reading comune_progetto from database!"))
             return
         comune = comune_record[4]
         cod_istat = comune_record[6]
@@ -105,7 +103,9 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
         if count > 1:
             qgs_log("Multiple metadata records found.", level="error")
             self.show_error(
-                "Multiple metadata records found. Please edit the 'metadati' table and remove all but one record."
+                self.tr(
+                    "Multiple metadata records found. Please edit the 'metadati' table and remove all but one record."
+                )
             )
             return
 
@@ -272,7 +272,7 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
                 ),
             )
             conn.commit()
-        QMessageBox.information(self.iface.mainWindow(), self.tr("Success"), self.tr("Metadata updated successfully."))
+        QMessageBox.information(iface.mainWindow(), self.tr("Success"), self.tr("Metadata updated successfully."))
 
     def get_comune_progetto(self):
         try:
@@ -286,7 +286,7 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
         return record
 
     def show_error(self, message):
-        QMessageBox.critical(self.iface.mainWindow(), self.tr("Error"), self.tr(message))
+        QMessageBox.critical(iface.mainWindow(), self.tr("Error"), message)
 
     def tr(self, message):
         return QCoreApplication.translate("EditMetadataDialog", message)

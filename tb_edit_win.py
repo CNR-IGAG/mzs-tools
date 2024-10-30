@@ -1,21 +1,19 @@
 import os
 import webbrowser
 
-from qgis.core import *
-from qgis.gui import *
-from qgis.PyQt import QtGui, uic
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import *
-from qgis.utils import *
+from qgis.core import QgsProject, QgsFeature, QgsGeometry, QgsPointXY, QgsFeatureRequest
+from qgis.PyQt import uic
+from qgis.PyQt.QtCore import QSettings, QCoreApplication, QLocale, QDate
+from qgis.PyQt.QtGui import QDoubleValidator
+from qgis.PyQt.QtWidgets import QDialog, QMessageBox
+from qgis.utils import iface
 
+from .utils import detect_mzs_tools_project
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'tb_edit_win.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_edit_win.ui"))
 
 
 class edit_win(QDialog, FORM_CLASS):
-
     def __init__(self, parent=None):
         """Constructor."""
         super().__init__(parent)
@@ -23,20 +21,21 @@ class edit_win(QDialog, FORM_CLASS):
         self.plugin_dir = os.path.dirname(__file__)
 
     def edita(self):
-
-        if len(QgsProject.instance().mapLayersByName("Siti puntuali")) == 0:
-            QMessageBox.warning(
-                None, self.tr('WARNING!'), self.tr("The tool must be used within an opened MS project!"))
+        if not detect_mzs_tools_project():
+            self.show_error(self.tr("The tool must be used within an opened MS project!"))
             return
 
-        self.help_button.clicked.connect(lambda: webbrowser.open(
-            'https://www.youtube.com/watch?v=4jQ9OacJ71w&t=4s'))
-        
+        self.help_button.clicked.connect(
+            lambda: webbrowser.open(
+                "https://mzs-tools.readthedocs.io/it/latest/plugin/altri_strumenti.html#inserimento-sito-puntuale-tramite-coordinate"
+            )
+        )
+
         codici_mod_identcoord = []
         lista_mod_identcoord = []
         codici_modo_quota = []
         lista_modo_quota = []
-        
+
         self.coord_x.clear()
         self.coord_y.clear()
         self.indirizzo.clear()
@@ -73,26 +72,22 @@ class edit_win(QDialog, FORM_CLASS):
         self.coord_y.textChanged.connect(self.disableButton)
 
         try:
-            self.define_mod(codici_mod_identcoord,
-                            "vw_mod_identcoord", lista_mod_identcoord)
+            self.define_mod(codici_mod_identcoord, "vw_mod_identcoord", lista_mod_identcoord)
             self.update_mod_box(self.mod_identcoord, codici_mod_identcoord)
-            self.define_mod(codici_modo_quota,
-                            "vw_modo_quota", lista_modo_quota)
+            self.define_mod(codici_modo_quota, "vw_modo_quota", lista_modo_quota)
             self.update_mod_box(self.modo_quota, codici_modo_quota)
 
         except IndexError:
             pass
 
         proj = QgsProject.instance()
-        proj.writeEntry('Digitizing', 'SnappingMode', 'all_layers')
-        proj.writeEntryDouble(
-            'Digitizing', 'DefaultSnapTolerance', 20.0)
+        proj.writeEntry("Digitizing", "SnappingMode", "all_layers")
+        proj.writeEntryDouble("Digitizing", "DefaultSnapTolerance", 20.0)
 
         self.show()
         self.adjustSize()
         result = self.exec_()
         if result:
-
             vectorLyr = QgsProject.instance().mapLayersByName("Siti puntuali")[0]
             it = vectorLyr.getFeatures()
             vpr = vectorLyr.dataProvider()
@@ -121,8 +116,7 @@ class edit_win(QDialog, FORM_CLASS):
             attr[idx9] = self.ubicazione_com.text()
             attr[idx10] = self.id_spu.text()
 
-            pnt = QgsGeometry.fromPointXY(
-                QgsPointXY(float(self.coord_x.text()), float(self.coord_y.text())))
+            pnt = QgsGeometry.fromPointXY(QgsPointXY(float(self.coord_x.text()), float(self.coord_y.text())))
             f = QgsFeature()
             f.setGeometry(pnt)
             f.setAttributes(attr)
@@ -133,9 +127,9 @@ class edit_win(QDialog, FORM_CLASS):
         try:
             valore = int(value.text())
             if valore not in list(range(n1, n2)):
-                value.setText('')
-        except:
-            value.setText('')
+                value.setText("")
+        except Exception:
+            value.setText("")
 
     def disableButton(self):
         if self.coord_x.hasAcceptableInput() and self.coord_y.hasAcceptableInput():
@@ -146,8 +140,7 @@ class edit_win(QDialog, FORM_CLASS):
             self.button_box.setEnabled(False)
 
     def define_mod(self, codici_mod, nome, lista):
-        codici_mod_layer = QgsProject.instance().mapLayersByName(nome)[
-            0]
+        codici_mod_layer = QgsProject.instance().mapLayersByName(nome)[0]
 
         for classe in codici_mod_layer.getFeatures(QgsFeatureRequest().setFlags(QgsFeatureRequest.NoGeometry)):
             lista = [classe.attributes()[1], classe.attributes()[2]]
@@ -161,5 +154,8 @@ class edit_win(QDialog, FORM_CLASS):
         for row in codici_mod:
             mod_box.addItem(row[1])
 
+    def show_error(self, message):
+        QMessageBox.critical(iface.mainWindow(), self.tr("Error"), message)
+
     def tr(self, message):
-        return QCoreApplication.translate('edit_win', message)
+        return QCoreApplication.translate("edit_win", message)

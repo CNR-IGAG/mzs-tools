@@ -2,74 +2,480 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="it">
 <context>
-    <name>MzSTools</name>
+    <name>EditMetadataDialog</name>
     <message>
-        <location filename="../mzs_tools.py" line="183"/>
-        <source>&amp;MzS Tools</source>
-        <translation>&amp;MzS Tools</translation>
+        <location filename="../tb_edit_metadata.py" line="275"/>
+        <source>Success</source>
+        <translation>Successo</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="119"/>
-        <source>New project</source>
-        <translation>Nuovo progetto</translation>
+        <location filename="../tb_edit_metadata.py" line="275"/>
+        <source>Metadata updated successfully.</source>
+        <translation>Metadati modificati correttamente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="128"/>
-        <source>Import project folder from geodatabase</source>
-        <translation>Importa dati da un progetto esistente</translation>
+        <location filename="../tb_edit_metadata.py" line="289"/>
+        <source>Error</source>
+        <translation>Errore</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="135"/>
-        <source>Export geodatabase to project folder</source>
-        <translation>Esporta i dati in una strutura di progetto standard</translation>
+        <location filename="../tb_edit_metadata.py" line="76"/>
+        <source>The tool must be used within an opened MS project!</source>
+        <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="144"/>
-        <source>Add feature or record</source>
-        <translation>Aggiungi una feature o un record</translation>
+        <location filename="../tb_edit_metadata.py" line="84"/>
+        <source>There was a problem reading comune_progetto from database!</source>
+        <translation>Si è verificato un problema nella lettura della tabella comune_progetto dal database!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="151"/>
-        <source>Save</source>
-        <translation>Salva</translation>
+        <location filename="../tb_edit_metadata.py" line="105"/>
+        <source>Multiple metadata records found. Please edit the &apos;metadati&apos; table and remove all but one record.</source>
+        <translation>Sono presenti più record nella tabella metadati. Rimuovere manualmente dalla tabella i record non pertinenti.</translation>
+    </message>
+</context>
+<context>
+    <name>EditMetadatiDialog</name>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="20"/>
+        <source>SM Project Metadata</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="158"/>
-        <source>Add &quot;Sito puntuale&quot; using XY coordinates</source>
-        <translation>Aggiungi un Sito Puntuale utilizzando le coordinate XY</translation>
+        <location filename="../tb_edit_metadata.ui" line="30"/>
+        <source>Informazioni sui metadati</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="165"/>
-        <source>Copy &quot;Stab&quot; or &quot;Instab&quot; layer</source>
-        <translation>Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
+        <location filename="../tb_edit_metadata.ui" line="36"/>
+        <source>ID Metadato</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="174"/>
+        <location filename="../tb_edit_metadata.ui" line="53"/>
+        <source>series</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="60"/>
+        <source>Liv. Gerarchico</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="67"/>
+        <source>Data Metadato</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="74"/>
+        <source>Inserire il nome e cognome dell&apos;autore dello studio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="81"/>
+        <source>Resp. Metadato Nome</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="88"/>
+        <source>Email dell&apos;autore dello studio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="95"/>
+        <source>Resp. Metadato Email</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="102"/>
+        <source>Inserire eventuale sito web dell&apos;autore dello studio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="105"/>
+        <source>https://example.com</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="112"/>
+        <source>Resp. Metadato Sito</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="225"/>
+        <source>dd/MM/yyyy</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="126"/>
+        <source>Comune</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="147"/>
+        <source>Informazioni sui dati</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="153"/>
+        <source>SRS Dati</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="163"/>
+        <source>32633</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="170"/>
+        <source>Formato</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="180"/>
+        <source>mapDigital</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="187"/>
+        <source>Data Dato</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="194"/>
+        <source>Descrizione Dato</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="204"/>
+        <source>vector</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="211"/>
+        <source>Tipo Dato</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="218"/>
+        <source>Genealogia</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="238"/>
+        <source>Descrizione dei dati</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="244"/>
+        <source>Studi di Microzonazione Sismica di livello (n) relativi al comune di ... </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="257"/>
+        <source>Descrizione della provenienza e dei processi di elaborazione dei dati</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="267"/>
+        <source>Precisione del dato (errore in metri)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="270"/>
+        <source>0.2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="277"/>
+        <source>Precisione</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="285"/>
+        <source>Proprietà dei dati</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="342"/>
+        <source>Regione (nome)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="298"/>
+        <source>Nome del proprietario </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="308"/>
+        <source>Email del proprietario</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="318"/>
+        <source>Sito web del proprietario</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="328"/>
+        <source>owner</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="335"/>
+        <source>Ruolo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="349"/>
+        <source>Nome del punto di contatto</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="359"/>
+        <source>Email del punto di contatto</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="369"/>
+        <source>Sito web del punto di contatto</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="377"/>
+        <source>Classificazione, vincoli, copertura</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="383"/>
+        <source>Keywords</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="390"/>
+        <source>Microzonazione Sismica, Pericolosità Sismica</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="397"/>
+        <source>Keywords Inspire</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="404"/>
+        <source>Zone a rischio naturale, Geologia</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="411"/>
+        <source>Limitazione</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="421"/>
+        <source>nessuna limitazione</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="428"/>
+        <source>Vincoli Accesso</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="472"/>
+        <source>nessuno</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="445"/>
+        <source>Vincoli Fruibilità</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="462"/>
+        <source>Vincoli Sicurezza</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="479"/>
+        <source>Scala</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="486"/>
+        <source>Scala nominale (solo denominatore, 10000 o scale più grandi come 5000)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="489"/>
+        <source>5000</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="496"/>
+        <source>Categoria ISO</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="506"/>
+        <source>geoscientificInformation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="513"/>
+        <source>Estensione Ovest</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="555"/>
+        <source>L&apos;estensione geografica è calcolata automaticamente, modificare solo in caso di necessità</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="527"/>
+        <source>Estensione Est</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="541"/>
+        <source>Estensione Sud</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="562"/>
+        <source>Estensione Nord</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="570"/>
+        <source>Distribuzione</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="576"/>
+        <source>Formato Dati</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="586"/>
+        <source>Distributore Dato Nome</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="596"/>
+        <source>Distributore Dato Telefono</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="606"/>
+        <source>Distributore Dato Email</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="616"/>
+        <source>Distributore Dato Sito</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="626"/>
+        <source>URL Accesso Dato</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="636"/>
+        <source>Funzione Accesso Dato</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="651"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#e01b24;&quot;&gt;Attenzione: questi campi dovranno essere compilati dal soggetto distributore dei dati stessi (ad es. DPC, Regione, ecc.)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_metadata.ui" line="773"/>
         <source>Help</source>
         <translation>Aiuto</translation>
     </message>
 </context>
 <context>
+    <name>MzSTools</name>
+    <message>
+        <location filename="../mzs_tools.py" line="191"/>
+        <source>&amp;MzS Tools</source>
+        <translation>&amp;MzS Tools</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="120"/>
+        <source>New project</source>
+        <translation>Nuovo progetto</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="136"/>
+        <source>Import project folder from geodatabase</source>
+        <translation>Importa dati da un progetto esistente</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="143"/>
+        <source>Export geodatabase to project folder</source>
+        <translation>Esporta i dati in una strutura di progetto standard</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="152"/>
+        <source>Add feature or record</source>
+        <translation>Aggiungi una feature o un record</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="159"/>
+        <source>Save</source>
+        <translation>Salva</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="166"/>
+        <source>Add &quot;Sito puntuale&quot; using XY coordinates</source>
+        <translation>Aggiungi un Sito Puntuale utilizzando le coordinate XY</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="173"/>
+        <source>Copy &quot;Stab&quot; or &quot;Instab&quot; layer</source>
+        <translation>Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="182"/>
+        <source>Help</source>
+        <translation>Aiuto</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="127"/>
+        <source>Edit project metadata</source>
+        <translation>Modifica i metadati del progetto</translation>
+    </message>
+</context>
+<context>
     <name>NewProject</name>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="53"/>
+        <location filename="../tb_nuovo_progetto.py" line="62"/>
         <source>WARNING!</source>
         <translation>ATTENZIONE!</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="53"/>
+        <location filename="../tb_nuovo_progetto.py" line="62"/>
         <source>The selected directory does not exist!</source>
         <translation>La cartella selezionata non esiste!</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="121"/>
+        <location filename="../tb_nuovo_progetto.py" line="130"/>
         <source>Notice</source>
         <translation>Avviso</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="121"/>
+        <location filename="../tb_nuovo_progetto.py" line="130"/>
         <source>The project has been created successfully.</source>
         <translation>Il progetto è stato creato correttamente.</translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.py" line="32"/>
+        <source>Close the current project before creating a new one.</source>
+        <translation>Chiudi il progetto corrente prima di crearne uno nuovo.</translation>
     </message>
 </context>
 <context>
@@ -260,12 +666,17 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
     <message>
         <location filename="../tb_edit_win.py" line="28"/>
         <source>WARNING!</source>
-        <translation>ATTENZIONE!</translation>
+        <translation type="obsolete">ATTENZIONE!</translation>
     </message>
     <message>
-        <location filename="../tb_edit_win.py" line="28"/>
+        <location filename="../tb_edit_win.py" line="25"/>
         <source>The tool must be used within an opened MS project!</source>
         <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
+    </message>
+    <message>
+        <location filename="../tb_edit_win.py" line="158"/>
+        <source>Error</source>
+        <translation>Errore</translation>
     </message>
 </context>
 <context>
@@ -470,7 +881,7 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
         <translation type="obsolete">&lt;b&gt;Dati del professionista incaricato&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="50"/>
+        <location filename="../tb_nuovo_progetto.ui" line="44"/>
         <source>Municipality</source>
         <translation>Comune</translation>
     </message>
@@ -485,7 +896,7 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
         <translation type="obsolete">&lt;b&gt;Punto di Contatto&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="182"/>
+        <location filename="../tb_nuovo_progetto.ui" line="186"/>
         <source>Email</source>
         <translation>Email</translation>
     </message>
@@ -495,7 +906,7 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
         <translation type="obsolete">Scala di riferimento</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="147"/>
+        <location filename="../tb_nuovo_progetto.ui" line="145"/>
         <source>Name </source>
         <translation>Nome </translation>
     </message>
@@ -520,17 +931,12 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
         <translation type="obsolete">Precisione della mappa</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="204"/>
+        <location filename="../tb_nuovo_progetto.ui" line="208"/>
         <source>Output directory</source>
         <translation>Cartella di destinazione</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="231"/>
-        <source>...</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../tb_nuovo_progetto.ui" line="335"/>
+        <location filename="../tb_nuovo_progetto.ui" line="361"/>
         <source>Help</source>
         <translation>Aiuto</translation>
     </message>
@@ -550,34 +956,39 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
         <translation type="obsolete">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;La storia del set di dati e il suo ciclo di vita, dalla rilevazione e l&apos;acquisizione mediante compilazione e derivazione fino alla forma attuale, conformemente alla norma EN ISO 19101&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="63"/>
+        <location filename="../tb_nuovo_progetto.ui" line="69"/>
         <source>Start typing the name of the municipality and select a result from the list</source>
         <translation>Inizia a digitare il nome del comune oggetto di studio e seleziona un risultato dalla lista</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="83"/>
+        <location filename="../tb_nuovo_progetto.ui" line="56"/>
         <source>ISTAT code</source>
         <translation>Codice ISTAT</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="93"/>
+        <location filename="../tb_nuovo_progetto.ui" line="98"/>
         <source>ISTAT code is automatically filled when selecting a municipality</source>
         <translation>Il codice ISTAT viene automaticamente inserito selezionando un comune</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="106"/>
+        <location filename="../tb_nuovo_progetto.ui" line="82"/>
         <source>Municipality name</source>
         <translation>Nome del Comune</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="122"/>
+        <location filename="../tb_nuovo_progetto.ui" line="114"/>
         <source>Study author</source>
         <translation>Autore dello studio</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.ui" line="134"/>
+        <location filename="../tb_nuovo_progetto.ui" line="132"/>
         <source>Nome Cognome</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../tb_nuovo_progetto.ui" line="241"/>
+        <source>...</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

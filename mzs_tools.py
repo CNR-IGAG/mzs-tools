@@ -42,8 +42,8 @@ class MzSTools:
 
         # self.wait_dlg = wait()
         self.project_update_dlg = aggiorna_progetto()
-        self.new_project_dlg = NewProject(self.iface)
-        self.edit_metadata_dlg = EditMetadataDialog(self.iface)
+        self.new_project_dlg = NewProject()
+        self.edit_metadata_dlg = EditMetadataDialog()
         self.info_dlg = info()
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
