@@ -3,6 +3,7 @@ import os
 import shutil
 import sqlite3
 import zipfile
+from pathlib import Path
 
 from qgis.core import Qgis, QgsMessageLog, QgsProject
 from qgis.PyQt import uic
@@ -23,14 +24,19 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         self.plugin_dir = os.path.dirname(__file__)
         self.sql_scripts_dir = os.path.join(self.plugin_dir, "data", "sql_scripts")
 
-    def aggiorna(self, proj_path, dir_output, nome, proj_vers, new_proj_vers):
+    def aggiorna(self, proj_path, proj_vers):
         self.show()
         self.adjustSize()
         result = self.exec_()
         if result == QDialog.Accepted:
             pacchetto = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
 
-            name_output = nome + "_backup_v" + proj_vers + "_" + datetime.datetime.now().strftime("%Y_%m_%d_%H_%M")
+            output_path = Path(proj_path).parent
+            project_folder_name = Path(proj_path).name
+
+            name_output = (
+                f"{project_folder_name}_backup_v{proj_vers}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}"
+            )
 
             sql_scripts = []
             if proj_vers < "0.8":
@@ -45,7 +51,7 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                 sql_scripts.append("query_v192.sql")
 
             try:
-                shutil.copytree(proj_path, os.path.join(dir_output, name_output))
+                shutil.copytree(proj_path, os.path.join(str(output_path), name_output))
 
                 path_db = os.path.join(proj_path, "db", "indagini.sqlite")
 

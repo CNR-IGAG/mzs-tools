@@ -1,4 +1,3 @@
-# coding=utf-8
 """ "Utilities for MzS Tools plugin
 
 .. note:: This program is free software; you can redistribute it and/or modify
@@ -8,10 +7,12 @@
 
 """
 
+import configparser
 import datetime
 import os
 import sqlite3
 from pathlib import Path
+from typing import Dict, Optional
 
 from qgis.core import (
     Qgis,
@@ -132,7 +133,17 @@ def create_basic_sm_metadata(cod_istat, study_author=None, author_email=None):
     conn.close()
 
 
-def detect_mzs_tools_project():
+def plugin_version_from_metadata_file() -> Optional[str]:
+    """Read the version from the metadata.txt file."""
+    metadata_path = Path(__file__).parent / "metadata.txt"
+    config = configparser.ConfigParser()
+    config.read(metadata_path)
+    if "general" in config and "version" in config["general"]:
+        return config["general"]["version"]
+    return None
+
+
+def detect_mzs_tools_project() -> Optional[Dict[str, str]]:
     """Detect if the current project is a MzSTools project.
 
     :return: A dictionary with project info if it's a MzSTools project, None otherwise
@@ -141,20 +152,16 @@ def detect_mzs_tools_project():
     project_file_name = project.baseName()
     project_path = Path(project.absolutePath())
     db_path = project_path / "db" / "indagini.sqlite"
+    version_file_path = project_path / "progetto" / "versione.txt"
 
-    if project_file_name != "progetto_MS" or not db_path.exists():
+    if project_file_name != "progetto_MS" or not db_path.exists() or not version_file_path.exists():
         return None
 
-    # Get project version from file versione.txt
-    version_file = project_path / "progetto" / "versione.txt"
-    if not version_file.exists():
-        return None
-    with version_file.open("r") as f:
+    with version_file_path.open("r") as f:
         version = f.read().strip()
 
-    project_info = {
+    return {
         "project_path": str(project_path),
         "db_path": str(db_path),
         "version": version,
     }
-    return project_info

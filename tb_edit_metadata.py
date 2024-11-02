@@ -15,6 +15,19 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_edit_
 
 
 class EditMetadataDialog(QDialog, FORM_CLASS):
+    """
+    EditMetadataDialog is a QDialog that provides a user interface for editing metadata for
+    the current MzS Tools QGIS project.
+    Metadata is stored as a single record in the 'metadati' table of the SQLite database.
+    If no record is found, a new record is created with the correct id. If multiple records are found,
+    the user is prompted to fix the issue.
+    Basic metadata is filled when creating a new project, but it can be edited at any time.
+    Some fields are required and highlighted with a red border when not filled; the 'Save' button is
+    enabled only when all required fields are filled.
+    Other fields are not editable and are filled automatically by the plugin with the values defined
+    in the 'Standard MS'.
+    """
+
     def __init__(self, parent=None):
         """Constructor."""
         super().__init__(parent)
@@ -64,9 +77,9 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
         for field in self.required_fields:
             if isinstance(field, QLineEdit) and field.isEnabled():
                 field.textChanged.connect(self.validate_input)
-            if isinstance(field, QTextEdit):
+            elif isinstance(field, QTextEdit):
                 field.textChanged.connect(self.validate_input)
-            if isinstance(field, QgsDateTimeEdit):
+            elif isinstance(field, QgsDateTimeEdit):
                 field.valueChanged.connect(self.validate_input)
 
     def run_edit_metadata_dialog(self):

@@ -1,5 +1,20 @@
 from qgis.PyQt.QtCore import QVariant
 
+NO_OVERLAPS_LAYER_GROUPS = [
+    ["Zone instabili liv 1", "Zone stabili liv 1"],
+    ["Zone instabili liv 2", "Zone stabili liv 2"],
+    ["Zone instabili liv 3", "Zone stabili liv 3"],
+]
+
+""" 
+MzS Tools QGIS layer / standard MS shapefile mapping, used in import/export functions.
+
+key: layer name
+value: list of 3 elements
+    1. standard project folder containing the corresponding shapefile
+    2. shapefile name
+    3. shapefile id field
+"""
 POSIZIONE = {
     "Comune del progetto": ["BasiDati", "Comune", "id_com"],
     "Elementi lineari": ["GeoTec", "Elineari", "ID_el"],

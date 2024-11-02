@@ -6,6 +6,7 @@ from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.utils import iface
 
+from .utils import plugin_version_from_metadata_file
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_info.ui"))
 
@@ -30,9 +31,8 @@ class info(QDialog, FORM_CLASS):
             version_installed = plugin_metadata["version_installed"]
             version_available = plugin_metadata["version_available"]
         else:
-            with open(os.path.join(os.path.dirname(__file__), "versione.txt")) as version_file:
-                version_installed = version_file.readline().strip()
-                version_available = version_installed
+            version_installed = plugin_version_from_metadata_file() or ""
+            version_available = version_installed
 
         label_text = self.label.text().replace("[[]]", version_installed)
         self.label.setText(label_text)
