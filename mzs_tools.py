@@ -5,6 +5,7 @@ from itertools import chain
 from pathlib import Path
 
 from qgis.core import (
+    Qgis,
     QgsApplication,
     QgsProject,
     QgsSettings,
@@ -13,9 +14,9 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, qApp
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, qApp
 
-from .constants import NO_OVERLAPS_LAYER_GROUPS
+from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .tb_aggiorna_progetto import aggiorna_progetto
 from .tb_copia_ms import copia_ms
 from .tb_edit_metadata import EditMetadataDialog
@@ -219,6 +220,8 @@ class MzSTools:
         - check if the project version is older than the plugin version and start the update process
         - connect editing signals to automatically set cross-layer no-overlap rules when needed and
           revert to the original config when editing stops
+        - connect to layer nameChanged signal to warn the user when renaming required layers
+        - warn the user if the QGIS version is less than SUGGESTED_QGIS_VERSION defined in constants.py
         """
         project_info = detect_mzs_tools_project()
         if not project_info:
@@ -255,6 +258,33 @@ class MzSTools:
 
         self.connect_editing_signals()
 
+        # connect to layer nameChanged signal to warn the user when renaming required layers
+        # TODO: find a better way to protect required layers and stop relying on layer names
+        # use layer IDs and/or the underlying database table instead
+        for layer in QgsProject.instance().requiredLayers():
+            layer.nameChanged.connect(self.warning_layer_renamed)
+
+        # get qgis version, warn the user if it's less than SUGGESTED_QGIS_VERSION
+        qgis_version = Qgis.version()
+        if qgis_version and qgis_version < SUGGESTED_QGIS_VERSION:
+            QMessageBox.warning(
+                None,
+                self.tr("Warning"),
+                self.tr(
+                    "MzS Tools is designed to work with QGIS 3.26 or later. Please consider upgrading QGIS to the latest LTR version to avoid possible issues."
+                ),
+            )
+
+    def warning_layer_renamed(self):
+        """Function to handle the nameChanged signal for required layers."""
+        QMessageBox.warning(
+            None,
+            self.tr("Warning"),
+            self.tr(
+                "It is not possible at the moment to rename a required MzS Tools layer! Please revert the name to avoid possible issues."
+            ),
+        )
+
     def connect_editing_signals(self):
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
         for layer in QgsProject.instance().mapLayers().values():
@@ -287,59 +317,69 @@ class MzSTools:
         self.proj_snapping_config = proj.snappingConfig()
         self.proj_avoid_intersections_layers = proj.avoidIntersectionsLayers()
         self.topological_editing = proj.topologicalEditing()
+        self.avoid_intersections_mode = proj.avoidIntersectionsMode()
 
-        snapping_config = QgsSnappingConfig(self.proj_snapping_config)
+        # just fail gracefully if something goes wrong
+        try:
+            snapping_config = QgsSnappingConfig(self.proj_snapping_config)
 
-        # snapping_config.clearIndividualLayerSettings()
-        snapping_config.setEnabled(True)
-        snapping_config.setMode(QgsSnappingConfig.AdvancedConfiguration)
-        snapping_config.setIntersectionSnapping(True)
-        snapping_config.setTolerance(20)
+            # snapping_config.clearIndividualLayerSettings()
+            snapping_config.setEnabled(True)
+            snapping_config.setMode(QgsSnappingConfig.AdvancedConfiguration)
+            snapping_config.setIntersectionSnapping(True)
+            snapping_config.setTolerance(20)
 
-        """
-        TODO: deprecation warning when using IndividualLayerSettings constructor
-        This works in QGIS but not here:
+            """
+            TODO: deprecation warning when using IndividualLayerSettings constructor
+            This works in QGIS but not here:
 
-        proj = QgsProject.instance()
-        proj_snapping_config = proj.snappingConfig()
+            proj = QgsProject.instance()
+            proj_snapping_config = proj.snappingConfig()
 
-        layer = iface.activeLayer()
+            layer = iface.activeLayer()
 
-        layer_settings = proj_snapping_config.individualLayerSettings(layer)
-        layer_settings.setEnabled(True)
-        layer_settings.setType(QgsSnappingConfig.Vertex)
-        layer_settings.setTolerance(20)
-        layer_settings.setUnits(QgsTolerance.ProjectUnits)
+            layer_settings = proj_snapping_config.individualLayerSettings(layer)
+            layer_settings.setEnabled(True)
+            layer_settings.setType(QgsSnappingConfig.Vertex)
+            layer_settings.setTolerance(20)
+            layer_settings.setUnits(QgsTolerance.ProjectUnits)
 
-        proj_snapping_config.setIndividualLayerSettings(layer, layer_settings)
-        #proj_snapping_config.addLayers([layer])
+            proj_snapping_config.setIndividualLayerSettings(layer, layer_settings)
+            #proj_snapping_config.addLayers([layer])
 
-        proj.setSnappingConfig(proj_snapping_config)
-        """
-        layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-            True,
-            QgsSnappingConfig.VertexFlag,
-            20,
-            QgsTolerance.ProjectUnits,
-        )
+            proj.setSnappingConfig(proj_snapping_config)
+            """
+            layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+                True,
+                QgsSnappingConfig.VertexFlag,
+                20,
+                QgsTolerance.ProjectUnits,
+            )
 
-        # set advanced overlap config for the layer and its corresponding layer
-        for layer_group in NO_OVERLAPS_LAYER_GROUPS:
-            if layer.name() in layer_group:
-                layers = [proj.mapLayersByName(layer_name)[0] for layer_name in layer_group]
-                for layer in layers:
-                    snapping_config.setIndividualLayerSettings(layer, layer_settings)
-                proj.setAvoidIntersectionsLayers(layers)
+            # set advanced overlap config for the layer and other layers in the same group
+            for layer_group in NO_OVERLAPS_LAYER_GROUPS:
+                if layer.name() in layer_group:
+                    layers = [proj.mapLayersByName(layer_name)[0] for layer_name in layer_group]
+                    for layer in layers:
+                        snapping_config.setIndividualLayerSettings(layer, layer_settings)
+                    proj.setAvoidIntersectionsLayers(layers)
 
-        # enable topological editing
-        proj.setTopologicalEditing(True)
+            # actually set "follow advanced config" for overlaps
+            proj.setAvoidIntersectionsMode(QgsProject.AvoidIntersectionsMode.AvoidIntersectionsLayers)
 
-        # apply the new config
-        proj.setSnappingConfig(snapping_config)
+            # enable topological editing
+            proj.setTopologicalEditing(True)
+
+            # apply the new config
+            proj.setSnappingConfig(snapping_config)
+
+        except Exception as e:
+            qgs_log(f"Error setting advanced editing config: {e}", level="error")
 
     def reset_editing_config(self):
         proj = QgsProject.instance()
         proj.setSnappingConfig(self.proj_snapping_config)
+        proj.setAvoidIntersectionsMode(self.avoid_intersections_mode)
         proj.setAvoidIntersectionsLayers(self.proj_avoid_intersections_layers)
         proj.setTopologicalEditing(self.topological_editing)
 

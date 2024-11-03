@@ -159,6 +159,7 @@ class NewProject(QDialog, FORM_CLASS):
             attrs = feat.attributes()
             codice_regio = attrs[1]
             nome = attrs[4]
+            provincia = attrs[6]
             regione = attrs[7]
 
         layer_limiti_comunali.removeSelection()
@@ -191,6 +192,10 @@ class NewProject(QDialog, FORM_CLASS):
             map_item_4.refreshPicture()
             map_item_5 = layout.itemById("mappa_1")
             map_item_5.refreshPicture()
+
+        # set project title
+        project_title = f"MzS Tools - Comune di {nome} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
+        project.setTitle(project_title)
 
     def clear_fields(self):
         self.comuneField.clear()

@@ -9,7 +9,13 @@ from qgis.gui import *
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
 from qgis.utils import *
-from ..constants import *
+from ..constants import (
+    LAYER_DB_TAB,
+    LISTA_TAB,
+    POSIZIONE,
+    SITO_PUNTUALE_INS_TRIG_QUERIES,
+    SITO_LINEARE_INS_TRIG_QUERIES,
+)
 from .abstract_worker import AbstractWorker, UserAbortedNotification
 
 
@@ -52,7 +58,9 @@ class ImportWorker(AbstractWorker):
         try:
             cur = conn.cursor()
 
-            res = cur.execute(f"SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'").fetchone()
+            res = cur.execute(
+                f"SELECT name, tbl_name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'"
+            ).fetchone()
             if res:
                 (self.current_trig_name, self.current_trig_table, self.current_trig_sql) = res
 
@@ -142,7 +150,6 @@ class ImportWorker(AbstractWorker):
         # step 2 (inserting features)
         ###############################################
         for chiave, valore in list(POSIZIONE.items()):
-
             if not os.path.exists(os.path.join(self.in_dir, valore[0], valore[1] + ".shp")):
                 self.set_log_message.emit("'" + chiave + "' shapefile does not exist!\n")
                 continue
@@ -254,10 +261,14 @@ class ImportWorker(AbstractWorker):
                 self.set_log_message.emit("'Parametri_Lineari' table has been copied!\n")
 
         if self.check_sito_p is False:
-            self.set_log_message.emit("'Ind_pu' layer and/or 'Sito_Puntuale' table are not present! The correlated surveys and parameters tables will not be copied!\n\n")
+            self.set_log_message.emit(
+                "'Ind_pu' layer and/or 'Sito_Puntuale' table are not present! The correlated surveys and parameters tables will not be copied!\n\n"
+            )
 
         if self.check_sito_l is False:
-            self.set_log_message.emit("'Ind_ln' layer and/or 'Sito_Lineare' table are not present! The correlated surveys and parameters tables will not be copied!\n\n")
+            self.set_log_message.emit(
+                "'Ind_ln' layer and/or 'Sito_Lineare' table are not present! The correlated surveys and parameters tables will not be copied!\n\n"
+            )
 
         if self.check_sito_p is True and self.check_sito_l is True:
             tab_mancanti = list(set(LISTA_TAB) - set(z_list))
@@ -276,9 +287,21 @@ class ImportWorker(AbstractWorker):
         self.set_message.emit("Adding miscellaneous files...")
 
         dizio_folder = {
-            "Plot": ["OLD_Plot", os.path.join(self.proj_abs_path, "Allegati", "Plot"), os.path.join(self.in_dir, "Plot")],
-            "Documenti": ["OLD_Documenti", os.path.join(self.proj_abs_path, "Allegati", "Documenti"), os.path.join(self.in_dir, "Indagini", "Documenti")],
-            "Spettri": ["OLD_Spettri", os.path.join(self.proj_abs_path, "Allegati", "Spettri"), os.path.join(self.in_dir, "MS23", "Spettri")],
+            "Plot": [
+                "OLD_Plot",
+                os.path.join(self.proj_abs_path, "Allegati", "Plot"),
+                os.path.join(self.in_dir, "Plot"),
+            ],
+            "Documenti": [
+                "OLD_Documenti",
+                os.path.join(self.proj_abs_path, "Allegati", "Documenti"),
+                os.path.join(self.in_dir, "Indagini", "Documenti"),
+            ],
+            "Spettri": [
+                "OLD_Spettri",
+                os.path.join(self.proj_abs_path, "Allegati", "Spettri"),
+                os.path.join(self.in_dir, "MS23", "Spettri"),
+            ],
         }
 
         for chiave_fold, valore_fold in list(dizio_folder.items()):
@@ -291,8 +314,17 @@ class ImportWorker(AbstractWorker):
                     shutil.rmtree(_folder)
                     shutil.copytree(valore_fold[2], valore_fold[1])
                 else:
-                    QgsMessageLog.logMessage("ELSE _folder: %s -> %s" % (os.path.join(self.in_dir, chiave_fold), os.path.join(self.proj_abs_path, "Allegati", chiave_fold)))
-                    shutil.copytree(os.path.join(self.in_dir, chiave_fold), os.path.join(self.proj_abs_path, "Allegati", chiave_fold))
+                    QgsMessageLog.logMessage(
+                        "ELSE _folder: %s -> %s"
+                        % (
+                            os.path.join(self.in_dir, chiave_fold),
+                            os.path.join(self.proj_abs_path, "Allegati", chiave_fold),
+                        )
+                    )
+                    shutil.copytree(
+                        os.path.join(self.in_dir, chiave_fold),
+                        os.path.join(self.proj_abs_path, "Allegati", chiave_fold),
+                    )
                 self.set_log_message.emit("\nFolder '" + chiave_fold + " has been copied!\n")
             else:
                 self.set_log_message.emit("\nFolder '" + chiave_fold + "' does not exist!")
@@ -333,7 +365,6 @@ class ImportWorker(AbstractWorker):
         return commonFields
 
     def attribute_fill(self, qgsFeature, targetLayer, commonFields):
-
         featureFields = {}
 
         for field in qgsFeature.fields().toList():
@@ -360,7 +391,6 @@ class ImportWorker(AbstractWorker):
         return qgsFeature
 
     def calc_layer(self, sourceFeatures, destLYR, commonFields):
-
         featureList = []
         for feature in sourceFeatures:
             geom = feature.geometry()
@@ -370,7 +400,9 @@ class ImportWorker(AbstractWorker):
                     modifiedFeature = self.attribute_fill(feature, destLYR, commonFields)
                     featureList.append(modifiedFeature)
                 else:
-                    self.set_log_message.emit("  Geometry error (feature %d will not be copied)\n" % (feature.id() + 1))
+                    self.set_log_message.emit(
+                        "  Geometry error (feature %d will not be copied)\n" % (feature.id() + 1)
+                    )
 
         current_feature = 1
 
@@ -388,7 +420,9 @@ class ImportWorker(AbstractWorker):
         with edit(destLYR):
             for f in featureList:
                 self.set_message.emit(f"{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
-                self.set_log_message.emit(f"\n{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
+                self.set_log_message.emit(
+                    f"\n{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}"
+                )
                 # data_provider.addFeatures([f])
 
                 destLYR.addFeature(f)
@@ -403,7 +437,6 @@ class ImportWorker(AbstractWorker):
             raise UserAbortedNotification("USER Killed")
 
     def insert_siti(self, vector_layer, txt_table, sito_type):
-
         if sito_type == "puntuale":
             id_field_name = "ID_SPU"
             tab_name = "sito_puntuale"
@@ -431,7 +464,9 @@ class ImportWorker(AbstractWorker):
                 table.seek(0)
                 next(dr)
                 for i in dr:
-                    self.set_message.emit("Sito %s: inserting feature %s/%s" % (sito_type, str(current_feature), str(row_num)))
+                    self.set_message.emit(
+                        "Sito %s: inserting feature %s/%s" % (sito_type, str(current_feature), str(row_num))
+                    )
 
                     # transform empty strings to None to circumvent db CHECKs
                     for k in i:
@@ -442,7 +477,9 @@ class ImportWorker(AbstractWorker):
                     for key in list(i.keys()):
                         dict_sito[key] = i[key]
                         if key == id_field_name:
-                            exp = "\"{field_name}\" = '{field_value}'".format(field_name=id_field_name, field_value=dict_sito[id_field_name])
+                            exp = "\"{field_name}\" = '{field_value}'".format(
+                                field_name=id_field_name, field_value=dict_sito[id_field_name]
+                            )
                             req = QgsFeatureRequest(QgsExpression(exp))
                             feature = next(vector_layer.getFeatures(req))
                             geometry = feature.geometry()
@@ -452,17 +489,29 @@ class ImportWorker(AbstractWorker):
                                 parts = geometry.asGeometryCollection()
                                 geometry = parts[0]
                                 if len(parts) > 1:
-                                    self.set_log_message.emit("Geometry from layer %s is multipart with more than one part: taking first part only - %s" % (vector_layer.name(), geom))
+                                    self.set_log_message.emit(
+                                        "Geometry from layer %s is multipart with more than one part: taking first part only - %s"
+                                        % (vector_layer.name(), geom)
+                                    )
 
                             geom = geometry.asWkt()
                             if not geometry.isGeosValid():
-                                self.set_log_message.emit("Wrong geometry from layer %s, expression: %s: %s" % (vector_layer.name(), exp, geom))
+                                self.set_log_message.emit(
+                                    "Wrong geometry from layer %s, expression: %s: %s"
+                                    % (vector_layer.name(), exp, geom)
+                                )
                             if geometry.isNull():
-                                self.set_log_message.emit("Null geometry from layer %s, expression: %s: %s" % (vector_layer.name(), exp, geom))
+                                self.set_log_message.emit(
+                                    "Null geometry from layer %s, expression: %s: %s"
+                                    % (vector_layer.name(), exp, geom)
+                                )
 
                     if sito_type == "puntuale":
                         try:
-                            cur.execute("INSERT INTO sito_puntuale (id_spu, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SPU"], geom))
+                            cur.execute(
+                                "INSERT INTO sito_puntuale (id_spu, geom) VALUES (?, GeomFromText(?, 32633))",
+                                (dict_sito["ID_SPU"], geom),
+                            )
                             lastid = cur.lastrowid
                             cur.execute(
                                 """UPDATE sito_puntuale SET pkuid = ?, indirizzo = ?, mod_identcoord = ?,
@@ -481,10 +530,16 @@ class ImportWorker(AbstractWorker):
                                 ),
                             )
                         except Exception as ex:
-                            self.set_log_message.emit("Error inserting geometry in sito_puntuale %s: %s - %s" % (dict_sito["ID_SPU"], geom, str(ex)))
+                            self.set_log_message.emit(
+                                "Error inserting geometry in sito_puntuale %s: %s - %s"
+                                % (dict_sito["ID_SPU"], geom, str(ex))
+                            )
                     elif sito_type == "lineare":
                         try:
-                            cur.execute("INSERT INTO sito_lineare (id_sln, geom) VALUES (?, GeomFromText(?, 32633))", (dict_sito["ID_SLN"], geom))
+                            cur.execute(
+                                "INSERT INTO sito_lineare (id_sln, geom) VALUES (?, GeomFromText(?, 32633))",
+                                (dict_sito["ID_SLN"], geom),
+                            )
                             lastid = cur.lastrowid
                             cur.execute(
                                 """UPDATE sito_lineare SET pkuid = ?, mod_identcoord = ?,
@@ -502,7 +557,10 @@ class ImportWorker(AbstractWorker):
                                 ),
                             )
                         except Exception as ex:
-                            self.set_log_message.emit("Error inserting geometry in sito_lineare %s: %s - %s" % (dict_sito["ID_SLN"], geom, str(ex)))
+                            self.set_log_message.emit(
+                                "Error inserting geometry in sito_lineare %s: %s - %s"
+                                % (dict_sito["ID_SLN"], geom, str(ex))
+                            )
 
                     current_feature = current_feature + 1
                     if self.killed or (TESTING and current_feature > 10):
@@ -519,7 +577,6 @@ class ImportWorker(AbstractWorker):
             conn.close()
 
     def insert_table(self, db_table, txt_table):
-
         # indagini_puntuali
         insert_indpu = """
             INSERT INTO indagini_puntuali
@@ -581,8 +638,9 @@ class ImportWorker(AbstractWorker):
                 table.seek(0)
                 next(dr)
                 for i in dr:
-
-                    self.set_message.emit("Table %s: inserting record %s/%s" % (db_table, str(current_record), str(row_num)))
+                    self.set_message.emit(
+                        "Table %s: inserting record %s/%s" % (db_table, str(current_record), str(row_num))
+                    )
 
                     # transform empty strings to None to circumvent db CHECKs
                     for k in i:
@@ -636,7 +694,14 @@ class ImportWorker(AbstractWorker):
                         select_parent_sql = select_id_indpu
                         update_sql = update_parpu_fkey
                     elif db_table == "curve":
-                        to_db = (i["pkey_curve"], i["pkey_parpu"], i["cond_curve"], i["varx"], i["vary"], i["pkey_parpu"])
+                        to_db = (
+                            i["pkey_curve"],
+                            i["pkey_parpu"],
+                            i["cond_curve"],
+                            i["varx"],
+                            i["vary"],
+                            i["pkey_parpu"],
+                        )
                         fkey = i["pkey_parpu"]
                         insert_sql = insert_curve
                         select_parent_sql = select_id_parpu
@@ -691,9 +756,15 @@ class ImportWorker(AbstractWorker):
                         cur.execute(update_sql, (id_parent, id_last_insert))
                         cur.execute("commit")
                     except Exception as ex:
-                        self.set_log_message.emit(f"\n{'!'*80}\nERROR inserting or updating record in {db_table}: {ex}\n Data: {to_db}\n")
-                        self.set_log_message.emit("\nThis record, along with possible related data (eg. parametri or curve), WILL NOT be imported\n")
-                        self.set_log_message.emit(f"\nCheck the original Microsoft Access database for errors before importing data!\n{'!'*80}\n")
+                        self.set_log_message.emit(
+                            f"\n{'!'*80}\nERROR inserting or updating record in {db_table}: {ex}\n Data: {to_db}\n"
+                        )
+                        self.set_log_message.emit(
+                            "\nThis record, along with possible related data (eg. parametri or curve), WILL NOT be imported\n"
+                        )
+                        self.set_log_message.emit(
+                            f"\nCheck the original Microsoft Access database for errors before importing data!\n{'!'*80}\n"
+                        )
                         cur.execute("rollback")
 
                     current_record = current_record + 1
@@ -706,7 +777,6 @@ class ImportWorker(AbstractWorker):
             conn.close()
 
     def calc_join(self, orig_tab, link_tab, temp_field, link_field, orig_field):
-
         path_db = os.path.join(self.proj_abs_path, "db", "indagini.sqlite")
 
         joinObject = QgsVectorJoinInfo()
@@ -735,7 +805,9 @@ class ImportWorker(AbstractWorker):
                     pass
                 else:
                     nome_tab = LAYER_DB_TAB[orig_tab.name()]
-                    cur.execute("UPDATE ? SET ?  = ? WHERE pkuid = ?", (nome_tab, orig_field, value, str(feature["pkuid"])))
+                    cur.execute(
+                        "UPDATE ? SET ?  = ? WHERE pkuid = ?", (nome_tab, orig_field, value, str(feature["pkuid"]))
+                    )
 
             conn.commit()
         except Exception as ex:
