@@ -40,6 +40,7 @@ Le tabelle da esportare da “CdI_Tabelle.mdb” sono:
 * “Indagini_Puntuali”;
 * “Indagini_Lineari”;
 * “Parametri_Puntuali”;
+* “Parametri_Lineari”;
 * “Curve”.
 
 .. image:: ../img/tabelle_access.png

@@ -377,11 +377,14 @@ class MzSTools:
             qgs_log(f"Error setting advanced editing config: {e}", level="error")
 
     def reset_editing_config(self):
-        proj = QgsProject.instance()
-        proj.setSnappingConfig(self.proj_snapping_config)
-        proj.setAvoidIntersectionsMode(self.avoid_intersections_mode)
-        proj.setAvoidIntersectionsLayers(self.proj_avoid_intersections_layers)
-        proj.setTopologicalEditing(self.topological_editing)
+        try:
+            proj = QgsProject.instance()
+            proj.setSnappingConfig(self.proj_snapping_config)
+            proj.setAvoidIntersectionsMode(self.avoid_intersections_mode)
+            proj.setAvoidIntersectionsLayers(self.proj_avoid_intersections_layers)
+            proj.setTopologicalEditing(self.topological_editing)
+        except Exception as e:
+            qgs_log(f"Error resetting advanced editing config: {e}", level="error")
 
     # def add_feature_or_record(self):
     #     proj = QgsProject.instance()

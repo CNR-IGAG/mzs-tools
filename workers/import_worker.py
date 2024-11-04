@@ -1,23 +1,25 @@
 import csv
 import os
+import re
 import shutil
 import sqlite3
-import re
 
-from qgis.core import *
-from qgis.gui import *
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.utils import *
+from qgis.core import (
+    QgsExpression,
+    QgsFeatureRequest,
+    QgsMessageLog,
+    QgsVectorLayer,
+    edit,
+)
+
 from ..constants import (
     LAYER_DB_TAB,
     LISTA_TAB,
     POSIZIONE,
-    SITO_PUNTUALE_INS_TRIG_QUERIES,
     SITO_LINEARE_INS_TRIG_QUERIES,
+    SITO_PUNTUALE_INS_TRIG_QUERIES,
 )
 from .abstract_worker import AbstractWorker, UserAbortedNotification
-
 
 # FOR TESTING ONLY!!!
 # When testing export: only import a few features to make the testing process faster
@@ -150,12 +152,16 @@ class ImportWorker(AbstractWorker):
         # step 2 (inserting features)
         ###############################################
         for chiave, valore in list(POSIZIONE.items()):
+            self.set_log_message.emit("\nImporting '" + chiave + "'...\n")
             if not os.path.exists(os.path.join(self.in_dir, valore[0], valore[1] + ".shp")):
                 self.set_log_message.emit("'" + chiave + "' shapefile does not exist!\n")
                 continue
 
             sourceLYR = QgsVectorLayer(os.path.join(self.in_dir, valore[0], valore[1] + ".shp"), valore[1], "ogr")
-            destLYR = self.map_registry_instance.mapLayersByName(chiave)[0]
+            for lyr in self.map_registry_instance.mapLayersByName(chiave):
+                if not lyr.readOnly():
+                    destLYR = lyr
+                    break
 
             commonFields = self.attribute_adaptor(destLYR, sourceLYR)
 
@@ -185,12 +191,14 @@ class ImportWorker(AbstractWorker):
                 pass
 
             else:
-                if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2":
-                    sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression(' "LIVELLO" = 2 ')))
-                elif chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
-                    sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression(' "LIVELLO" = 3 ')))
-                else:
-                    sourceFeatures = sourceLYR.getFeatures()
+                # if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2":
+                #     sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression(' "LIVELLO" = 2 ')))
+                # elif chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
+                #     sourceFeatures = sourceLYR.getFeatures(QgsFeatureRequest(QgsExpression(' "LIVELLO" = 3 ')))
+                # else:
+                #     sourceFeatures = sourceLYR.getFeatures()
+
+                sourceFeatures = sourceLYR.getFeatures()
 
                 self.calc_layer(sourceFeatures, destLYR, commonFields)
 
@@ -490,8 +498,8 @@ class ImportWorker(AbstractWorker):
                                 geometry = parts[0]
                                 if len(parts) > 1:
                                     self.set_log_message.emit(
-                                        "Geometry from layer %s is multipart with more than one part: taking first part only - %s"
-                                        % (vector_layer.name(), geom)
+                                        "Geometry from layer %s is multipart with more than one part: taking first part only"
+                                        % (vector_layer.name())
                                     )
 
                             geom = geometry.asWkt()
@@ -776,47 +784,47 @@ class ImportWorker(AbstractWorker):
         finally:
             conn.close()
 
-    def calc_join(self, orig_tab, link_tab, temp_field, link_field, orig_field):
-        path_db = os.path.join(self.proj_abs_path, "db", "indagini.sqlite")
+    # def calc_join(self, orig_tab, link_tab, temp_field, link_field, orig_field):
+    #     path_db = os.path.join(self.proj_abs_path, "db", "indagini.sqlite")
 
-        joinObject = QgsVectorJoinInfo()
-        joinObject.joinLayerId = link_tab.id()
-        joinObject.joinFieldName = "pkuid"
-        joinObject.targetFieldName = temp_field
-        joinObject.memoryCache = True
-        orig_tab.addJoin(joinObject)
+    #     joinObject = QgsVectorJoinInfo()
+    #     joinObject.joinLayerId = link_tab.id()
+    #     joinObject.joinFieldName = "pkuid"
+    #     joinObject.targetFieldName = temp_field
+    #     joinObject.memoryCache = True
+    #     orig_tab.addJoin(joinObject)
 
-        context = QgsExpressionContext()
-        scope = QgsExpressionContextScope()
-        context.appendScope(scope)
+    #     context = QgsExpressionContext()
+    #     scope = QgsExpressionContextScope()
+    #     context.appendScope(scope)
 
-        expression = QgsExpression(link_field)
-        expression.prepare(orig_tab.pendingFields())
+    #     expression = QgsExpression(link_field)
+    #     expression.prepare(orig_tab.pendingFields())
 
-        try:
-            conn = sqlite3.connect(path_db)
-            conn.text_factory = lambda x: str(x, "utf-8", "ignore")
-            cur = conn.cursor()
+    #     try:
+    #         conn = sqlite3.connect(path_db)
+    #         conn.text_factory = lambda x: str(x, "utf-8", "ignore")
+    #         cur = conn.cursor()
 
-            for feature in orig_tab.getFeatures():
-                scope.setFeature(feature)
-                value = expression.evaluate(context)
-                if value is None:
-                    pass
-                else:
-                    nome_tab = LAYER_DB_TAB[orig_tab.name()]
-                    cur.execute(
-                        "UPDATE ? SET ?  = ? WHERE pkuid = ?", (nome_tab, orig_field, value, str(feature["pkuid"]))
-                    )
+    #         for feature in orig_tab.getFeatures():
+    #             scope.setFeature(feature)
+    #             value = expression.evaluate(context)
+    #             if value is None:
+    #                 pass
+    #             else:
+    #                 nome_tab = LAYER_DB_TAB[orig_tab.name()]
+    #                 cur.execute(
+    #                     "UPDATE ? SET ?  = ? WHERE pkuid = ?", (nome_tab, orig_field, value, str(feature["pkuid"]))
+    #                 )
 
-            conn.commit()
-        except Exception as ex:
-            # error will be forwarded upstream
-            raise ex
-        finally:
-            conn.close()
+    #         conn.commit()
+    #     except Exception as ex:
+    #         # error will be forwarded upstream
+    #         raise ex
+    #     finally:
+    #         conn.close()
 
-        orig_tab.removeJoin(link_tab.id())
+    #     orig_tab.removeJoin(link_tab.id())
 
     def copy_files(self, src, dest):
         for file_name in os.listdir(src):

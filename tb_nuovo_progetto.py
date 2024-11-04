@@ -127,6 +127,12 @@ class NewProject(QDialog, FORM_CLASS):
         # Save the project
         project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
 
+        # Refresh layouts
+        layout_manager = QgsProject.instance().layoutManager()
+        layouts = layout_manager.printLayouts()
+        for layout in layouts:
+            layout.refresh()
+
         QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
 
     def extract_project_template(self, dir_out):
@@ -153,6 +159,7 @@ class NewProject(QDialog, FORM_CLASS):
         data_provider = layer_comune_progetto.dataProvider()
         data_provider.addFeatures(features)
         layer_comune_progetto.commitChanges()
+        layer_comune_progetto.updateExtents()
 
         features = layer_comune_progetto.getFeatures()
         for feat in features:
