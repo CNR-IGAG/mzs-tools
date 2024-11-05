@@ -1,15 +1,16 @@
 from __future__ import absolute_import
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import QMessageBox
-from qgis.utils import *
-from qgis.core import *
-from qgis.gui import *
+
 import os
 import shutil
-import zipfile
 import sqlite3
-from ..constants import *
+import zipfile
+
+from qgis.core import QgsField, QgsProject, QgsVectorFileWriter, QgsVectorLayer
+from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.utils import iface
+
+from ..constants import POSIZIONE
 from .abstract_worker import AbstractWorker, UserAbortedNotification
 
 
@@ -29,17 +30,17 @@ class ExportWorker(AbstractWorker):
         # calculate steps
         total_steps = len(POSIZIONE) + 5
 
-        LISTA_LIV_2_3 = [
-            ["Zone stabili liv 3", "Zone stabili liv 2", "Stab.shp", "Stab", "ID_z"],
-            [
-                "Zone instabili liv 3",
-                "Zone instabili liv 2",
-                "Instab.shp",
-                "Instab",
-                "ID_i",
-            ],
-            ["Isobate liv 3", "Isobate liv 2", "Isosub.shp", "Isosub", "ID_isosub"],
-        ]
+        # LISTA_LIV_2_3 = [
+        #     ["Zone stabili liv 3", "Zone stabili liv 2", "Stab.shp", "Stab", "ID_z"],
+        #     [
+        #         "Zone instabili liv 3",
+        #         "Zone instabili liv 2",
+        #         "Instab.shp",
+        #         "Instab",
+        #         "ID_i",
+        #     ],
+        #     ["Isobate liv 3", "Isobate liv 2", "Isosub.shp", "Isosub", "ID_isosub"],
+        # ]
         QUERY_DICT = {
             "sito_puntuale": """INSERT INTO 'sito_puntuale'(pkey_spu, ubicazione_prov, ubicazione_com, ID_SPU, indirizzo, coord_X, coord_Y,
                     mod_identcoord, desc_modcoord, quota_slm, modo_quota, data_sito, note_sito) SELECT pkuid, ubicazione_prov, ubicazione_com,
@@ -120,8 +121,13 @@ class ExportWorker(AbstractWorker):
                 valore[1],
                 "ogr",
             )
-            if chiave == "Zone stabili liv 2" or chiave == "Zone instabili liv 2" or chiave == "Zone stabili liv 3" or chiave == "Zone instabili liv 3":
-                pass
+            # if (
+            #     chiave == "Zone stabili liv 2"
+            #     or chiave == "Zone instabili liv 2"
+            #     or chiave == "Zone stabili liv 3"
+            #     or chiave == "Zone instabili liv 3"
+            # ):
+            #     pass
             if chiave == "Siti lineari" or chiave == "Siti puntuali":
                 self.esporta([0, ["id_spu", "id_sln"]], selected_layer)
                 self.set_message.emit("'" + chiave + "' shapefile has been created!")
@@ -141,40 +147,40 @@ class ExportWorker(AbstractWorker):
         if self.killed:
             raise UserAbortedNotification("USER Killed")
 
-        for l23_value in LISTA_LIV_2_3:
-            sourceLYR_1 = QgsProject.instance().mapLayersByName(l23_value[0])[0]
-            # QgsVectorFileWriter.writeAsVectorFormat(
-            #    sourceLYR_1, os.path.join(
-            #        output_name, "MS23", l23_value[2]), "utf-8", None, "ESRI Shapefile")
+        # for l23_value in LISTA_LIV_2_3:
+        #     sourceLYR_1 = QgsProject.instance().mapLayersByName(l23_value[0])[0]
+        #     # QgsVectorFileWriter.writeAsVectorFormat(
+        #     #    sourceLYR_1, os.path.join(
+        #     #        output_name, "MS23", l23_value[2]), "utf-8", None, "ESRI Shapefile")
 
-            err, msg = QgsVectorFileWriter.writeAsVectorFormatV2(
-                sourceLYR_1,
-                os.path.join(output_name, "MS23", l23_value[2]),
-                QgsProject.instance().transformContext(),
-                options,
-            )
+        #     err, msg = QgsVectorFileWriter.writeAsVectorFormatV2(
+        #         sourceLYR_1,
+        #         os.path.join(output_name, "MS23", l23_value[2]),
+        #         QgsProject.instance().transformContext(),
+        #         options,
+        #     )
 
-            if err != QgsVectorFileWriter.NoError:
-                self.set_log_message.emit("Error creating shapefile %s: %s!\n" % (output_name, msg))
-                continue
+        #     if err != QgsVectorFileWriter.NoError:
+        #         self.set_log_message.emit("Error creating shapefile %s: %s!\n" % (output_name, msg))
+        #         continue
 
-            sourceLYR_2 = QgsProject.instance().mapLayersByName(l23_value[1])[0]
-            MS23_stab = QgsVectorLayer(os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr")
-            features = []
-            for feature in sourceLYR_2.getFeatures():
-                features.append(feature)
-            MS23_stab.startEditing()
-            data_provider = MS23_stab.dataProvider()
-            data_provider.addFeatures(features)
-            MS23_stab.commitChanges()
-            selected_layer_1 = QgsVectorLayer(os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr")
-            self.esporta([1, ["pkuid"]], selected_layer_1)
-            self.set_message.emit("'" + chiave + "' shapefile has been created!")
-            self.set_log_message.emit("  '" + chiave + "' shapefile has been created!\n")
+        #     sourceLYR_2 = QgsProject.instance().mapLayersByName(l23_value[1])[0]
+        #     MS23_stab = QgsVectorLayer(os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr")
+        #     features = []
+        #     for feature in sourceLYR_2.getFeatures():
+        #         features.append(feature)
+        #     MS23_stab.startEditing()
+        #     data_provider = MS23_stab.dataProvider()
+        #     data_provider.addFeatures(features)
+        #     MS23_stab.commitChanges()
+        #     selected_layer_1 = QgsVectorLayer(os.path.join(output_name, "MS23", l23_value[2]), l23_value[3], "ogr")
+        #     self.esporta([1, ["pkuid"]], selected_layer_1)
+        #     self.set_message.emit("'" + chiave + "' shapefile has been created!")
+        #     self.set_log_message.emit("  '" + chiave + "' shapefile has been created!\n")
 
         # end for
-        if self.killed:
-            raise UserAbortedNotification("USER Killed")
+        # if self.killed:
+        #     raise UserAbortedNotification("USER Killed")
 
         self.current_step = self.current_step + 1
         self.progress.emit(int(self.current_step * 100 / total_steps))
@@ -240,7 +246,9 @@ class ExportWorker(AbstractWorker):
             for tab_name, insert_query in QUERY_DICT.items():
                 cur = conn.cursor()
 
-                trigger_data = cur.execute(f"SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'").fetchone()
+                trigger_data = cur.execute(
+                    f"SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND name like 'ins_data%' AND tbl_name = '{tab_name}'"
+                ).fetchone()
 
                 # drop insert trigger
                 if trigger_data:

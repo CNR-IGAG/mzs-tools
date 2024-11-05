@@ -8,6 +8,7 @@ from qgis.core import (
     QgsExpression,
     QgsFeatureRequest,
     QgsMessageLog,
+    QgsProject,
     QgsVectorLayer,
     edit,
 )
@@ -55,9 +56,8 @@ class ImportWorker(AbstractWorker):
 
         self.set_message.emit(f"\nDropping {tab_name} insert trigger...\n")
 
-        conn = sqlite3.connect(self.db_path)
-
-        try:
+        # conn = sqlite3.connect(self.db_path)
+        with sqlite3.connect(self.db_path) as conn:
             cur = conn.cursor()
 
             res = cur.execute(
@@ -72,50 +72,48 @@ class ImportWorker(AbstractWorker):
             else:
                 self.current_trig_name = self.current_trig_table = self.current_trig_sql = None
 
-        finally:
-            conn.close()
-
     def update_values_and_restore_trigger(self, lyr_name):
         self.set_message.emit(f"Updating {lyr_name} values and restoring insert trigger...")
         self.set_log_message.emit(f"\nUpdating {lyr_name} values and restoring insert trigger...\n")
 
-        conn = sqlite3.connect(self.db_path)
-        conn.text_factory = lambda x: str(x, "utf-8", "ignore")
-        conn.enable_load_extension(True)
-        conn.execute('SELECT load_extension("mod_spatialite")')
+        # conn = sqlite3.connect(self.db_path)
+        with sqlite3.connect(self.db_path) as conn:
+            conn.text_factory = lambda x: str(x, "utf-8", "ignore")
+            conn.enable_load_extension(True)
+            conn.execute('SELECT load_extension("mod_spatialite")')
 
-        cur = conn.cursor()
+            cur = conn.cursor()
 
-        # update table data
-        if lyr_name == "Siti puntuali":
-            trig_queries_list = SITO_PUNTUALE_INS_TRIG_QUERIES.split(";")
-        elif lyr_name == "Siti lineari":
-            trig_queries_list = SITO_LINEARE_INS_TRIG_QUERIES.split(";")
-        else:
-            # extract update queries from trigger
-            search_res = re.search(r"BEGIN(.*)(?=^END|\Z)", self.current_trig_sql, re.DOTALL)
-            trig_queries = search_res.group(1)
-            trig_queries_list = trig_queries.split(";")
+            # update table data
+            if lyr_name == "Siti puntuali":
+                trig_queries_list = SITO_PUNTUALE_INS_TRIG_QUERIES.split(";")
+            elif lyr_name == "Siti lineari":
+                trig_queries_list = SITO_LINEARE_INS_TRIG_QUERIES.split(";")
+            else:
+                # extract update queries from trigger
+                search_res = re.search(r"BEGIN(.*)(?=^END|\Z)", self.current_trig_sql, re.DOTALL)
+                trig_queries = search_res.group(1)
+                trig_queries_list = trig_queries.split(";")
 
-        for query in trig_queries_list:
-            if query and "END" not in query and query.strip() != "":
-                # self.set_log_message.emit(f"\nExecuting query: {query}\n")
-                try:
-                    cur.execute(query)
-                except Exception as err:
-                    self.set_log_message.emit(f"\nError while executing query: {query}\n{err}\n")
-                finally:
-                    conn.commit()
+            for query in trig_queries_list:
+                if query and "END" not in query and query.strip() != "":
+                    # self.set_log_message.emit(f"\nExecuting query: {query}\n")
+                    try:
+                        cur.execute(query)
+                    except Exception as err:
+                        self.set_log_message.emit(f"\nError while executing query: {query}\n{err}\n")
+                    finally:
+                        conn.commit()
 
-        try:
+            # try:
             # restore trigger
             cur.execute(self.current_trig_sql)
 
             cur.close()
             conn.commit()
 
-        finally:
-            conn.close()
+        # finally:
+        #     conn.close()
 
     def work(self):
         path_tabelle = os.path.join(self.proj_abs_path, "Allegati", "Altro")
@@ -400,17 +398,25 @@ class ImportWorker(AbstractWorker):
 
     def calc_layer(self, sourceFeatures, destLYR, commonFields):
         featureList = []
+        # for feature in sourceFeatures:
+        #     geom = feature.geometry()
+        #     if geom:
+        #         err = geom.validateGeometry()
+        #         if not err:
+        #             modifiedFeature = self.attribute_fill(feature, destLYR, commonFields)
+        #             featureList.append(modifiedFeature)
+        #         else:
+        #             self.set_log_message.emit(
+        #                 "  Geometry error (feature %d will not be copied)\n" % (feature.id() + 1)
+        #             )
+
         for feature in sourceFeatures:
-            geom = feature.geometry()
-            if geom:
-                err = geom.validateGeometry()
-                if not err:
-                    modifiedFeature = self.attribute_fill(feature, destLYR, commonFields)
-                    featureList.append(modifiedFeature)
-                else:
-                    self.set_log_message.emit(
-                        "  Geometry error (feature %d will not be copied)\n" % (feature.id() + 1)
-                    )
+            geometry = feature.geometry()
+            if geometry.get().is3D():
+                geometry.get().dropZValue()
+                feature.setGeometry(geometry)
+            modifiedFeature = self.attribute_fill(feature, destLYR, commonFields)
+            featureList.append(modifiedFeature)
 
         current_feature = 1
 
@@ -425,7 +431,23 @@ class ImportWorker(AbstractWorker):
             featureList.append(dup)
         ##################################################################################################
 
+        # for feature in featureList:
+        #     geometry = feature.geometry()
+        #     if geometry.get().is3D():
+        #         geom_was_3d = geometry.get().dropZValue()
+        #         if geom_was_3d:
+        #             feature.setGeometry(geometry)
+
         with edit(destLYR):
+            # set AllowIntersections and disable digitizing geometry checks
+            proj = QgsProject.instance()
+            intersection_mode = proj.avoidIntersectionsMode()
+            proj.setAvoidIntersectionsMode(QgsProject.AvoidIntersectionsMode.AllowIntersections)
+
+            geom_checks = destLYR.geometryOptions().geometryChecks()
+            if geom_checks:
+                destLYR.geometryOptions().setGeometryChecks([])
+
             for f in featureList:
                 self.set_message.emit(f"{destLYR.name()}: inserting feature {current_feature}/{len(featureList)}")
                 self.set_log_message.emit(
@@ -440,6 +462,11 @@ class ImportWorker(AbstractWorker):
 
                 if self.killed:
                     break
+
+        # restore intersection mode and digitizing geometry checks
+        proj.setAvoidIntersectionsMode(intersection_mode)
+        if geom_checks:
+            destLYR.geometryOptions().setGeometryChecks(geom_checks)
 
         if self.killed:
             raise UserAbortedNotification("USER Killed")
