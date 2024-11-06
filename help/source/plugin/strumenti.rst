@@ -4,7 +4,7 @@ Strumenti del plugin
 Toolbar
 """""""
 
-All'attivazione del plugin MzSTools viene visualizzata nell'interfaccia di QGIS una **toolbar** contenente una serie di strumenti:
+All'attivazione del plugin MzS Tools viene visualizzata nell'interfaccia di QGIS una **toolbar** contenente una serie di strumenti:
 
 .. image:: ../img/plugin_toolbar.png
   :align: center
@@ -49,10 +49,6 @@ Gli strumenti richiamabili tramite la toolbar sono:
 |ico2| **Importa dati da un progetto esistente** → :ref:`importazione`
 
 |ico3| **Esporta dati in una struttura di progetto standard** → :ref:`esportazione`
-
-|ico4| **Aggiungi una feature o un record** → :ref:`editing`
-
-|ico5| **Salva** → :ref:`editing`
 
 |ico6| **Aggiungi un Sito Puntuale utilizzando le coordinate XY** → :ref:`sito-xy`
 

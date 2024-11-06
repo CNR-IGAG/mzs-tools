@@ -9,5 +9,6 @@ Il plugin MzS Tools
    plugin/nuovo_progetto.rst
    plugin/importazione.rst
    plugin/editing.rst
+   plugin/esportazione.rst
    plugin/altri_strumenti.rst
    plugin/layout_stampa.rst

@@ -3,36 +3,39 @@
 Inserimento dati ed editing
 ---------------------------
 
-.. |ico4| image:: ../../../img/ico_edita.png
+.. |ico-topo| image:: https://docs.qgis.org/3.34/it/_images/mIconTopologicalEditing.png
   :height: 25
 
-.. |ico5| image:: ../../../img/ico_salva_edita.png
-  :height: 25
+Come descritto nella sezione :ref:`progetto-qgis`, il progetto generato dal plugin MzSTools è strutturato in gruppi di layer.
 
-Il plugin possiede alcuni strumenti che aiutano l’operatore nel disegno e nella creazione di nuovi oggetti secondo determinate regole topologiche preimpostate nel progetto.
+L\'**inserimento dei dati geografici vettoriali** necessari per lo studio di MS, secondo quanto definito dagli Standard, viene effettuato tramite i layer del gruppo
+**Banca dati geografica**, utilizzando *gli strumenti di editing messi a disposizione da QGIS*. 
 
-La procedura per **inserire nuovi dati** consiste in:
+MzS Tools associa agli strumenti di editing di QGIS una serie di *interfacce di inserimento dati personalizzate* 
+che aiutano nell'inserimento degli attributi e delle informazioni correlate alle geometrie.
 
-* selezionare il layer da editare nel pannello dei layer di QGIS;
-* attivare l’editing con lo strumento |ico4| della toolbar del plugin;
+La procedura generale per **inserire nuovi dati** consiste in:
+
+* selezionare uno dei layer vettoriali del gruppo **Banca dati geografica** nel pannello dei layer di QGIS;
+* attivare l’editing tramite lo strumento “Attiva modifiche” della toolbar di editing di QGIS;
 * disegnare su mappa la geometria dell’elemento;
-* una volta conclusa la digitalizzazione (tramite il pulsante destro del mouse), QGIS aprirà automaticamente la maschera di inserimento degli attributi relativi alla geometria appena creata;
+* una volta conclusa la digitalizzazione (tramite il pulsante destro del mouse), QGIS aprirà automaticamente
+  la maschera di inserimento degli attributi relativi alla geometria appena creata; questa può essere più o meno
+  articolata in base alla quantità di informazioni correlate alla geometria inserita;
+
+  .. image:: ../img/editing2.png
+      :width: 700
+      :align: center
+
 * dopo aver inserito gli attributi, premere il tasto “OK” della maschera di inserimento;
-* per salvare, cliccare il tool del plugin “Save” |ico5|.
+* per salvare, cliccare il pulsante “Salva modifiche” e selezionare nuovamente “Attiva modifiche” della toolbar di editing di QGIS per interrompere l'editing.
+
+.. Tip:: Per approfondire consultare il `Manuale utente di QGIS <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#digitizing-an-existing-layer>`_.
 
 Per **modificare gli attributi** di una feature già esistente, è possibile procedere in questo modo:
 
 * selezionare il layer da editare;
-  
-  .. image:: ../img/editing1.png
-      :width: 350
-      :align: center
-
-* attivare l’editing con:
-
-  - lo strumento della toolbar di QGIS “Attiva modifiche”;
-  - oppure lo strumento |ico4| della barra del plugin;
-
+* attivare l’editing con lo strumento della toolbar di QGIS “Attiva modifiche”;
 * "identificare" la feature da editare su mappa tramite lo strumento "Informazioni elementi" di QGIS;
   
   .. tip:: Per fare in modo che QGIS apra direttamente la maschera di inserimento, nel pannello “Informazioni risultati” mettere la spunta su “Apri modulo automaticamente”.
@@ -41,31 +44,9 @@ Per **modificare gli attributi** di una feature già esistente, è possibile pro
         :width: 550
         :align: center
 
-* all’interno della maschera, modificare i campi da aggiornare. La finestra di inserimento può essere più o meno articolata in base alla quantità di informazioni correlate alla geometria inserita;
+* all’interno della maschera, modificare i campi da aggiornare;
 
-  .. image:: ../img/editing2.png
-      :width: 700
-      :align: center
-
-* per salvare le modifiche, cliccare su:
-
-  * pulsante della toolbar di QGIS “Salva modifiche vettore”;
-  * oppure pulsante della barra del plugin |ico5|.
-
-Editing topologico
-""""""""""""""""""
-
-In un progetto creato tramite il plugin sono attive per default alcune impostazioni per l'editing, raggiungibili tramite il menu **"Progetto" - "Opzioni di aggancio"**, che aiutano ad evitare di incorrere in **errori topologici**; in particolare le impostazioni presenti non permettono la sovrapposizione tra elementi poligonali appartenenti allo stesso layer o a layer diversi.
-
-Per poter effettuare correttamente l’editing degli oggetti dei layer: **"Forme"** ed **"Instabilità di versante"** della Carta Geologico Tecnica, come da Standard MS versione 4.2, è possibile attivare la "Barra degli strumenti di aggancio" che permette di settare le modifiche topologiche, e successivamente impostare l’opzione **"Evita sovrapposizione sul layer attivo"** nell’apposito menu a tendina.
-
-.. image:: ../img/editing3.png
-  :width: 840
-  :align: center
-
-.. image:: ../img/editing4.png
-  :width: 473
-  :align: center
+* per salvare le modifiche, cliccare sul pulsante della toolbar di QGIS “Salva modifiche vettore”.
 
 Inserimento indagini puntuali e lineari
 """""""""""""""""""""""""""""""""""""""
@@ -156,3 +137,99 @@ Il valore ‘No Peak’ della misura si ottiene dando un valore nullo o ‘0’ 
     :align: center
 
 Per ulteriori informazioni sulla simbologia e sui layout cartografici per le stazioni singole: :ref:`layout-hvsr`
+
+Strumenti di editing avanzato
+"""""""""""""""""""""""""""""
+
+QGIS mette a disposizione una serie di strumenti di editing avanzato che aiutano l’utente nella creazione e modifica di oggetti geografici corretti e coerenti
+da un punto di vista geometrico, topologico e concettuale.
+
+.. Tip:: Si consiglia la consultazione del `Manuale utente di QGIS <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html>`_ per tutte le informazioni.
+
+In particolare sono presenti varie impostazioni che riguardano:
+
+* `proprietà di aggancio (*snapping*): <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#snapping-properties>`_
+* `modifiche topologiche <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#topological-editing>`_
+* `digitalizzazione avanzata <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#advanced-digitizing>`_
+* `proprietà Digitalizzazione del layer <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/vector_properties.html#digitizing-properties>`_
+
+Impostazioni di aggancio (snapping)
+===================================
+
+Le impostazioni di aggancio sono raggiungibili tramite il menu ``Progetto ► Opzioni di Aggancio…``. E\' possibile inoltre attivare 
+la *Barra degli strumenti di aggancio* di QGIS, la quale dà accesso alla maggior parte di queste funzioni.
+
+Editing topologico
+==================
+
+Oltre alle opzioni di aggancio, la finestra di dialogo ``Opzioni di aggancio…`` e la barra degli strumenti Aggancio… permettono di abilitare / disabilitare
+alcune funzionalità topologiche, quali:
+
+* **modifica topologica**: il pulsante |ico-topo| (*Abilita Modifica Topologica*) aiuta quando si modificano e si gestiscono elementi con confini comuni.
+  Con questa opzione abilitata, QGIS «rileva» i confini comuni. Quando si spostano i vertici/segmenti comuni, QGIS li sposta anche nelle geometrie degli elementi vicini.
+* **controllo delle sovrapposizioni** (*overlaps*): La sovrapposizione impedisce di disegnare nuovi elementi che si sovrappongono a quelli esistenti nel layer selezionato,
+  velocizzando la digitalizzazione di poligoni adiacenti.
+
+.. image:: ../img/editing3.png
+  :width: 700
+  :align: center
+
+|
+
+Altre opzioni di editing topologico sono disponibili nel pannello delle `proprietà *Digitalizzazione* del layer <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/vector_properties.html#digitizing-properties>`_:
+
+.. image:: ../img/proprieta_layer_digitalizzazione.png
+  :width: 700
+  :align: center
+
+|
+
+E\' qui possibile attivare, a seconda del tipo di geometria del layer, alcuni **Controlli topologici** per *assicurare che le geometrie inserite nel layer rispettino determinate regole*, indipendentemente dalle impostazioni
+di aggancio ed editing viste in precedenza.
+
+* "Vuoto": impedisce la presenza di vuoti (*gaps*) tra un poligono e l'altro;
+* "Vertice Mancante": controlla i confini condivisi dei poligoni vicini quando un confine manca di un vertice presente sull’altro;
+* "Sovrappone": impedisce le sovrapposizioni tra i poligoni vicini.
+
+Si possono inoltre impostare altri controlli quali:
+
+* Correzione automatica dei nodi duplicati;
+* Controllo della validità delle geometrie; ad esempio, nel caso dei poligoni, questa opzione evita che si possano verificare problemi quali
+  l'"auto-intersezione".
+
+Controllo delle sovrapposizioni tra layer diversi
+=================================================
+
+L'impostazione di base per il controllo delle sovrapposizioni tra poligoni è "Evita sovrapposizione sul layer attivo", che impedisce la sovrapposizione
+tra elementi poligonali appartenenti allo stesso layer.
+
+.. image:: ../img/editing4.png
+  :width: 473
+  :align: center
+
+|
+
+In alcuni casi può essere utile attivare l'opzione **"Segui configurazione avanzata"**, che permette di impostare regole di sovrapposizione
+tra i poligoni appartenenti a *layer diversi*.
+
+Nel caso della Microzonazione Sismica è ad esempio utile fare in modo che non vi siano sovrapposizioni tra i layer delle zone stabili e instabili.
+L'impostazione, in questo caso, dovrebbe avvenire come mostrato in figura:
+
+.. image:: ../img/config_avanzata_overlaps.png
+  :align: center
+
+|
+
+Come segnalato nel `manuale di QGIS <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#overlapping-control>`_,
+questa impostazione è da usare con cautela in quanto si potrebbero ottenere geometrie inaspettate nel caso ci si dimentichi di deselezionare questa opzione 
+quando non è più necessaria.
+
+Per questo motivo **MzS Tools imposta automaticamente l'opzione "Segui configurazione avanzata"**, solo per determinati layer, nel momento in cui 
+si attiva l'editing su uno di essi, e **la disattiva nel momento in cui si interrompe l'editing**, riportando la configurazione allo stato iniziale.
+
+In questo modo si evitano errori topologici garantendo la corretta gestione delle sovrapposizioni tra i layer che lo richiedono, senza però interferire
+con le impostazioni personali effettuate a livello di progetto. 
+
+
+
+

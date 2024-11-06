@@ -74,21 +74,6 @@ Il plugin MzSTools è corredato da una serie di videoguide che illustrano le pri
 
 Le videoguide sono disponibili sul `canale YouTube del plugin <https://youtube.com/playlist?list=PLM5qQOkOkzgWH2VogqeQIDybylmE4P1TQ&feature=shared>`_.
 
-Credits
--------
-
-|logo_igag| |logo_cnr|
-
-.. |logo_igag| image:: ../../img/IGAG-CMYK.png
-    :width: 18%
-    :target: https://www.igag.cnr.it
-
-.. |logo_cnr| image:: ./img/logo_cnr.png
-    :width: 30%
-
-Il plugin viene sviluppato nell'ambito delle attività del 
-`Laboratorio GIS del CNR-IGAG <https://www.igag.cnr.it/lista-laboratori/labgis/>`_
-
 Riferimenti
 -----------
 
@@ -102,7 +87,19 @@ Changelog
 ---------
 
 v1.9.2
-    - Temp
+    - Introdotta la compatibilità con gli Standard MS v4.3
+    - Unificati i layer "Zone stabili" e "Zone instabili" dei livelli 2-3, così come previsto dagli Standard MS
+    - Nel progetto QGIS i layer gestiti dal plugin sono ora impostati come "richiesti", ed i layer per i layout di
+      stampa sono impostati in sola lettura; l'utente viene avvisato nel caso in cui tenti di rinominare un layer
+      richiesto 
+    - Semplificato e reso più efficiente lo strumento di creazione di un nuovo progetto
+    - Aggiunto uno strumento per l'inserimento e la modifica dei metadati di progetto
+    - Sistemata e resa automatica l'impostazione dei controlli di sovrapposizione fra determinati layer, quali "Zone
+      stabili" e "Zone instabili"
+    - Rimossi gli strumenti di editing dalla toolbar di MzS Tools (le impostazioni di editing topologico sono ora 
+      gestite automaticamente tramite gli strumenti di editing base di QGIS)
+    - Risolti alcuni problemi con l'importazione e l'esportazione dei dati
+    - Risolti diversi problemi minori
 
 v1.9.1
     - Updated style expressions for MS level 2-3 layers
@@ -213,3 +210,18 @@ v0.5
 		
 v0.4
     -  initial relase.
+
+Credits
+-------
+
+|logo_igag| |logo_cnr|
+
+.. |logo_igag| image:: ../../img/IGAG-CMYK.png
+    :width: 24%
+    :target: https://www.igag.cnr.it
+
+.. |logo_cnr| image:: ./img/logo_cnr.png
+    :width: 30%
+
+Il plugin viene sviluppato nell'ambito delle attività del 
+`Laboratorio GIS del CNR-IGAG <https://www.igag.cnr.it/lista-laboratori/labgis/>`_  

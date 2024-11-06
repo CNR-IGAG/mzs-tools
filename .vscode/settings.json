@@ -8,5 +8,7 @@
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
   "esbonio.sphinx.confDir": "${workspaceFolder}/help/source",
-  "makefile.configureOnOpen": false
+  "makefile.configureOnOpen": false,
+  "rewrap.wrappingColumn": 119,
+  "rewrap.autoWrap.enabled": true
 }
