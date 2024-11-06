@@ -25,7 +25,11 @@ from qgis.core import (
     QgsProject,
     QgsUnitTypes,
 )
-from qgis.PyQt.QtCore import QRectF, QSize
+from qgis.PyQt.QtCore import QRectF, QSize, QStandardPaths
+
+# Constants for settings keys
+SETTINGS_SECTION = "Settings"
+AUTO_ADVANCED_EDITING_KEY = "auto_advanced_editing"
 
 
 def save_map_image(image_path, zoom_to_layer, canvas):
@@ -165,3 +169,27 @@ def detect_mzs_tools_project() -> Optional[Dict[str, str]]:
         "db_path": str(db_path),
         "version": version,
     }
+
+
+def get_settings():
+    """Retrieve settings from the .ini file."""
+    config_file = Path(QStandardPaths.writableLocation(QStandardPaths.AppConfigLocation)) / "mzs_tools.ini"
+    config = configparser.ConfigParser()
+    settings = {}
+
+    if not config_file.exists():
+        # Create the config file with default settings
+        config[SETTINGS_SECTION] = {AUTO_ADVANCED_EDITING_KEY: "True"}
+        with config_file.open("w") as configfile:
+            config.write(configfile)
+
+    config.read(config_file)
+    settings[AUTO_ADVANCED_EDITING_KEY] = config.getboolean(SETTINGS_SECTION, AUTO_ADVANCED_EDITING_KEY, fallback=True)
+
+    return settings
+
+
+def ensure_config_directory():
+    """Ensure the configuration directory exists."""
+    config_dir = Path(QStandardPaths.writableLocation(QStandardPaths.AppConfigLocation))
+    config_dir.mkdir(parents=True, exist_ok=True)

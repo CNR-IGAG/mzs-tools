@@ -15,6 +15,7 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, qApp
+from .tb_settings import MzSToolsSettings
 
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .tb_aggiorna_progetto import aggiorna_progetto
@@ -25,7 +26,13 @@ from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
 from .tb_info import info
 from .tb_nuovo_progetto import NewProject
-from .utils import detect_mzs_tools_project, plugin_version_from_metadata_file, qgs_log
+from .utils import (
+    AUTO_ADVANCED_EDITING_KEY,
+    detect_mzs_tools_project,
+    get_settings,
+    plugin_version_from_metadata_file,
+    qgs_log,
+)
 
 
 class MzSTools:
@@ -52,6 +59,7 @@ class MzSTools:
         self.export_shp_dlg = esporta_shp()
         self.ms_copy_dlg = copia_ms()
         self.edit_win_dlg = edit_win()
+        self.settings_dlg = MzSToolsSettings()
 
         self.actions = []
         self.menu = self.tr("&MzS Tools")
@@ -187,6 +195,13 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
+        self.add_action(
+            icon_path3,
+            text=self.tr("Help"),
+            callback=self.show_settings,
+            parent=self.iface.mainWindow(),
+        )
+
     def unload(self):
         for action in self.actions:
             self.iface.removePluginDatabaseMenu(self.tr("&MzS Tools"), action)
@@ -302,6 +317,12 @@ class MzSTools:
     def help(self):
         self.info_dlg.help()
 
+    def show_settings(self):
+        """Show the settings dialog."""
+        self.settings_dlg.load_settings()
+        self.settings_dlg.show()
+        self.settings_dlg.adjustSize()
+
     def import_project(self):
         self.import_shp_dlg.importa_prog()
 
@@ -312,6 +333,10 @@ class MzSTools:
         self.ms_copy_dlg.copia()
 
     def set_advanced_editing_config(self, layer):
+        settings = get_settings()
+        if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
+            return
+
         proj = QgsProject.instance()
         # save the current config
         self.proj_snapping_config = proj.snappingConfig()
