@@ -4,32 +4,32 @@
 <context>
     <name>EditMetadataDialog</name>
     <message>
-        <location filename="../tb_edit_metadata.py" line="275"/>
+        <location filename="../tb_edit_metadata.py" line="288"/>
         <source>Success</source>
         <translation>Successo</translation>
     </message>
     <message>
-        <location filename="../tb_edit_metadata.py" line="275"/>
+        <location filename="../tb_edit_metadata.py" line="288"/>
         <source>Metadata updated successfully.</source>
         <translation>Metadati modificati correttamente.</translation>
     </message>
     <message>
-        <location filename="../tb_edit_metadata.py" line="289"/>
+        <location filename="../tb_edit_metadata.py" line="302"/>
         <source>Error</source>
         <translation>Errore</translation>
     </message>
     <message>
-        <location filename="../tb_edit_metadata.py" line="76"/>
+        <location filename="../tb_edit_metadata.py" line="89"/>
         <source>The tool must be used within an opened MS project!</source>
         <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
     </message>
     <message>
-        <location filename="../tb_edit_metadata.py" line="84"/>
+        <location filename="../tb_edit_metadata.py" line="97"/>
         <source>There was a problem reading comune_progetto from database!</source>
         <translation>Si è verificato un problema nella lettura della tabella comune_progetto dal database!</translation>
     </message>
     <message>
-        <location filename="../tb_edit_metadata.py" line="105"/>
+        <location filename="../tb_edit_metadata.py" line="118"/>
         <source>Multiple metadata records found. Please edit the &apos;metadati&apos; table and remove all but one record.</source>
         <translation>Sono presenti più record nella tabella metadati. Rimuovere manualmente dalla tabella i record non pertinenti.</translation>
     </message>
@@ -400,54 +400,102 @@
 <context>
     <name>MzSTools</name>
     <message>
-        <location filename="../mzs_tools.py" line="191"/>
+        <location filename="../mzs_tools.py" line="236"/>
         <source>&amp;MzS Tools</source>
         <translation>&amp;MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="120"/>
+        <location filename="../mzs_tools.py" line="130"/>
         <source>New project</source>
         <translation>Nuovo progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="136"/>
+        <location filename="../mzs_tools.py" line="146"/>
         <source>Import project folder from geodatabase</source>
         <translation>Importa dati da un progetto esistente</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="143"/>
+        <location filename="../mzs_tools.py" line="153"/>
         <source>Export geodatabase to project folder</source>
         <translation>Esporta i dati in una strutura di progetto standard</translation>
     </message>
     <message>
         <location filename="../mzs_tools.py" line="152"/>
         <source>Add feature or record</source>
-        <translation>Aggiungi una feature o un record</translation>
+        <translation type="obsolete">Aggiungi una feature o un record</translation>
     </message>
     <message>
         <location filename="../mzs_tools.py" line="159"/>
         <source>Save</source>
-        <translation>Salva</translation>
+        <translation type="obsolete">Salva</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="166"/>
+        <location filename="../mzs_tools.py" line="176"/>
         <source>Add &quot;Sito puntuale&quot; using XY coordinates</source>
         <translation>Aggiungi un Sito Puntuale utilizzando le coordinate XY</translation>
     </message>
     <message>
         <location filename="../mzs_tools.py" line="173"/>
         <source>Copy &quot;Stab&quot; or &quot;Instab&quot; layer</source>
-        <translation>Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
+        <translation type="obsolete">Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="182"/>
+        <location filename="../mzs_tools.py" line="199"/>
         <source>Help</source>
         <translation>Aiuto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="127"/>
+        <location filename="../mzs_tools.py" line="137"/>
         <source>Edit project metadata</source>
         <translation>Modifica i metadati del progetto</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="192"/>
+        <source>MzS Tools Settings</source>
+        <translation>Impostazioni di MzS Tools</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="324"/>
+        <source>Warning</source>
+        <translation>Attenzione</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="314"/>
+        <source>MzS Tools is designed to work with QGIS 3.26 or later. Please consider upgrading QGIS to the latest LTR version to avoid possible issues.</source>
+        <translation>MzS Tools è stato sviluppato per QGIS versione 3.26 o successiva. Si prega di aggiornare QGIS all&apos;ultima versione LTR per evitare possibili problemi.</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="324"/>
+        <source>It is not possible at the moment to rename a required MzS Tools layer! Please revert the name to avoid possible issues.</source>
+        <translation>Non è al momento possibile rinominare un layer richiesto dal plugin MzS Tools! Si prega di ritornare al nome precedente per evitare possibili problemi.</translation>
+    </message>
+</context>
+<context>
+    <name>MzSToolsSettings</name>
+    <message>
+        <location filename="../tb_settings.ui" line="14"/>
+        <source>MzS Tools Settings</source>
+        <translation>Impostazioni di MzS Tools</translation>
+    </message>
+    <message>
+        <location filename="../tb_settings.ui" line="22"/>
+        <source>Automatically Enable Advanced Editing Options</source>
+        <translation type="obsolete">Imposta Automaticamente Le Opzioni Di Editing Avanzato</translation>
+    </message>
+    <message>
+        <location filename="../tb_settings.ui" line="47"/>
+        <source>?</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_settings.ui" line="56"/>
+        <source>Save</source>
+        <translation>Salva</translation>
+    </message>
+    <message>
+        <location filename="../tb_settings.ui" line="22"/>
+        <source>Automatically enable advanced editing options</source>
+        <translation>Imposta automaticamente le opzioni di editing avanzato</translation>
     </message>
 </context>
 <context>
@@ -463,12 +511,12 @@
         <translation>La cartella selezionata non esiste!</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="130"/>
+        <location filename="../tb_nuovo_progetto.py" line="136"/>
         <source>Notice</source>
         <translation>Avviso</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="130"/>
+        <location filename="../tb_nuovo_progetto.py" line="136"/>
         <source>The project has been created successfully.</source>
         <translation>Il progetto è stato creato correttamente.</translation>
     </message>
@@ -491,12 +539,12 @@
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Il progetto può essere aggiornato all&apos;ultima versione.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Se vuoi procedere con l&apos;aggiornamento clicca su OK! &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Altrimenti clicca su Annulla.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;La versione precedente verrà conservata in una cartella a parte.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../tb_aggiorna_progetto.py" line="90"/>
+        <location filename="../tb_aggiorna_progetto.py" line="96"/>
         <source>INFORMATION!</source>
         <translation>Attenzione!</translation>
     </message>
     <message>
-        <location filename="../tb_aggiorna_progetto.py" line="90"/>
+        <location filename="../tb_aggiorna_progetto.py" line="96"/>
         <source>The project structure has been updated!
 The backup copy has been saved in the following directory: </source>
         <translation>La struttura del progetto è stata aggiornata!
@@ -513,32 +561,22 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
     <message>
         <location filename="../tb_copia_ms.ui" line="62"/>
         <source>Input</source>
-        <translation>Sorgente</translation>
+        <translation type="obsolete">Sorgente</translation>
     </message>
     <message>
         <location filename="../tb_copia_ms.ui" line="94"/>
         <source>Output</source>
-        <translation>Destinazione</translation>
-    </message>
-    <message>
-        <location filename="../tb_copia_ms.ui" line="109"/>
-        <source>Zone stabili</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../tb_copia_ms.ui" line="122"/>
-        <source>Zone instabili</source>
-        <translation></translation>
+        <translation type="obsolete">Destinazione</translation>
     </message>
     <message>
         <location filename="../tb_copia_ms.ui" line="221"/>
         <source>Help</source>
-        <translation>Aiuto</translation>
+        <translation type="obsolete">Aiuto</translation>
     </message>
     <message>
         <location filename="../tb_copia_ms.ui" line="50"/>
         <source>Copy features between &quot;Stab&quot; or &quot;Instab&quot; layers</source>
-        <translation>Copia gli oggetti tra i layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
+        <translation type="obsolete">Copia gli oggetti tra i layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
     </message>
 </context>
 <context>

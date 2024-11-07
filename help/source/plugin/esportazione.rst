@@ -1,10 +1,10 @@
 .. _esportazione:
 
-.. |ico3| image:: ../../../img/ico_esporta.png
-  :height: 25
-
 Esportazione del progetto in una struttura standard
 ---------------------------------------------------
+
+.. |ico3| image:: ../../../img/ico_esporta.png
+  :height: 25
 
 La struttura di archiviazione generata dal plugin MzSTools non corrisponde esattamente a quella prevista dagli Standard MS, in quanto è ottimizzata per l’utilizzo con QGIS. 
 

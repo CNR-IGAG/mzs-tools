@@ -15,17 +15,16 @@ from qgis.core import (
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, qApp
-from .tb_settings import MzSToolsSettings
 
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .tb_aggiorna_progetto import aggiorna_progetto
-from .tb_copia_ms import copia_ms
 from .tb_edit_metadata import EditMetadataDialog
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
 from .tb_info import info
 from .tb_nuovo_progetto import NewProject
+from .tb_settings import MzSToolsSettings
 from .utils import (
     AUTO_ADVANCED_EDITING_KEY,
     detect_mzs_tools_project,
@@ -57,7 +56,7 @@ class MzSTools:
         self.info_dlg = info()
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
-        self.ms_copy_dlg = copia_ms()
+        # self.ms_copy_dlg = copia_ms()
         self.edit_win_dlg = edit_win()
         self.settings_dlg = MzSToolsSettings()
 
@@ -121,7 +120,7 @@ class MzSTools:
         icon_path3 = os.path.join(self.plugin_dir, "img", "ico_info.png")
         icon_path4 = os.path.join(self.plugin_dir, "img", "ico_importa.png")
         icon_path5 = os.path.join(self.plugin_dir, "img", "ico_esporta.png")
-        icon_path6 = os.path.join(self.plugin_dir, "img", "ico_copia_ms.png")
+        # icon_path6 = os.path.join(self.plugin_dir, "img", "ico_copia_ms.png")
         # icon_path8 = os.path.join(self.plugin_dir, "img", "ico_edita.png")
         # icon_path9 = os.path.join(self.plugin_dir, "img", "ico_salva_edita.png")
         icon_path10 = os.path.join(self.plugin_dir, "img", "ico_xypoint.png")
@@ -156,7 +155,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
-        self.toolbar.addSeparator()
+        # self.toolbar.addSeparator()
 
         # self.add_action(
         #     icon_path8,
@@ -179,14 +178,21 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
-        self.add_action(
-            icon_path6,
-            text=self.tr('Copy "Stab" or "Instab" layer'),
-            callback=self.copy_stab,
-            parent=self.iface.mainWindow(),
-        )
+        # self.add_action(
+        #     icon_path6,
+        #     text=self.tr('Copy "Stab" or "Instab" layer'),
+        #     callback=self.copy_stab,
+        #     parent=self.iface.mainWindow(),
+        # )
 
         self.toolbar.addSeparator()
+
+        self.add_action(
+            QgsApplication.getThemeIcon("/mActionOptions.svg"),
+            text=self.tr("MzS Tools Settings"),
+            callback=self.show_settings,
+            parent=self.iface.mainWindow(),
+        )
 
         self.add_action(
             icon_path3,
@@ -195,12 +201,33 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
-        self.add_action(
-            icon_path3,
-            text=self.tr("Help"),
-            callback=self.show_settings,
-            parent=self.iface.mainWindow(),
-        )
+    def new_project(self):
+        self.new_project_dlg.run_new_project_tool()
+        self.connect_editing_signals()
+
+    def edit_metadata(self):
+        self.edit_metadata_dlg.run_edit_metadata_dialog()
+
+    def import_project(self):
+        self.import_shp_dlg.importa_prog()
+
+    def export_project(self):
+        self.export_shp_dlg.esporta_prog()
+
+    def add_site(self):
+        self.edit_win_dlg.edita()
+
+    # def copy_stab(self):
+    #     self.ms_copy_dlg.copia()
+
+    def show_settings(self):
+        """Show the settings dialog."""
+        self.settings_dlg.load_settings()
+        self.settings_dlg.show()
+        self.settings_dlg.adjustSize()
+
+    def help(self):
+        self.info_dlg.help()
 
     def unload(self):
         for action in self.actions:
@@ -264,12 +291,8 @@ class MzSTools:
 
         if project_info["version"] < plugin_version:
             qgs_log(f"Project should be updated to version {plugin_version}")
-            output_path = Path(project_info["project_path"]).parent
-            project_folder_name = Path(project_info["project_path"]).name
             qApp.processEvents()
-            self.project_update_dlg.aggiorna(
-                project_info["project_path"], str(output_path), project_folder_name, project_info["version"]
-            )
+            self.project_update_dlg.aggiorna(project_info["project_path"], project_info["version"])
 
         self.connect_editing_signals()
 
@@ -306,31 +329,6 @@ class MzSTools:
             if layer.name() in list(chain.from_iterable(NO_OVERLAPS_LAYER_GROUPS)):
                 layer.editingStarted.connect(partial(self.set_advanced_editing_config, layer))
                 layer.editingStopped.connect(self.reset_editing_config)
-
-    def new_project(self):
-        self.new_project_dlg.run_new_project_tool()
-        self.connect_editing_signals()
-
-    def edit_metadata(self):
-        self.edit_metadata_dlg.run_edit_metadata_dialog()
-
-    def help(self):
-        self.info_dlg.help()
-
-    def show_settings(self):
-        """Show the settings dialog."""
-        self.settings_dlg.load_settings()
-        self.settings_dlg.show()
-        self.settings_dlg.adjustSize()
-
-    def import_project(self):
-        self.import_shp_dlg.importa_prog()
-
-    def export_project(self):
-        self.export_shp_dlg.esporta_prog()
-
-    def copy_stab(self):
-        self.ms_copy_dlg.copia()
 
     def set_advanced_editing_config(self, layer):
         settings = get_settings()
@@ -546,9 +544,6 @@ class MzSTools:
 
     #         else:
     #             layer.commitChanges()
-
-    def add_site(self):
-        self.edit_win_dlg.edita()
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)

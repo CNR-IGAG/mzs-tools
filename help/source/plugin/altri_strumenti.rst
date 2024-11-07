@@ -19,7 +19,7 @@ Altri strumenti
 .. |ico6| image:: ../../../img/ico_xypoint.png
   :height: 25
 
-.. |ico7| image:: ../../../img/ico_copia_ms.png
+.. |ico7| image:: ../../../img/mActionOptions.png
   :height: 25
 
 .. |ico8| image:: ../../../img/ico_info.png
@@ -60,22 +60,20 @@ Lo strumento della toolbar *Aggiungi un Sito Puntuale utilizzando le coordinate 
 
 |
 
-.. _copia-oggetti:
+.. _plugin-settings:
 
-Copia di oggetti fra i layer Stab e Instab
-""""""""""""""""""""""""""""""""""""""""""
+Impostazioni di MzS Tools
+"""""""""""""""""""""""""
 
-Lo strumento “Copy Stab or Instab layer”, attivabile tramite il pulsante |ico7| della toolbar, consente di copiare tutti i poligoni presenti in un layer *Zone stabili* (o *Zone instabili*) all’interno di un layer *Zone stabili* (o *Zone instabili*) di **livello diverso**. 
+Lo strumento “Impostazioni di MzS Tools”, attivabile tramite il pulsante |ico7| della toolbar, consente modificare
+alcune impostazioni del plugin.
 
-Questo consente di eseguire l’editing di un nuovo livello di approfondimento, utilizzando come base l’informazione spaziale dei poligoni provenienti da un precedente livello. 
+Attualmente è possibile attivare o disattivare l'impostazione automatica delle opzioni avanzate di editing per alcuni
+layer del progetto (vedi: :ref:`auto-overlaps`).
 
-.. image:: ../img/copia_oggetti.png
-  :width: 450
+.. image:: ../img/settings.png
+  :width: 400
   :align: center
 
-Nella finestra viene richiesto di selezionare:
 
-* i layer su cui lavorare (*“Zone stabili”* o *“Zone instabili”*);
-* all’interno del campo *Sorgente*, il layer dal quale copiare le feature;
-* all’interno del campo *Destinazione*, il layer nel quale verranno copiate le feature.
 

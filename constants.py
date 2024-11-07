@@ -4,8 +4,6 @@ SUGGESTED_QGIS_VERSION = "3.26"
 
 NO_OVERLAPS_LAYER_GROUPS = [
     ["Zone instabili liv 1", "Zone stabili liv 1"],
-    ["Zone instabili liv 2", "Zone stabili liv 2"],
-    ["Zone instabili liv 3", "Zone stabili liv 3"],
     ["Zone instabili liv 2-3", "Zone stabili liv 2-3"],
 ]
 

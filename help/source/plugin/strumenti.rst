@@ -9,8 +9,6 @@ All'attivazione del plugin MzS Tools viene visualizzata nell'interfaccia di QGIS
 .. image:: ../img/plugin_toolbar.png
   :align: center
 
-|
-
 .. Note:: Se la toolbar non è presente nell'interfaccia di QGIS, è possibile riattivarla tramite il menu **Visualizza → Barre degli strumenti**.
 
 Gli strumenti richiamabili tramite la toolbar sono:
@@ -33,7 +31,7 @@ Gli strumenti richiamabili tramite la toolbar sono:
 .. |ico6| image:: ../../../img/ico_xypoint.png
   :height: 25
 
-.. |ico7| image:: ../../../img/ico_copia_ms.png
+.. |ico7| image:: ../../../img/mActionOptions.png
   :height: 25
 
 .. |ico8| image:: ../../../img/ico_info.png
@@ -52,7 +50,7 @@ Gli strumenti richiamabili tramite la toolbar sono:
 
 |ico6| **Aggiungi un Sito Puntuale utilizzando le coordinate XY** → :ref:`sito-xy`
 
-|ico7| **Copia gli oggetti dai layer Stab o Instab** → :ref:`copia-oggetti`
+|ico7| **Impostazioni di MzS Tools** → :ref:`plugin-settings`
 
 |ico8| **Aiuto**
 

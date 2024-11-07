@@ -94,10 +94,13 @@ v1.9.2
       richiesto 
     - Semplificato e reso più efficiente lo strumento di creazione di un nuovo progetto
     - Aggiunto uno strumento per l'inserimento e la modifica dei metadati di progetto
-    - Sistemata e resa automatica l'impostazione dei controlli di sovrapposizione fra determinati layer, quali "Zone
-      stabili" e "Zone instabili"
+    - Sistemata e resa automatica l'impostazione dei controlli di editing topologico e sovrapposizione fra determinati
+      layer, quali "Zone stabili" e "Zone instabili"
+    - Aggiunto uno strumento di configurazione del plugin in cui è possibile attivare o disattivare l'impostazione
+      automatica dei controlli di editing topologico e sovrapposizione fra i layer
     - Rimossi gli strumenti di editing dalla toolbar di MzS Tools (le impostazioni di editing topologico sono ora 
       gestite automaticamente tramite gli strumenti di editing base di QGIS)
+    - Rimosso lo strumento di copia delle feature fra i layer "Zone stabili" e "Zone instabili"
     - Risolti alcuni problemi con l'importazione e l'esportazione dei dati
     - Risolti diversi problemi minori
 
@@ -217,11 +220,11 @@ Credits
 |logo_igag| |logo_cnr|
 
 .. |logo_igag| image:: ../../img/IGAG-CMYK.png
-    :width: 24%
+    :width: 14%
     :target: https://www.igag.cnr.it
 
 .. |logo_cnr| image:: ./img/logo_cnr.png
-    :width: 30%
+    :width: 18%
 
 Il plugin viene sviluppato nell'ambito delle attività del 
 `Laboratorio GIS del CNR-IGAG <https://www.igag.cnr.it/lista-laboratori/labgis/>`_  

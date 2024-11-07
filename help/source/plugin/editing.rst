@@ -3,6 +3,9 @@
 Inserimento dati ed editing
 ---------------------------
 
+Inserimento dati vettoriali e relativi attributi
+""""""""""""""""""""""""""""""""""""""""""""""""
+
 .. |ico-topo| image:: https://docs.qgis.org/3.34/it/_images/mIconTopologicalEditing.png
   :height: 25
 
@@ -197,6 +200,8 @@ Si possono inoltre impostare altri controlli quali:
 * Controllo della validità delle geometrie; ad esempio, nel caso dei poligoni, questa opzione evita che si possano verificare problemi quali
   l'"auto-intersezione".
 
+.. _auto-overlaps:
+
 Controllo delle sovrapposizioni tra layer diversi
 =================================================
 
@@ -224,12 +229,24 @@ Come segnalato nel `manuale di QGIS <https://docs.qgis.org/3.34/it/docs/user_man
 questa impostazione è da usare con cautela in quanto si potrebbero ottenere geometrie inaspettate nel caso ci si dimentichi di deselezionare questa opzione 
 quando non è più necessaria.
 
-Per questo motivo **MzS Tools imposta automaticamente l'opzione "Segui configurazione avanzata"**, solo per determinati layer, nel momento in cui 
-si attiva l'editing su uno di essi, e **la disattiva nel momento in cui si interrompe l'editing**, riportando la configurazione allo stato iniziale.
+Per questo motivo **MzS Tools effettua automaticamente l'impostazione di alcune opzioni di editing avanzato** nel momento in cui 
+si attiva l'editing per determinati layer:
 
-In questo modo si evitano errori topologici garantendo la corretta gestione delle sovrapposizioni tra i layer che lo richiedono, senza però interferire
-con le impostazioni personali effettuate a livello di progetto. 
+* attivazione dell'opzione "Segui configurazione avanzata" per il controllo delle sovrapposizioni tra layer
+  appartenenti ad uno stesso "gruppo" (ad esempio i layer delle zone stabili e instabili del livello 1 o del livello 2-3); 
+* attivazione dell'opzione "Modifica topologica" per facilitare l'editing dei poligoni aventi confini in comune ed
+  evitare la presenza di vuoti tra l'uno e l'altro.
 
+Le opzioni vengono poi **automaticamente riportate allo stato iniziale salvato nel progetto** nel momento in cui si
+interrompe l'editing.
 
+In questo modo si evitano errori topologici garantendo la corretta gestione delle sovrapposizioni tra i layer che lo
+richiedono, senza però interferire con le impostazioni personali effettuate a livello di progetto. 
 
+Questo comportamento automatico può comunque essere disattivato o riattivato tramite lo strumento di configurazione di
+MzS Tools (vedi: :ref:`plugin-settings`):
+
+.. image:: ../img/settings.png
+  :width: 400
+  :align: center
 

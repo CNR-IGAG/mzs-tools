@@ -78,15 +78,17 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                     os.path.join(os.path.dirname(__file__), "versione.txt"),
                     os.path.join(proj_path, "progetto", "versione.txt"),
                 )
-                os.remove(os.path.join(proj_path, "progetto_MS.qgs"))
-                shutil.copyfile(
-                    os.path.join(proj_path, "progetto_MS", "progetto_MS.qgs"),
-                    os.path.join(proj_path, "progetto_MS.qgs"),
-                )
                 shutil.rmtree(os.path.join(proj_path, "progetto", "loghi"))
                 shutil.copytree(
                     os.path.join(proj_path, "progetto_MS", "progetto", "loghi"),
                     os.path.join(proj_path, "progetto", "loghi"),
+                )
+
+                # remove the old project file and copy the new one
+                os.remove(os.path.join(proj_path, "progetto_MS.qgs"))
+                shutil.copyfile(
+                    os.path.join(proj_path, "progetto_MS", "progetto_MS.qgs"),
+                    os.path.join(proj_path, "progetto_MS.qgs"),
                 )
 
                 self.load_new_qgs_file(proj_path)
@@ -102,7 +104,8 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                     + name_output,
                 )
 
-                # QgsProject.instance().read(QgsProject.instance().fileName())
+                # reload the project
+                iface.addProject(os.path.join(proj_path, "progetto_MS.qgs"))
 
             except Exception as z:
                 QMessageBox.critical(None, "ERROR!", 'Error:\n"' + str(z) + '"')
@@ -131,44 +134,40 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
         QgsMessageLog.logMessage("Loading new project", "MzSTools", level=Qgis.Info)
 
         project = QgsProject.instance()
+
+        # read the new project file inside the loaded (old) project
         project.read(os.path.join(proj_path, "progetto_MS.qgs"))
-        comune_layer = QgsProject.instance().mapLayersByName("Comune del progetto")[0]
 
-        features = comune_layer.getFeatures()
-        try:
-            for feat in features:
-                attrs = feat.attributes()
-                codice_regio = attrs[1]
-                nome = attrs[4]
-                regione = attrs[7]
-        except IndexError:
-            regione = ""
+        layer_limiti_comunali = project.mapLayersByName("Limiti comunali")[0]
 
-        sourceLYR = QgsProject.instance().mapLayersByName("Limiti comunali")[0]
-        sourceLYR.setSubsetString("cod_regio='" + codice_regio + "'")
-        canvas = iface.mapCanvas()
-        comune_extent = comune_layer.extent()
+        layer_comune_progetto = project.mapLayersByName("Comune del progetto")[0]
 
-        layout_manager = QgsProject.instance().layoutManager()
-        layouts = layout_manager.printLayouts()
+        features = layer_comune_progetto.getFeatures()
+        for feat in features:
+            attrs = feat.attributes()
+            codice_regio = attrs[1]
+            nome = attrs[4]
+            provincia = attrs[6]
+            regione = attrs[7]
 
-        # replace region logo
+        layer_limiti_comunali.removeSelection()
+        layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
+
         logo_regio_in = os.path.join(self.plugin_dir, "img", "logo_regio", codice_regio + ".png").replace("\\", "/")
         logo_regio_out = os.path.join(proj_path, "progetto", "loghi", "logo_regio.png").replace("\\", "/")
         shutil.copyfile(logo_regio_in, logo_regio_out)
 
-        # replace region map
-        layer_tree_root = QgsProject.instance().layerTreeRoot()
-        project_layers = layer_tree_root.layerOrder()
-        for layer in project_layers:
-            layer_tree_root.findLayer(layer.id()).setItemVisibilityChecked(False)
-        layer_limiti_comunali = QgsProject.instance().mapLayersByName("Limiti comunali")[0]
-        layer_tree_root.findLayer(layer_limiti_comunali.id()).setItemVisibilityChecked(True)
-        layer_tree_root.findLayer(comune_layer.id()).setItemVisibilityChecked(True)
-        imageFilename = os.path.join(proj_path, "progetto", "loghi", "mappa_reg.png")
+        mainPath = QgsProject.instance().homePath()
+        canvas = iface.mapCanvas()
+
+        imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
         save_map_image(imageFilename, layer_limiti_comunali, canvas)
 
-        canvas.setExtent(comune_extent)
+        extent = layer_comune_progetto.dataProvider().extent()
+        canvas.setExtent(extent)
+
+        layout_manager = QgsProject.instance().layoutManager()
+        layouts = layout_manager.printLayouts()
 
         for layout in layouts:
             map_item = layout.itemById("mappa_0")
@@ -181,6 +180,19 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
             map_item_4.refreshPicture()
             map_item_5 = layout.itemById("mappa_1")
             map_item_5.refreshPicture()
+
+        # set project title
+        project_title = f"MzS Tools - Comune di {nome} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
+        project.setTitle(project_title)
+
+        # # Save the project
+        project.write(os.path.join(QgsProject.instance().absolutePath(), "progetto_MS.qgs"))
+
+        # Refresh layouts
+        layout_manager = QgsProject.instance().layoutManager()
+        layouts = layout_manager.printLayouts()
+        for layout in layouts:
+            layout.refresh()
 
     def tr(self, message):
         return QCoreApplication.translate("aggiorna_progetto", message)

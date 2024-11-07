@@ -1,12 +1,12 @@
 import configparser
-from itertools import chain
+import webbrowser
 from pathlib import Path
-from .constants import NO_OVERLAPS_LAYER_GROUPS
+
 from qgis.PyQt import uic
-from qgis.core import QgsProject
-from qgis.PyQt.QtWidgets import QDialog, QApplication
 from qgis.PyQt.QtCore import QStandardPaths
-from .utils import get_settings, ensure_config_directory, SETTINGS_SECTION, AUTO_ADVANCED_EDITING_KEY
+from qgis.PyQt.QtWidgets import QDialog
+
+from .utils import AUTO_ADVANCED_EDITING_KEY, SETTINGS_SECTION, ensure_config_directory, get_settings
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / "tb_settings.ui")
 
@@ -29,15 +29,11 @@ class MzSToolsSettings(QDialog, FORM_CLASS):
         # Connect the save button
         self.saveButton.clicked.connect(self.save_settings)
 
-    # def show_settings(self):
-    #     """Show the settings dialog."""
-    #     self.load_settings()
-    #     self.show()
-    #     self.adjustSize()
-
-    # result = self.exec_()
-    # if result:
-    #     self.save_settings()
+        self.helpButtonAutoEditing.clicked.connect(
+            lambda: webbrowser.open(
+                "https://mzs-tools.readthedocs.io/it/latest/plugin/editing.html#controllo-delle-sovrapposizioni-tra-layer-diversi"
+            )
+        )
 
     def load_settings(self):
         """Load settings from the .ini file."""
