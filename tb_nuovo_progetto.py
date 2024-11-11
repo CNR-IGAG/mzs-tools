@@ -53,7 +53,9 @@ class NewProject(QDialog, FORM_CLASS):
             dir_out = self.dir_output.text()
             if os.path.isdir(dir_out):
                 try:
-                    self.create_project(dir_out)
+                    new_project = self.create_project(dir_out)
+                    # reload the project
+                    iface.addProject(new_project)
                 except Exception as z:
                     QMessageBox.critical(None, "ERROR!", f'Error:\n"{str(z)}"')
                     if os.path.exists(os.path.join(dir_out, "progetto_MS")):
@@ -124,16 +126,18 @@ class NewProject(QDialog, FORM_CLASS):
         self.customize_project(project, cod_istat, new_project_path)
         create_basic_sm_metadata(cod_istat, professionista, email_prof)
 
-        # Save the project
-        project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
-
         # Refresh layouts
         layout_manager = QgsProject.instance().layoutManager()
         layouts = layout_manager.printLayouts()
         for layout in layouts:
             layout.refresh()
 
+        # Save the project
+        project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
+
         QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
+
+        return os.path.join(new_project_path, "progetto_MS.qgs")
 
     def extract_project_template(self, dir_out):
         with zipfile.ZipFile(self.project_template_path, "r") as zip_ref:

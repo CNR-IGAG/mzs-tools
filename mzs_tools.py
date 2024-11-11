@@ -2,7 +2,6 @@ import os
 import shutil
 from functools import partial
 from itertools import chain
-from pathlib import Path
 
 from qgis.core import (
     Qgis,
@@ -56,7 +55,6 @@ class MzSTools:
         self.info_dlg = info()
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
-        # self.ms_copy_dlg = copia_ms()
         self.edit_win_dlg = edit_win()
         self.settings_dlg = MzSToolsSettings()
 
@@ -120,9 +118,6 @@ class MzSTools:
         icon_path3 = os.path.join(self.plugin_dir, "img", "ico_info.png")
         icon_path4 = os.path.join(self.plugin_dir, "img", "ico_importa.png")
         icon_path5 = os.path.join(self.plugin_dir, "img", "ico_esporta.png")
-        # icon_path6 = os.path.join(self.plugin_dir, "img", "ico_copia_ms.png")
-        # icon_path8 = os.path.join(self.plugin_dir, "img", "ico_edita.png")
-        # icon_path9 = os.path.join(self.plugin_dir, "img", "ico_salva_edita.png")
         icon_path10 = os.path.join(self.plugin_dir, "img", "ico_xypoint.png")
 
         self.add_action(
@@ -155,35 +150,12 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
-        # self.toolbar.addSeparator()
-
-        # self.add_action(
-        #     icon_path8,
-        #     text=self.tr("Add feature or record"),
-        #     callback=self.add_feature_or_record,
-        #     parent=self.iface.mainWindow(),
-        # )
-
-        # self.add_action(
-        #     icon_path9,
-        #     text=self.tr("Save"),
-        #     callback=self.save,
-        #     parent=self.iface.mainWindow(),
-        # )
-
         self.add_action(
             icon_path10,
             text=self.tr('Add "Sito puntuale" using XY coordinates'),
             callback=self.add_site,
             parent=self.iface.mainWindow(),
         )
-
-        # self.add_action(
-        #     icon_path6,
-        #     text=self.tr('Copy "Stab" or "Instab" layer'),
-        #     callback=self.copy_stab,
-        #     parent=self.iface.mainWindow(),
-        # )
 
         self.toolbar.addSeparator()
 
@@ -203,7 +175,6 @@ class MzSTools:
 
     def new_project(self):
         self.new_project_dlg.run_new_project_tool()
-        self.connect_editing_signals()
 
     def edit_metadata(self):
         self.edit_metadata_dlg.run_edit_metadata_dialog()
@@ -216,9 +187,6 @@ class MzSTools:
 
     def add_site(self):
         self.edit_win_dlg.edita()
-
-    # def copy_stab(self):
-    #     self.ms_copy_dlg.copia()
 
     def show_settings(self):
         """Show the settings dialog."""
@@ -300,6 +268,7 @@ class MzSTools:
         # TODO: find a better way to protect required layers and stop relying on layer names
         # use layer IDs and/or the underlying database table instead
         for layer in QgsProject.instance().requiredLayers():
+            layer.nameChanged.disconnect()
             layer.nameChanged.connect(self.warning_layer_renamed)
 
         # get qgis version, warn the user if it's less than SUGGESTED_QGIS_VERSION
@@ -327,6 +296,8 @@ class MzSTools:
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
         for layer in QgsProject.instance().mapLayers().values():
             if layer.name() in list(chain.from_iterable(NO_OVERLAPS_LAYER_GROUPS)):
+                layer.editingStarted.disconnect()
+                layer.editingStopped.disconnect()
                 layer.editingStarted.connect(partial(self.set_advanced_editing_config, layer))
                 layer.editingStopped.connect(self.reset_editing_config)
 
@@ -408,142 +379,6 @@ class MzSTools:
             proj.setTopologicalEditing(self.topological_editing)
         except Exception as e:
             qgs_log(f"Error resetting advanced editing config: {e}", level="error")
-
-    # def add_feature_or_record(self):
-    #     proj = QgsProject.instance()
-
-    #     snapping_config = proj.instance().snappingConfig()
-    #     snapping_config.clearIndividualLayerSettings()
-
-    #     snapping_config.setTolerance(20.0)
-    #     snapping_config.setMode(QgsSnappingConfig.AdvancedConfiguration)
-
-    #     DIZIO_LAYER = {
-    #         "Zone stabili liv 1": "Zone instabili liv 1",
-    #         "Zone instabili liv 1": "Zone stabili liv 1",
-    #         "Zone stabili liv 2": "Zone instabili liv 2",
-    #         "Zone instabili liv 2": "Zone stabili liv 2",
-    #         "Zone stabili liv 3": "Zone instabili liv 3",
-    #         "Zone instabili liv 3": "Zone stabili liv 3",
-    #     }
-    #     POLY_LYR = [
-    #         "Unita' geologico-tecniche",
-    #         "Instabilita' di versante",
-    #         "Zone stabili liv 1",
-    #         "Zone instabili liv 1",
-    #         "Zone stabili liv 2",
-    #         "Zone instabili liv 2",
-    #         "Zone stabili liv 3",
-    #         "Zone instabili liv 3",
-    #     ]
-
-    #     layer = self.iface.activeLayer()
-
-    #     # Configure snapping
-    #     if layer is not None:
-    #         if layer.name() in POLY_LYR:
-    #             # self.wait_dlg.show()
-    #             for fc in proj.mapLayers().values():
-    #                 if fc.name() in POLY_LYR:
-    #                     layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-    #                         True,
-    #                         QgsSnappingConfig.VertexFlag,
-    #                         20,
-    #                         QgsTolerance.ProjectUnits,
-    #                     )
-
-    #                     snapping_config.setIndividualLayerSettings(fc, layer_settings)
-    #                     snapping_config.setIntersectionSnapping(False)
-
-    #             for chiave, valore in list(DIZIO_LAYER.items()):
-    #                 if layer.name() == chiave:
-    #                     other_layer = proj.mapLayersByName(valore)[0]
-
-    #                     layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-    #                         True,
-    #                         QgsSnappingConfig.VertexFlag,
-    #                         20,
-    #                         QgsTolerance.ProjectUnits,
-    #                     )
-    #                     snapping_config.setIndividualLayerSettings(layer, layer_settings)
-    #                     snapping_config.setIndividualLayerSettings(other_layer, layer_settings)
-
-    #                     snapping_config.setIntersectionSnapping(True)
-
-    #                 elif layer.name() == "Unita' geologico-tecniche":
-    #                     layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-    #                         True,
-    #                         QgsSnappingConfig.VertexFlag,
-    #                         20,
-    #                         QgsTolerance.ProjectUnits,
-    #                     )
-    #                     snapping_config.setIndividualLayerSettings(layer, layer_settings)
-    #                     snapping_config.setIntersectionSnapping(True)
-
-    #                 elif layer.name() == "Instabilita' di versante":
-    #                     layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-    #                         True,
-    #                         QgsSnappingConfig.VertexFlag,
-    #                         20,
-    #                         QgsTolerance.ProjectUnits,
-    #                     )
-    #                     snapping_config.setIndividualLayerSettings(layer, layer_settings)
-    #                     snapping_config.setIntersectionSnapping(True)
-
-    #             layer.startEditing()
-    #             self.iface.actionAddFeature().trigger()
-    #             # self.wait_dlg.hide()
-
-    #         else:
-    #             layer.startEditing()
-    #             self.iface.actionAddFeature().trigger()
-
-    #         proj.setSnappingConfig(snapping_config)
-
-    # def save(self):
-    #     proj = QgsProject.instance()
-
-    #     snapping_config = proj.snappingConfig()
-    #     snapping_config.clearIndividualLayerSettings()
-
-    #     snapping_config.setTolerance(20.0)
-    #     snapping_config.setMode(QgsSnappingConfig.AllLayers)
-
-    #     POLYGON_LYR = [
-    #         "Unita' geologico-tecniche",
-    #         "Instabilita' di versante",
-    #         "Zone stabili liv 1",
-    #         "Zone instabili liv 1",
-    #         "Zone stabili liv 2",
-    #         "Zone instabili liv 2",
-    #         "Zone stabili liv 3",
-    #         "Zone instabili liv 3",
-    #     ]
-
-    #     layer = self.iface.activeLayer()
-    #     if layer is not None:
-    #         if layer.name() in POLYGON_LYR:
-    #             # self.wait_dlg.show()
-    #             layers = proj.mapLayers().values()
-    #             snapping_config = proj.snappingConfig()
-    #             snapping_config.clearIndividualLayerSettings()
-    #             snapping_config.setIntersectionSnapping(False)
-
-    #             for fc in layers:
-    #                 if fc.name() in POLYGON_LYR:
-    #                     layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-    #                         True,
-    #                         QgsSnappingConfig.VertexFlag,
-    #                         20,
-    #                         QgsTolerance.ProjectUnits,
-    #                     )
-    #                     snapping_config.setIndividualLayerSettings(fc, layer_settings)
-
-    #             layer.commitChanges()
-    #             # self.wait_dlg.hide()
-
-    #         else:
-    #             layer.commitChanges()
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)

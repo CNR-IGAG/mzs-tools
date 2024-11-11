@@ -57,7 +57,7 @@ Gli elementi principali del progetto QGIS possono essere identificati in:
 
 * **struttura dei layer** del progetto, rappresentata nel “Pannello dei Layer” (o "TOC" - *table of contents*) di QGIS; i layer presenti all’interno di questi gruppi non devono subire modifiche alle impostazioni di stile e simbologia, alla struttura della tabella degli attributi, ai join e/o relazioni.
 
-  .. Note:: I layer del gruppo **Carta di Microzonazione Sismica** contengono regole di stile e filtri specifici per la composizione dei layout di stampa, e vanno quindi utilizzati solo in fase di generazione delle carte. Nel gruppo **“Cartografia di base”** sono precaricati alcuni layer di utilità quali i limiti comunali ed alcuni servizi WMS, ma è possibile aggiungerne altri in base alle esigenze di progetto;
+  .. Note:: I layer del gruppo **LAYOUT DI STAMPA** contengono regole di stile e filtri specifici per la composizione dei layout di stampa, e vanno quindi utilizzati solo in fase di generazione delle carte. Nel gruppo **“Cartografia di base”** sono precaricati alcuni layer di utilità quali i limiti comunali ed alcuni servizi WMS, ma è possibile aggiungerne altri in base alle esigenze di progetto;
 
 * **toolbar** del plugin MzSTools; come tutte le barre degli strumenti di QGIS, questa può essere visualizzata o nascosta utilizzando il menu “Visualizza – Barre degli strumenti”;
 
@@ -75,20 +75,20 @@ Il progetto QGIS per uno studio di MS creato da MzS Tools contiene una serie di 
 
 I gruppi di layer principali del progetto sono:
 
-* **Banca dati geografica**
-* **Carta di Microzonazione Sismica**
+* **BANCA DATI GEOGRAFICA**
+* **LAYOUT DI STAMPA**
 * **Cartografia di base**
 
 .. warning:: Il layer di questi gruppi non devono essere rimossi, rinominati o spostati, in quanto il plugin MzS Tools si basa su questa struttura per il corretto funzionamento.
 
-Il primo gruppo (**"Banca dati geografica"**) è costituito dai layer di tipo vettoriale che contengono le geometrie di diversi elementi del progetto 
+Il primo gruppo (**"BANCA DATI GEOGRAFICA"**) è costituito dai layer di tipo vettoriale che contengono le geometrie di diversi elementi del progetto 
 (Siti puntuali, Siti lineari, Zone stabili, Zone instabili, ecc.).
 
 L\'**inserimento dei dati geografici vettoriali** necessari per lo studio di MS, secondo quanto definito dagli Standard MS, viene effettuato tramite i layer di questo gruppo
 utilizzando *gli strumenti di editing standard messi a disposizione da QGIS*. MzS Tools associa agli strumenti di editing di QGIS delle *interfacce di inserimento dati
 personalizzate* che aiutano nell'inserimento degli attributi e delle informazioni correlate alle geometrie.
 
-Il secondo gruppo di layer (**"Carta di Microzonazione Sismica"**) è invece costituito dai layer che fanno parte dei *layout di stampa* del progetto, 
+Il secondo gruppo di layer (**"LAYOUT DI STAMPA"**) è invece costituito dai layer che fanno parte dei *layout di stampa* del progetto, 
 e che vengono quindi utilizzati per la creazione delle carte tematiche previste dagli Standard MS.
 
 I layer di questo gruppo sono caratterizzati da opportuni sistemi di filtraggio dei dati e dalla presenza della simbologia prevista dagli Standard MS,

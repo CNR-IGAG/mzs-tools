@@ -87,13 +87,13 @@ Changelog
 ---------
 
 v1.9.2
-    - Introdotta la compatibilità con gli Standard MS v4.3
+    - Introdotti alcuni elementi di compatibilità con le future versioni degli Standard MS
     - Unificati i layer "Zone stabili" e "Zone instabili" dei livelli 2-3, così come previsto dagli Standard MS
     - Nel progetto QGIS i layer gestiti dal plugin sono ora impostati come "richiesti", ed i layer per i layout di
       stampa sono impostati in sola lettura; l'utente viene avvisato nel caso in cui tenti di rinominare un layer
       richiesto 
     - Semplificato e reso più efficiente lo strumento di creazione di un nuovo progetto
-    - Aggiunto uno strumento per l'inserimento e la modifica dei metadati di progetto
+    - Aggiunto uno strumento per l'inserimento e la modifica dei metadati dello studio di MS
     - Sistemata e resa automatica l'impostazione dei controlli di editing topologico e sovrapposizione fra determinati
       layer, quali "Zone stabili" e "Zone instabili"
     - Aggiunto uno strumento di configurazione del plugin in cui è possibile attivare o disattivare l'impostazione
