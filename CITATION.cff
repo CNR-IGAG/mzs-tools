@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: MzS Tools
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Giuseppe
+    family-names: Cosentino
+    orcid: 'https://orcid.org/0000-0001-8691-3430'
+    affiliation: CNR-IGG
+  - given-names: Francesco
+    family-names: Pennica
+    orcid: 'https://orcid.org/0000-0002-8141-9246'
+    affiliation: CNR-IGAG
+  - given-names: Emanuele
+    family-names: Tarquini
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.6372647
+repository-code: 'https://github.com/CNR-IGAG/mzs-tools'
+abstract: QGIS plugin for italian Seismic Microzonation.
+license: GPL-3.0

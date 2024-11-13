@@ -1,18 +1,36 @@
 # MzS Tools
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11125497.svg)](https://doi.org/10.5281/zenodo.11125497) [![Documentation Status](https://readthedocs.org/projects/mzs-tools/badge/?version=latest)](https://mzs-tools.readthedocs.io/it/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11125497.svg)](https://doi.org/10.5281/zenodo.6372647) [![Documentation Status](https://readthedocs.org/projects/mzs-tools/badge/?version=latest)](https://mzs-tools.readthedocs.io/it/latest/?badge=latest) ![GitHub License](https://img.shields.io/github/license/CNR-IGAG/mzs-tools) ![GitHub Release](https://img.shields.io/github/v/release/CNR-IGAG/mzs-tools)
+
+## About
 
 **QGIS plugin for italian Seismic Microzonation.**
 
-Download and install from the QGIS 3.22+ plugin manager or directly from the [plugin repository](https://plugins.qgis.org/plugins/MzSTools/).
+Download and install MzS Tools using the [QGIS](https://qgis.org/) 3.26+ [plugin manager](https://docs.qgis.org/3.34/en/docs/user_manual/plugins/plugins.html) (search for "mzs tools").
+
+You can also download and install manually a release file from the Releases section or the [QGIS plugin repository](https://plugins.qgis.org/plugins/MzSTools/).
 
 Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.io)
+
+Credits: [CREDITS.md](CREDITS.md)
+
+License: [LICENSE.md](LICENSE.md)
 
 ## Changelog
 
 ### v1.9.2
 
-- Temp
+- Initial compatibility with future Standard MS version
+- Unified level 2-3 layers "Zone stabili" and "Zone instabili", as described in Standard MS
+- Plugin layers are marked as required and/or read-only where applicable
+- Simplified and streamlined new project creation tool
+- Added a SM study metadata editor tool
+- Automatic "don't overlap" and topological editing rules for groups of layers such as "Zone stabili" and "Zone instabili"
+- Added a plugin configuration tool with an option to deactivate the automatic editing rules
+- Removed editing tools from MzS Tools toolbar
+- Removed feature copy tool from MzS Tools toolbar
+- Fixed some issues with project import/export tools
+- Fixed some minor issues
 
 ### v1.9.1
 
@@ -157,8 +175,8 @@ sudo apt install python3-pip virtualenv python3-venv qttools5-dev-tools pyqt5-de
 Example of a Linux development environment with Visual Studio Code, poetry and pb_tool:
 
 - Install [poetry](https://python-poetry.org/)
+  - Or use a Python virtualenv and install the dependencies listed in `pyproject.toml` with pip
 - Install [Visual Studio Code](https://code.visualstudio.com/) with the Python, Pylance and reStructuredText (for documentation) extensions.
-  - If needed, install the python libraries required for reStructuredText extension (`pip install snooty-lextudio rstcheck`)
 - Clone the repository
 - Execute `poetry install`
 - Open the project in vscode

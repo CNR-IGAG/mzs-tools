@@ -10,5 +10,8 @@
   "esbonio.sphinx.confDir": "${workspaceFolder}/help/source",
   "makefile.configureOnOpen": false,
   "rewrap.wrappingColumn": 119,
-  "rewrap.autoWrap.enabled": true
+  "rewrap.autoWrap.enabled": true,
+  "[markdown]": {
+    "rewrap.autoWrap.enabled": false,
+  }
 }

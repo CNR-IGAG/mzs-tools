@@ -10,7 +10,6 @@ python = "^3.8.1"
 
 [tool.poetry.dev-dependencies]
 pb_tool = "*"
-# black = "*"
 sphinx-rtd-theme = "*"
 rstcheck = "*"
 esbonio = "*"
