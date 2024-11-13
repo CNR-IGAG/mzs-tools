@@ -400,22 +400,22 @@
 <context>
     <name>MzSTools</name>
     <message>
-        <location filename="../mzs_tools.py" line="236"/>
+        <location filename="../mzs_tools.py" line="202"/>
         <source>&amp;MzS Tools</source>
         <translation>&amp;MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="130"/>
+        <location filename="../mzs_tools.py" line="123"/>
         <source>New project</source>
         <translation>Nuovo progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="146"/>
+        <location filename="../mzs_tools.py" line="139"/>
         <source>Import project folder from geodatabase</source>
         <translation>Importa dati da un progetto esistente</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="153"/>
+        <location filename="../mzs_tools.py" line="146"/>
         <source>Export geodatabase to project folder</source>
         <translation>Esporta i dati in una strutura di progetto standard</translation>
     </message>
@@ -430,7 +430,7 @@
         <translation type="obsolete">Salva</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="176"/>
+        <location filename="../mzs_tools.py" line="153"/>
         <source>Add &quot;Sito puntuale&quot; using XY coordinates</source>
         <translation>Aggiungi un Sito Puntuale utilizzando le coordinate XY</translation>
     </message>
@@ -440,32 +440,32 @@
         <translation type="obsolete">Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="199"/>
+        <location filename="../mzs_tools.py" line="169"/>
         <source>Help</source>
         <translation>Aiuto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="137"/>
+        <location filename="../mzs_tools.py" line="130"/>
         <source>Edit project metadata</source>
         <translation>Modifica i metadati del progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="192"/>
+        <location filename="../mzs_tools.py" line="162"/>
         <source>MzS Tools Settings</source>
         <translation>Impostazioni di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="324"/>
+        <location filename="../mzs_tools.py" line="287"/>
         <source>Warning</source>
         <translation>Attenzione</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="314"/>
+        <location filename="../mzs_tools.py" line="277"/>
         <source>MzS Tools is designed to work with QGIS 3.26 or later. Please consider upgrading QGIS to the latest LTR version to avoid possible issues.</source>
         <translation>MzS Tools è stato sviluppato per QGIS versione 3.26 o successiva. Si prega di aggiornare QGIS all&apos;ultima versione LTR per evitare possibili problemi.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="324"/>
+        <location filename="../mzs_tools.py" line="287"/>
         <source>It is not possible at the moment to rename a required MzS Tools layer! Please revert the name to avoid possible issues.</source>
         <translation>Non è al momento possibile rinominare un layer richiesto dal plugin MzS Tools! Si prega di ritornare al nome precedente per evitare possibili problemi.</translation>
     </message>
@@ -501,22 +501,22 @@
 <context>
     <name>NewProject</name>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="62"/>
+        <location filename="../tb_nuovo_progetto.py" line="64"/>
         <source>WARNING!</source>
         <translation>ATTENZIONE!</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="62"/>
+        <location filename="../tb_nuovo_progetto.py" line="64"/>
         <source>The selected directory does not exist!</source>
         <translation>La cartella selezionata non esiste!</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="136"/>
+        <location filename="../tb_nuovo_progetto.py" line="138"/>
         <source>Notice</source>
         <translation>Avviso</translation>
     </message>
     <message>
-        <location filename="../tb_nuovo_progetto.py" line="136"/>
+        <location filename="../tb_nuovo_progetto.py" line="138"/>
         <source>The project has been created successfully.</source>
         <translation>Il progetto è stato creato correttamente.</translation>
     </message>
@@ -539,12 +539,12 @@
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Il progetto può essere aggiornato all&apos;ultima versione.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Se vuoi procedere con l&apos;aggiornamento clicca su OK! &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Altrimenti clicca su Annulla.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;La versione precedente verrà conservata in una cartella a parte.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../tb_aggiorna_progetto.py" line="96"/>
+        <location filename="../tb_aggiorna_progetto.py" line="98"/>
         <source>INFORMATION!</source>
         <translation>Attenzione!</translation>
     </message>
     <message>
-        <location filename="../tb_aggiorna_progetto.py" line="96"/>
+        <location filename="../tb_aggiorna_progetto.py" line="98"/>
         <source>The project structure has been updated!
 The backup copy has been saved in the following directory: </source>
         <translation>La struttura del progetto è stata aggiornata!
@@ -720,49 +720,59 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
 <context>
     <name>esporta_shp</name>
     <message>
-        <location filename="../tb_esporta_shp.ui" line="32"/>
+        <location filename="../tb_esporta_shp.ui" line="12"/>
         <source>Export as shapefile</source>
         <translation>Esporta dati in shapefile</translation>
     </message>
     <message>
-        <location filename="../tb_esporta_shp.ui" line="56"/>
+        <location filename="../tb_esporta_shp.ui" line="36"/>
         <source>Export geodatabase to project folder</source>
         <translation>Esporta i dati in una strutura di progetto standard</translation>
     </message>
     <message>
-        <location filename="../tb_esporta_shp.ui" line="68"/>
+        <location filename="../tb_esporta_shp.ui" line="48"/>
         <source>Output</source>
         <translation>Destinazione</translation>
     </message>
     <message>
-        <location filename="../tb_esporta_shp.ui" line="94"/>
+        <location filename="../tb_esporta_shp.ui" line="74"/>
         <source>...</source>
         <translation></translation>
     </message>
     <message>
         <location filename="../tb_esporta_shp.ui" line="116"/>
         <source>Message box</source>
-        <translation>Informazioni</translation>
+        <translation type="obsolete">Informazioni</translation>
     </message>
     <message>
         <location filename="../tb_esporta_shp.ui" line="128"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;One or more fundamental layers have been removed / renamed within QGIS LAYER PANEL. Or the Seismic Microzonation project has not started. Fix the problem before running this tool again.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;Uno o piu&apos; layer fondamentali sono stati eliminati o rinominati all&apos;interno del pannello dei layer di QGIS. Non modificare la struttura iniziale dei layer del progetto generato dal plugin.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation type="obsolete">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;Uno o piu&apos; layer fondamentali sono stati eliminati o rinominati all&apos;interno del pannello dei layer di QGIS. Non modificare la struttura iniziale dei layer del progetto generato dal plugin.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../tb_esporta_shp.ui" line="221"/>
+        <location filename="../tb_esporta_shp.ui" line="158"/>
         <source>Help</source>
         <translation>Aiuto</translation>
     </message>
     <message>
-        <location filename="../tb_esporta_shp.py" line="72"/>
+        <location filename="../tb_esporta_shp.py" line="63"/>
         <source>WARNING!</source>
         <translation>ATTENZIONE!</translation>
     </message>
     <message>
-        <location filename="../tb_esporta_shp.py" line="72"/>
+        <location filename="../tb_esporta_shp.py" line="63"/>
         <source>The selected directory does not exist!</source>
         <translation>La cartella selezionata non esiste!</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.py" line="27"/>
+        <source>The tool must be used within an opened MS project!</source>
+        <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
+    </message>
+    <message>
+        <location filename="../tb_esporta_shp.py" line="75"/>
+        <source>Error</source>
+        <translation>Errore</translation>
     </message>
 </context>
 <context>
