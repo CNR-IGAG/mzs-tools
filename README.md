@@ -14,7 +14,7 @@ Documentation: [https://mzs-tools.readthedocs.io](https://mzs-tools.readthedocs.
 
 Credits: [CREDITS.md](CREDITS.md)
 
-License: [LICENSE.md](LICENSE.md)
+License: [LICENSE](LICENSE)
 
 ## Changelog
 
