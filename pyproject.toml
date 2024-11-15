@@ -15,7 +15,7 @@ rstcheck = "*"
 esbonio = "*"
 toml = "*"
 autoflake = "*"
-setuptools = "^69.5.1" # required by pb_tool with python 3.12 https://stackoverflow.com/a/77284076
+setuptools = "^70.0.0" # required by pb_tool with python 3.12 https://stackoverflow.com/a/77284076
 
 [build-system]
 requires = ["poetry>=0.12"]
