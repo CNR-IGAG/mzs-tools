@@ -38,6 +38,9 @@ class MzSTools:
         self.iface = iface
         self.plugin_dir = os.path.dirname(__file__)
 
+        # keep track of connected layers to avoid reconnecting signals
+        self.editing_signals_connected_layers = {}
+
         # initialize locale
         try:
             locale = QSettings().value("locale/userLocale", "en", type=str)[0:2]
@@ -296,10 +299,20 @@ class MzSTools:
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
         for layer in QgsProject.instance().mapLayers().values():
             if layer.name() in list(chain.from_iterable(NO_OVERLAPS_LAYER_GROUPS)):
-                layer.editingStarted.disconnect()
-                layer.editingStopped.disconnect()
-                layer.editingStarted.connect(partial(self.set_advanced_editing_config, layer))
-                layer.editingStopped.connect(self.reset_editing_config)
+                if layer not in self.editing_signals_connected_layers:
+                    layer.editingStarted.connect(partial(self.set_advanced_editing_config, layer))
+                    layer.editingStopped.connect(self.reset_editing_config)
+                    self.editing_signals_connected_layers[layer] = (
+                        self.set_advanced_editing_config,
+                        self.reset_editing_config,
+                    )
+
+    def disconnect_editing_signals(self):
+        """Disconnect specific editing signals."""
+        for layer, (start_func, stop_func) in self.editing_signals_connected_layers.items():
+            layer.editingStarted.disconnect(start_func)
+            layer.editingStopped.disconnect(stop_func)
+        self.editing_signals_connected_layers.clear()
 
     def set_advanced_editing_config(self, layer):
         settings = get_settings()
@@ -371,6 +384,9 @@ class MzSTools:
             qgs_log(f"Error setting advanced editing config: {e}", level="error")
 
     def reset_editing_config(self):
+        settings = get_settings()
+        if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
+            return
         try:
             proj = QgsProject.instance()
             proj.setSnappingConfig(self.proj_snapping_config)

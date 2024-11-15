@@ -151,7 +151,7 @@ da un punto di vista geometrico, topologico e concettuale.
 
 In particolare sono presenti varie impostazioni che riguardano:
 
-* `proprietà di aggancio (*snapping*): <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#snapping-properties>`_
+* `proprietà di aggancio (snapping): <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#snapping-properties>`_
 * `modifiche topologiche <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#topological-editing>`_
 * `digitalizzazione avanzata <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#advanced-digitizing>`_
 * `proprietà Digitalizzazione del layer <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/vector_properties.html#digitizing-properties>`_
@@ -159,7 +159,7 @@ In particolare sono presenti varie impostazioni che riguardano:
 Impostazioni di aggancio (snapping)
 ===================================
 
-Le impostazioni di aggancio sono raggiungibili tramite il menu ``Progetto ► Opzioni di Aggancio…``. E\' possibile inoltre attivare 
+Le impostazioni di aggancio sono raggiungibili tramite il menu ``Progetto - Opzioni di Aggancio…``. E\' possibile inoltre attivare 
 la *Barra degli strumenti di aggancio* di QGIS, la quale dà accesso alla maggior parte di queste funzioni.
 
 Editing topologico
@@ -179,7 +179,7 @@ alcune funzionalità topologiche, quali:
 
 |
 
-Altre opzioni di editing topologico sono disponibili nel pannello delle `proprietà *Digitalizzazione* del layer <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/vector_properties.html#digitizing-properties>`_:
+Altre opzioni di editing topologico sono disponibili nel pannello delle `proprietà Digitalizzazione del layer <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/vector_properties.html#digitizing-properties>`_:
 
 .. image:: ../img/proprieta_layer_digitalizzazione.png
   :width: 700
@@ -198,7 +198,7 @@ Si possono inoltre impostare altri controlli quali:
 
 * Correzione automatica dei nodi duplicati;
 * Controllo della validità delle geometrie; ad esempio, nel caso dei poligoni, questa opzione evita che si possano verificare problemi quali
-  l'"auto-intersezione".
+  la "auto-intersezione".
 
 .. _auto-overlaps:
 

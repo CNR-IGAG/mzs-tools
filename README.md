@@ -18,6 +18,11 @@ License: [LICENSE](LICENSE)
 
 ## Changelog
 
+### v1.9.3
+
+- Hotfix for editing signals disconnection
+- Fix stab, instab, isosub triggers
+
 ### v1.9.2
 
 - Initial compatibility with future Standard MS version

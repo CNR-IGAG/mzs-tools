@@ -86,6 +86,10 @@ Riferimenti
 Changelog
 ---------
 
+v1.9.3
+    - Hotfix per la disconnessione dei segnali di editing
+    - Sistemati i trigger delle tabelle stab, instab, isosub
+
 v1.9.2
     - Introdotti alcuni elementi di compatibilità con le future versioni degli Standard MS
     - Unificati i layer "Zone stabili" e "Zone instabili" dei livelli 2-3, così come previsto dagli Standard MS

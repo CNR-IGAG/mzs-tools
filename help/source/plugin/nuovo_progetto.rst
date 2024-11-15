@@ -97,9 +97,9 @@ e *non devono essere utilizzati per l'editing* (sono infatti impostati in sola l
 Il terzo gruppo di layer (**"Cartografia di base"**) contiene i layer di tipo raster e vettoriale che costituiscono la base cartografica del progetto.
 
 .. Warning:: È possibile aggiungere layer (ad esempio è sicuramente utile aggiungere mappe di base come la cartografia CTR del comune oggetto di studio) 
-  ed altri collegamenti come layer WMS (Web Map Services), ed è importante salvare il progetto al termine di una sessione di lavoro. Bisogna però avere 
-  cura di *non eliminare o modificare i layer già presenti* nel progetto subito dopo averlo generato: in questo modo infatti si potrebbero perdere i 
-  collegamenti agli script ed alle interfacce di inserimento necessarie per il funzionamento di diversi strumenti messi a disposizione dal plugin.
+   ed altri collegamenti come layer WMS (Web Map Services), ed è importante salvare il progetto al termine di una sessione di lavoro. Bisogna però avere 
+   cura di *non eliminare o modificare i layer già presenti* nel progetto subito dopo averlo generato: in questo modo infatti si potrebbero perdere i 
+   collegamenti agli script ed alle interfacce di inserimento necessarie per il funzionamento di diversi strumenti messi a disposizione dal plugin.
 
    In generale, si raccomanda di:
 

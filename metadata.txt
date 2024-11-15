@@ -9,7 +9,7 @@ qgisMinimumVersion=3.26
 description=Plugin for Italian seismic microzonation.
 description[it]=Plugin per la Microzonazione Sismica in Italia
 
-version=1.9.2
+version=1.9.3
 author=CNR-IGAG
 email=labgis@igag.cnr.it
 
@@ -17,7 +17,9 @@ about=The plugin allows the creation of the database and the cartographic repres
 about[it]=Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana secondo gli "Standard di rappresentazione ed archiviazione informatica" versione 4.2 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907). Il fornitore del software non fornisce alcun tipo di garanzia per il programma (come descritto all'interno della licenza GPLv3).
     
 changelog=
-
+        <b>v1.9.3:</b>
+                - Hotfix for editing signals disconnection
+                - Fix stab, instab, isosub triggers
         <b>v1.9.2:</b>
                 - Initial compatibility with future Standard MS version
                 - Unified level 2-3 layers "Zone stabili" and "Zone instabili", as described in Standard MS
@@ -121,7 +123,9 @@ changelog=
                 -  initial relase.
 
 changelog[it]=
-
+        <b>v1.9.3:</b>
+                - Hotfix per la disconnessione dei segnali di editing
+                - Sistemati i trigger delle tabelle stab, instab, isosub
         <b>v1.9.2:</b>
                 - Introdotti alcuni elementi di compatibilità con le future versioni degli Standard MS
                 - Unificati i layer "Zone stabili" e "Zone instabili" dei livelli 2-3, così come previsto dagli Standard MS

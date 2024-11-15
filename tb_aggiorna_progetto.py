@@ -49,6 +49,8 @@ class aggiorna_progetto(QDialog, FORM_CLASS):
                 sql_scripts.append("query_v19.sql")
             if proj_vers < "1.9.2":
                 sql_scripts.append("query_v192.sql")
+            if proj_vers < "1.9.3":
+                sql_scripts.append("query_v193.sql")
 
             try:
                 shutil.copytree(proj_path, os.path.join(str(output_path), name_output))
