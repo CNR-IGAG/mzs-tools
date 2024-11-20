@@ -1,5 +1,3 @@
-# Mandatory items:
-
 [general]
 
 name=MzS Tools
@@ -9,7 +7,7 @@ qgisMinimumVersion=3.26
 description=Plugin for Italian seismic microzonation.
 description[it]=Plugin per la Microzonazione Sismica in Italia
 
-version=1.9.3
+version=1.9.4
 author=CNR-IGAG
 email=labgis@igag.cnr.it
 
@@ -17,6 +15,8 @@ about=The plugin allows the creation of the database and the cartographic repres
 about[it]=Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana secondo gli "Standard di rappresentazione ed archiviazione informatica" versione 4.2 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907). Il fornitore del software non fornisce alcun tipo di garanzia per il programma (come descritto all'interno della licenza GPLv3).
     
 changelog=
+        <b>v1.9.4:</b>
+                - Fix print layout layers
         <b>v1.9.3:</b>
                 - Hotfix for editing signals disconnection
                 - Fix stab, instab, isosub triggers
@@ -123,6 +123,8 @@ changelog=
                 -  initial relase.
 
 changelog[it]=
+        <b>v1.9.4:</b>
+                - Sistemati i layer per i layout di stampa
         <b>v1.9.3:</b>
                 - Hotfix per la disconnessione dei segnali di editing
                 - Sistemati i trigger delle tabelle stab, instab, isosub

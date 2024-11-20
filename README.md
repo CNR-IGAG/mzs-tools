@@ -18,6 +18,10 @@ License: [LICENSE](LICENSE)
 
 ## Changelog
 
+### 1.9.4
+
+- Fix print layout layers
+
 ### v1.9.3
 
 - Hotfix for editing signals disconnection

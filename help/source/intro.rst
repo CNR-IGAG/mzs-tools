@@ -86,6 +86,9 @@ Riferimenti
 Changelog
 ---------
 
+v1.9.4
+    - Sistemati i layer per i layout di stampa
+
 v1.9.3
     - Hotfix per la disconnessione dei segnali di editing
     - Sistemati i trigger delle tabelle stab, instab, isosub
