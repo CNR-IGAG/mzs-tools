@@ -1,19 +1,19 @@
 # Changelog
 
-## 1.9.5 - 2024-12-12 [Unreleased]
+## [1.9.5] - 2024-12-12 [Unreleased]
 
 - test
 
-## 1.9.4 - 2024-11-21
+## [1.9.4] - 2024-11-21
 
 - Fix print layout layers
 
-## 1.9.3 - 2024-11-15
+## [1.9.3] - 2024-11-15
 
 - Hotfix for editing signals disconnection
 - Fix stab, instab, isosub triggers
 
-## 1.9.2 - 2024-11-13
+## [1.9.2] - 2024-11-13
 
 - Initial compatibility with future Standard MS version
 - Unified level 2-3 layers "Zone stabili" and "Zone instabili", as described in Standard MS
@@ -27,11 +27,11 @@
 - Fixed some issues with project import/export tools
 - Fixed some minor issues
 
-## 1.9.1 - 2024-05-10
+## [1.9.1] - 2024-05-10
 
 - Updated style expressions for MS level 2-3 layers
 
-## 1.9.0 - 2023-10-27
+## [1.9.0] - 2023-10-27
 
 - Updated styles and print layouts
 - Improved compatibility with MS standard v4.2

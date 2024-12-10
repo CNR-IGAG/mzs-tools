@@ -1,7 +1,8 @@
 [project]
 name = "mzs-tools"
-version = "1.9.5"
 description = "QGIS plugin for italian seismic microzonation"
+dynamic = ["version"]
+# version = "1.9.5"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
@@ -14,14 +15,19 @@ dev = [
     "qgis-plugin-ci>=2.8.10",
     "ruff>=0.8.2",
     "sphinx-rtd-theme>=3.0.2",
+    "esbonio>=0.16.5",
 ]
 
 [tool.qgis-plugin-ci]
 plugin_name = "MzS Tools"
 plugin_path = "mzs_tools"
 project_slug = "mzs-tools"
+github_organization_slug = "CNR-IGAG"
 
 [tool.ruff]
 target-version = "py311"
 line-length = 119
 indent-width = 4
+
+[tool.setuptools]
+packages = ["mzs_tools"]
