@@ -1,4 +1,11 @@
 {
+  "files.associations": {
+    "./requirements/*.txt": "pip-requirements",
+    "metadata.txt": "ini",
+    "**/*.model3": "xml",
+    "**/*.ts": "xml",
+    "**/*.ui": "xml"
+  },
   "editor.defaultFormatter": "charliermarsh.ruff",
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,

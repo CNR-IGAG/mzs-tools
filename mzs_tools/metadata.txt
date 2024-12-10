@@ -1,0 +1,30 @@
+[general]
+
+name=MzS Tools
+
+qgisMinimumVersion=3.26
+
+description=Plugin for Italian seismic microzonation.
+description[it]=Plugin per la Microzonazione Sismica in Italia
+
+version=1.9.4
+author=CNR-IGAG
+email=labgis@igag.cnr.it
+
+about=The plugin allows the creation of the database and the cartographic representations for the Italian seismic microzonation studies according to the "standards of representation and computer archiving" version 4.2 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907). The software provider does not provide any warranty for the program (as described in the GPLv3 license).
+about[it]=Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana secondo gli "Standard di rappresentazione ed archiviazione informatica" versione 4.2 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907). Il fornitore del software non fornisce alcun tipo di garanzia per il programma (come descritto all''interno della licenza GPLv3).
+    
+changelog=
+
+tracker=https://github.com/CNR-IGAG/mzs-tools/issues
+repository=https://github.com/CNR-IGAG/mzs-tools
+
+tags=Italy, Seismic hazard, seismic microzonation
+tags[it]=microzonazione sismica, pericolosità geologica, geologia
+
+homepage=https://github.com/CNR-IGAG/mzs-tools
+category=Database
+icon=icon.png
+experimental=False
+deprecated=False
+

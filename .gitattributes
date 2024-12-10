@@ -1,9 +1,0 @@
-.venv export-ignore
-.vscode export-ignore
-/help export-ignore
-/scripts export-ignore
-/template_code export-ignore
-.gitattributes export-ignore
-.gitignore export-ignore
-Makefile export-ignore
-
