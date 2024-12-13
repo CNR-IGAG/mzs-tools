@@ -15,20 +15,20 @@ from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, qApp
 
+from .__about__ import __version__
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .tb_aggiorna_progetto import aggiorna_progetto
 from .tb_edit_metadata import EditMetadataDialog
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
-from .tb_info import info
+from .tb_info import PluginInfo
 from .tb_nuovo_progetto import NewProject
 from .tb_settings import MzSToolsSettings
 from .utils import (
     AUTO_ADVANCED_EDITING_KEY,
     detect_mzs_tools_project,
     get_settings,
-    plugin_version_from_metadata_file,
     qgs_log,
 )
 
@@ -55,7 +55,7 @@ class MzSTools:
         self.project_update_dlg = aggiorna_progetto()
         self.new_project_dlg = NewProject()
         self.edit_metadata_dlg = EditMetadataDialog()
-        self.info_dlg = info()
+        self.info_dlg = PluginInfo()
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
         self.edit_win_dlg = edit_win()
@@ -258,10 +258,10 @@ class MzSTools:
                     shutil.copy(full_file_name, dir_svg_output)
 
         qgs_log("Comparing project and plugin versions...")
-        plugin_version = plugin_version_from_metadata_file()
+        # plugin_version = plugin_version_from_metadata_file()
 
-        if project_info["version"] < plugin_version:
-            qgs_log(f"Project should be updated to version {plugin_version}")
+        if project_info["version"] < __version__:
+            qgs_log(f"Project should be updated to version {__version__}")
             qApp.processEvents()
             self.project_update_dlg.aggiorna(project_info["project_path"], project_info["version"])
 

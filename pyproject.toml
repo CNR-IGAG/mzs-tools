@@ -10,12 +10,19 @@ dependencies = []
 [dependency-groups]
 dev = [
     "pre-commit>=4.0.1",
-    "pytest-cov>=6.0.0",
-    "pytest>=8.3.4",
-    "qgis-plugin-ci>=2.8.10",
     "ruff>=0.8.2",
-    "sphinx-rtd-theme>=3.0.2",
     "esbonio>=0.16.5",
+]
+testing = [
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-qgis>=2.1.0",
+]
+ci = [
+    "qgis-plugin-ci>=2.8.10",
+]
+docs = [
+    "sphinx-rtd-theme>=3.0.2",
 ]
 
 [tool.qgis-plugin-ci]
