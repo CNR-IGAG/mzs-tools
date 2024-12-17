@@ -9,13 +9,18 @@ qgisMinimumVersion=3.26
 qgisMaximumVersion=3.99
 
 description=Plugin for Italian seismic microzonation.
-description[it]=Plugin per la Microzonazione Sismica in Italia
+description[it]=Plugin per la Microzonazione Sismica in Italia.
 
-about=The plugin allows the creation of the database and the cartographic representations for the Italian seismic microzonation studies according to the "standards of representation and computer archiving" version 4.2 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907). The software provider does not provide any warranty for the program (as described in the GPLv3 license).
-about[it]=Il plugin consente la creazione della banca dati e la rappresentazione cartografica degli studi di microzonazione sismica italiana secondo gli "Standard di rappresentazione ed archiviazione informatica" versione 4.2 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907). Il fornitore del software non fornisce alcun tipo di garanzia per il programma (come descritto nella licenza GPLv3).
+about=Database management and cartographic representations for the Italian seismic microzonation studies according to the "standards of representation and computer archiving" version 4.2 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907). 
+    Plugin developed by the <a href="https://www.igag.cnr.it/en/laboratories/labgis/">GIS Laboratory (LabGIS)</a> of the <a href="https://www.igag.cnr.it">Institute of Environmental Geology and Geoengineering (IGAG)</a> of the National Research Council (CNR). 
+    The software provider does not provide any warranty for the program (as described in the GPLv3 license).
+
+about[it]=Gestione dati e rappresentazioni cartografiche degli studi di microzonazione sismica italiana secondo gli "Standard di rappresentazione ed archiviazione informatica" versione 4.2 (Commissione tecnica per la microzonazione sismica - art. 5, comma 7 dell’OPCM 13 nov. 2010, n. 3907). 
+    Plugin sviluppato dal <a href="https://www.igag.cnr.it/it/laboratori/labgis/">Laboratorio GIS (LabGIS)</a> dell`<a href="https://www.igag.cnr.it">Istituto di Geologia Ambientale e Geoingegneria (IGAG)</a> del Consiglio Nazionale delle Ricerche (CNR). 
+    Il fornitore del software non fornisce alcun tipo di garanzia per il programma (come descritto nella licenza GPLv3).
     
 changelog=
- Complete changelog here: https://github.com/CNR-IGAG/mzs-tools/blob/master/CHANGELOG.md
+ Complete changelog <a href="https://github.com/CNR-IGAG/mzs-tools/blob/master/CHANGELOG.md">here</a>.
 
 tracker=https://github.com/CNR-IGAG/mzs-tools/issues
 repository=https://github.com/CNR-IGAG/mzs-tools

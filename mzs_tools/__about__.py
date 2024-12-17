@@ -32,9 +32,13 @@ __email__: str = __plugin_md__.get("general").get("email")
 __icon_path__: Path = DIR_PLUGIN_ROOT.resolve() / __plugin_md__.get("general").get("icon")
 __keywords__: list = [t.strip() for t in __plugin_md__.get("general").get("repository").split("tags")]
 __license__: str = "GPLv3"
-__summary__: str = "{}\n{}".format(
+__summary__: str = "{}\n\n{}".format(
     __plugin_md__.get("general").get("description"),
     __plugin_md__.get("general").get("about"),
+)
+__summary_it__: str = "{}\n\n{}".format(
+    __plugin_md__.get("general").get("description[it]"),
+    __plugin_md__.get("general").get("about[it]"),
 )
 
 __title__: str = __plugin_md__.get("general").get("name")

@@ -8,6 +8,7 @@
 
 ## Special Thanks
 
+- Francesco Stigliano (MS projects support)
 - Monia Coltella (MS standard support)
 - Alessandro Pasotti (QGIS 3 port)
 

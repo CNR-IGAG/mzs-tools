@@ -3,7 +3,8 @@ SOURCES = mzs_tools.py \
           tb_edit_metadata.py \
           tb_esporta_shp.py \
           tb_edit_win.py \
-          tb_aggiorna_progetto.py
+          tb_aggiorna_progetto.py \
+          tb_info.py
 
 FORMS = tb_nuovo_progetto.ui \
         tb_edit_metadata.ui \

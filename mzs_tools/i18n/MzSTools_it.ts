@@ -400,22 +400,22 @@
 <context>
     <name>MzSTools</name>
     <message>
-        <location filename="../mzs_tools.py" line="202"/>
+        <location filename="../mzs_tools.py" line="205"/>
         <source>&amp;MzS Tools</source>
         <translation>&amp;MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="123"/>
+        <location filename="../mzs_tools.py" line="126"/>
         <source>New project</source>
         <translation>Nuovo progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="139"/>
+        <location filename="../mzs_tools.py" line="142"/>
         <source>Import project folder from geodatabase</source>
         <translation>Importa dati da un progetto esistente</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="146"/>
+        <location filename="../mzs_tools.py" line="149"/>
         <source>Export geodatabase to project folder</source>
         <translation>Esporta i dati in una strutura di progetto standard</translation>
     </message>
@@ -430,7 +430,7 @@
         <translation type="obsolete">Salva</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="153"/>
+        <location filename="../mzs_tools.py" line="156"/>
         <source>Add &quot;Sito puntuale&quot; using XY coordinates</source>
         <translation>Aggiungi un Sito Puntuale utilizzando le coordinate XY</translation>
     </message>
@@ -440,32 +440,32 @@
         <translation type="obsolete">Copia gli oggetti dai layer &quot;Stab&quot; o &quot;Instab&quot;</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="169"/>
+        <location filename="../mzs_tools.py" line="172"/>
         <source>Help</source>
         <translation>Aiuto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="130"/>
+        <location filename="../mzs_tools.py" line="133"/>
         <source>Edit project metadata</source>
         <translation>Modifica i metadati del progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="162"/>
+        <location filename="../mzs_tools.py" line="165"/>
         <source>MzS Tools Settings</source>
         <translation>Impostazioni di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="287"/>
+        <location filename="../mzs_tools.py" line="290"/>
         <source>Warning</source>
         <translation>Attenzione</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="277"/>
+        <location filename="../mzs_tools.py" line="280"/>
         <source>MzS Tools is designed to work with QGIS 3.26 or later. Please consider upgrading QGIS to the latest LTR version to avoid possible issues.</source>
         <translation>MzS Tools è stato sviluppato per QGIS versione 3.26 o successiva. Si prega di aggiornare QGIS all&apos;ultima versione LTR per evitare possibili problemi.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="287"/>
+        <location filename="../mzs_tools.py" line="290"/>
         <source>It is not possible at the moment to rename a required MzS Tools layer! Please revert the name to avoid possible issues.</source>
         <translation>Non è al momento possibile rinominare un layer richiesto dal plugin MzS Tools! Si prega di ritornare al nome precedente per evitare possibili problemi.</translation>
     </message>
@@ -527,6 +527,19 @@
     </message>
 </context>
 <context>
+    <name>PluginInfo</name>
+    <message>
+        <location filename="../tb_info.py" line="107"/>
+        <source>New version available: {version_available}</source>
+        <translation>Nuova versione disponibile: {version_available}</translation>
+    </message>
+    <message>
+        <location filename="../tb_info.py" line="104"/>
+        <source>(Local or development version)</source>
+        <translation>(Versione locale o di sviluppo)</translation>
+    </message>
+</context>
+<context>
     <name>aggiorna_progetto</name>
     <message>
         <location filename="../tb_aggiorna_progetto.ui" line="56"/>
@@ -539,12 +552,12 @@
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;Il progetto può essere aggiornato all&apos;ultima versione.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Se vuoi procedere con l&apos;aggiornamento clicca su OK! &lt;/p&gt;&lt;p align=&quot;center&quot;&gt;Altrimenti clicca su Annulla.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;La versione precedente verrà conservata in una cartella a parte.&lt;/p&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../tb_aggiorna_progetto.py" line="98"/>
+        <location filename="../tb_aggiorna_progetto.py" line="100"/>
         <source>INFORMATION!</source>
         <translation>Attenzione!</translation>
     </message>
     <message>
-        <location filename="../tb_aggiorna_progetto.py" line="98"/>
+        <location filename="../tb_aggiorna_progetto.py" line="100"/>
         <source>The project structure has been updated!
 The backup copy has been saved in the following directory: </source>
         <translation>La struttura del progetto è stata aggiornata!
@@ -838,32 +851,79 @@ Una copia di backup è stata conservata nella seguente cartella: </translation>
     <message>
         <location filename="../tb_info.ui" line="6"/>
         <source>Help</source>
-        <translation>Aiuto</translation>
+        <translation type="obsolete">Aiuto</translation>
     </message>
     <message>
         <location filename="../tb_info.ui" line="32"/>
         <source>Information/Informazioni</source>
-        <translation>Informazioni</translation>
+        <translation type="obsolete">Informazioni</translation>
     </message>
     <message>
-        <location filename="../tb_info.ui" line="75"/>
+        <location filename="../tb_info.ui" line="424"/>
         <source>User guide</source>
         <translation>Guida utente</translation>
     </message>
     <message>
-        <location filename="../tb_info.ui" line="53"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;MzS Tools QGIS plugin version [[]]&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt;Plugin developed by the &lt;/span&gt;&lt;a href=&quot;https://www.igag.cnr.it/it/laboratori/labgis/&quot;&gt;&lt;span style=&quot; font-weight:400; text-decoration: underline; color:#0000ff;&quot;&gt;GIS Laboratory (LabGIS)&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt; of the &lt;/span&gt;&lt;a href=&quot;https://www.igag.cnr.it&quot;&gt;&lt;span style=&quot; font-weight:400; text-decoration: underline; color:#0000ff;&quot;&gt;Institute of Environmental Geology and Geoengineering (IGAG)&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt; of the National Research Council (CNR). &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt;Plugin sviluppato dal &lt;/span&gt;&lt;a href=&quot;https://www.igag.cnr.it/it/laboratori/labgis/&quot;&gt;&lt;span style=&quot; font-weight:400; text-decoration: underline; color:#0000ff;&quot;&gt;Laboratorio GIS (LabGIS)&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt; dell&apos;&lt;/span&gt;&lt;a href=&quot;https://www.igag.cnr.it&quot;&gt;&lt;span style=&quot; font-weight:400; text-decoration: underline; color:#0000ff;&quot;&gt;Istituto di Geologia Ambientale e Geoingegneria (IGAG)&lt;/span&gt;&lt;/a&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt; del Consiglio Nazionale delle Ricerce (CNR). &lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;MzS Tools QGIS plugin By Cosentino G., Pennica F., Tarquini E., Stigliano F.&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:400;&quot;&gt;With the contribution of/con il contributo di: &lt;/span&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;Coltella M.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../tb_info.ui" line="153"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../tb_info.ui" line="173"/>
+        <location filename="../tb_info.ui" line="444"/>
         <source>GitHub</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="14"/>
+        <source>MzS Tools Info</source>
+        <translation>Informazioni su MzS Tools</translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="50"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:18pt; font-weight:600;&quot;&gt;MzS Tools&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="62"/>
+        <source>Version [[]]</source>
+        <translation>Versione [[]]</translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="69"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#e01b24;&quot;&gt;[Local or development version]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="162"/>
+        <source>Information</source>
+        <translation>Informazioni</translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="203"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:600;&quot;&gt;MzS Tools QGIS plugin&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;[[Abstract]]&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;Contacts: [[Contacts]]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Ubuntu&apos;; font-size:10pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;; font-weight:600;&quot;&gt;MzS Tools QGIS plugin&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;[[Abstract]]&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:&apos;MS Shell Dlg 2&apos;;&quot;&gt;Contatti: [[Contacts]]&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="236"/>
+        <source>Credits</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="297"/>
+        <source>Changelog</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="../tb_info.ui" line="358"/>
+        <source>License</source>
+        <translation>Licenza</translation>
     </message>
 </context>
 <context>

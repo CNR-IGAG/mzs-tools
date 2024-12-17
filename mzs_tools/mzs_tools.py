@@ -55,7 +55,7 @@ class MzSTools:
         self.project_update_dlg = aggiorna_progetto()
         self.new_project_dlg = NewProject()
         self.edit_metadata_dlg = EditMetadataDialog()
-        self.info_dlg = PluginInfo()
+        self.info_dlg = PluginInfo(self.iface.mainWindow())
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
         self.edit_win_dlg = edit_win()
@@ -172,7 +172,7 @@ class MzSTools:
         self.add_action(
             icon_path3,
             text=self.tr("Help"),
-            callback=self.help,
+            callback=self.show_info_dlg,
             parent=self.iface.mainWindow(),
         )
 
@@ -197,8 +197,8 @@ class MzSTools:
         self.settings_dlg.show()
         self.settings_dlg.adjustSize()
 
-    def help(self):
-        self.info_dlg.help()
+    def show_info_dlg(self):
+        self.info_dlg.exec()
 
     def unload(self):
         for action in self.actions:
