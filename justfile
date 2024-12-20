@@ -6,7 +6,7 @@ default:
 create-venv PYTHON_VERSION="3.12" QGIS_PYTHON_LIB_PATH="/usr/share/qgis/python":
     rm -rf .venv
     uv venv --system-site-packages --python ">={{ PYTHON_VERSION }}"
-    echo "{ QGIS_PYTHON_LIB_PATH }" > .venv/lib/python{{ PYTHON_VERSION }}/site-packages/qgis.pth
+    echo "{{ QGIS_PYTHON_LIB_PATH }}" > .venv/lib/python{{ PYTHON_VERSION }}/site-packages/qgis.pth
     uv sync --all-groups
     uv run qgis-plugin-ci changelog latest
 

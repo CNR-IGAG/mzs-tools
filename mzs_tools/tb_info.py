@@ -13,7 +13,7 @@ from qgis.utils import iface
 
 from mzs_tools.utils import qgs_log
 
-from .__about__ import __email__, __summary__, __summary_it__, __version__
+from mzs_tools.__about__ import __email__, __summary__, __summary_it__, __version__
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_info.ui"))
 
@@ -91,11 +91,16 @@ class PluginInfo(QDialog, FORM_CLASS):
 
     def get_plugin_metadata(self, plugin_name: str) -> Dict[str, str]:
         """Fetch plugin metadata."""
-        plugin_metadata = iface.pluginManagerInterface().pluginMetadata(plugin_name)
-        if not plugin_metadata:
-            # Try refreshing the plugin manager cache
-            pyplugin_installer.instance().reloadAndExportData()
+        plugin_metadata = {}
+        try:
+            # iface.pluginManagerInterface() and pyplugin_installer.instance() are not available during tests
             plugin_metadata = iface.pluginManagerInterface().pluginMetadata(plugin_name)
+            if not plugin_metadata:
+                # Try refreshing the plugin manager cache
+                pyplugin_installer.instance().reloadAndExportData()
+                plugin_metadata = iface.pluginManagerInterface().pluginMetadata(plugin_name)
+        except Exception as e:
+            qgs_log(f"Error fetching plugin metadata: {e}", level="warning")
         return plugin_metadata or {}
 
     def update_version_warning(self, version_installed: str, version_available: str):
@@ -111,3 +116,17 @@ class PluginInfo(QDialog, FORM_CLASS):
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)
+
+
+# def _run():
+#     from qgis.core import QgsApplication
+
+#     app = QgsApplication([], True)
+#     app.initQgis()
+#     widget = PluginInfo()
+#     widget.show()
+#     app.exec_()
+
+
+# if __name__ == "__main__":
+#     _run()

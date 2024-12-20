@@ -1,4 +1,6 @@
+import configparser
 import os
+from pathlib import Path
 import shutil
 from functools import partial
 from itertools import chain
@@ -52,8 +54,11 @@ class MzSTools:
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
 
+        # install or update svg symbols in current QGIS profile
+        self.check_svg_cache()
+
         self.project_update_dlg = aggiorna_progetto()
-        self.new_project_dlg = NewProject()
+        self.new_project_dlg = NewProject(self.iface.mainWindow())
         self.edit_metadata_dlg = EditMetadataDialog()
         self.info_dlg = PluginInfo(self.iface.mainWindow())
         self.import_shp_dlg = importa_shp()
@@ -66,8 +71,8 @@ class MzSTools:
         self.toolbar = self.iface.addToolBar("MzSTools")
         self.toolbar.setObjectName("MzSTools")
 
-        self.new_project_dlg.dir_output.clear()
-        self.new_project_dlg.pushButton_out.clicked.connect(self.select_output_fld_2)
+        # self.new_project_dlg.dir_output.clear()
+        # self.new_project_dlg.pushButton_out.clicked.connect(self.select_output_fld_2)
 
         self.import_shp_dlg.dir_input.clear()
         self.import_shp_dlg.pushButton_in.clicked.connect(self.select_input_fld_4)
@@ -126,7 +131,7 @@ class MzSTools:
         self.add_action(
             icon_path2,
             text=self.tr("New project"),
-            callback=self.new_project,
+            callback=self.new_project_dlg.run_new_project_tool,
             parent=self.iface.mainWindow(),
         )
 
@@ -169,15 +174,26 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
-        self.add_action(
+        self.help_action = self.add_action(
             icon_path3,
-            text=self.tr("Help"),
+            text=self.tr("MzS Tools Help"),
             callback=self.show_info_dlg,
             parent=self.iface.mainWindow(),
         )
+        # add the help action to the QGIS plugin help menu
+        self.iface.pluginHelpMenu().addAction(self.help_action)
 
-    def new_project(self):
-        self.new_project_dlg.run_new_project_tool()
+    def unload(self):
+        for action in self.actions:
+            self.iface.removePluginDatabaseMenu(self.tr("&MzS Tools"), action)
+            self.iface.removeToolBarIcon(action)
+        del self.toolbar
+
+        # remove the help action from the QGIS plugin help menu
+        self.iface.pluginHelpMenu().removeAction(self.help_action)
+        del self.help_action
+
+        self.iface.projectRead.disconnect(self.check_project)
 
     def edit_metadata(self):
         self.edit_metadata_dlg.run_edit_metadata_dialog()
@@ -200,15 +216,9 @@ class MzSTools:
     def show_info_dlg(self):
         self.info_dlg.exec()
 
-    def unload(self):
-        for action in self.actions:
-            self.iface.removePluginDatabaseMenu(self.tr("&MzS Tools"), action)
-            self.iface.removeToolBarIcon(action)
-        del self.toolbar
-
-    def select_output_fld_2(self):
-        out_dir = QFileDialog.getExistingDirectory(self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly)
-        self.new_project_dlg.dir_output.setText(out_dir)
+    # def select_output_fld_2(self):
+    #     out_dir = QFileDialog.getExistingDirectory(self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly)
+    #     self.new_project_dlg.dir_output.setText(out_dir)
 
     def select_input_fld_4(self):
         in_dir = QFileDialog.getExistingDirectory(self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
@@ -226,10 +236,39 @@ class MzSTools:
         out_dir = QFileDialog.getExistingDirectory(self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
         self.export_shp_dlg.dir_output.setText(out_dir)
 
+    def check_svg_cache(self):
+        qgs_log("Checking svg symbols...")
+        dir_svg_input = Path(self.plugin_dir) / "img" / "svg"
+
+        current_qgis_profile_name = None
+        try:
+            # only in QGIS >= 3.30
+            current_qgis_profile_name = self.iface.userProfileManager().userProfile().name()
+        except Exception:
+            config = configparser.ConfigParser()
+            profiles_directory = Path(QgsApplication.qgisSettingsDirPath()).parent
+            config.read(f"{profiles_directory}/profiles.ini")
+            current_qgis_profile_name = config["core"]["defaultProfile"]
+
+        dir_svg_output = Path(self.plugin_dir).parent.parent.parent.parent / current_qgis_profile_name / "svg"
+
+        # qgs_log(f"Profile: {current_qgis_profile_name} - Output dir: {dir_svg_output} - Input dir: {dir_svg_input}")
+
+        if not dir_svg_output.exists():
+            qgs_log(f"Copying svg symbols in {dir_svg_output}")
+            shutil.copytree(dir_svg_input, dir_svg_output)
+        else:
+            qgs_log(f"Updating svg symbols in {dir_svg_output}")
+            # copy only new or updated files
+            for file in dir_svg_input.glob("*.svg"):
+                dest = dir_svg_output / file.name
+                if not dest.exists() or file.stat().st_mtime > dest.stat().st_mtime:
+                    qgs_log(f"Copying {file} to {dest}")
+                    shutil.copy2(file, dest)
+
     def check_project(self):
         """
         Check if the current project is a MzSTools project to:
-        - update svg symbols in the QGIS profile
         - check if the project version is older than the plugin version and start the update process
         - connect editing signals to automatically set cross-layer no-overlap rules when needed and
           revert to the original config when editing stops
@@ -241,22 +280,6 @@ class MzSTools:
             return
 
         qgs_log(f"MzSTools project detected. Project version: {project_info['version']}")
-
-        qgs_log("Checking svg symbols...")
-        dir_svg_input = os.path.join(self.plugin_dir, "img", "svg")
-        dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
-
-        if not os.path.exists(dir_svg_output):
-            qgs_log(f"Copying svg symbols in {dir_svg_output}")
-            shutil.copytree(dir_svg_input, dir_svg_output)
-        else:
-            qgs_log(f"Updating svg symbols in {dir_svg_output}")
-            src_files = os.listdir(dir_svg_input)
-            for file_name in src_files:
-                full_file_name = os.path.join(dir_svg_input, file_name)
-                if os.path.isfile(full_file_name):
-                    shutil.copy(full_file_name, dir_svg_output)
-
         qgs_log("Comparing project and plugin versions...")
         # plugin_version = plugin_version_from_metadata_file()
 

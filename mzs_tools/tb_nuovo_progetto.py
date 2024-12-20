@@ -1,17 +1,17 @@
 import os
-import tempfile
 import shutil
 import sqlite3
+import tempfile
 import webbrowser
 import zipfile
 
+from qgis.core import QgsFeatureRequest, QgsProject
 from qgis.PyQt import uic
-from qgis.core import QgsProject, QgsFeatureRequest
-from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QCompleter
 from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtWidgets import QCompleter, QDialog, QFileDialog, QMessageBox
 from qgis.utils import iface
 
-from .utils import save_map_image, create_basic_sm_metadata
+from .utils import create_basic_sm_metadata, save_map_image
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_nuovo_progetto.ui"))
 
@@ -24,46 +24,11 @@ class NewProject(QDialog, FORM_CLASS):
 
         self.plugin_dir = os.path.dirname(__file__)
         self.project_template_path = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
-        self.connect_signals()
-
-    def run_new_project_tool(self):
-        # check if there is a project already open
-        if QgsProject.instance().fileName():
-            QMessageBox.warning(
-                iface.mainWindow(),
-                self.tr("WARNING!"),
-                self.tr("Close the current project before creating a new one."),
-            )
-            return
 
         # Load comuni data for autocomplete
         self.load_comuni_data()
 
-        # check and update QGIS svg symbols cache
-        self.check_svg_cache()
-
-        self.clear_fields()
-        self.button_box.setEnabled(False)
-
-        self.show()
-        self.adjustSize()
-        result = self.exec_()
-
-        if result:
-            dir_out = self.dir_output.text()
-            if os.path.isdir(dir_out):
-                try:
-                    new_project = self.create_project(dir_out)
-                    # reload the project
-                    iface.addProject(new_project)
-                except Exception as z:
-                    QMessageBox.critical(None, "ERROR!", f'Error:\n"{str(z)}"')
-                    if os.path.exists(os.path.join(dir_out, "progetto_MS")):
-                        shutil.rmtree(os.path.join(dir_out, "progetto_MS"))
-            else:
-                QMessageBox.warning(
-                    iface.mainWindow(), self.tr("WARNING!"), self.tr("The selected directory does not exist!")
-                )
+        self.connect_signals()
 
     def connect_signals(self):
         self.help_button.clicked.connect(
@@ -73,6 +38,15 @@ class NewProject(QDialog, FORM_CLASS):
         self.professionista.textChanged.connect(self.validate_input)
         self.email_prof.textChanged.connect(self.validate_input)
         self.dir_output.textChanged.connect(self.validate_input)
+        self.pushButton_out.clicked.connect(self.update_output_field)
+
+    def showEvent(self, e):
+        self.clear_fields()
+        self.button_box.setEnabled(False)
+
+    def update_output_field(self):
+        out_dir = QFileDialog.getExistingDirectory(self, "", "", QFileDialog.ShowDirsOnly)
+        self.dir_output.setText(out_dir)
 
     def load_comuni_data(self):
         # Load comuni data from the project template
@@ -95,18 +69,35 @@ class NewProject(QDialog, FORM_CLASS):
         completer.setCaseSensitivity(False)
         self.comuneField.setCompleter(completer)
 
-    def check_svg_cache(self):
-        dir_svg_input = os.path.join(self.plugin_dir, "img", "svg")
-        dir_svg_output = self.plugin_dir.split("python")[0] + "svg"
+    def run_new_project_tool(self):
+        # check if there is a project already open
+        if QgsProject.instance().fileName():
+            QMessageBox.warning(
+                iface.mainWindow(),
+                self.tr("WARNING!"),
+                self.tr("Close the current project before creating a new one."),
+            )
+            return
 
-        if not os.path.exists(dir_svg_output):
-            shutil.copytree(dir_svg_input, dir_svg_output)
-        else:
-            src_files = os.listdir(dir_svg_input)
-            for file_name in src_files:
-                full_file_name = os.path.join(dir_svg_input, file_name)
-                if os.path.isfile(full_file_name):
-                    shutil.copy(full_file_name, dir_svg_output)
+        # self.show()
+        # self.adjustSize()
+        result = self.exec_()
+
+        if result:
+            dir_out = self.dir_output.text()
+            if os.path.isdir(dir_out):
+                try:
+                    new_project = self.create_project(dir_out)
+                    # reload the project
+                    iface.addProject(new_project)
+                except Exception as z:
+                    QMessageBox.critical(None, "ERROR!", f'Error:\n"{str(z)}"')
+                    if os.path.exists(os.path.join(dir_out, "progetto_MS")):
+                        shutil.rmtree(os.path.join(dir_out, "progetto_MS"))
+            else:
+                QMessageBox.warning(
+                    iface.mainWindow(), self.tr("WARNING!"), self.tr("The selected directory does not exist!")
+                )
 
     def create_project(self, dir_out):
         comune_name = self.comuneField.text()
