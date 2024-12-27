@@ -1,30 +1,36 @@
-import os
 import re
 import webbrowser
-from functools import wraps
+from pathlib import Path
 from typing import Dict
 
 import pyplugin_installer
 from packaging.version import parse
+from qgis.core import QgsApplication
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt
+from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.utils import iface
 
-from mzs_tools.utils import qgs_log
+from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __email__, __summary__, __summary_it__, __version__
+from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from mzs_tools.plugin_utils.misc import skip_file_not_found
 
-from mzs_tools.__about__ import __email__, __summary__, __summary_it__, __version__
-
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_info.ui"))
+FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
 
 class PluginInfo(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super().__init__(parent)
+        self.log = MzSToolsLogger().log
         self.setupUi(self)
-        self.plugin_dir = os.path.dirname(__file__)
+
+        self.button_manual.setIcon(QIcon(QgsApplication.getThemeIcon("/mActionHelpContents.svg")))
         self.button_manual.clicked.connect(lambda: webbrowser.open("https://mzs-tools.readthedocs.io"))
+
+        github_icon = QPixmap(str(DIR_PLUGIN_ROOT / "resources" / "img" / "github-mark.png"))
+        self.button_github.setIcon(QIcon(github_icon))
         self.button_github.clicked.connect(lambda: webbrowser.open("https://github.com/CNR-IGAG/mzs-tools/"))
 
         try:
@@ -53,22 +59,10 @@ class PluginInfo(QDialog, FORM_CLASS):
 
         self.buttonBox.rejected.connect(self.reject)
 
-    def skip_file_not_found(func):
-        """Decorator to catch FileNotFoundError exceptions."""
-
-        @wraps(func)
-        def _wrapper(*args, **kwargs):
-            try:
-                func(*args, **kwargs)
-            except FileNotFoundError as e:
-                qgs_log(f"File not found: {e}", level="warning")
-
-        return _wrapper
-
     @skip_file_not_found
     def load_and_set_text(self, filename, label):
         """Load text from a file, process it, and set it to a label."""
-        with open(os.path.join(self.plugin_dir, filename), "r") as f:
+        with open(DIR_PLUGIN_ROOT / filename, "r") as f:
             text = f.read()
             if self.markdown_available:
                 text = self.replace_headings(text)
@@ -100,7 +94,7 @@ class PluginInfo(QDialog, FORM_CLASS):
                 pyplugin_installer.instance().reloadAndExportData()
                 plugin_metadata = iface.pluginManagerInterface().pluginMetadata(plugin_name)
         except Exception as e:
-            qgs_log(f"Error fetching plugin metadata: {e}", level="warning")
+            self.log(f"Error fetching plugin metadata: {e}", log_level=1)
         return plugin_metadata or {}
 
     def update_version_warning(self, version_installed: str, version_available: str):

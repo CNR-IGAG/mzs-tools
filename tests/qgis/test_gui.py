@@ -5,7 +5,7 @@ from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QCompleter, QDialog
 
 from mzs_tools.__about__ import __version__
-from mzs_tools.tb_info import PluginInfo
+from mzs_tools.gui.dlg_info import PluginInfo
 from mzs_tools.tb_nuovo_progetto import NewProject
 
 
@@ -14,7 +14,6 @@ def test_tb_info(qgis_app):
     dialog = PluginInfo()
     assert dialog is not None
     assert dialog.markdown_available is not None
-    assert dialog.plugin_dir is not None
     assert dialog.label_info is not None
     assert dialog.label_license is not None
     assert dialog.label_credits is not None

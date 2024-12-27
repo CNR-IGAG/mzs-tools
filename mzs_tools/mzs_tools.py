@@ -1,9 +1,9 @@
 import configparser
 import os
-from pathlib import Path
 import shutil
 from functools import partial
 from itertools import chain
+from pathlib import Path
 
 from qgis.core import (
     Qgis,
@@ -17,20 +17,21 @@ from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, qApp
 
-from .__about__ import __version__
+from mzs_tools.gui.dlg_settings import PlgOptionsFactory
+from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from mzs_tools.plugin_utils.settings import PlgOptionsManager
+
+from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
+from .gui.dlg_info import PluginInfo
 from .tb_aggiorna_progetto import aggiorna_progetto
 from .tb_edit_metadata import EditMetadataDialog
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
-from .tb_info import PluginInfo
 from .tb_nuovo_progetto import NewProject
-from .tb_settings import MzSToolsSettings
 from .utils import (
-    AUTO_ADVANCED_EDITING_KEY,
     detect_mzs_tools_project,
-    get_settings,
     qgs_log,
 )
 
@@ -38,7 +39,8 @@ from .utils import (
 class MzSTools:
     def __init__(self, iface):
         self.iface = iface
-        self.plugin_dir = os.path.dirname(__file__)
+
+        self.log = MzSToolsLogger().log
 
         # keep track of connected layers to avoid reconnecting signals
         self.editing_signals_connected_layers = {}
@@ -48,10 +50,10 @@ class MzSTools:
             locale = QSettings().value("locale/userLocale", "en", type=str)[0:2]
         except Exception:
             locale = "en"
-        locale_path = os.path.join(self.plugin_dir, "i18n", "MzSTools_{}.qm".format(locale))
+        locale_path = DIR_PLUGIN_ROOT / "i18n" / "MzSTools_{}.qm".format(locale)
         if os.path.exists(locale_path):
             self.translator = QTranslator()
-            self.translator.load(locale_path)
+            self.translator.load(str(locale_path))
             QCoreApplication.installTranslator(self.translator)
 
         # install or update svg symbols in current QGIS profile
@@ -64,15 +66,12 @@ class MzSTools:
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
         self.edit_win_dlg = edit_win()
-        self.settings_dlg = MzSToolsSettings()
+        # self.settings_dlg = MzSToolsSettings()
 
         self.actions = []
         self.menu = self.tr("&MzS Tools")
         self.toolbar = self.iface.addToolBar("MzSTools")
         self.toolbar.setObjectName("MzSTools")
-
-        # self.new_project_dlg.dir_output.clear()
-        # self.new_project_dlg.pushButton_out.clicked.connect(self.select_output_fld_2)
 
         self.import_shp_dlg.dir_input.clear()
         self.import_shp_dlg.pushButton_in.clicked.connect(self.select_input_fld_4)
@@ -122,14 +121,18 @@ class MzSTools:
         return action
 
     def initGui(self):
-        icon_path2 = os.path.join(self.plugin_dir, "img", "ico_nuovo_progetto.png")
-        icon_path3 = os.path.join(self.plugin_dir, "img", "ico_info.png")
-        icon_path4 = os.path.join(self.plugin_dir, "img", "ico_importa.png")
-        icon_path5 = os.path.join(self.plugin_dir, "img", "ico_esporta.png")
-        icon_path10 = os.path.join(self.plugin_dir, "img", "ico_xypoint.png")
+        # settings page within the QGIS preferences menu
+        self.options_factory = PlgOptionsFactory()
+        self.iface.registerOptionsWidgetFactory(self.options_factory)
+
+        icon_path2 = DIR_PLUGIN_ROOT / "img" / "ico_nuovo_progetto.png"
+        icon_path3 = DIR_PLUGIN_ROOT / "img" / "ico_info.png"
+        icon_path4 = DIR_PLUGIN_ROOT / "img" / "ico_importa.png"
+        icon_path5 = DIR_PLUGIN_ROOT / "img" / "ico_esporta.png"
+        icon_path10 = DIR_PLUGIN_ROOT / "img" / "ico_xypoint.png"
 
         self.add_action(
-            icon_path2,
+            str(icon_path2),
             text=self.tr("New project"),
             callback=self.new_project_dlg.run_new_project_tool,
             parent=self.iface.mainWindow(),
@@ -145,21 +148,21 @@ class MzSTools:
         self.toolbar.addSeparator()
 
         self.add_action(
-            icon_path4,
+            str(icon_path4),
             text=self.tr("Import project folder from geodatabase"),
             callback=self.import_project,
             parent=self.iface.mainWindow(),
         )
 
         self.add_action(
-            icon_path5,
+            str(icon_path5),
             text=self.tr("Export geodatabase to project folder"),
             callback=self.export_project,
             parent=self.iface.mainWindow(),
         )
 
         self.add_action(
-            icon_path10,
+            str(icon_path10),
             text=self.tr('Add "Sito puntuale" using XY coordinates'),
             callback=self.add_site,
             parent=self.iface.mainWindow(),
@@ -167,23 +170,33 @@ class MzSTools:
 
         self.toolbar.addSeparator()
 
+        # self.add_action(
+        #     QgsApplication.getThemeIcon("/mActionOptions.svg"),
+        #     text=self.tr("MzS Tools Settings"),
+        #     callback=self.show_settings,
+        #     parent=self.iface.mainWindow(),
+        # )
+
         self.add_action(
             QgsApplication.getThemeIcon("/mActionOptions.svg"),
             text=self.tr("MzS Tools Settings"),
-            callback=self.show_settings,
+            callback=lambda: self.iface.showOptionsDialog(currentPage="mOptionsPage{}".format(__title__)),
             parent=self.iface.mainWindow(),
         )
 
         self.help_action = self.add_action(
-            icon_path3,
+            str(icon_path3),
             text=self.tr("MzS Tools Help"),
-            callback=self.show_info_dlg,
+            callback=self.info_dlg.show,
             parent=self.iface.mainWindow(),
         )
         # add the help action to the QGIS plugin help menu
         self.iface.pluginHelpMenu().addAction(self.help_action)
 
     def unload(self):
+        # Clean up preferences panel in QGIS settings
+        self.iface.unregisterOptionsWidgetFactory(self.options_factory)
+
         for action in self.actions:
             self.iface.removePluginDatabaseMenu(self.tr("&MzS Tools"), action)
             self.iface.removeToolBarIcon(action)
@@ -207,14 +220,14 @@ class MzSTools:
     def add_site(self):
         self.edit_win_dlg.edita()
 
-    def show_settings(self):
-        """Show the settings dialog."""
-        self.settings_dlg.load_settings()
-        self.settings_dlg.show()
-        self.settings_dlg.adjustSize()
+    # def show_settings(self):
+    #     """Show the settings dialog."""
+    #     self.settings_dlg.load_settings()
+    #     self.settings_dlg.show()
+    #     self.settings_dlg.adjustSize()
 
-    def show_info_dlg(self):
-        self.info_dlg.exec()
+    # def show_info_dlg(self):
+    #     self.info_dlg.exec()
 
     # def select_output_fld_2(self):
     #     out_dir = QFileDialog.getExistingDirectory(self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly)
@@ -238,7 +251,7 @@ class MzSTools:
 
     def check_svg_cache(self):
         qgs_log("Checking svg symbols...")
-        dir_svg_input = Path(self.plugin_dir) / "img" / "svg"
+        dir_svg_input = DIR_PLUGIN_ROOT / "img" / "svg"
 
         current_qgis_profile_name = None
         try:
@@ -250,7 +263,7 @@ class MzSTools:
             config.read(f"{profiles_directory}/profiles.ini")
             current_qgis_profile_name = config["core"]["defaultProfile"]
 
-        dir_svg_output = Path(self.plugin_dir).parent.parent.parent.parent / current_qgis_profile_name / "svg"
+        dir_svg_output = DIR_PLUGIN_ROOT.parent.parent.parent.parent / current_qgis_profile_name / "svg"
 
         # qgs_log(f"Profile: {current_qgis_profile_name} - Output dir: {dir_svg_output} - Input dir: {dir_svg_input}")
 
@@ -338,10 +351,17 @@ class MzSTools:
         self.editing_signals_connected_layers.clear()
 
     def set_advanced_editing_config(self, layer):
-        settings = get_settings()
-        if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
+        # settings = get_settings()
+        # if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
+        #     return
+
+        auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
+            "auto_advanced_editing", default=True, exp_type=bool
+        )
+        if not auto_advanced_editing_setting:
             return
 
+        self.log("Setting advanced editing options")
         proj = QgsProject.instance()
         # save the current config
         self.proj_snapping_config = proj.snappingConfig()
@@ -407,9 +427,17 @@ class MzSTools:
             qgs_log(f"Error setting advanced editing config: {e}", level="error")
 
     def reset_editing_config(self):
-        settings = get_settings()
-        if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
+        # settings = get_settings()
+        # if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
+        #     return
+        auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
+            "auto_advanced_editing", default=True, exp_type=bool
+        )
+        if not auto_advanced_editing_setting:
             return
+
+        self.log("Resetting advanced editing settings")
+
         try:
             proj = QgsProject.instance()
             proj.setSnappingConfig(self.proj_snapping_config)
