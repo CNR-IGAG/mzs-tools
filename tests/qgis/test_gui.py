@@ -6,7 +6,7 @@ from qgis.PyQt.QtWidgets import QCompleter, QDialog
 
 from mzs_tools.__about__ import __version__
 from mzs_tools.gui.dlg_info import PluginInfo
-from mzs_tools.tb_nuovo_progetto import NewProject
+from mzs_tools.gui.dlg_create_project import CreateProjectDlg
 
 
 def test_tb_info(qgis_app):
@@ -35,7 +35,7 @@ def test_tb_info(qgis_app):
 
 
 def test_tb_nuovo_progetto_gui(qgis_app):
-    dialog = NewProject()
+    dialog = CreateProjectDlg()
     assert dialog is not None
 
     dialog.show()
@@ -69,14 +69,14 @@ def test_tb_nuovo_progetto_gui(qgis_app):
 
     dialog.professionista.setText("Mario Rossi")
     dialog.email_prof.setText("asdf@qwer.com")
-    dialog.dir_output.setText("/tmp")
+    dialog.output_dir_widget.lineEdit().setText("/tmp")
 
     # ok button should be enabled when all fields are filled
-    assert dialog.button_box.isEnabled() is True
+    assert dialog.ok_button.isEnabled() is True
 
     # all fields are required
     dialog.email_prof.setText("")
-    assert dialog.button_box.isEnabled() is False
+    assert dialog.ok_button.isEnabled() is False
 
     QTimer.singleShot(2000, dialog.reject)
 
@@ -86,7 +86,7 @@ def test_tb_nuovo_progetto_gui(qgis_app):
 
 
 def test_tb_nuovo_progetto_comune_completer():
-    dialog = NewProject()
+    dialog = CreateProjectDlg()
 
     # Test completer setup
     completer = dialog.comuneField.completer()
@@ -121,40 +121,21 @@ def test_tb_nuovo_progetto_comune_completer():
     dialog.close()
 
 
-def test_tb_nuovo_progetto_output_button():
-    """Test output directory selection button."""
-    dialog = NewProject()
-
-    # Test accepted dialog
-    with patch("qgis.PyQt.QtWidgets.QFileDialog.getExistingDirectory") as mock_dialog:
-        mock_dialog.return_value = "/tmp/test_dir"
-        dialog.pushButton_out.click()
-        assert dialog.dir_output.text() == "/tmp/test_dir"
-
-    # Test cancelled dialog
-    with patch("qgis.PyQt.QtWidgets.QFileDialog.getExistingDirectory") as mock_dialog:
-        mock_dialog.return_value = ""
-        dialog.pushButton_out.click()
-        assert dialog.dir_output.text() == ""
-
-    dialog.close()
-
-
 def test_tb_nuovo_progetto_dialog_reject():
-    dialog = NewProject()
+    dialog = CreateProjectDlg()
 
     # Mock create_project method
     dialog.create_project = MagicMock()
 
     # Test dialog rejection
     with patch.object(QDialog, "exec_", return_value=False):
-        dialog.run_new_project_tool()
+        dialog.run_new_project_tool(False)
         dialog.create_project.assert_not_called()
     dialog.close()
 
 
 def test_create_project():
-    dialog = NewProject()
+    dialog = CreateProjectDlg()
 
     # Setup test data
     test_dir = "/tmp/test_project"
@@ -180,7 +161,7 @@ def test_create_project():
         patch("qgis.core.QgsProject.instance", return_value=project_mock),
         # patch.object(dialog, "extract_project_template"),
         patch.object(dialog, "customize_project"),
-        patch("mzs_tools.tb_nuovo_progetto.create_basic_sm_metadata"),
+        patch("mzs_tools.gui.dlg_create_project.create_basic_sm_metadata"),
         patch("qgis.PyQt.QtWidgets.QMessageBox.information"),
         patch("os.rename"),
         patch("os.path.join", side_effect=os.path.join),
@@ -204,23 +185,10 @@ def test_create_project():
 
 def test_sanitize_comune_name():
     """Test comune name sanitization"""
-    dialog = NewProject()
+    dialog = CreateProjectDlg()
     assert dialog.sanitize_comune_name("Roma (RM - Lazio)") == "Roma"
     assert dialog.sanitize_comune_name("Sant'Angelo (LE)") == "Sant_Angelo"
     assert dialog.sanitize_comune_name("Città Sant'Angelo") == "Città_Sant_Angelo"
-
-
-def test_run_new_project_tool_with_open_project():
-    """Test attempt to create project while another is open"""
-    dialog = NewProject()
-    with (
-        patch("qgis.core.QgsProject.instance") as mock_project,
-        patch("qgis.PyQt.QtWidgets.QMessageBox.warning") as mock_warning,
-    ):
-        mock_project().fileName.return_value = "existing.qgs"
-        dialog.run_new_project_tool()
-
-        mock_warning.assert_called_once()
 
 
 # @pytest.fixture

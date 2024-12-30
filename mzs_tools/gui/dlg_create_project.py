@@ -4,26 +4,32 @@ import sqlite3
 import tempfile
 import webbrowser
 import zipfile
+from pathlib import Path
 
 from qgis.core import QgsFeatureRequest, QgsProject
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtWidgets import QCompleter, QDialog, QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QCompleter, QDialog, QDialogButtonBox, QMessageBox
 from qgis.utils import iface
 
-from .utils import create_basic_sm_metadata, save_map_image
+from mzs_tools.__about__ import DIR_PLUGIN_ROOT
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_nuovo_progetto.ui"))
+from ..utils import create_basic_sm_metadata, save_map_image
+
+FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
 
-class NewProject(QDialog, FORM_CLASS):
+class CreateProjectDlg(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super().__init__(parent)
         self.setupUi(self)
 
-        self.plugin_dir = os.path.dirname(__file__)
-        self.project_template_path = os.path.join(self.plugin_dir, "data", "progetto_MS.zip")
+        self.project_template_path = os.path.join(DIR_PLUGIN_ROOT, "data", "progetto_MS.zip")
+
+        self.help_button = self.button_box.button(QDialogButtonBox.Help)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
 
         # Load comuni data for autocomplete
         self.load_comuni_data()
@@ -31,22 +37,26 @@ class NewProject(QDialog, FORM_CLASS):
         self.connect_signals()
 
     def connect_signals(self):
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button.clicked.connect(self.reject)
         self.help_button.clicked.connect(
             lambda: webbrowser.open("https://mzs-tools.readthedocs.io/it/latest/plugin/nuovo_progetto.html")
         )
         self.comuneField.textChanged.connect(self.update_cod_istat)
         self.professionista.textChanged.connect(self.validate_input)
         self.email_prof.textChanged.connect(self.validate_input)
-        self.dir_output.textChanged.connect(self.validate_input)
-        self.pushButton_out.clicked.connect(self.update_output_field)
+        self.output_dir_widget.lineEdit().textChanged.connect(self.validate_input)
+        # self.pushButton_out.clicked.connect(self.update_output_field)
+
+        self.finished.connect(self.run_new_project_tool)
 
     def showEvent(self, e):
         self.clear_fields()
-        self.button_box.setEnabled(False)
+        self.ok_button.setEnabled(False)
 
-    def update_output_field(self):
-        out_dir = QFileDialog.getExistingDirectory(self, "", "", QFileDialog.ShowDirsOnly)
-        self.dir_output.setText(out_dir)
+    # def update_output_field(self):
+    #     out_dir = QFileDialog.getExistingDirectory(self, "", "", QFileDialog.ShowDirsOnly)
+    #     self.dir_output.setText(out_dir)
 
     def load_comuni_data(self):
         # Load comuni data from the project template
@@ -69,22 +79,9 @@ class NewProject(QDialog, FORM_CLASS):
         completer.setCaseSensitivity(False)
         self.comuneField.setCompleter(completer)
 
-    def run_new_project_tool(self):
-        # check if there is a project already open
-        if QgsProject.instance().fileName():
-            QMessageBox.warning(
-                iface.mainWindow(),
-                self.tr("WARNING!"),
-                self.tr("Close the current project before creating a new one."),
-            )
-            return
-
-        # self.show()
-        # self.adjustSize()
-        result = self.exec_()
-
+    def run_new_project_tool(self, result):
         if result:
-            dir_out = self.dir_output.text()
+            dir_out = self.output_dir_widget.lineEdit().text()
             if os.path.isdir(dir_out):
                 try:
                     new_project = self.create_project(dir_out)
@@ -167,7 +164,7 @@ class NewProject(QDialog, FORM_CLASS):
         layer_limiti_comunali.removeSelection()
         layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
 
-        logo_regio_in = os.path.join(self.plugin_dir, "img", "logo_regio", codice_regio + ".png").replace("\\", "/")
+        logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", codice_regio + ".png").replace("\\", "/")
         logo_regio_out = os.path.join(new_project_path, "progetto", "loghi", "logo_regio.png").replace("\\", "/")
         shutil.copyfile(logo_regio_in, logo_regio_out)
 
@@ -201,29 +198,29 @@ class NewProject(QDialog, FORM_CLASS):
 
     def clear_fields(self):
         self.comuneField.clear()
-        self.dir_output.clear()
+        self.output_dir_widget.lineEdit().clear()
         self.cod_istat.clear()
         self.professionista.clear()
         self.email_prof.clear()
 
     def validate_input(self):
         if (
-            self.cod_istat
+            self.cod_istat.text()
             and self.professionista.text()
             and self.email_prof.text()
-            and self.dir_output.text()
-            and os.path.isdir(self.dir_output.text())
+            and self.output_dir_widget.lineEdit().text()
+            and os.path.isdir(self.output_dir_widget.lineEdit().text())
         ):
-            self.button_box.setEnabled(True)
+            self.ok_button.setEnabled(True)
         else:
-            self.button_box.setEnabled(False)
+            self.ok_button.setEnabled(False)
 
     def update_cod_istat(self):
         comune_name = self.comuneField.text()
 
         if comune_name not in self.comuni_names:
             self.cod_istat.clear()
-            self.button_box.setEnabled(False)
+            self.ok_button.setEnabled(False)
         else:
             comune_record = next((comune for comune in self.comuni if comune[0] == comune_name.split(" (")[0]), None)
             if comune_record:

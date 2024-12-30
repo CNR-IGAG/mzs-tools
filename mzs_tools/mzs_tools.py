@@ -29,7 +29,7 @@ from .tb_edit_metadata import EditMetadataDialog
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
-from .tb_nuovo_progetto import NewProject
+from .gui.dlg_create_project import CreateProjectDlg
 from .utils import (
     detect_mzs_tools_project,
     qgs_log,
@@ -60,7 +60,7 @@ class MzSTools:
         self.check_svg_cache()
 
         self.project_update_dlg = aggiorna_progetto()
-        self.new_project_dlg = NewProject(self.iface.mainWindow())
+        self.create_project_dlg = None
         self.edit_metadata_dlg = EditMetadataDialog()
         self.info_dlg = PluginInfo(self.iface.mainWindow())
         self.import_shp_dlg = importa_shp()
@@ -134,7 +134,7 @@ class MzSTools:
         self.add_action(
             str(icon_path2),
             text=self.tr("New project"),
-            callback=self.new_project_dlg.run_new_project_tool,
+            callback=self.open_create_project_dlg,
             parent=self.iface.mainWindow(),
         )
 
@@ -207,6 +207,19 @@ class MzSTools:
         del self.help_action
 
         self.iface.projectRead.disconnect(self.check_project)
+
+    def open_create_project_dlg(self):
+        # check if there is a project already open
+        if QgsProject.instance().fileName():
+            QMessageBox.warning(
+                self.iface.mainWindow(),
+                self.tr("WARNING!"),
+                self.tr("Close the current project before creating a new one."),
+            )
+            return
+        if self.create_project_dlg is None:
+            self.create_project_dlg = CreateProjectDlg(self.iface.mainWindow())
+        self.create_project_dlg.exec()
 
     def edit_metadata(self):
         self.edit_metadata_dlg.run_edit_metadata_dialog()
