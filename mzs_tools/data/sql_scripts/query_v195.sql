@@ -11,12 +11,18 @@ SELECT CreateSpatialIndex('isosub_l23', 'geom');;
 
 -- cleanups
 DROP TABLE IF EXISTS idx_comuni_2022_g_33_GEOMETRY;;
-SELECT DropTable(NULL, "instab_l2");;
-SELECT DropTable(NULL, "instab_l3");;
-SELECT DropTable(NULL, "stab_l2");;
-SELECT DropTable(NULL, "stab_l3");;
-SELECT DropTable(NULL, "isosub_l2");;
-SELECT DropTable(NULL, "isosub_l3");;
+-- SELECT DropTable(NULL, "instab_l2");;
+-- SELECT DropTable(NULL, "instab_l3");;
+-- SELECT DropTable(NULL, "stab_l2");;
+-- SELECT DropTable(NULL, "stab_l3");;
+-- SELECT DropTable(NULL, "isosub_l2");;
+-- SELECT DropTable(NULL, "isosub_l3");;
+DROP TABLE IF EXISTS instab_l2;;
+DROP TABLE IF EXISTS instab_l3;;
+DROP TABLE IF EXISTS stab_l2;;
+DROP TABLE IF EXISTS stab_l3;;
+DROP TABLE IF EXISTS isosub_l2;;
+DROP TABLE IF EXISTS isosub_l3;;
 
 
 -- elineari triggers

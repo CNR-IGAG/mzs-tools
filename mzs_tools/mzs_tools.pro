@@ -3,7 +3,6 @@ SOURCES = mzs_tools.py \
           tb_edit_metadata.py \
           tb_esporta_shp.py \
           tb_edit_win.py \
-          tb_aggiorna_progetto.py \
           gui/dlg_info.py
 
 FORMS = gui/dlg_create_project.ui \
@@ -11,7 +10,6 @@ FORMS = gui/dlg_create_project.ui \
         tb_importa_shp.ui \
         tb_esporta_shp.ui \
         tb_edit_win.ui \
-        tb_aggiorna_progetto.ui \
         tb_settings.ui \
         gui/dlg_info.ui
 

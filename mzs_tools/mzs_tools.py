@@ -17,6 +17,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, qApp
 
+from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.gui.dlg_settings import PlgOptionsFactory
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
 from mzs_tools.plugin_utils.settings import PlgOptionsManager
@@ -24,16 +25,11 @@ from mzs_tools.plugin_utils.settings import PlgOptionsManager
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .gui.dlg_info import PluginInfo
-from .tb_aggiorna_progetto import aggiorna_progetto
 from .tb_edit_metadata import EditMetadataDialog
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
 from .gui.dlg_create_project import CreateProjectDlg
-from .utils import (
-    detect_mzs_tools_project,
-    qgs_log,
-)
 
 
 class MzSTools:
@@ -59,7 +55,6 @@ class MzSTools:
         # install or update svg symbols in current QGIS profile
         self.check_svg_cache()
 
-        self.project_update_dlg = aggiorna_progetto()
         self.create_project_dlg = None
         self.edit_metadata_dlg = EditMetadataDialog()
         self.info_dlg = PluginInfo(self.iface.mainWindow())
@@ -263,7 +258,7 @@ class MzSTools:
         self.export_shp_dlg.dir_output.setText(out_dir)
 
     def check_svg_cache(self):
-        qgs_log("Checking svg symbols...")
+        self.log("Checking svg symbols...")
         dir_svg_input = DIR_PLUGIN_ROOT / "img" / "svg"
 
         current_qgis_profile_name = None
@@ -281,15 +276,15 @@ class MzSTools:
         # qgs_log(f"Profile: {current_qgis_profile_name} - Output dir: {dir_svg_output} - Input dir: {dir_svg_input}")
 
         if not dir_svg_output.exists():
-            qgs_log(f"Copying svg symbols in {dir_svg_output}")
+            self.log(f"Copying svg symbols in {dir_svg_output}")
             shutil.copytree(dir_svg_input, dir_svg_output)
         else:
-            qgs_log(f"Updating svg symbols in {dir_svg_output}")
+            self.log(f"Updating svg symbols in {dir_svg_output}")
             # copy only new or updated files
             for file in dir_svg_input.glob("*.svg"):
                 dest = dir_svg_output / file.name
                 if not dest.exists() or file.stat().st_mtime > dest.stat().st_mtime:
-                    qgs_log(f"Copying {file} to {dest}")
+                    self.log(f"Copying {file} to {dest}")
                     shutil.copy2(file, dest)
 
     def check_project(self):
@@ -301,18 +296,44 @@ class MzSTools:
         - connect to layer nameChanged signal to warn the user when renaming required layers
         - warn the user if the QGIS version is less than SUGGESTED_QGIS_VERSION defined in constants.py
         """
-        project_info = detect_mzs_tools_project()
-        if not project_info:
+        # project_info = detect_mzs_tools_project()
+        # if not project_info:
+        #     return
+
+        # qgs_log(f"MzSTools project detected. Project version: {project_info['version']}")
+        # qgs_log("Comparing project and plugin versions...")
+        # # plugin_version = plugin_version_from_metadata_file()
+
+        # if project_info["version"] < __version__:
+        #     qgs_log(f"Project should be updated to version {__version__}")
+        #     qApp.processEvents()
+        #     self.project_update_dlg.aggiorna(project_info["project_path"], project_info["version"])
+
+        prj_manager = MzSProjectManager()
+        if not prj_manager.is_mzs_project:
             return
 
-        qgs_log(f"MzSTools project detected. Project version: {project_info['version']}")
-        qgs_log("Comparing project and plugin versions...")
-        # plugin_version = plugin_version_from_metadata_file()
+        if prj_manager.project_updateable:
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Question)
+            msg_box.setWindowTitle("MzS Tools - Project Update")
+            msg_box.setText("The project should be updated. Do you want to proceed?")
+            msg_box.setInformativeText(
+                f"The project will be updated from version {prj_manager.project_version} to version {__version__}."
+            )
+            msg_box.setDetailedText("This action will make changes to your project. TODO: add more details.")
+            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            msg_box.setDefaultButton(QMessageBox.Yes)
 
-        if project_info["version"] < __version__:
-            qgs_log(f"Project should be updated to version {__version__}")
-            qApp.processEvents()
-            self.project_update_dlg.aggiorna(project_info["project_path"], project_info["version"])
+            response = msg_box.exec_()
+            if response == QMessageBox.Yes:
+                self.log("Starting project update process.", log_level=1)
+                prj_manager.update_db()
+                prj_manager.update_project_from_template()
+                return
+            else:
+                self.log("Project update process cancelled.", log_level=1)
+                # TODO: warn the user!
 
         self.connect_editing_signals()
 
@@ -437,7 +458,7 @@ class MzSTools:
             proj.setSnappingConfig(snapping_config)
 
         except Exception as e:
-            qgs_log(f"Error setting advanced editing config: {e}", level="error")
+            self.log(f"Error setting advanced editing config: {e}", log_level=2)
 
     def reset_editing_config(self):
         # settings = get_settings()
@@ -458,7 +479,7 @@ class MzSTools:
             proj.setAvoidIntersectionsLayers(self.proj_avoid_intersections_layers)
             proj.setTopologicalEditing(self.topological_editing)
         except Exception as e:
-            qgs_log(f"Error resetting advanced editing config: {e}", level="error")
+            self.log(f"Error resetting advanced editing config: {e}", log_level=2)
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)

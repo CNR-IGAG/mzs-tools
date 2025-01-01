@@ -1,27 +1,31 @@
+import datetime
 import os
 import shutil
 import sqlite3
 import zipfile
 from pathlib import Path
 
-from qgis.core import QgsFeature, QgsFeatureRequest, QgsField, QgsFields, QgsGeometry, QgsPointXY, QgsProject
-from qgis.PyQt.QtCore import QCoreApplication, QVariant
+from qgis.core import QgsFeature, QgsField, QgsFields, QgsGeometry, QgsProject
+from qgis.PyQt.QtCore import QVariant
 from qgis.utils import iface
 
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT
+from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __version__
+from mzs_tools.plugin_utils.logging import MzSToolsLogger
 
 from ..utils import create_basic_sm_metadata, save_map_image
 
 
 class MzSProjectManager:
     def __init__(self):
+        self.log = MzSToolsLogger().log
         self.current_project = QgsProject.instance()
 
-        self.is_mzs_project = self.detect_mzs_project()
-
         self.project_path = None
+        self.project_version = None
+        self.project_updateable = False
         self.db_path = None
-        self.mzs_project_version = None
+
+        self.project_issues = {}
 
         self.cod_regio = None
         self.cod_prov = None
@@ -31,15 +35,18 @@ class MzSProjectManager:
         self.regione = None
         self.cod_istat = None
 
-        self.sm_project_metadata = None
+        self.project_metadata = None
 
         # TODO: build a simple map of table names and corresponding layer names
         # find the editable layers that are linked to tables in the db
         self.table_layer_map = {}
 
+        # initialize the manager
+        self.is_mzs_project = self.detect_mzs_project()
+
     def detect_mzs_project(self):
         """Detect if the current project is a MzSTools project."""
-
+        self.log("Detecting MzSTools project...", log_level=4)
         project_file_name = self.current_project.baseName()
         project_path = Path(self.current_project.absolutePath())
         db_path = project_path / "db" / "indagini.sqlite"
@@ -50,10 +57,22 @@ class MzSProjectManager:
 
         self.project_path = project_path
         self.db_path = db_path
-        with version_file_path.open("r") as f:
-            self.mzs_project_version = f.read().strip()
 
-        # TODO: quick check for db integrity and get version
+        try:
+            with version_file_path.open("r") as f:
+                self.project_version = f.read().strip()
+        except Exception as e:
+            self.log(f"Error reading project version: {e}", log_level=2)
+            self.project_issues["version"] = "Error reading project version"
+
+        if self.project_version and self.project_version < __version__:
+            self.log(
+                f"MzS Project is version {self.project_version} and should be updated to version {__version__}",
+                log_level=1,
+            )
+            self.project_updateable = True
+
+        # TODO: quick check for db integrity
 
         # get comune data from db
         comune_record = self.get_project_comune_record()
@@ -65,9 +84,14 @@ class MzSProjectManager:
             self.provincia = comune_record[7]
             self.regione = comune_record[8]
             self.cod_istat = comune_record[6]
+        else:
+            self.log("Error reading comune data from project db", log_level=2)
+            self.project_issues["comune"] = "Error reading comune data from project db"
 
         # TODO: load metadata from db if exists
         # self.sm_project_metadata = self.get_sm_project_metadata()
+
+        self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
 
         return True
 
@@ -113,73 +137,102 @@ class MzSProjectManager:
 
         return feature
 
-    def create_project(self, comune_name, cod_istat, dir_out):
-        # comune_name = self.comuneField.text()
-        # cod_istat = self.cod_istat.text()
-        # professionista = self.professionista.text()
-        # email_prof = self.email_prof.text()
-
+    def create_project_from_template(self, comune_name, cod_istat, dir_out):
+        # extract project template in the output directory
         self.extract_project_template(dir_out)
 
         comune_name = self.sanitize_comune_name(comune_name)
         new_project_path = os.path.join(dir_out, f"{cod_istat}_{comune_name}")
         os.rename(os.path.join(dir_out, "progetto_MS"), new_project_path)
 
-        # project = QgsProject.instance()
         self.current_project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        self.customize_project(self.current_project, cod_istat, new_project_path)
+        self.customize_project_template(self.current_project, cod_istat, new_project_path)
+
         # create_basic_sm_metadata(cod_istat, professionista, email_prof)
 
         # Refresh layouts
-        layout_manager = self.current_project.layoutManager()
-        layouts = layout_manager.printLayouts()
-        for layout in layouts:
-            layout.refresh()
+        self.refresh_project_layouts()
 
         # Save the project
         self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        # QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
-
-        # return os.path.join(new_project_path, "progetto_MS.qgs")
-
         # completely reload the project
         iface.addProject(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-    def customize_project(self, cod_istat):
+        return new_project_path
+
+    def update_project_from_template(self):
+        if not self.project_updateable:
+            self.log("Requested project update for non-updateable project!", log_level=1)
+            return
+
+        # backup the current project
+        self.backup_project()
+
+        # extract project template in the current project directory (will be in "progetto_MS" subdir)
+        self.extract_project_template(self.project_path)
+
+        # remove old project files (maschere, script, loghi, progetto_MS.qgs)
+        shutil.rmtree(os.path.join(self.project_path, "progetto", "maschere"))
+        shutil.copytree(
+            os.path.join(self.project_path, "progetto_MS", "progetto", "maschere"),
+            os.path.join(self.project_path, "progetto", "maschere"),
+        )
+
+        shutil.rmtree(os.path.join(self.project_path, "progetto", "script"))
+        shutil.copytree(
+            os.path.join(self.project_path, "progetto_MS", "progetto", "script"),
+            os.path.join(self.project_path, "progetto", "script"),
+        )
+
+        shutil.rmtree(os.path.join(self.project_path, "progetto", "loghi"))
+        shutil.copytree(
+            os.path.join(self.project_path, "progetto_MS", "progetto", "loghi"),
+            os.path.join(self.project_path, "progetto", "loghi"),
+        )
+
+        # write the new version to the version file
+        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+            f.write(__version__)
+
+        os.remove(os.path.join(self.project_path, "progetto_MS.qgs"))
+        shutil.copyfile(
+            os.path.join(self.project_path, "progetto_MS", "progetto_MS.qgs"),
+            os.path.join(self.project_path, "progetto_MS.qgs"),
+        )
+
+        # read the new project file inside the loaded (old) project
+        self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
+
+        # apply project customizations without creating comune feature
+        self.customize_project_template(self.cod_istat, insert_comune_progetto=False)
+
+        # Refresh layouts
+        self.refresh_project_layouts()
+
+        # Save the project
+        self.current_project.write(os.path.join(self.project_path, "progetto_MS.qgs"))
+
+        # completely reload the project
+        iface.addProject(os.path.join(self.project_path, "progetto_MS.qgs"))
+
+        return self.project_path
+
+    def customize_project_template(self, cod_istat, insert_comune_progetto=True):
         """Customize the project with the selected comune data."""
-
-        # TODO: get comune data from db directly
-        # layer_limiti_comunali = self.current_project.mapLayersByName("Limiti comunali")[0]
-        # req = QgsFeatureRequest()
-        # req.setFilterExpression(f"\"cod_istat\" = '{cod_istat}'")
-        # selection = layer_limiti_comunali.getFeatures(req)
-        # layer_limiti_comunali.selectByIds([k.id() for k in selection])
-
-        # layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
-        # selected_features = layer_limiti_comunali.selectedFeatures()
-
-        # features = [i for i in selected_features]
 
         comune_record = self.get_comune_record(cod_istat)
         feature = self.create_comune_feature(comune_record)
-
-        # TODO: save comune progetto data to db directly?
+        # TODO: get layer from self.table_layer_map
         layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
-        layer_comune_progetto.startEditing()
-        data_provider = layer_comune_progetto.dataProvider()
-        data_provider.addFeatures([feature])
-        layer_comune_progetto.commitChanges()
-        layer_comune_progetto.updateExtents()
-
-        # features = layer_comune_progetto.getFeatures()
-        # for feat in features:
-        #     attrs = feat.attributes()
-        #     codice_regio = attrs[1]
-        #     nome = attrs[4]
-        #     provincia = attrs[6]
-        #     regione = attrs[7]
+        if insert_comune_progetto:
+            # TODO: save comune progetto data to db directly?
+            layer_comune_progetto.startEditing()
+            data_provider = layer_comune_progetto.dataProvider()
+            data_provider.addFeatures([feature])
+            layer_comune_progetto.commitChanges()
+            layer_comune_progetto.updateExtents()
 
         attribute_map = feature.attributeMap()
         codice_regio = attribute_map["cod_regio"]
@@ -224,8 +277,129 @@ class MzSProjectManager:
         project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
         self.current_project.setTitle(project_title)
 
-    def update_project(self):
-        pass
+    def refresh_project_layouts(self):
+        layout_manager = self.current_project.layoutManager()
+        layouts = layout_manager.printLayouts()
+        for layout in layouts:
+            layout.refresh()
+
+    def update_db(self):
+        sql_scripts = []
+        if self.project_version < "0.8":
+            sql_scripts.append("query_v08.sql")
+        if self.project_version < "0.9":
+            sql_scripts.append("query_v09.sql")
+        if self.project_version < "1.2":
+            sql_scripts.append("query_v10_12.sql")
+        if self.project_version < "1.9":
+            sql_scripts.append("query_v19.sql")
+        if self.project_version < "1.9.2":
+            sql_scripts.append("query_v192.sql")
+        if self.project_version < "1.9.3":
+            sql_scripts.append("query_v193.sql")
+        if self.project_version < "1.9.5":
+            sql_scripts.append("query_v195.sql")
+
+        for upgrade_script in sql_scripts:
+            self.log(f"Executing: {upgrade_script}", log_level=1)
+            self.exec_db_upgrade_sql(upgrade_script)
+
+        self.log("Sql upgrades ok")
+
+    def exec_db_upgrade_sql(self, script_name):
+        with sqlite3.connect(self.db_path) as conn:
+            conn.enable_load_extension(True)
+            conn.execute('SELECT load_extension("mod_spatialite")')
+            cursor = conn.cursor()
+            script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name
+            with script_path.open("r") as f:
+                cursor.executescript(f.read())
+            cursor.close()
+
+        # conn = sqlite3.connect(path_db)
+        # cursor = conn.cursor()
+        # conn.text_factory = lambda x: str(x, "utf-8", "ignore")
+        # conn.enable_load_extension(True)
+
+        # with open(os.path.join(self.sql_scripts_dir, upgrade_script), "r") as f:
+        #     full_sql = f.read()
+        #     sql_commands = full_sql.split(";;")
+        #     try:
+        #         conn.execute('SELECT load_extension("mod_spatialite")')
+        #         for sql_command in sql_commands:
+        #             sql_command = sql_command.strip()
+        #             if sql_command:
+        #                 cursor.execute(sql_command)
+        #         cursor.close()
+        #         conn.commit()
+        #     finally:
+        #         conn.close()
+
+    def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
+        """Create a basic metadata record for an MzS Tools project."""
+        orig_gdb = self.current_project.readPath(os.path.join("db", "indagini.sqlite"))
+        date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
+        # TODO: get layer from self.table_layer_map
+        extent = self.current_project.mapLayersByName("Comune del progetto")[0].dataProvider().extent()
+        values = {
+            "id_metadato": f"{cod_istat}M1",
+            "liv_gerarchico": "series",
+            "resp_metadato_nome": study_author,
+            "resp_metadato_email": author_email,
+            "data_metadato": date_now,
+            "srs_dati": 32633,
+            "ruolo": "owner",
+            "formato": "mapDigital",
+            "tipo_dato": "vector",
+            "keywords": "Microzonazione Sismica, Pericolosita Sismica",
+            "keywords_inspire": "Zone a rischio naturale, Geologia",
+            "limitazione": "nessuna limitazione",
+            "vincoli_accesso": "nessuno",
+            "vincoli_fruibilita": "nessuno",
+            "vincoli_sicurezza": "nessuno",
+            "categoria_iso": "geoscientificInformation",
+            "estensione_ovest": str(extent.xMinimum()),
+            "estensione_est": str(extent.xMaximum()),
+            "estensione_sud": str(extent.yMinimum()),
+            "estensione_nord": str(extent.yMaximum()),
+        }
+
+        with sqlite3.connect(orig_gdb) as conn:
+            conn.execute(
+                """
+                INSERT INTO metadati (
+                    id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, data_metadato, srs_dati, 
+                    ruolo, formato, tipo_dato, keywords, keywords_inspire, limitazione, vincoli_accesso, vincoli_fruibilita, 
+                    vincoli_sicurezza, categoria_iso, estensione_ovest, estensione_est, estensione_sud, estensione_nord
+                ) VALUES (
+                    :id_metadato, :liv_gerarchico, :resp_metadato_nome, :resp_metadato_email, :data_metadato, :srs_dati, 
+                    :ruolo, :formato, :tipo_dato, :keywords, :keywords_inspire, :limitazione, :vincoli_accesso, :vincoli_fruibilita,
+                    :vincoli_sicurezza, :categoria_iso, :estensione_ovest, :estensione_est, :estensione_sud, :estensione_nord
+                );
+                """,
+                values,
+            )
+
+    def backup_project(self, out_dir=None):
+        if not out_dir:
+            out_dir = self.project_path.parent
+
+        project_folder_name = Path(self.project_path).name
+        backup_dir = f"{project_folder_name}_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}"
+
+        shutil.copytree(self.project_path, out_dir / backup_dir)
+
+        # backup_dir = os.path.join(out_dir, "backup")
+        # if not os.path.exists(backup_dir):
+        #     os.makedirs(backup_dir)
+
+        # backup_name = f"progetto_MS_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+        # backup_path = os.path.join(backup_dir, backup_name)
+
+        # with zipfile.ZipFile(backup_path, "w") as zip_ref:
+        #     for root, dirs, files in os.walk(self.project_path):
+        #         for file in files:
+        #             zip_ref.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), self
 
     @staticmethod
     def extract_project_template(dir_out):
