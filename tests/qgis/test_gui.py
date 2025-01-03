@@ -6,7 +6,7 @@ from qgis.PyQt.QtWidgets import QCompleter, QDialog
 
 from mzs_tools.__about__ import __version__
 from mzs_tools.gui.dlg_info import PluginInfo
-from mzs_tools.gui.dlg_create_project import CreateProjectDlg
+from mzs_tools.gui.dlg_create_project import DlgCreateProject
 
 
 def test_tb_info(qgis_app):
@@ -35,7 +35,7 @@ def test_tb_info(qgis_app):
 
 
 def test_tb_nuovo_progetto_gui(qgis_app):
-    dialog = CreateProjectDlg()
+    dialog = DlgCreateProject()
     assert dialog is not None
 
     dialog.show()
@@ -86,7 +86,7 @@ def test_tb_nuovo_progetto_gui(qgis_app):
 
 
 def test_tb_nuovo_progetto_comune_completer():
-    dialog = CreateProjectDlg()
+    dialog = DlgCreateProject()
 
     # Test completer setup
     completer = dialog.comuneField.completer()
@@ -122,7 +122,7 @@ def test_tb_nuovo_progetto_comune_completer():
 
 
 def test_tb_nuovo_progetto_dialog_reject():
-    dialog = CreateProjectDlg()
+    dialog = DlgCreateProject()
 
     # Mock create_project method
     dialog.create_project = MagicMock()
@@ -135,7 +135,7 @@ def test_tb_nuovo_progetto_dialog_reject():
 
 
 def test_create_project():
-    dialog = CreateProjectDlg()
+    dialog = DlgCreateProject()
 
     # Setup test data
     test_dir = "/tmp/test_project"
@@ -185,7 +185,7 @@ def test_create_project():
 
 def test_sanitize_comune_name():
     """Test comune name sanitization"""
-    dialog = CreateProjectDlg()
+    dialog = DlgCreateProject()
     assert dialog.sanitize_comune_name("Roma (RM - Lazio)") == "Roma"
     assert dialog.sanitize_comune_name("Sant'Angelo (LE)") == "Sant_Angelo"
     assert dialog.sanitize_comune_name("Città Sant'Angelo") == "Città_Sant_Angelo"

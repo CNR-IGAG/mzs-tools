@@ -12,7 +12,7 @@ from qgis.utils import iface
 from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __version__
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
 
-from ..utils import create_basic_sm_metadata, save_map_image
+from ..plugin_utils.misc import save_map_image
 
 
 class MzSProjectManager:
@@ -45,14 +45,15 @@ class MzSProjectManager:
         self.is_mzs_project = self.detect_mzs_project()
 
     def detect_mzs_project(self):
-        """Detect if the current project is a MzSTools project."""
-        self.log("Detecting MzSTools project...", log_level=4)
+        """Detect if the current project is a MzS Tools project."""
+        self.log("Detecting MzS Tools project...", log_level=4)
         project_file_name = self.current_project.baseName()
         project_path = Path(self.current_project.absolutePath())
         db_path = project_path / "db" / "indagini.sqlite"
         version_file_path = project_path / "progetto" / "versione.txt"
 
         if project_file_name != "progetto_MS" or not db_path.exists() or not version_file_path.exists():
+            self.log("No MzS Tools project detected", log_level=4)
             return False
 
         self.project_path = project_path
@@ -137,7 +138,7 @@ class MzSProjectManager:
 
         return feature
 
-    def create_project_from_template(self, comune_name, cod_istat, dir_out):
+    def create_project_from_template(self, comune_name, cod_istat, study_author, author_email, dir_out):
         # extract project template in the output directory
         self.extract_project_template(dir_out)
 
@@ -147,12 +148,21 @@ class MzSProjectManager:
 
         self.current_project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        self.customize_project_template(self.current_project, cod_istat, new_project_path)
+        # init new project info
+        self.current_project = QgsProject.instance()
+        self.project_path = Path(self.current_project.absolutePath())
+        self.db_path = self.project_path / "db" / "indagini.sqlite"
 
-        # create_basic_sm_metadata(cod_istat, professionista, email_prof)
+        self.customize_project_template(cod_istat)
+
+        self.create_basic_project_metadata(cod_istat, study_author, author_email)
 
         # Refresh layouts
         self.refresh_project_layouts()
+
+        # write the version file
+        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+            f.write(__version__)
 
         # Save the project
         self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
@@ -207,6 +217,9 @@ class MzSProjectManager:
 
         # apply project customizations without creating comune feature
         self.customize_project_template(self.cod_istat, insert_comune_progetto=False)
+
+        # cleanup the extracted project template
+        shutil.rmtree(os.path.join(self.project_path, "progetto_MS"))
 
         # Refresh layouts
         self.refresh_project_layouts()
@@ -316,28 +329,9 @@ class MzSProjectManager:
                 cursor.executescript(f.read())
             cursor.close()
 
-        # conn = sqlite3.connect(path_db)
-        # cursor = conn.cursor()
-        # conn.text_factory = lambda x: str(x, "utf-8", "ignore")
-        # conn.enable_load_extension(True)
-
-        # with open(os.path.join(self.sql_scripts_dir, upgrade_script), "r") as f:
-        #     full_sql = f.read()
-        #     sql_commands = full_sql.split(";;")
-        #     try:
-        #         conn.execute('SELECT load_extension("mod_spatialite")')
-        #         for sql_command in sql_commands:
-        #             sql_command = sql_command.strip()
-        #             if sql_command:
-        #                 cursor.execute(sql_command)
-        #         cursor.close()
-        #         conn.commit()
-        #     finally:
-        #         conn.close()
-
-    def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
+    def create_basic_project_metadata(self, cod_istat, study_author, author_email):
         """Create a basic metadata record for an MzS Tools project."""
-        orig_gdb = self.current_project.readPath(os.path.join("db", "indagini.sqlite"))
+        # orig_gdb = self.current_project.readPath(os.path.join("db", "indagini.sqlite"))
         date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
         # TODO: get layer from self.table_layer_map
         extent = self.current_project.mapLayersByName("Comune del progetto")[0].dataProvider().extent()
@@ -364,7 +358,7 @@ class MzSProjectManager:
             "estensione_nord": str(extent.yMaximum()),
         }
 
-        with sqlite3.connect(orig_gdb) as conn:
+        with sqlite3.connect(self.db_path) as conn:
             conn.execute(
                 """
                 INSERT INTO metadati (
@@ -385,21 +379,13 @@ class MzSProjectManager:
             out_dir = self.project_path.parent
 
         project_folder_name = Path(self.project_path).name
-        backup_dir = f"{project_folder_name}_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}"
+        backup_dir_name = f"{project_folder_name}_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}"
+        backup_path = out_dir / backup_dir_name
 
-        shutil.copytree(self.project_path, out_dir / backup_dir)
+        self.log(f"Backing up project in {backup_path}...")
+        shutil.copytree(self.project_path, backup_path)
 
-        # backup_dir = os.path.join(out_dir, "backup")
-        # if not os.path.exists(backup_dir):
-        #     os.makedirs(backup_dir)
-
-        # backup_name = f"progetto_MS_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
-        # backup_path = os.path.join(backup_dir, backup_name)
-
-        # with zipfile.ZipFile(backup_path, "w") as zip_ref:
-        #     for root, dirs, files in os.walk(self.project_path):
-        #         for file in files:
-        #             zip_ref.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), self
+        return backup_path
 
     @staticmethod
     def extract_project_template(dir_out):

@@ -1,6 +1,7 @@
 import configparser
 import os
 import shutil
+import traceback
 from functools import partial
 from itertools import chain
 from pathlib import Path
@@ -15,7 +16,7 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, qApp
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
 
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.gui.dlg_settings import PlgOptionsFactory
@@ -24,12 +25,12 @@ from mzs_tools.plugin_utils.settings import PlgOptionsManager
 
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
+from .gui.dlg_create_project import DlgCreateProject
 from .gui.dlg_info import PluginInfo
 from .tb_edit_metadata import EditMetadataDialog
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
-from .gui.dlg_create_project import CreateProjectDlg
 
 
 class MzSTools:
@@ -78,6 +79,9 @@ class MzSTools:
         self.export_shp_dlg.pushButton_out.clicked.connect(self.select_output_fld_5)
 
         QgsSettings().setValue("qgis/enableMacros", 3)
+
+        # initialize project manager
+        self.prj_manager = MzSProjectManager()
 
         # connect to projectRead signal
         self.iface.projectRead.connect(self.check_project)
@@ -213,8 +217,40 @@ class MzSTools:
             )
             return
         if self.create_project_dlg is None:
-            self.create_project_dlg = CreateProjectDlg(self.iface.mainWindow())
-        self.create_project_dlg.exec()
+            self.create_project_dlg = DlgCreateProject(self.iface.mainWindow())
+        result = self.create_project_dlg.exec()
+        if result:
+            dir_out = self.create_project_dlg.output_dir_widget.lineEdit().text()
+            comune_name = self.create_project_dlg.comune_line_edit.text().split(" (")[0]
+            cod_istat = self.create_project_dlg.cod_istat_line_edit.text()
+            study_author = self.create_project_dlg.study_author_line_edit.text()
+            author_email = self.create_project_dlg.author_email_line_edit.text()
+            self.log(
+                f"Creating new MzS Tools project in {dir_out} for {comune_name} ({cod_istat}). Author: {study_author} ({author_email})"
+            )
+            project_path = None
+            try:
+                # new_project = self.create_project(dir_out)
+                # reload the project
+                # self.iface.addProject(new_project)
+                project_path = self.prj_manager.create_project_from_template(
+                    comune_name, cod_istat, study_author, author_email, dir_out
+                )
+            except Exception as e:
+                err_msg = self.tr("Error during project creation")
+                self.log(f"{err_msg}: {e} ", log_level=2)
+                self.log(traceback.format_exc(), log_level=2)
+                QMessageBox.critical(None, "MzS Tools error", f'{err_msg}:\n"{str(e)}"')
+                # cleanup
+                QgsProject.instance().clear()
+                prj_path = Path(dir_out) / f"{cod_istat}_{self.prj_manager.sanitize_comune_name(comune_name)}"
+                if prj_path.exists():
+                    self.log(f"Removing incomplete project in {prj_path}")
+                    shutil.rmtree(prj_path)
+
+            if project_path:
+                self.log(f"Project created successfully in {project_path}")
+                QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
 
     def edit_metadata(self):
         self.edit_metadata_dlg.run_edit_metadata_dialog()
@@ -258,7 +294,7 @@ class MzSTools:
         self.export_shp_dlg.dir_output.setText(out_dir)
 
     def check_svg_cache(self):
-        self.log("Checking svg symbols...")
+        self.log("Checking svg symbols...", log_level=4)
         dir_svg_input = DIR_PLUGIN_ROOT / "img" / "svg"
 
         current_qgis_profile_name = None
@@ -279,7 +315,6 @@ class MzSTools:
             self.log(f"Copying svg symbols in {dir_svg_output}")
             shutil.copytree(dir_svg_input, dir_svg_output)
         else:
-            self.log(f"Updating svg symbols in {dir_svg_output}")
             # copy only new or updated files
             for file in dir_svg_input.glob("*.svg"):
                 dest = dir_svg_output / file.name
@@ -289,51 +324,48 @@ class MzSTools:
 
     def check_project(self):
         """
-        Check if the current project is a MzSTools project to:
-        - check if the project version is older than the plugin version and start the update process
+        Initialize the MzSProjectManager and return immediately if the project is not a MzSTools project.
+        If the project is a MzSTools project:
+        - check if the project is outdated and ask the user to start the update process
         - connect editing signals to automatically set cross-layer no-overlap rules when needed and
           revert to the original config when editing stops
-        - connect to layer nameChanged signal to warn the user when renaming required layers
+        - connect layer nameChanged signal to warn the user when renaming required layers
         - warn the user if the QGIS version is less than SUGGESTED_QGIS_VERSION defined in constants.py
         """
-        # project_info = detect_mzs_tools_project()
-        # if not project_info:
-        #     return
-
-        # qgs_log(f"MzSTools project detected. Project version: {project_info['version']}")
-        # qgs_log("Comparing project and plugin versions...")
-        # # plugin_version = plugin_version_from_metadata_file()
-
-        # if project_info["version"] < __version__:
-        #     qgs_log(f"Project should be updated to version {__version__}")
-        #     qApp.processEvents()
-        #     self.project_update_dlg.aggiorna(project_info["project_path"], project_info["version"])
-
-        prj_manager = MzSProjectManager()
-        if not prj_manager.is_mzs_project:
+        self.prj_manager = MzSProjectManager()
+        if not self.prj_manager.is_mzs_project:
             return
 
-        if prj_manager.project_updateable:
+        if self.prj_manager.project_updateable:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Question)
-            msg_box.setWindowTitle("MzS Tools - Project Update")
-            msg_box.setText("The project should be updated. Do you want to proceed?")
-            msg_box.setInformativeText(
-                f"The project will be updated from version {prj_manager.project_version} to version {__version__}."
+            msg_box.setWindowTitle(self.tr("MzS Tools - Project Update"))
+            msg_box.setText(
+                self.tr(
+                    f"The project will be updated from version {self.prj_manager.project_version} to version {__version__}."
+                )
             )
-            msg_box.setDetailedText("This action will make changes to your project. TODO: add more details.")
+            msg_box.setInformativeText(self.tr("Do you want to proceed?"))
+            msg_box.setDetailedText(
+                self.tr(
+                    "It is possible to cancel the update process and continue using the current project version, "
+                    "but it is highly recommended to proceed with the update to avoid possible issues.\n"
+                    "The QGIS project content (layers, styles, symbols, print layout) will be updated to the latest plugin version.\n"
+                    "The database will be updated if necessary but all data will be preserved.\n"
+                    "The current project will be saved in a backup directory before the update."
+                )
+            )
             msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             msg_box.setDefaultButton(QMessageBox.Yes)
 
             response = msg_box.exec_()
             if response == QMessageBox.Yes:
                 self.log("Starting project update process.", log_level=1)
-                prj_manager.update_db()
-                prj_manager.update_project_from_template()
+                self.prj_manager.update_db()
+                self.prj_manager.update_project_from_template()
                 return
             else:
                 self.log("Project update process cancelled.", log_level=1)
-                # TODO: warn the user!
 
         self.connect_editing_signals()
 

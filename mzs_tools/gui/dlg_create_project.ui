@@ -58,7 +58,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="comuneField">
+       <widget class="QLineEdit" name="comune_line_edit">
         <property name="font">
          <font>
           <weight>50</weight>
@@ -84,7 +84,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="cod_istat">
+       <widget class="QLineEdit" name="cod_istat_line_edit">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -115,7 +115,7 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="1">
-       <widget class="QLineEdit" name="professionista">
+       <widget class="QLineEdit" name="study_author_line_edit">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -172,7 +172,7 @@
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QLineEdit" name="email_prof">
+       <widget class="QLineEdit" name="author_email_line_edit">
         <property name="font">
          <font>
           <weight>50</weight>
