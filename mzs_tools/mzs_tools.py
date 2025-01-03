@@ -26,8 +26,8 @@ from mzs_tools.plugin_utils.settings import PlgOptionsManager
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .gui.dlg_create_project import DlgCreateProject
+from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_info import PluginInfo
-from .tb_edit_metadata import EditMetadataDialog
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
@@ -56,8 +56,8 @@ class MzSTools:
         # install or update svg symbols in current QGIS profile
         self.check_svg_cache()
 
-        self.create_project_dlg = None
-        self.edit_metadata_dlg = EditMetadataDialog()
+        self.dlg_create_project = None
+        self.dlg_metadata_edit = None
         self.info_dlg = PluginInfo(self.iface.mainWindow())
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
@@ -85,6 +85,10 @@ class MzSTools:
 
         # connect to projectRead signal
         self.iface.projectRead.connect(self.check_project)
+
+        # when an entirely new project is started, disable the actions that require an open mzs tools project
+        # https://qgis.org/pyqgis/master/gui/QgisInterface.html#qgis.gui.QgisInterface.newProjectCreated
+        self.iface.newProjectCreated.connect(self.on_new_qgis_project)
 
     def add_action(
         self,
@@ -133,14 +137,15 @@ class MzSTools:
         self.add_action(
             str(icon_path2),
             text=self.tr("New project"),
-            callback=self.open_create_project_dlg,
+            callback=self.open_dlg_create_project,
             parent=self.iface.mainWindow(),
         )
 
-        self.add_action(
+        self.action_edit_metadata = self.add_action(
             QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
+            enabled_flag=self.prj_manager and self.prj_manager.is_mzs_project,
             text=self.tr("Edit project metadata"),
-            callback=self.edit_metadata,
+            callback=self.open_dlg_metadata_edit,
             parent=self.iface.mainWindow(),
         )
 
@@ -168,13 +173,6 @@ class MzSTools:
         )
 
         self.toolbar.addSeparator()
-
-        # self.add_action(
-        #     QgsApplication.getThemeIcon("/mActionOptions.svg"),
-        #     text=self.tr("MzS Tools Settings"),
-        #     callback=self.show_settings,
-        #     parent=self.iface.mainWindow(),
-        # )
 
         self.add_action(
             QgsApplication.getThemeIcon("/mActionOptions.svg"),
@@ -205,26 +203,31 @@ class MzSTools:
         self.iface.pluginHelpMenu().removeAction(self.help_action)
         del self.help_action
 
+        # disconnect QgisInterface signals
         self.iface.projectRead.disconnect(self.check_project)
+        self.iface.newProjectCreated.disconnect(self.on_new_qgis_project)
 
-    def open_create_project_dlg(self):
+    def on_new_qgis_project(self):
+        self.action_edit_metadata.setEnabled(False)
+
+    def open_dlg_create_project(self):
         # check if there is a project already open
         if QgsProject.instance().fileName():
             QMessageBox.warning(
                 self.iface.mainWindow(),
-                self.tr("WARNING!"),
+                self.tr("MzS Tools"),
                 self.tr("Close the current project before creating a new one."),
             )
             return
-        if self.create_project_dlg is None:
-            self.create_project_dlg = DlgCreateProject(self.iface.mainWindow())
-        result = self.create_project_dlg.exec()
+        if self.dlg_create_project is None:
+            self.dlg_create_project = DlgCreateProject(self.iface.mainWindow())
+        result = self.dlg_create_project.exec()
         if result:
-            dir_out = self.create_project_dlg.output_dir_widget.lineEdit().text()
-            comune_name = self.create_project_dlg.comune_line_edit.text().split(" (")[0]
-            cod_istat = self.create_project_dlg.cod_istat_line_edit.text()
-            study_author = self.create_project_dlg.study_author_line_edit.text()
-            author_email = self.create_project_dlg.author_email_line_edit.text()
+            dir_out = self.dlg_create_project.output_dir_widget.lineEdit().text()
+            comune_name = self.dlg_create_project.comune_line_edit.text().split(" (")[0]
+            cod_istat = self.dlg_create_project.cod_istat_line_edit.text()
+            study_author = self.dlg_create_project.study_author_line_edit.text()
+            author_email = self.dlg_create_project.author_email_line_edit.text()
             self.log(
                 f"Creating new MzS Tools project in {dir_out} for {comune_name} ({cod_istat}). Author: {study_author} ({author_email})"
             )
@@ -252,8 +255,20 @@ class MzSTools:
                 self.log(f"Project created successfully in {project_path}")
                 QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
 
-    def edit_metadata(self):
-        self.edit_metadata_dlg.run_edit_metadata_dialog()
+    def open_dlg_metadata_edit(self):
+        # self.edit_metadata_dlg.run_edit_metadata_dialog()
+        if not self.prj_manager.is_mzs_project:
+            self.log(self.tr("The tool must be used within an opened MS project!"), log_level=1)
+            return
+
+        if self.dlg_metadata_edit is None:
+            self.dlg_metadata_edit = DlgMetadataEdit(self.iface.mainWindow())
+
+        self.dlg_metadata_edit.set_prj_manager(self.prj_manager)
+
+        result = self.dlg_metadata_edit.exec()
+        if result:
+            self.dlg_metadata_edit.save_data()
 
     def import_project(self):
         self.import_shp_dlg.importa_prog()
@@ -333,6 +348,9 @@ class MzSTools:
         - warn the user if the QGIS version is less than SUGGESTED_QGIS_VERSION defined in constants.py
         """
         self.prj_manager = MzSProjectManager()
+
+        self.action_edit_metadata.setEnabled(self.prj_manager.is_mzs_project)
+
         if not self.prj_manager.is_mzs_project:
             return
 

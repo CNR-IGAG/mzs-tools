@@ -1,20 +1,22 @@
-import os
 import sqlite3
 import webbrowser
 from datetime import datetime
+from pathlib import Path
+from typing import Optional
 
 from qgis.gui import QgsDateTimeEdit
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtWidgets import QDialog, QLineEdit, QMessageBox, QTextEdit
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QMessageBox, QTextEdit
 from qgis.utils import iface
 
-from .utils import create_basic_sm_metadata, detect_mzs_tools_project, qgs_log
+from mzs_tools.core.mzs_project_manager import MzSProjectManager
+from mzs_tools.plugin_utils.logging import MzSToolsLogger
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "tb_edit_metadata.ui"))
+FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
 
-class EditMetadataDialog(QDialog, FORM_CLASS):
+class DlgMetadataEdit(QDialog, FORM_CLASS):
     """
     EditMetadataDialog is a QDialog that provides a user interface for editing metadata for
     the current MzS Tools QGIS project.
@@ -28,16 +30,15 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
     in the 'Standard MS'.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, prj_manager: MzSProjectManager, parent: Optional[QDialog] = None) -> None:
         """Constructor."""
         super().__init__(parent)
+        self.log = MzSToolsLogger().log
         self.setupUi(self)
 
-        self.help_button.clicked.connect(
-            lambda: webbrowser.open(
-                "https://mzs-tools.readthedocs.io/it/latest/plugin/altri_strumenti.html#inserimento-e-modifica-dei-metadati"
-            )
-        )
+        self.help_button = self.button_box.button(QDialogButtonBox.Help)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
 
         self.required_fields = (
             self.id_metadato,
@@ -73,6 +74,15 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
             self.estensione_nord,
         )
 
+        self.ok_button.setText(self.tr("Save"))
+        self.ok_button.clicked.connect(self.accept)
+        self.cancel_button.clicked.connect(self.reject)
+        self.help_button.clicked.connect(
+            lambda: webbrowser.open(
+                "https://mzs-tools.readthedocs.io/it/latest/plugin/altri_strumenti.html#inserimento-e-modifica-dei-metadati"
+            )
+        )
+
         # connect all required fields to the validate_input method
         for field in self.required_fields:
             if isinstance(field, QLineEdit) and field.isEnabled():
@@ -82,17 +92,18 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
             elif isinstance(field, QgsDateTimeEdit):
                 field.valueChanged.connect(self.validate_input)
 
-    def run_edit_metadata_dialog(self):
-        """Run the metadata edit tool."""
-        project_info = detect_mzs_tools_project()
-        if not project_info:
+        self.prj_manager: MzSProjectManager = prj_manager
+
+    def set_prj_manager(self, prj_manager):
+        self.prj_manager = prj_manager
+
+    def showEvent(self, e):
+        if not self.prj_manager:
             self.show_error(self.tr("The tool must be used within an opened MS project!"))
             return
 
-        self.db_path = project_info["db_path"]
-
         # get comune_progetto data
-        comune_record = self.get_comune_progetto()
+        comune_record = self.prj_manager.get_project_comune_record()
         if not comune_record:
             self.show_error(self.tr("There was a problem reading comune_progetto from database!"))
             return
@@ -105,16 +116,16 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
         comune_info = f"{comune} ({provincia}, {regione})"
 
         # check if "metadati" table contains a single record with expected id
-        with sqlite3.connect(self.db_path) as conn:
+        with sqlite3.connect(self.prj_manager.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM metadati WHERE id_metadato = ?", (expected_id,))
             count = cursor.fetchone()[0]
 
         if count == 0:
-            qgs_log("Metadata record not found. Creating a new record...", level="warning")
-            create_basic_sm_metadata(cod_istat)
+            self.log("Metadata record not found. Creating a new record...", log_level=1)
+            self.prj_manager.create_basic_project_metadata(cod_istat)
         if count > 1:
-            qgs_log("Multiple metadata records found.", level="error")
+            self.log("Multiple metadata records found.", log_level="2")
             self.show_error(
                 self.tr(
                     "Multiple metadata records found. Please edit the 'metadati' table and remove all but one record."
@@ -124,14 +135,6 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
 
         self.load_data(expected_id, comune_info)
         self.validate_input()
-
-        self.show()
-        self.adjustSize()
-
-        result = self.exec_()
-
-        if result:
-            self.save_data()
 
     def parse_date(self, date_str):
         if date_str and date_str != "NULL":
@@ -143,10 +146,11 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
 
     def load_data(self, record_id, comune_info):
         """Load data from the SQLite table and populate the form fields."""
-        with sqlite3.connect(self.db_path) as conn:
+        with sqlite3.connect(self.prj_manager.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM metadati WHERE id_metadato = ?", (record_id,))
             record = cursor.fetchone()
+            cursor.close()
 
         if record:
             data_metadato = self.parse_date(record[5])
@@ -222,12 +226,12 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
                     all_fields_filled = False
                 else:
                     field.setStyleSheet("")
-            self.button_box.setEnabled(all_fields_filled)
+            self.ok_button.setEnabled(all_fields_filled)
 
     def save_data(self):
         """Save the edited data back to the SQLite table."""
-        qgs_log("Updating metadata record...", level="info")
-        with sqlite3.connect(self.db_path) as conn:
+        self.log("Updating metadata record...")
+        with sqlite3.connect(self.prj_manager.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """
@@ -284,22 +288,14 @@ class EditMetadataDialog(QDialog, FORM_CLASS):
                     self.id_metadato.text(),
                 ),
             )
-            conn.commit()
-        QMessageBox.information(iface.mainWindow(), self.tr("Success"), self.tr("Metadata updated successfully."))
+            cursor.close()
 
-    def get_comune_progetto(self):
-        try:
-            with sqlite3.connect(self.db_path) as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT * FROM comune_progetto")
-                record = cursor.fetchone()
-        except sqlite3.Error as e:
-            qgs_log(f"Error reading 'comune_progetto' table: {e}", level="error")
-            return None
-        return record
+        success_msg = self.tr("Metadata updated successfully.")
+        self.log(success_msg)
+        QMessageBox.information(iface.mainWindow(), self.tr("MzS Tools"), success_msg)
 
     def show_error(self, message):
-        QMessageBox.critical(iface.mainWindow(), self.tr("Error"), message)
+        QMessageBox.critical(iface.mainWindow(), self.tr("MzS Tools - Error"), message)
 
-    def tr(self, message):
-        return QCoreApplication.translate("EditMetadataDialog", message)
+    def tr(self, message: str) -> str:
+        return QCoreApplication.translate(self.__class__.__name__, message)

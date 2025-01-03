@@ -1,12 +1,12 @@
 SOURCES = mzs_tools.py \
           gui/dlg_create_project.py \
-          tb_edit_metadata.py \
+          gui/dlg_metadata_edit.py \
           tb_esporta_shp.py \
           tb_edit_win.py \
           gui/dlg_info.py
 
 FORMS = gui/dlg_create_project.ui \
-        tb_edit_metadata.ui \
+        gui/dlg_metadata_edit.ui \
         tb_importa_shp.ui \
         tb_esporta_shp.ui \
         tb_edit_win.ui \

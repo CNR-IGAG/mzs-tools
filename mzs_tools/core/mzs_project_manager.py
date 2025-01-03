@@ -123,6 +123,7 @@ class MzSProjectManager:
     def create_comune_feature(self, comune_record):
         # create comune feature
         fields = QgsFields()
+        # TODO: DeprecationWarning: QgsField constructor is deprecated
         fields.append(QgsField("pkuid", QVariant.Int))
         fields.append(QgsField("cod_regio", QVariant.String))
         fields.append(QgsField("cod_prov", QVariant.String))
@@ -329,7 +330,7 @@ class MzSProjectManager:
                 cursor.executescript(f.read())
             cursor.close()
 
-    def create_basic_project_metadata(self, cod_istat, study_author, author_email):
+    def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
         """Create a basic metadata record for an MzS Tools project."""
         # orig_gdb = self.current_project.readPath(os.path.join("db", "indagini.sqlite"))
         date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
