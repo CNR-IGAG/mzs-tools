@@ -13,6 +13,7 @@ from qgis.core import (
     QgsSettings,
     QgsSnappingConfig,
     QgsTolerance,
+    QgsVectorLayer,
 )
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
@@ -32,11 +33,12 @@ from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
 
+# from .editing.instab_l1 import instab_l1_form_init
+
 
 class MzSTools:
     def __init__(self, iface):
         self.iface = iface
-
         self.log = MzSToolsLogger().log
 
         # keep track of connected layers to avoid reconnecting signals
@@ -62,7 +64,6 @@ class MzSTools:
         self.import_shp_dlg = importa_shp()
         self.export_shp_dlg = esporta_shp()
         self.edit_win_dlg = edit_win()
-        # self.settings_dlg = MzSToolsSettings()
 
         self.actions = []
         self.menu = self.tr("&MzS Tools")
@@ -80,8 +81,9 @@ class MzSTools:
 
         QgsSettings().setValue("qgis/enableMacros", 3)
 
-        # initialize project manager
-        self.prj_manager = MzSProjectManager()
+        # create the project manager
+        self.prj_manager = MzSProjectManager.instance()
+        self.prj_manager.init_manager()
 
         # connect to projectRead signal
         self.iface.projectRead.connect(self.check_project)
@@ -89,6 +91,9 @@ class MzSTools:
         # when an entirely new project is started, disable the actions that require an open mzs tools project
         # https://qgis.org/pyqgis/master/gui/QgisInterface.html#qgis.gui.QgisInterface.newProjectCreated
         self.iface.newProjectCreated.connect(self.on_new_qgis_project)
+
+        # load form init functions
+        # self.instab_l1_form_init = instab_l1_form_init
 
     def add_action(
         self,
@@ -191,6 +196,10 @@ class MzSTools:
         self.iface.pluginHelpMenu().addAction(self.help_action)
 
     def unload(self):
+        # close db connections
+        if self.prj_manager:
+            self.prj_manager.cleanup_db_connection()
+
         # Clean up preferences panel in QGIS settings
         self.iface.unregisterOptionsWidgetFactory(self.options_factory)
 
@@ -264,7 +273,7 @@ class MzSTools:
         if self.dlg_metadata_edit is None:
             self.dlg_metadata_edit = DlgMetadataEdit(self.iface.mainWindow())
 
-        self.dlg_metadata_edit.set_prj_manager(self.prj_manager)
+        # self.dlg_metadata_edit.set_prj_manager(self.prj_manager)
 
         result = self.dlg_metadata_edit.exec()
         if result:
@@ -278,19 +287,6 @@ class MzSTools:
 
     def add_site(self):
         self.edit_win_dlg.edita()
-
-    # def show_settings(self):
-    #     """Show the settings dialog."""
-    #     self.settings_dlg.load_settings()
-    #     self.settings_dlg.show()
-    #     self.settings_dlg.adjustSize()
-
-    # def show_info_dlg(self):
-    #     self.info_dlg.exec()
-
-    # def select_output_fld_2(self):
-    #     out_dir = QFileDialog.getExistingDirectory(self.new_project_dlg, "", "", QFileDialog.ShowDirsOnly)
-    #     self.new_project_dlg.dir_output.setText(out_dir)
 
     def select_input_fld_4(self):
         in_dir = QFileDialog.getExistingDirectory(self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
@@ -347,7 +343,8 @@ class MzSTools:
         - connect layer nameChanged signal to warn the user when renaming required layers
         - warn the user if the QGIS version is less than SUGGESTED_QGIS_VERSION defined in constants.py
         """
-        self.prj_manager = MzSProjectManager()
+        # initialize the project manager
+        self.prj_manager.init_manager()
 
         self.action_edit_metadata.setEnabled(self.prj_manager.is_mzs_project)
 
@@ -426,6 +423,17 @@ class MzSTools:
                         self.set_advanced_editing_config,
                         self.reset_editing_config,
                     )
+            # test for setting the ui form with qgis.core.QgsEditFormConfig.setUiForm
+
+    #         if layer.name() == "Zone instabili liv 1":
+    #             layer.editingStarted.connect(partial(self.set_ui_file, layer, "instab_l1.ui"))
+
+    # def set_ui_file(self, layer: QgsVectorLayer, ui_file_name: str):
+    #     form_config = layer.editFormConfig()
+    #     ui_path = DIR_PLUGIN_ROOT / "editing" / ui_file_name
+    #     self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
+    #     form_config.setUiForm(str(ui_path))
+    #     layer.setEditFormConfig(form_config)
 
     def disconnect_editing_signals(self):
         """Disconnect specific editing signals."""

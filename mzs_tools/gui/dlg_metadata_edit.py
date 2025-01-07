@@ -1,4 +1,3 @@
-import sqlite3
 import webbrowser
 from datetime import datetime
 from pathlib import Path
@@ -30,7 +29,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
     in the 'Standard MS'.
     """
 
-    def __init__(self, prj_manager: MzSProjectManager, parent: Optional[QDialog] = None) -> None:
+    def __init__(self, parent: Optional[QDialog] = None) -> None:
         """Constructor."""
         super().__init__(parent)
         self.log = MzSToolsLogger().log
@@ -92,34 +91,27 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
             elif isinstance(field, QgsDateTimeEdit):
                 field.valueChanged.connect(self.validate_input)
 
-        self.prj_manager: MzSProjectManager = prj_manager
-
-    def set_prj_manager(self, prj_manager):
-        self.prj_manager = prj_manager
+        self.prj_manager: MzSProjectManager = MzSProjectManager.instance()
 
     def showEvent(self, e):
         if not self.prj_manager:
             self.show_error(self.tr("The tool must be used within an opened MS project!"))
             return
 
-        # get comune_progetto data
-        comune_record = self.prj_manager.get_project_comune_record()
-        if not comune_record:
-            self.show_error(self.tr("There was a problem reading comune_progetto from database!"))
-            return
-        comune = comune_record[4]
-        cod_istat = comune_record[6]
-        provincia = comune_record[7]
-        regione = comune_record[8]
+        cod_istat = self.prj_manager.comune_data.cod_istat
+        comune = self.prj_manager.comune_data.comune
+        provincia = self.prj_manager.comune_data.provincia
+        regione = self.prj_manager.comune_data.regione
 
         expected_id = f"{cod_istat}M1"
         comune_info = f"{comune} ({provincia}, {regione})"
 
         # check if "metadati" table contains a single record with expected id
-        with sqlite3.connect(self.prj_manager.db_path) as conn:
+        with self.prj_manager.db_connection as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM metadati WHERE id_metadato = ?", (expected_id,))
             count = cursor.fetchone()[0]
+            cursor.close()
 
         if count == 0:
             self.log("Metadata record not found. Creating a new record...", log_level=1)
@@ -146,7 +138,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
 
     def load_data(self, record_id, comune_info):
         """Load data from the SQLite table and populate the form fields."""
-        with sqlite3.connect(self.prj_manager.db_path) as conn:
+        with self.prj_manager.db_connection as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM metadati WHERE id_metadato = ?", (record_id,))
             record = cursor.fetchone()
@@ -231,7 +223,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
     def save_data(self):
         """Save the edited data back to the SQLite table."""
         self.log("Updating metadata record...")
-        with sqlite3.connect(self.prj_manager.db_path) as conn:
+        with self.prj_manager.db_connection as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """

@@ -1,13 +1,16 @@
 import datetime
 import os
 import shutil
-import sqlite3
+import traceback
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
+from sqlite3 import Connection
+from typing import Optional
 
 from qgis.core import QgsFeature, QgsField, QgsFields, QgsGeometry, QgsProject
-from qgis.PyQt.QtCore import QVariant
-from qgis.utils import iface
+from qgis.PyQt.QtCore import QCoreApplication, QVariant
+from qgis.utils import iface, spatialite_connect
 
 from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __version__
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
@@ -15,38 +18,55 @@ from mzs_tools.plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import save_map_image
 
 
+@dataclass
+class ComuneData:
+    cod_regio: str
+    cod_prov: str
+    cod_com: str
+    comune: str
+    provincia: str
+    regione: str
+    cod_istat: str
+
+
 class MzSProjectManager:
+    _instance = None
+
+    @classmethod
+    def instance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
     def __init__(self):
+        if MzSProjectManager._instance is not None:
+            raise Exception("This class is a singleton!")
+        else:
+            MzSProjectManager._instance = self
+
         self.log = MzSToolsLogger().log
-        self.current_project = QgsProject.instance()
+        self.current_project: QgsProject = None
 
         self.project_path = None
         self.project_version = None
         self.project_updateable = False
         self.db_path = None
+        self.db_connection: Optional[Connection] = None
 
-        self.project_issues = {}
-
-        self.cod_regio = None
-        self.cod_prov = None
-        self.cod_com = None
-        self.comune = None
-        self.provincia = None
-        self.regione = None
-        self.cod_istat = None
-
+        self.comune_data: ComuneData = None
         self.project_metadata = None
 
         # TODO: build a simple map of table names and corresponding layer names
         # find the editable layers that are linked to tables in the db
         self.table_layer_map = {}
 
-        # initialize the manager
-        self.is_mzs_project = self.detect_mzs_project()
+        self.project_issues = {}
 
-    def detect_mzs_project(self):
-        """Detect if the current project is a MzS Tools project."""
-        self.log("Detecting MzS Tools project...", log_level=4)
+        self.is_mzs_project: bool = False
+
+    def init_manager(self):
+        """Detect if the current project is a MzS Tools project and setup the manager."""
+        self.current_project = QgsProject.instance()
         project_file_name = self.current_project.baseName()
         project_path = Path(self.current_project.absolutePath())
         db_path = project_path / "db" / "indagini.sqlite"
@@ -54,11 +74,21 @@ class MzSProjectManager:
 
         if project_file_name != "progetto_MS" or not db_path.exists() or not version_file_path.exists():
             self.log("No MzS Tools project detected", log_level=4)
+            self.is_mzs_project = False
             return False
 
         self.project_path = project_path
         self.db_path = db_path
 
+        # setup db connection and save it to the manager
+        connected = self.setup_db_connection()
+        if not connected:
+            return False
+
+        # cleanup db connection on project close
+        self.current_project.cleared.connect(self.cleanup_db_connection)
+
+        # check project version
         try:
             with version_file_path.open("r") as f:
                 self.project_version = f.read().strip()
@@ -73,44 +103,81 @@ class MzSProjectManager:
             )
             self.project_updateable = True
 
-        # TODO: quick check for db integrity
-
         # get comune data from db
-        comune_record = self.get_project_comune_record()
-        if comune_record:
-            self.cod_regio = comune_record[1]
-            self.cod_prov = comune_record[2]
-            self.cod_com = comune_record[3]
-            self.comune = comune_record[4]
-            self.provincia = comune_record[7]
-            self.regione = comune_record[8]
-            self.cod_istat = comune_record[6]
-        else:
+        self.comune_data = self.get_project_comune_data()
+        if not self.comune_data:
             self.log("Error reading comune data from project db", log_level=2)
             self.project_issues["comune"] = "Error reading comune data from project db"
 
         # TODO: load metadata from db if exists
         # self.sm_project_metadata = self.get_sm_project_metadata()
 
+        self.is_mzs_project = True
         self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
 
         return True
 
-    def get_project_comune_record(self):
-        record = None
-        with sqlite3.connect(self.db_path) as conn:
+    def setup_db_connection(self):
+        # setup db connection
+        if not self.db_connection:
+            self.log(f"Creating db connection to {self.db_path}...", log_level=4)
+            # database cannot be an empty 0-byte file
+            if self.db_path.stat().st_size == 0:
+                err_msg = self.tr(f"The database file is empty! {self.db_path}")
+                self.log(err_msg, log_level=2, push=True, duration=0)
+                self.project_issues["db"] = "Empty database file"
+                self.cleanup_db_connection()
+                return False
+
+            try:
+                self.db_connection = spatialite_connect(str(self.db_path))
+                # validate connection
+                cursor = self.db_connection.cursor()
+                # TODO: quick check for db version and integrity
+                # cursor.execute("PRAGMA integrity_check")
+                cursor.execute("PRAGMA quick_check")
+                # cursor.execute("SELECT * FROM sito_puntuale LIMIT 1")
+                cursor.close()
+            except Exception as e:
+                err_msg = self.tr(f"Error connecting to db! {self.db_path}")
+                self.log(f"{err_msg}: {e}", log_level=2, push=True, duration=0)
+                self.log(traceback.format_exc(), log_level=2)
+                self.cleanup_db_connection()
+                return False
+
+        return True
+
+    def cleanup_db_connection(self):
+        if self.db_connection:
+            self.log(f"Closing db connection to {self.db_path}...", log_level=4)
+            self.db_connection.close()
+            self.db_connection = None
+
+    def get_project_comune_data(self) -> Optional[ComuneData]:
+        data = None
+        with self.db_connection as conn:
             cursor = conn.cursor()
+        try:
             cursor.execute("SELECT * FROM comune_progetto LIMIT 1")
-            record = cursor.fetchone()
+            row = cursor.fetchone()
+            if row:
+                data = ComuneData(
+                    cod_regio=row[1],
+                    cod_prov=row[2],
+                    cod_com=row[3],
+                    comune=row[4],
+                    provincia=row[7],
+                    regione=row[8],
+                    cod_istat=row[6],
+                )
+        finally:
             cursor.close()
-        return record
+        return data
 
     def get_comune_record(self, cod_istat):
         # extract comune feature from db
         record = None
-        with sqlite3.connect(self.db_path) as conn:
-            conn.enable_load_extension(True)
-            conn.execute('SELECT load_extension("mod_spatialite")')
+        with self.db_connection as conn:
             cursor = conn.cursor()
             cursor.execute(
                 f"SELECT ogc_fid, cod_regio, cod_prov, cod_com, comune, cod_istat, provincia, regione, st_astext(GEOMETRY) FROM comuni WHERE cod_istat = '{cod_istat}'"
@@ -153,6 +220,8 @@ class MzSProjectManager:
         self.current_project = QgsProject.instance()
         self.project_path = Path(self.current_project.absolutePath())
         self.db_path = self.project_path / "db" / "indagini.sqlite"
+
+        self.setup_db_connection()
 
         self.customize_project_template(cod_istat)
 
@@ -216,8 +285,10 @@ class MzSProjectManager:
         # read the new project file inside the loaded (old) project
         self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
 
+        self.setup_db_connection()
+
         # apply project customizations without creating comune feature
-        self.customize_project_template(self.cod_istat, insert_comune_progetto=False)
+        self.customize_project_template(self.comune_data.cod_istat, insert_comune_progetto=False)
 
         # cleanup the extracted project template
         shutil.rmtree(os.path.join(self.project_path, "progetto_MS"))
@@ -321,9 +392,7 @@ class MzSProjectManager:
         self.log("Sql upgrades ok")
 
     def exec_db_upgrade_sql(self, script_name):
-        with sqlite3.connect(self.db_path) as conn:
-            conn.enable_load_extension(True)
-            conn.execute('SELECT load_extension("mod_spatialite")')
+        with self.db_connection as conn:
             cursor = conn.cursor()
             script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name
             with script_path.open("r") as f:
@@ -359,7 +428,7 @@ class MzSProjectManager:
             "estensione_nord": str(extent.yMaximum()),
         }
 
-        with sqlite3.connect(self.db_path) as conn:
+        with self.db_connection as conn:
             conn.execute(
                 """
                 INSERT INTO metadati (
@@ -397,3 +466,6 @@ class MzSProjectManager:
     @staticmethod
     def sanitize_comune_name(comune_name):
         return comune_name.split(" (")[0].replace(" ", "_").replace("'", "_")
+
+    def tr(self, message: str) -> str:
+        return QCoreApplication.translate(self.__class__.__name__, message)
