@@ -8,7 +8,18 @@ from pathlib import Path
 from sqlite3 import Connection
 from typing import Optional
 
-from qgis.core import QgsFeature, QgsField, QgsFields, QgsGeometry, QgsProject
+from qgis.core import (
+    QgsFeature,
+    QgsField,
+    QgsFields,
+    QgsGeometry,
+    QgsProject,
+    QgsVectorLayer,
+    QgsDataSourceUri,
+    QgsLayerDefinition,
+    QgsLayerTreeGroup,
+    QgsMapLayer,
+)
 from qgis.PyQt.QtCore import QCoreApplication, QVariant
 from qgis.utils import iface, spatialite_connect
 
@@ -58,7 +69,75 @@ class MzSProjectManager:
 
         # TODO: build a simple map of table names and corresponding layer names
         # find the editable layers that are linked to tables in the db
-        self.table_layer_map = {}
+        self.default_editing_layers = {
+            "sito_puntuale": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Siti puntuali",
+                "group": "Indagini",
+                "qlr_path": "siti_puntuali.qlr",
+            },
+            "indagini_puntuali": {
+                "role": "editing",
+                "type": "table",
+                "layer_name": "Indagini puntuali",
+                "group": "Indagini",
+                "qlr_path": "indagini_puntuali.qlr",
+            },
+            "parametri_puntuali": {
+                "role": "editing",
+                "type": "table",
+                "layer_name": "Parametri puntuali",
+                "group": "Indagini",
+                "qlr_path": "parametri_puntuali.qlr",
+            },
+            "curve": {
+                "role": "editing",
+                "type": "table",
+                "layer_name": "Curve di riferimento",
+                "group": "Indagini",
+                "qlr_path": "curve.qlr",
+            },
+            "hvsr": {
+                "role": "editing",
+                "type": "table",
+                "layer_name": "Indagine stazione singola (HVSR)",
+                "group": "Indagini",
+                "qlr_path": "hvsr.qlr",
+            },
+            "sito_lineare": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Siti lineari",
+                "group": "Indagini",
+                "qlr_path": "siti_lineari.qlr",
+            },
+            "indagini_lineari": {
+                "role": "editing",
+                "type": "table",
+                "layer_name": "Indagini lineari",
+                "group": "Indagini",
+                "qlr_path": "indagini_lineari.qlr",
+            },
+            "parametri_lineari": {
+                "role": "editing",
+                "type": "table",
+                "layer_name": "Parametri lineari",
+                "group": "Indagini",
+                "qlr_path": "parametri_lineari.qlr",
+            },
+        }
+
+        self.default_layout_groups = {
+            "Carta delle Indagini": "carta_delle_indagini.qlr",
+            "Carta geologico-tecnica": "carta_geologico_tecnica.qlr",
+            "Carta delle microzone omogenee in prospettiva sismica (MOPS)": "carta_mops.qlr",
+            "Carta di microzonazione sismica (FA 0.1-0.5 s)": "carta_fa_01_05.qlr",
+            "Carta di microzonazione sismica (FA 0.4-0.8 s)": "carta_fa_04_08.qlr",
+            "Carta di microzonazione sismica (FA 0.7-1.1 s)": "carta_fa_07_11.qlr",
+            "Carta delle frequenze naturali dei terreni (f0)": "carta_frequenze_f0.qlr",
+            "Carta delle frequenze naturali dei terreni (fr)": "carta_frequenze_fr.qlr",
+        }
 
         self.project_issues = {}
 
@@ -102,6 +181,8 @@ class MzSProjectManager:
                 log_level=1,
             )
             self.project_updateable = True
+        else:
+            self.project_updateable = False
 
         # get comune data from db
         self.comune_data = self.get_project_comune_data()
@@ -157,54 +238,178 @@ class MzSProjectManager:
         data = None
         with self.db_connection as conn:
             cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT * FROM comune_progetto LIMIT 1")
-            row = cursor.fetchone()
-            if row:
-                data = ComuneData(
-                    cod_regio=row[1],
-                    cod_prov=row[2],
-                    cod_com=row[3],
-                    comune=row[4],
-                    provincia=row[7],
-                    regione=row[8],
-                    cod_istat=row[6],
-                )
-        finally:
-            cursor.close()
+            try:
+                cursor.execute("SELECT * FROM comune_progetto LIMIT 1")
+                row = cursor.fetchone()
+                if row:
+                    data = ComuneData(
+                        cod_regio=row[1],
+                        cod_prov=row[2],
+                        cod_com=row[3],
+                        comune=row[4],
+                        provincia=row[7],
+                        regione=row[8],
+                        cod_istat=row[6],
+                    )
+            finally:
+                cursor.close()
         return data
 
-    def get_comune_record(self, cod_istat):
-        # extract comune feature from db
-        record = None
-        with self.db_connection as conn:
-            cursor = conn.cursor()
-            cursor.execute(
-                f"SELECT ogc_fid, cod_regio, cod_prov, cod_com, comune, cod_istat, provincia, regione, st_astext(GEOMETRY) FROM comuni WHERE cod_istat = '{cod_istat}'"
+    # def get_comune_record(self, cod_istat):
+    #     # extract comune feature from db
+    #     record = None
+    #     with self.db_connection as conn:
+    #         cursor = conn.cursor()
+    #         cursor.execute(
+    #             f"SELECT ogc_fid, cod_regio, cod_prov, cod_com, comune, cod_istat, provincia, regione, st_astext(GEOMETRY) FROM comuni WHERE cod_istat = '{cod_istat}'"
+    #         )
+    #         record = cursor.fetchone()
+    #         cursor.close()
+
+    #     return record
+
+    # def create_comune_feature(self, comune_record):
+    #     # create comune feature
+    #     fields = QgsFields()
+    #     # TODO: DeprecationWarning: QgsField constructor is deprecated
+    #     fields.append(QgsField("pkuid", QVariant.Int))
+    #     fields.append(QgsField("cod_regio", QVariant.String))
+    #     fields.append(QgsField("cod_prov", QVariant.String))
+    #     fields.append(QgsField("cod_com", QVariant.String))
+    #     fields.append(QgsField("comune", QVariant.String))
+    #     fields.append(QgsField("cod_istat", QVariant.String))
+    #     fields.append(QgsField("provincia", QVariant.String))
+    #     fields.append(QgsField("regione", QVariant.String))
+
+    #     feature = QgsFeature(fields)
+    #     feature.setAttributes(list(comune_record[:8]))
+    #     feature.setGeometry(QgsGeometry.fromWkt(comune_record[8]))
+
+    #     return feature
+
+    # def build_required_layers_registry(self):
+    #     for id, layer in self.current_project.mapLayers().items():
+    #         if type(layer) is QgsVectorLayer:
+    #             self.table_layer_map[layer.dataProvider().uri().table()] = layer
+
+    @staticmethod
+    def set_project_layer_capabilities(
+        layer: QgsMapLayer, identifiable=True, required=False, searchable=True, private=False
+    ):
+        """
+        Set QgsMapLayer.LayerFlag(s) for a layer, as in Project Properties - Data Sources
+        The "Read Only" status must be set with layer.setReadOnly() and is not a QgsMapLayer.LayerFlag
+
+        Flags:
+        - Identifiable = 1
+        - Removable = 2
+        - Searchable = 4
+        - Private = 8
+        """
+        # https://gis.stackexchange.com/questions/318506/setting-layer-identifiable-seachable-and-removable-with-python-in-qgis-3
+        flags = 0
+        if identifiable:
+            flags += QgsMapLayer.Identifiable
+        if searchable:
+            flags += QgsMapLayer.Searchable
+        if not required:
+            flags += QgsMapLayer.Removable
+        if private:
+            flags += QgsMapLayer.Private
+
+        layer.setFlags(QgsMapLayer.LayerFlag(flags))
+
+    def add_default_editing_layers(self):
+        # create new group layer
+        layer_group = QgsLayerTreeGroup("TEMP")
+        self.current_project.layerTreeRoot().addChildNode(layer_group)
+
+        for table_name, layer_data in self.default_editing_layers.items():
+            layer_added = self.add_editing_layer_from_qlr(layer_group, layer_data["qlr_path"])
+            if not layer_added or layer_data["type"] == "group":
+                continue
+
+            # set the data source and layer options for the newly added layer
+            for layer_tree_layer in layer_group.findLayers():
+                if layer_tree_layer.name() == layer_data["layer_name"]:
+                    uri = QgsDataSourceUri()
+                    uri.setDatabase(str(self.db_path))
+                    schema = ""
+                    geom_column = "geom" if layer_data["type"] == "vector" else None
+                    uri.setDataSource(schema, table_name, geom_column)
+                    layer_tree_layer.layer().setDataSource(
+                        uri.uri(),
+                        layer_data["layer_name"],
+                        "spatialite",
+                    )
+                    # reset flags for testing
+                    self.set_project_layer_capabilities(layer_tree_layer.layer())
+                    break
+
+    def add_editing_layer_from_qlr(self, layer_group, qlr_path):
+        try:
+            QgsLayerDefinition.loadLayerDefinition(
+                str(DIR_PLUGIN_ROOT / "data" / "layer_defs" / qlr_path),
+                self.current_project,
+                layer_group,
             )
-            record = cursor.fetchone()
-            cursor.close()
+            return True
+        except Exception as e:
+            self.log(f"Error loading layer from .qlr ({qlr_path}): {e}", log_level=2)
+            return False
 
-        return record
+    # def add_editing_layer(self, table_name, layer_name, type):
+    #     if not self.db_connection:
+    #         self.log("No db connection available!", log_level=2)
+    #         return
 
-    def create_comune_feature(self, comune_record):
-        # create comune feature
-        fields = QgsFields()
-        # TODO: DeprecationWarning: QgsField constructor is deprecated
-        fields.append(QgsField("pkuid", QVariant.Int))
-        fields.append(QgsField("cod_regio", QVariant.String))
-        fields.append(QgsField("cod_prov", QVariant.String))
-        fields.append(QgsField("cod_com", QVariant.String))
-        fields.append(QgsField("comune", QVariant.String))
-        fields.append(QgsField("cod_istat", QVariant.String))
-        fields.append(QgsField("provincia", QVariant.String))
-        fields.append(QgsField("regione", QVariant.String))
+    #     with self.db_connection as conn:
+    #         cursor = conn.cursor()
+    #         cursor.execute(f"SELECT * FROM {table_name} LIMIT 1")
+    #         fields = cursor.description
+    #         cursor.close()
 
-        feature = QgsFeature(fields)
-        feature.setAttributes(list(comune_record[:8]))
-        feature.setGeometry(QgsGeometry.fromWkt(comune_record[8]))
+    #     # create the layer
+    #     uri = QgsDataSourceUri()
+    #     uri.setDatabase(str(self.db_path))
+    #     schema = ""
+    #     geom_column = "geom" if type == "vector" else None
+    #     uri.setDataSource(schema, table_name, geom_column)
 
-        return feature
+    #     layer = QgsVectorLayer(uri.uri(), layer_name, "spatialite")
+    #     # if not layer.isValid():
+    #     #     self.log(f"Error creating layer {layer_name}", log_level=2)
+    #     #     return
+
+    #     # set the fields
+    #     layer_fields = layer.fields()
+    #     for field in fields:
+    #         field_name = field[0]
+    #         field_type = field[1]
+    #         if field_name == "pkuid":
+    #             continue
+    #         layer_fields.append(QgsField(field_name, self.get_qvariant_type(field_type)))
+
+    #     layer.updateFields()
+
+    #     # add the layer to the project
+    #     self.current_project.addMapLayer(layer)
+
+    #     # load the QLR style
+    #     # layer.loadNamedStyle(str(DIR_PLUGIN_ROOT / "data" / "styles" / qlr_path))
+    #     # layer.triggerRepaint()
+
+    # def get_qvariant_type(self, field_type):
+    #     if field_type == "INTEGER":
+    #         return QVariant.Int
+    #     elif field_type == "REAL":
+    #         return QVariant.Double
+    #     elif field_type == "TEXT":
+    #         return QVariant.String
+    #     elif field_type == "BLOB":
+    #         return QVariant.ByteArray
+    #     else:
+    #         return QVariant.String
 
     def create_project_from_template(self, comune_name, cod_istat, study_author, author_email, dir_out):
         # extract project template in the output directory
@@ -246,9 +451,6 @@ class MzSProjectManager:
         if not self.project_updateable:
             self.log("Requested project update for non-updateable project!", log_level=1)
             return
-
-        # backup the current project
-        self.backup_project()
 
         # extract project template in the current project directory (will be in "progetto_MS" subdir)
         self.extract_project_template(self.project_path)
@@ -307,23 +509,67 @@ class MzSProjectManager:
     def customize_project_template(self, cod_istat, insert_comune_progetto=True):
         """Customize the project with the selected comune data."""
 
-        comune_record = self.get_comune_record(cod_istat)
-        feature = self.create_comune_feature(comune_record)
+        # comune_record = self.get_comune_record(cod_istat)
+        # feature = self.create_comune_feature(comune_record)
+
         # TODO: get layer from self.table_layer_map
         layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
-        if insert_comune_progetto:
-            # TODO: save comune progetto data to db directly?
-            layer_comune_progetto.startEditing()
-            data_provider = layer_comune_progetto.dataProvider()
-            data_provider.addFeatures([feature])
-            layer_comune_progetto.commitChanges()
-            layer_comune_progetto.updateExtents()
 
-        attribute_map = feature.attributeMap()
-        codice_regio = attribute_map["cod_regio"]
-        comune = attribute_map["comune"]
-        provincia = attribute_map["provincia"]
-        regione = attribute_map["regione"]
+        # if insert_comune_progetto:
+        #     layer_comune_progetto.startEditing()
+        #     data_provider = layer_comune_progetto.dataProvider()
+        #     data_provider.addFeatures([feature])
+        #     layer_comune_progetto.commitChanges()
+        #     layer_comune_progetto.updateExtents()
+
+        comune_data = None
+        if insert_comune_progetto:
+            with self.db_connection as conn:
+                cursor = conn.cursor()
+                try:
+                    cursor.execute(
+                        """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
+                        SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
+                        (cod_istat,),
+                    )
+                    conn.commit()
+
+                    last_inserted_id = cursor.lastrowid
+
+                    cursor.execute(
+                        """SELECT cod_regio, comune, provincia, regione
+                        FROM comune_progetto WHERE rowid = ?""",
+                        (last_inserted_id,),
+                    )
+                    comune_data = cursor.fetchone()
+                except Exception as e:
+                    conn.rollback()
+                    self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
+                finally:
+                    cursor.close()
+        else:
+            with self.db_connection as conn:
+                try:
+                    cursor = conn.cursor()
+                    # assuming there is only one record in comune_progetto
+                    cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
+                    comune_data = cursor.fetchone()
+                except Exception as e:
+                    self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
+                finally:
+                    cursor.close()
+                cursor.close()
+
+        # attribute_map = feature.attributeMap()
+        # codice_regio = attribute_map["cod_regio"]
+        # comune = attribute_map["comune"]
+        # provincia = attribute_map["provincia"]
+        # regione = attribute_map["regione"]
+
+        codice_regio = comune_data[0]
+        comune = comune_data[1]
+        provincia = comune_data[2]
+        regione = comune_data[3]
 
         layer_limiti_comunali = self.current_project.mapLayersByName("Limiti comunali")[0]
         layer_limiti_comunali.removeSelection()
@@ -340,8 +586,10 @@ class MzSProjectManager:
         # TODO: this assumes comune_progetto and comuni layers are the only layers currently active
         save_map_image(imageFilename, layer_limiti_comunali, canvas)
 
-        extent = layer_comune_progetto.dataProvider().extent()
-        canvas.setExtent(extent)
+        layer_comune_progetto.dataProvider().updateExtents()
+        layer_comune_progetto.updateExtents()
+        # extent = layer_comune_progetto.dataProvider().extent()
+        canvas.setExtent(layer_comune_progetto.extent())
 
         layout_manager = QgsProject.instance().layoutManager()
         layouts = layout_manager.printLayouts()
@@ -387,11 +635,11 @@ class MzSProjectManager:
 
         for upgrade_script in sql_scripts:
             self.log(f"Executing: {upgrade_script}", log_level=1)
-            self.exec_db_upgrade_sql(upgrade_script)
+            self._exec_db_upgrade_sql(upgrade_script)
 
         self.log("Sql upgrades ok")
 
-    def exec_db_upgrade_sql(self, script_name):
+    def _exec_db_upgrade_sql(self, script_name):
         with self.db_connection as conn:
             cursor = conn.cursor()
             script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name

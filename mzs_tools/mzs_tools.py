@@ -146,6 +146,13 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
+        self.add_action(
+            str(icon_path2),
+            text=self.tr("test"),
+            callback=self.prj_manager.add_default_editing_layers,
+            parent=self.iface.mainWindow(),
+        )
+
         self.action_edit_metadata = self.add_action(
             QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
             enabled_flag=self.prj_manager and self.prj_manager.is_mzs_project,
@@ -376,6 +383,7 @@ class MzSTools:
             response = msg_box.exec_()
             if response == QMessageBox.Yes:
                 self.log("Starting project update process.", log_level=1)
+                self.prj_manager.backup_project()
                 self.prj_manager.update_db()
                 self.prj_manager.update_project_from_template()
                 return

@@ -1,0 +1,562 @@
+<!DOCTYPE qgis-layer-definition>
+<qlr>
+  <layer-tree-group checked="Qt::Checked" expanded="1" name="" groupLayer="">
+    <customproperties>
+      <Option/>
+    </customproperties>
+    <layer-tree-layer legend_exp="" source="dbname='./db/indagini.sqlite' table=&quot;parametri_puntuali&quot;" checked="Qt::Unchecked" expanded="1" providerKey="spatialite" id="parametri_puntuali20171112121247089" legend_split_behavior="0" patch_size="0,0" name="Parametri puntuali">
+      <customproperties>
+        <Option type="Map">
+          <Option value="Parametri puntuali" name="cached_name" type="QString"/>
+        </Option>
+      </customproperties>
+    </layer-tree-layer>
+  </layer-tree-group>
+  <maplayers>
+    <maplayer geometry="No geometry" minScale="1e+08" legendPlaceholderImage="" wkbType="NoGeometry" autoRefreshTime="0" readOnly="0" refreshOnNotifyEnabled="0" refreshOnNotifyMessage="" maxScale="0" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="0" autoRefreshMode="Disabled" type="vector">
+      <id>parametri_puntuali20171112121247089</id>
+      <datasource>dbname='./db/indagini.sqlite' table="parametri_puntuali"</datasource>
+      <keywordList>
+        <value></value>
+      </keywordList>
+      <layername>Parametri puntuali</layername>
+      <srs>
+        <spatialrefsys nativeFormat="Wkt">
+          <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
+          <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
+          <srsid>3452</srsid>
+          <srid>4326</srid>
+          <authid>EPSG:4326</authid>
+          <description>WGS 84</description>
+          <projectionacronym>longlat</projectionacronym>
+          <ellipsoidacronym>EPSG:7030</ellipsoidacronym>
+          <geographicflag>true</geographicflag>
+        </spatialrefsys>
+      </srs>
+      <resourceMetadata>
+        <identifier></identifier>
+        <parentidentifier></parentidentifier>
+        <language></language>
+        <type></type>
+        <title></title>
+        <abstract></abstract>
+        <links/>
+        <dates/>
+        <fees></fees>
+        <encoding></encoding>
+        <crs>
+          <spatialrefsys nativeFormat="Wkt">
+            <wkt></wkt>
+            <proj4></proj4>
+            <srsid>0</srsid>
+            <srid>0</srid>
+            <authid></authid>
+            <description></description>
+            <projectionacronym></projectionacronym>
+            <ellipsoidacronym></ellipsoidacronym>
+            <geographicflag>true</geographicflag>
+          </spatialrefsys>
+        </crs>
+        <extent/>
+      </resourceMetadata>
+      <provider encoding="UTF-8">spatialite</provider>
+      <vectorjoins/>
+      <layerDependencies/>
+      <dataDependencies/>
+      <expressionfields/>
+      <map-layer-style-manager current="default">
+        <map-layer-style name="default"/>
+      </map-layer-style-manager>
+      <auxiliaryLayer/>
+      <metadataUrls/>
+      <flags>
+        <Identifiable>1</Identifiable>
+        <Removable>0</Removable>
+        <Searchable>1</Searchable>
+        <Private>0</Private>
+      </flags>
+      <temporal endExpression="" durationField="" mode="0" startField="" fixedDuration="0" accumulate="0" endField="" durationUnit="min" limitMode="0" enabled="0" startExpression="">
+        <fixedRange>
+          <start></start>
+          <end></end>
+        </fixedRange>
+      </temporal>
+      <elevation extrusion="0" binding="Centroid" respectLayerSymbol="1" zoffset="0" symbology="Line" zscale="1" clamping="Terrain" showMarkerSymbolInSurfacePlots="0" extrusionEnabled="0" type="IndividualFeatures">
+        <data-defined-properties>
+          <Option type="Map">
+            <Option value="" name="name" type="QString"/>
+            <Option name="properties"/>
+            <Option value="collection" name="type" type="QString"/>
+          </Option>
+        </data-defined-properties>
+        <profileLineSymbol>
+          <symbol frame_rate="10" alpha="1" force_rhr="0" name="" clip_to_extent="1" type="line" is_animated="0">
+            <data_defined_properties>
+              <Option type="Map">
+                <Option value="" name="name" type="QString"/>
+                <Option name="properties"/>
+                <Option value="collection" name="type" type="QString"/>
+              </Option>
+            </data_defined_properties>
+            <layer pass="0" locked="0" id="{2f90eb10-99e3-4e29-b588-cc4fa2aa9c53}" class="SimpleLine" enabled="1">
+              <Option type="Map">
+                <Option value="0" name="align_dash_pattern" type="QString"/>
+                <Option value="square" name="capstyle" type="QString"/>
+                <Option value="5;2" name="customdash" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="customdash_map_unit_scale" type="QString"/>
+                <Option value="MM" name="customdash_unit" type="QString"/>
+                <Option value="0" name="dash_pattern_offset" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="dash_pattern_offset_map_unit_scale" type="QString"/>
+                <Option value="MM" name="dash_pattern_offset_unit" type="QString"/>
+                <Option value="0" name="draw_inside_polygon" type="QString"/>
+                <Option value="bevel" name="joinstyle" type="QString"/>
+                <Option value="152,125,183,255" name="line_color" type="QString"/>
+                <Option value="solid" name="line_style" type="QString"/>
+                <Option value="0.6" name="line_width" type="QString"/>
+                <Option value="MM" name="line_width_unit" type="QString"/>
+                <Option value="0" name="offset" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="offset_map_unit_scale" type="QString"/>
+                <Option value="MM" name="offset_unit" type="QString"/>
+                <Option value="0" name="ring_filter" type="QString"/>
+                <Option value="0" name="trim_distance_end" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="trim_distance_end_map_unit_scale" type="QString"/>
+                <Option value="MM" name="trim_distance_end_unit" type="QString"/>
+                <Option value="0" name="trim_distance_start" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="trim_distance_start_map_unit_scale" type="QString"/>
+                <Option value="MM" name="trim_distance_start_unit" type="QString"/>
+                <Option value="0" name="tweak_dash_pattern_on_corners" type="QString"/>
+                <Option value="0" name="use_custom_dash" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="width_map_unit_scale" type="QString"/>
+              </Option>
+              <data_defined_properties>
+                <Option type="Map">
+                  <Option value="" name="name" type="QString"/>
+                  <Option name="properties"/>
+                  <Option value="collection" name="type" type="QString"/>
+                </Option>
+              </data_defined_properties>
+            </layer>
+          </symbol>
+        </profileLineSymbol>
+        <profileFillSymbol>
+          <symbol frame_rate="10" alpha="1" force_rhr="0" name="" clip_to_extent="1" type="fill" is_animated="0">
+            <data_defined_properties>
+              <Option type="Map">
+                <Option value="" name="name" type="QString"/>
+                <Option name="properties"/>
+                <Option value="collection" name="type" type="QString"/>
+              </Option>
+            </data_defined_properties>
+            <layer pass="0" locked="0" id="{bdfc40de-51fc-4337-b5bb-ce9178d96c27}" class="SimpleFill" enabled="1">
+              <Option type="Map">
+                <Option value="3x:0,0,0,0,0,0" name="border_width_map_unit_scale" type="QString"/>
+                <Option value="152,125,183,255" name="color" type="QString"/>
+                <Option value="bevel" name="joinstyle" type="QString"/>
+                <Option value="0,0" name="offset" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="offset_map_unit_scale" type="QString"/>
+                <Option value="MM" name="offset_unit" type="QString"/>
+                <Option value="109,89,131,255" name="outline_color" type="QString"/>
+                <Option value="solid" name="outline_style" type="QString"/>
+                <Option value="0.2" name="outline_width" type="QString"/>
+                <Option value="MM" name="outline_width_unit" type="QString"/>
+                <Option value="solid" name="style" type="QString"/>
+              </Option>
+              <data_defined_properties>
+                <Option type="Map">
+                  <Option value="" name="name" type="QString"/>
+                  <Option name="properties"/>
+                  <Option value="collection" name="type" type="QString"/>
+                </Option>
+              </data_defined_properties>
+            </layer>
+          </symbol>
+        </profileFillSymbol>
+        <profileMarkerSymbol>
+          <symbol frame_rate="10" alpha="1" force_rhr="0" name="" clip_to_extent="1" type="marker" is_animated="0">
+            <data_defined_properties>
+              <Option type="Map">
+                <Option value="" name="name" type="QString"/>
+                <Option name="properties"/>
+                <Option value="collection" name="type" type="QString"/>
+              </Option>
+            </data_defined_properties>
+            <layer pass="0" locked="0" id="{42c37c1d-0125-4079-8f0a-d72fbc79a691}" class="SimpleMarker" enabled="1">
+              <Option type="Map">
+                <Option value="0" name="angle" type="QString"/>
+                <Option value="square" name="cap_style" type="QString"/>
+                <Option value="152,125,183,255" name="color" type="QString"/>
+                <Option value="1" name="horizontal_anchor_point" type="QString"/>
+                <Option value="bevel" name="joinstyle" type="QString"/>
+                <Option value="diamond" name="name" type="QString"/>
+                <Option value="0,0" name="offset" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="offset_map_unit_scale" type="QString"/>
+                <Option value="MM" name="offset_unit" type="QString"/>
+                <Option value="109,89,131,255" name="outline_color" type="QString"/>
+                <Option value="solid" name="outline_style" type="QString"/>
+                <Option value="0.2" name="outline_width" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="outline_width_map_unit_scale" type="QString"/>
+                <Option value="MM" name="outline_width_unit" type="QString"/>
+                <Option value="diameter" name="scale_method" type="QString"/>
+                <Option value="3" name="size" type="QString"/>
+                <Option value="3x:0,0,0,0,0,0" name="size_map_unit_scale" type="QString"/>
+                <Option value="MM" name="size_unit" type="QString"/>
+                <Option value="1" name="vertical_anchor_point" type="QString"/>
+              </Option>
+              <data_defined_properties>
+                <Option type="Map">
+                  <Option value="" name="name" type="QString"/>
+                  <Option name="properties"/>
+                  <Option value="collection" name="type" type="QString"/>
+                </Option>
+              </data_defined_properties>
+            </layer>
+          </symbol>
+        </profileMarkerSymbol>
+      </elevation>
+      <customproperties>
+        <Option type="Map">
+          <Option value="copy" name="QFieldSync/action" type="QString"/>
+          <Option value="{}" name="QFieldSync/attachment_naming" type="QString"/>
+          <Option value="offline" name="QFieldSync/cloud_action" type="QString"/>
+          <Option value="" name="QFieldSync/geometry_locked_expression" type="QString"/>
+          <Option value="{}" name="QFieldSync/photo_naming" type="QString"/>
+          <Option value="{}" name="QFieldSync/relationship_maximum_visible" type="QString"/>
+          <Option value="30" name="QFieldSync/tracking_distance_requirement_minimum_meters" type="int"/>
+          <Option value="false" name="QFieldSync/tracking_erroneous_distance_safeguard_maximum_meters" type="bool"/>
+          <Option value="0" name="QFieldSync/tracking_measurement_type" type="int"/>
+          <Option value="30" name="QFieldSync/tracking_time_requirement_interval_seconds" type="int"/>
+          <Option value="0" name="QFieldSync/value_map_button_interface_threshold" type="int"/>
+          <Option name="dualview/previewExpressions" type="List">
+            <Option value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )" type="QString"/>
+            <Option value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )" type="QString"/>
+            <Option value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )" type="QString"/>
+          </Option>
+        </Option>
+      </customproperties>
+      <geometryOptions geometryPrecision="0" removeDuplicateNodes="0">
+        <activeChecks/>
+        <checkConfiguration/>
+      </geometryOptions>
+      <legend showLabelLegend="0" type="default-vector"/>
+      <referencedLayers>
+        <relation strength="Association" referencingLayer="parametri_puntuali20171112121247089" layerId="indagini_puntuali20171112121245150" referencedLayer="indagini_puntuali20171112121245150" dataSource="dbname='/mnt/KS1/TestMzS1.9.2/057001_Accumoli_asdf/db/indagini.sqlite' table=&quot;indagini_puntuali&quot;" providerKey="spatialite" id="fk_p_indagini_parametri" layerName="Indagini puntuali" name="fk_p_indagini_parametri">
+          <fieldRef referencedField="id_indpu" referencingField="id_indpu"/>
+        </relation>
+      </referencedLayers>
+      <fieldConfiguration>
+        <field configurationFlags="NoFlag" name="pkuid">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="id_indpu">
+          <editWidget type="ValueRelation">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="AllowMulti" type="QString"/>
+                <Option value="0" name="AllowNull" type="QString"/>
+                <Option value="" name="FilterExpression" type="QString"/>
+                <Option value="id_indpu" name="Key" type="QString"/>
+                <Option value="indagini_puntuali20171112121245150" name="Layer" type="QString"/>
+                <Option value="1" name="OrderByValue" type="QString"/>
+                <Option value="0" name="UseCompleter" type="QString"/>
+                <Option value="id_indpu" name="Value" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="tipo_parpu">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="id_parpu">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="prof_top">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="prof_bot">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="spessore">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="quota_slm_top">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="quota_slm_bot">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="valore">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="attend_mis">
+          <editWidget type="ValueRelation">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="AllowMulti" type="QString"/>
+                <Option value="0" name="AllowNull" type="QString"/>
+                <Option value="" name="FilterExpression" type="QString"/>
+                <Option value="cod" name="Key" type="QString"/>
+                <Option value="vw_attend_mis20171129095604124" name="Layer" type="QString"/>
+                <Option value="1" name="OrderByValue" type="QString"/>
+                <Option value="0" name="UseCompleter" type="QString"/>
+                <Option value="descrizione" name="Value" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="tab_curve">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="note_par">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="data_par">
+          <editWidget type="DateTime">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="allow_null" type="QString"/>
+                <Option value="1" name="calendar_popup" type="QString"/>
+                <Option value="dd-MM-yyyy" name="display_format" type="QString"/>
+                <Option value="yyyy-MM-dd" name="field_format" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="pkey_indpu">
+          <editWidget type="TextEdit">
+            <config>
+              <Option type="Map">
+                <Option value="0" name="IsMultiline" type="QString"/>
+                <Option value="0" name="UseHtml" type="QString"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+      </fieldConfiguration>
+      <aliases>
+        <alias index="0" field="pkuid" name=""/>
+        <alias index="1" field="id_indpu" name=""/>
+        <alias index="2" field="tipo_parpu" name=""/>
+        <alias index="3" field="id_parpu" name=""/>
+        <alias index="4" field="prof_top" name=""/>
+        <alias index="5" field="prof_bot" name=""/>
+        <alias index="6" field="spessore" name=""/>
+        <alias index="7" field="quota_slm_top" name=""/>
+        <alias index="8" field="quota_slm_bot" name=""/>
+        <alias index="9" field="valore" name=""/>
+        <alias index="10" field="attend_mis" name=""/>
+        <alias index="11" field="tab_curve" name=""/>
+        <alias index="12" field="note_par" name=""/>
+        <alias index="13" field="data_par" name=""/>
+        <alias index="14" field="pkey_indpu" name=""/>
+      </aliases>
+      <splitPolicies>
+        <policy field="pkuid" policy="Duplicate"/>
+        <policy field="id_indpu" policy="Duplicate"/>
+        <policy field="tipo_parpu" policy="Duplicate"/>
+        <policy field="id_parpu" policy="Duplicate"/>
+        <policy field="prof_top" policy="Duplicate"/>
+        <policy field="prof_bot" policy="Duplicate"/>
+        <policy field="spessore" policy="Duplicate"/>
+        <policy field="quota_slm_top" policy="Duplicate"/>
+        <policy field="quota_slm_bot" policy="Duplicate"/>
+        <policy field="valore" policy="Duplicate"/>
+        <policy field="attend_mis" policy="Duplicate"/>
+        <policy field="tab_curve" policy="Duplicate"/>
+        <policy field="note_par" policy="Duplicate"/>
+        <policy field="data_par" policy="Duplicate"/>
+        <policy field="pkey_indpu" policy="Duplicate"/>
+      </splitPolicies>
+      <defaults>
+        <default field="pkuid" expression="" applyOnUpdate="0"/>
+        <default field="id_indpu" expression="" applyOnUpdate="0"/>
+        <default field="tipo_parpu" expression="''" applyOnUpdate="0"/>
+        <default field="id_parpu" expression="0" applyOnUpdate="0"/>
+        <default field="prof_top" expression="''" applyOnUpdate="0"/>
+        <default field="prof_bot" expression="''" applyOnUpdate="0"/>
+        <default field="spessore" expression="''" applyOnUpdate="0"/>
+        <default field="quota_slm_top" expression="''" applyOnUpdate="0"/>
+        <default field="quota_slm_bot" expression="''" applyOnUpdate="0"/>
+        <default field="valore" expression="''" applyOnUpdate="0"/>
+        <default field="attend_mis" expression="" applyOnUpdate="0"/>
+        <default field="tab_curve" expression="''" applyOnUpdate="0"/>
+        <default field="note_par" expression="''" applyOnUpdate="0"/>
+        <default field="data_par" expression="" applyOnUpdate="0"/>
+        <default field="pkey_indpu" expression="" applyOnUpdate="0"/>
+      </defaults>
+      <constraints>
+        <constraint constraints="3" unique_strength="1" field="pkuid" exp_strength="0" notnull_strength="1"/>
+        <constraint constraints="1" unique_strength="0" field="id_indpu" exp_strength="0" notnull_strength="1"/>
+        <constraint constraints="1" unique_strength="0" field="tipo_parpu" exp_strength="0" notnull_strength="1"/>
+        <constraint constraints="3" unique_strength="1" field="id_parpu" exp_strength="0" notnull_strength="1"/>
+        <constraint constraints="0" unique_strength="0" field="prof_top" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="prof_bot" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="spessore" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="quota_slm_top" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="quota_slm_bot" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="valore" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="attend_mis" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="tab_curve" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="note_par" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="data_par" exp_strength="0" notnull_strength="0"/>
+        <constraint constraints="0" unique_strength="0" field="pkey_indpu" exp_strength="0" notnull_strength="0"/>
+      </constraints>
+      <constraintExpressions>
+        <constraint desc="" field="pkuid" exp=""/>
+        <constraint desc="" field="id_indpu" exp=""/>
+        <constraint desc="" field="tipo_parpu" exp=""/>
+        <constraint desc="" field="id_parpu" exp=""/>
+        <constraint desc="" field="prof_top" exp=""/>
+        <constraint desc="" field="prof_bot" exp=""/>
+        <constraint desc="" field="spessore" exp=""/>
+        <constraint desc="" field="quota_slm_top" exp=""/>
+        <constraint desc="" field="quota_slm_bot" exp=""/>
+        <constraint desc="" field="valore" exp=""/>
+        <constraint desc="" field="attend_mis" exp=""/>
+        <constraint desc="" field="tab_curve" exp=""/>
+        <constraint desc="" field="note_par" exp=""/>
+        <constraint desc="" field="data_par" exp=""/>
+        <constraint desc="" field="pkey_indpu" exp=""/>
+      </constraintExpressions>
+      <expressionfields/>
+      <attributeactions>
+        <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
+      </attributeactions>
+      <attributetableconfig sortExpression="" sortOrder="0" actionWidgetStyle="dropDown">
+        <columns>
+          <column hidden="0" width="-1" name="pkuid" type="field"/>
+          <column hidden="0" width="-1" name="id_indpu" type="field"/>
+          <column hidden="0" width="-1" name="tipo_parpu" type="field"/>
+          <column hidden="0" width="-1" name="id_parpu" type="field"/>
+          <column hidden="0" width="-1" name="prof_top" type="field"/>
+          <column hidden="0" width="-1" name="prof_bot" type="field"/>
+          <column hidden="0" width="-1" name="spessore" type="field"/>
+          <column hidden="0" width="-1" name="quota_slm_top" type="field"/>
+          <column hidden="0" width="-1" name="quota_slm_bot" type="field"/>
+          <column hidden="0" width="-1" name="valore" type="field"/>
+          <column hidden="0" width="339" name="attend_mis" type="field"/>
+          <column hidden="0" width="-1" name="tab_curve" type="field"/>
+          <column hidden="0" width="-1" name="note_par" type="field"/>
+          <column hidden="0" width="-1" name="data_par" type="field"/>
+          <column hidden="0" width="-1" name="pkey_indpu" type="field"/>
+          <column hidden="1" width="-1" type="actions"/>
+        </columns>
+      </attributetableconfig>
+      <conditionalstyles>
+        <rowstyles/>
+        <fieldstyles/>
+      </conditionalstyles>
+      <storedexpressions/>
+      <editform tolerant="1">./progetto/maschere/parametri_puntuali.ui</editform>
+      <editforminit>parametri_puntuali</editforminit>
+      <editforminitcodesource>1</editforminitcodesource>
+      <editforminitfilepath>./progetto/script/siti_ind_param.py</editforminitfilepath>
+      <editforminitcode><![CDATA[# -*- coding: utf-8 -*-
+"""
+QGIS forms can have a Python function that is called when the form is
+opened.
+
+Use this function to add extra logic to your forms.
+
+Enter the name of the function in the "Python Init function"
+field.
+An example follows:
+"""
+from qgis.PyQt.QtWidgets import QWidget
+
+def my_form_open(dialog, layer, feature):
+	geom = feature.geometry()
+	control = dialog.findChild(QWidget, "MyLineEdit")
+]]></editforminitcode>
+      <featformsuppress>0</featformsuppress>
+      <editorlayout>uifilelayout</editorlayout>
+      <editable/>
+      <labelOnTop/>
+      <reuseLastValue/>
+      <dataDefinedFieldProperties/>
+      <widgets>
+        <widget name="fk_p_parametri_curve">
+          <config/>
+        </widget>
+      </widgets>
+      <previewExpression>COALESCE( "id_parpu", '&lt;NULL>' )</previewExpression>
+      <mapTip enabled="1"></mapTip>
+    </maplayer>
+  </maplayers>
+</qlr>

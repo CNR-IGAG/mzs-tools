@@ -19,6 +19,9 @@ dev-link QGIS_PLUGIN_PATH="/home/francesco/.local/share/QGIS/QGIS3/profiles/defa
 
 @bootstrap-dev: create-venv dev-link
 
+@update-deps:
+    uv lock --upgrade
+
 trans-update:
     uv run pylupdate5 ./mzs_tools/mzs_tools.pro
 
