@@ -149,7 +149,7 @@ class MzSTools:
         self.add_action(
             str(icon_path2),
             text=self.tr("test"),
-            callback=self.prj_manager.add_default_editing_layers,
+            callback=self.test_add_layers,
             parent=self.iface.mainWindow(),
         )
 
@@ -201,6 +201,9 @@ class MzSTools:
         )
         # add the help action to the QGIS plugin help menu
         self.iface.pluginHelpMenu().addAction(self.help_action)
+
+    def test_add_layers(self):
+        self.prj_manager.add_default_layers(add_base_layers=True, add_editing_layers=True, add_layout_groups=True)
 
     def unload(self):
         # close db connections

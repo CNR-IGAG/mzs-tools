@@ -67,9 +67,40 @@ class MzSProjectManager:
         self.comune_data: ComuneData = None
         self.project_metadata = None
 
-        # TODO: build a simple map of table names and corresponding layer names
-        # find the editable layers that are linked to tables in the db
+        self.default_base_layers = {
+            "comune_progetto": {
+                "role": "base",
+                "type": "vector",
+                "layer_name": "Comune del progetto",
+                "group": None,
+                "qlr_path": "comune_progetto.qlr",
+            },
+            "comuni": {
+                "role": "base",
+                "type": "vector",
+                "geom_name": "GEOMETRY",
+                "layer_name": "Limiti comunali",
+                "group": None,
+                "qlr_path": "comuni.qlr",
+            },
+            "basemap": {
+                "role": "base",
+                "type": "service_group",
+                "layer_name": "Basemap",
+                "group": None,
+                "qlr_path": "basemap.qlr",
+            },
+        }
+
         self.default_editing_layers = {
+            "tavole": {
+                "role": "editing",
+                "type": "vector",
+                "geom_name": "GEOMETRY",
+                "layer_name": "tavole",
+                "group": None,
+                "qlr_path": "tavole.qlr",
+            },
             "sito_puntuale": {
                 "role": "editing",
                 "type": "vector",
@@ -126,7 +157,133 @@ class MzSProjectManager:
                 "group": "Indagini",
                 "qlr_path": "parametri_lineari.qlr",
             },
+            "isosub_l23": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Isobate liv 2-3",
+                "group": "MS livello 2-3",
+                "qlr_path": "isosub_l23.qlr",
+            },
+            "instab_l23": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Zone instabili liv 2-3",
+                "group": "MS livello 2-3",
+                "qlr_path": "instab_l23.qlr",
+            },
+            "stab_l23": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Zone stabili liv 2-3",
+                "group": "MS livello 2-3",
+                "qlr_path": "stab_l23.qlr",
+            },
+            "isosub_l1": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Isobate liv 1",
+                "group": "MS livello 1",
+                "qlr_path": "isosub_l1.qlr",
+            },
+            "instab_l1": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Zone instabili liv 1",
+                "group": "MS livello 1",
+                "qlr_path": "instab_l1.qlr",
+            },
+            "stab_l1": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Zone stabili liv 1",
+                "group": "MS livello 1",
+                "qlr_path": "stab_l1.qlr",
+            },
+            "nome_sezione": {
+                "role": "editing",
+                "type": "vector",
+                "geom_name": "GEOMETRY",
+                "layer_name": "Nome Sezione",
+                "group": "Geologico Tecnica",
+                "qlr_path": "nome_sezione.qlr",
+            },
+            "geoidr": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Elementi geologici e idrogeologici puntuali",
+                "group": "Geologico Tecnica",
+                "qlr_path": "geoidr.qlr",
+            },
+            "epuntuali": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Elementi puntuali",
+                "group": "Geologico Tecnica",
+                "qlr_path": "epuntuali.qlr",
+            },
+            "elineari": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Elementi lineari",
+                "group": "Geologico Tecnica",
+                "qlr_path": "elineari.qlr",
+            },
+            "forme": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Forme",
+                "group": "Geologico Tecnica",
+                "qlr_path": "forme.qlr",
+            },
+            "instab_geotec": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Instabilita' di versante",
+                "group": "Geologico Tecnica",
+                "qlr_path": "instab_geotec.qlr",
+            },
+            "geotec": {
+                "role": "editing",
+                "type": "vector",
+                "layer_name": "Unita' geologico-tecniche",
+                "group": "Geologico Tecnica",
+                "qlr_path": "geotec.qlr",
+            },
+            "tabelle_accessorie": {
+                "role": "editing",
+                "type": "group",
+                "layer_name": "Tabelle accessorie",
+                "group": None,
+                "qlr_path": "tabelle_accessorie.qlr",
+            },
         }
+
+        self.required_layer_table_names = [
+            "vw_sito_ind",
+            "vw_id_ind_sln",
+            "vw_amb",
+            "vw_attend_mis",
+            "vw_cat_s",
+            "vw_classe_ind_l",
+            "vw_classe_ind_p",
+            "vw_cod_instab",
+            "vw_cod_stab",
+            "vw_gen",
+            "vw_mod_identcoord",
+            "vw_modo_quota",
+            "vw_param_l",
+            "vw_param_p",
+            "vw_qualita",
+            "vw_stato",
+            "vw_tipo_el",
+            "vw_tipo_ep",
+            "vw_tipo_f",
+            "vw_tipo_gi",
+            "vw_tipo_gt",
+            "vw_tipo_hvsr",
+            "vw_tipo_ind_l",
+            "vw_tipo_ind_p",
+        ]
 
         self.default_layout_groups = {
             "Carta delle Indagini": "carta_delle_indagini.qlr",
@@ -138,6 +295,8 @@ class MzSProjectManager:
             "Carta delle frequenze naturali dei terreni (f0)": "carta_frequenze_f0.qlr",
             "Carta delle frequenze naturali dei terreni (fr)": "carta_frequenze_fr.qlr",
         }
+
+        self.required_layer_map = {}
 
         self.project_issues = {}
 
@@ -255,38 +414,6 @@ class MzSProjectManager:
                 cursor.close()
         return data
 
-    # def get_comune_record(self, cod_istat):
-    #     # extract comune feature from db
-    #     record = None
-    #     with self.db_connection as conn:
-    #         cursor = conn.cursor()
-    #         cursor.execute(
-    #             f"SELECT ogc_fid, cod_regio, cod_prov, cod_com, comune, cod_istat, provincia, regione, st_astext(GEOMETRY) FROM comuni WHERE cod_istat = '{cod_istat}'"
-    #         )
-    #         record = cursor.fetchone()
-    #         cursor.close()
-
-    #     return record
-
-    # def create_comune_feature(self, comune_record):
-    #     # create comune feature
-    #     fields = QgsFields()
-    #     # TODO: DeprecationWarning: QgsField constructor is deprecated
-    #     fields.append(QgsField("pkuid", QVariant.Int))
-    #     fields.append(QgsField("cod_regio", QVariant.String))
-    #     fields.append(QgsField("cod_prov", QVariant.String))
-    #     fields.append(QgsField("cod_com", QVariant.String))
-    #     fields.append(QgsField("comune", QVariant.String))
-    #     fields.append(QgsField("cod_istat", QVariant.String))
-    #     fields.append(QgsField("provincia", QVariant.String))
-    #     fields.append(QgsField("regione", QVariant.String))
-
-    #     feature = QgsFeature(fields)
-    #     feature.setAttributes(list(comune_record[:8]))
-    #     feature.setGeometry(QgsGeometry.fromWkt(comune_record[8]))
-
-    #     return feature
-
     # def build_required_layers_registry(self):
     #     for id, layer in self.current_project.mapLayers().items():
     #         if type(layer) is QgsVectorLayer:
@@ -319,44 +446,81 @@ class MzSProjectManager:
 
         layer.setFlags(QgsMapLayer.LayerFlag(flags))
 
-    def add_default_editing_layers(self):
-        # create new group layer
-        layer_group = QgsLayerTreeGroup("TEMP")
-        self.current_project.layerTreeRoot().addChildNode(layer_group)
+    def add_default_layers(self, add_base_layers=True, add_editing_layers=True, add_layout_groups=True):
+        if add_editing_layers:
+            self.add_default_layer_group(self.default_editing_layers, "BANCA DATI GEOGRAFICA")
+        if add_layout_groups:
+            self.add_default_layout_groups("LAYOUT DI STAMPA")
+        if add_base_layers:
+            self.add_default_layer_group(self.default_base_layers, "Cartografia di base")
 
-        for table_name, layer_data in self.default_editing_layers.items():
-            layer_added = self.add_editing_layer_from_qlr(layer_group, layer_data["qlr_path"])
-            if not layer_added or layer_data["type"] == "group":
+    def add_default_layer_group(self, group_dict: dict, group_name: str):
+        # create new group layer
+        root_layer_group = QgsLayerTreeGroup(group_name)
+        self.current_project.layerTreeRoot().addChildNode(root_layer_group)
+
+        for table_name, layer_data in group_dict.items():
+            layer_group = None
+            if layer_data["group"]:
+                layer_group = root_layer_group.findGroup(layer_data["group"])
+                if not layer_group:
+                    layer_group = QgsLayerTreeGroup(layer_data["group"])
+                    root_layer_group.addChildNode(layer_group)
+            qlr_full_path = DIR_PLUGIN_ROOT / "data" / "layer_defs" / layer_data["qlr_path"]
+            layer_added = self.add_layer_from_qlr(layer_group if layer_group else root_layer_group, qlr_full_path)
+            if not layer_added or layer_data["group"] == "service_group":
                 continue
 
             # set the data source and layer options for the newly added layer
-            for layer_tree_layer in layer_group.findLayers():
-                if layer_tree_layer.name() == layer_data["layer_name"]:
-                    uri = QgsDataSourceUri()
-                    uri.setDatabase(str(self.db_path))
-                    schema = ""
-                    geom_column = "geom" if layer_data["type"] == "vector" else None
-                    uri.setDataSource(schema, table_name, geom_column)
-                    layer_tree_layer.layer().setDataSource(
-                        uri.uri(),
-                        layer_data["layer_name"],
-                        "spatialite",
-                    )
+            for layer_tree_layer in root_layer_group.findLayers():
+                # self.log(f"Layer name: {layer_tree_layer.name()}")
+                if (
+                    layer_tree_layer.name() == layer_data["layer_name"]
+                    or layer_tree_layer.parent().name() == layer_data["layer_name"]
+                ):
+                    # self.log(f"Setting data source for layer: {layer_tree_layer.name()}")
+                    # uri = QgsDataSourceUri()
+                    # uri.setDatabase(str(self.db_path))
+                    # schema = ""
+                    # if layer_data["type"] == "vector" and "geom_name" in layer_data:
+                    #     geom_column = layer_data["geom_name"]
+                    # elif layer_data["type"] == "vector":
+                    #     geom_column = "geom"
+                    # else:
+                    #     geom_column = None
+                    # uri.setDataSource(
+                    #     schema, table_name if layer_data["type"] != "group" else layer_tree_layer.name(), geom_column
+                    # )
+                    # layer_tree_layer.layer().setDataSource(
+                    #     uri.uri(),
+                    #     layer_data["layer_name"] if layer_data["type"] == "vector" else layer_tree_layer.name(),
+                    #     "spatialite",
+                    # )
                     # reset flags for testing
                     self.set_project_layer_capabilities(layer_tree_layer.layer())
-                    break
+                    if layer_data["type"] != "group":
+                        break
 
-    def add_editing_layer_from_qlr(self, layer_group, qlr_path):
-        try:
-            QgsLayerDefinition.loadLayerDefinition(
-                str(DIR_PLUGIN_ROOT / "data" / "layer_defs" / qlr_path),
-                self.current_project,
-                layer_group,
-            )
-            return True
-        except Exception as e:
-            self.log(f"Error loading layer from .qlr ({qlr_path}): {e}", log_level=2)
-            return False
+    def add_default_layout_groups(self, group_name):
+        root_layer_group = QgsLayerTreeGroup(group_name)
+        self.current_project.layerTreeRoot().addChildNode(root_layer_group)
+        for group_name, qlr_path in self.default_layout_groups.items():
+            qlr_full_path = DIR_PLUGIN_ROOT / "data" / "layer_defs" / "print_layout" / qlr_path
+            self.add_layer_from_qlr(root_layer_group, qlr_full_path)
+
+    def add_layer_from_qlr(self, layer_group: QgsLayerTreeGroup, qlr_full_path: Path):
+        # copy .qlr file in project folder
+        shutil.copy(qlr_full_path, self.project_path)
+        success, error_msg = QgsLayerDefinition.loadLayerDefinition(
+            str(self.project_path / qlr_full_path.name),
+            self.current_project,
+            layer_group,
+        )
+        # remove the copied qlr file
+        os.remove(self.project_path / qlr_full_path.name)
+        if not success:
+            self.log(f"Error loading layer from .qlr ({qlr_full_path}): {error_msg}", log_level=2)
+        return success
 
     # def add_editing_layer(self, table_name, layer_name, type):
     #     if not self.db_connection:
