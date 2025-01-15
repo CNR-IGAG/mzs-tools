@@ -24,6 +24,21 @@ DROP TABLE IF EXISTS stab_l3;;
 DROP TABLE IF EXISTS isosub_l2;;
 DROP TABLE IF EXISTS isosub_l3;;
 
+-- version info table
+CREATE TABLE IF NOT EXISTS mzs_tools_version (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	db_version TEXT
+);
+
+-- update history table
+CREATE TABLE IF NOT EXISTS mzs_tools_update_history (
+	id INTEGER PRIMARY KEY AUTOINCREMENT, 
+	update_timestamp DATETIME DEFAULT (datetime('now', 'localtime')),
+	updated_component TEXT,
+	from_version TEXT,
+	to_version TEXT,
+	notes TEXT
+);
 
 -- elineari triggers
 DROP TRIGGER IF EXISTS ins_data_elineari;;

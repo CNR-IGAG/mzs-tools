@@ -40,6 +40,467 @@ class ComuneData:
 class MzSProjectManager:
     _instance = None
 
+    DEFAULT_BASE_LAYERS = {
+        "comune_progetto": {
+            "role": "base",
+            "type": "vector",
+            "layer_name": "Comune del progetto",
+            "group": None,
+            "qlr_path": "comune_progetto.qlr",
+        },
+        "comuni": {
+            "role": "base",
+            "type": "vector",
+            "geom_name": "GEOMETRY",
+            "subset_string": "cod_regio",
+            "layer_name": "Limiti comunali",
+            "group": None,
+            "qlr_path": "comuni.qlr",
+        },
+        "basemap": {
+            "role": "base",
+            "type": "service_group",
+            "layer_name": "Basemap",
+            "group": None,
+            "qlr_path": "basemap.qlr",
+        },
+    }
+
+    DEFAULT_EDITING_LAYERS = {
+        "tavole": {
+            "role": "editing",
+            "type": "vector",
+            "geom_name": "GEOMETRY",
+            "layer_name": "tavole",
+            "group": None,
+            "qlr_path": "tavole.qlr",
+        },
+        "sito_puntuale": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Siti puntuali",
+            "group": "Indagini",
+            "qlr_path": "siti_puntuali.qlr",
+            "value_relations": {
+                "mod_identcoord": {
+                    "relation_table": "vw_mod_identcoord",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+                "modo_quota": {
+                    "relation_table": "vw_modo_quota",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "indagini_puntuali": {
+            "role": "editing",
+            "type": "table",
+            "layer_name": "Indagini puntuali",
+            "group": "Indagini",
+            "qlr_path": "indagini_puntuali.qlr",
+            "value_relations": {
+                "id_spu": {
+                    "relation_table": "sito_puntuale",
+                    "relation_key": "id_spu",
+                    "relation_value": "id_spu",
+                    "order_by_value": True,
+                },
+                "classe_ind": {
+                    "relation_table": "vw_classe_ind_p",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "parametri_puntuali": {
+            "role": "editing",
+            "type": "table",
+            "layer_name": "Parametri puntuali",
+            "group": "Indagini",
+            "qlr_path": "parametri_puntuali.qlr",
+            "value_relations": {
+                "id_indpu": {
+                    "relation_table": "indagini_puntuali",
+                    "relation_key": "id_indpu",
+                    "relation_value": "id_indpu",
+                    "order_by_value": True,
+                },
+                "attend_mis": {
+                    "relation_table": "vw_attend_mis",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "curve": {
+            "role": "editing",
+            "type": "table",
+            "layer_name": "Curve di riferimento",
+            "group": "Indagini",
+            "qlr_path": "curve.qlr",
+            "value_relations": {
+                "id_parpu": {
+                    "relation_table": "parametri_puntuali",
+                    "relation_key": "id_parpu",
+                    "relation_value": "id_parpu",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "hvsr": {
+            "role": "editing",
+            "type": "table",
+            "layer_name": "Indagine stazione singola (HVSR)",
+            "group": "Indagini",
+            "qlr_path": "hvsr.qlr",
+            "value_relations": {
+                "id_indpu": {
+                    "relation_table": "indagini_puntuali",
+                    "relation_key": "id_indpu",
+                    "relation_value": "id_indpu",
+                    "order_by_value": True,
+                },
+                "qualita": {
+                    "relation_table": "vw_qualita",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+                "tipo": {
+                    "relation_table": "vw_tipo_hvsr",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "allow_null": True,
+                },
+            },
+        },
+        "sito_lineare": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Siti lineari",
+            "group": "Indagini",
+            "qlr_path": "siti_lineari.qlr",
+            "value_relations": {
+                "mod_identcoord": {
+                    "relation_table": "vw_mod_identcoord",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "indagini_lineari": {
+            "role": "editing",
+            "type": "table",
+            "layer_name": "Indagini lineari",
+            "group": "Indagini",
+            "qlr_path": "indagini_lineari.qlr",
+            "value_relations": {
+                "id_sln": {
+                    "relation_table": "sito_lineare",
+                    "relation_key": "id_sln",
+                    "relation_value": "id_sln",
+                    "order_by_value": True,
+                },
+                "classe_ind": {
+                    "relation_table": "vw_classe_ind_l",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "parametri_lineari": {
+            "role": "editing",
+            "type": "table",
+            "layer_name": "Parametri lineari",
+            "group": "Indagini",
+            "qlr_path": "parametri_lineari.qlr",
+            "value_relations": {
+                "id_indln": {
+                    "relation_table": "indagini_lineari",
+                    "relation_key": "id_indln",
+                    "relation_value": "id_indln",
+                    "order_by_value": True,
+                },
+                "attend_mis": {
+                    "relation_table": "vw_attend_mis",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "isosub_l23": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Isobate liv 2-3",
+            "group": "MS livello 2-3",
+            "qlr_path": "isosub_l23.qlr",
+        },
+        "instab_l23": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Zone instabili liv 2-3",
+            "group": "MS livello 2-3",
+            "qlr_path": "instab_l23.qlr",
+            "value_relations": {
+                "CAT": {
+                    "relation_table": "vw_cat_s",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+                "AMB": {
+                    "relation_table": "vw_amb",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+            },
+        },
+        "stab_l23": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Zone stabili liv 2-3",
+            "group": "MS livello 2-3",
+            "qlr_path": "stab_l23.qlr",
+            "value_relations": {
+                "Tipo_z": {
+                    "relation_table": "vw_cod_stab",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+                "CAT": {
+                    "relation_table": "vw_cat_s",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+            },
+        },
+        "isosub_l1": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Isobate liv 1",
+            "group": "MS livello 1",
+            "qlr_path": "isosub_l1.qlr",
+        },
+        "instab_l1": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Zone instabili liv 1",
+            "group": "MS livello 1",
+            "qlr_path": "instab_l1.qlr",
+        },
+        "stab_l1": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Zone stabili liv 1",
+            "group": "MS livello 1",
+            "qlr_path": "stab_l1.qlr",
+            "value_relations": {
+                "Tipo_z": {
+                    "relation_table": "vw_cod_stab",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+            },
+        },
+        "nome_sezione": {
+            "role": "editing",
+            "type": "vector",
+            "geom_name": "GEOMETRY",
+            "layer_name": "Nome Sezione",
+            "group": "Geologico Tecnica",
+            "qlr_path": "nome_sezione.qlr",
+        },
+        "geoidr": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Elementi geologici e idrogeologici puntuali",
+            "group": "Geologico Tecnica",
+            "qlr_path": "geoidr.qlr",
+            "value_relations": {
+                "Tipo_gi": {
+                    "relation_table": "vw_tipo_gi",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+            },
+        },
+        "epuntuali": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Elementi puntuali",
+            "group": "Geologico Tecnica",
+            "qlr_path": "epuntuali.qlr",
+            "value_relations": {
+                "Tipo_ep": {
+                    "relation_table": "vw_tipo_ep",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+            },
+        },
+        "elineari": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Elementi lineari",
+            "group": "Geologico Tecnica",
+            "qlr_path": "elineari.qlr",
+            "value_relations": {
+                "Tipo_el": {
+                    "relation_table": "vw_tipo_el",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+            },
+        },
+        "forme": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Forme",
+            "group": "Geologico Tecnica",
+            "qlr_path": "forme.qlr",
+            "value_relations": {
+                "Tipo_f": {
+                    "relation_table": "vw_tipo_f",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+            },
+        },
+        "instab_geotec": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Instabilita' di versante",
+            "group": "Geologico Tecnica",
+            "qlr_path": "instab_geotec.qlr",
+        },
+        "geotec": {
+            "role": "editing",
+            "type": "vector",
+            "layer_name": "Unita' geologico-tecniche",
+            "group": "Geologico Tecnica",
+            "qlr_path": "geotec.qlr",
+            "value_relations": {
+                "Tipo_gt": {
+                    "relation_table": "vw_tipo_gt",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": False,
+                },
+            },
+        },
+        "tabelle_accessorie": {
+            "role": "editing",
+            "type": "group",
+            "layer_name": "Tabelle accessorie",
+            "group": None,
+            "qlr_path": "tabelle_accessorie.qlr",
+        },
+    }
+
+    REMOVED_EDITING_LAYERS = [
+        "isosub_l2",
+        "instab_l2",
+        "stab_l2",
+        "isosub_l3",
+        "instab_l3",
+        "stab_l3",
+        "indice",
+    ]
+
+    DEFAULT_TABLE_LAYERS_NAMES = [
+        "metadati",
+        "vw_amb",
+        "vw_attend_mis",
+        "vw_cat_s",
+        "vw_classe_ind_l",
+        "vw_classe_ind_p",
+        "vw_cod_instab",
+        "vw_cod_stab",
+        "vw_gen",
+        "vw_mod_identcoord",
+        "vw_modo_quota",
+        "vw_param_l",
+        "vw_param_p",
+        "vw_qualita",
+        "vw_stato",
+        "vw_tipo_el",
+        "vw_tipo_ep",
+        "vw_tipo_f",
+        "vw_tipo_gi",
+        "vw_tipo_gt",
+        "vw_tipo_hvsr",
+        "vw_tipo_ind_l",
+        "vw_tipo_ind_p",
+    ]
+
+    DEFAULT_LAYOUT_GROUPS = {
+        "Carta delle Indagini": "carta_delle_indagini.qlr",
+        "Carta geologico-tecnica": "carta_geologico_tecnica.qlr",
+        "Carta delle microzone omogenee in prospettiva sismica (MOPS)": "carta_mops.qlr",
+        "Carta di microzonazione sismica (FA 0.1-0.5 s)": "carta_fa_01_05.qlr",
+        "Carta di microzonazione sismica (FA 0.4-0.8 s)": "carta_fa_04_08.qlr",
+        "Carta di microzonazione sismica (FA 0.7-1.1 s)": "carta_fa_07_11.qlr",
+        "Carta delle frequenze naturali dei terreni (f0)": "carta_frequenze_f0.qlr",
+        "Carta delle frequenze naturali dei terreni (fr)": "carta_frequenze_fr.qlr",
+    }
+
+    DEFAULT_RELATIONS = {
+        "siti_indagini_puntuali": {
+            "parent": "sito_puntuale",
+            "child": "indagini_puntuali",
+            "parent_key": "id_spu",
+            "child_key": "id_spu",
+        },
+        "indagini_hvsr_puntuali": {
+            "parent": "indagini_puntuali",
+            "child": "hvsr",
+            "parent_key": "id_indpu",
+            "child_key": "id_indpu",
+        },
+        "indagini_parametri_puntuali": {
+            "parent": "indagini_puntuali",
+            "child": "parametri_puntuali",
+            "parent_key": "id_indpu",
+            "child_key": "id_indpu",
+        },
+        "parametri_curve_puntuali": {
+            "parent": "parametri_puntuali",
+            "child": "curve",
+            "parent_key": "id_parpu",
+            "child_key": "id_parpu",
+        },
+        "siti_indagini_lineari": {
+            "parent": "sito_lineare",
+            "child": "indagini_lineari",
+            "parent_key": "id_sln",
+            "child_key": "id_sln",
+        },
+        "indagini_parametri_lineari": {
+            "parent": "indagini_lineari",
+            "child": "parametri_lineari",
+            "parent_key": "id_indln",
+            "child_key": "id_indln",
+        },
+    }
+
     @classmethod
     def instance(cls):
         if cls._instance is None:
@@ -64,458 +525,6 @@ class MzSProjectManager:
         self.comune_data: ComuneData = None
         self.project_metadata = None
 
-        self.default_base_layers = {
-            "comune_progetto": {
-                "role": "base",
-                "type": "vector",
-                "layer_name": "Comune del progetto",
-                "group": None,
-                "qlr_path": "comune_progetto.qlr",
-            },
-            "comuni": {
-                "role": "base",
-                "type": "vector",
-                "geom_name": "GEOMETRY",
-                "subset_string": "cod_regio",
-                "layer_name": "Limiti comunali",
-                "group": None,
-                "qlr_path": "comuni.qlr",
-            },
-            "basemap": {
-                "role": "base",
-                "type": "service_group",
-                "layer_name": "Basemap",
-                "group": None,
-                "qlr_path": "basemap.qlr",
-            },
-        }
-
-        self.default_editing_layers = {
-            "tavole": {
-                "role": "editing",
-                "type": "vector",
-                "geom_name": "GEOMETRY",
-                "layer_name": "tavole",
-                "group": None,
-                "qlr_path": "tavole.qlr",
-            },
-            "sito_puntuale": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Siti puntuali",
-                "group": "Indagini",
-                "qlr_path": "siti_puntuali.qlr",
-                "value_relations": {
-                    "mod_identcoord": {
-                        "relation_table": "vw_mod_identcoord",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                    "modo_quota": {
-                        "relation_table": "vw_modo_quota",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "indagini_puntuali": {
-                "role": "editing",
-                "type": "table",
-                "layer_name": "Indagini puntuali",
-                "group": "Indagini",
-                "qlr_path": "indagini_puntuali.qlr",
-                "value_relations": {
-                    "id_spu": {
-                        "relation_table": "sito_puntuale",
-                        "relation_key": "id_spu",
-                        "relation_value": "id_spu",
-                        "order_by_value": True,
-                    },
-                    "classe_ind": {
-                        "relation_table": "vw_classe_ind_p",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "parametri_puntuali": {
-                "role": "editing",
-                "type": "table",
-                "layer_name": "Parametri puntuali",
-                "group": "Indagini",
-                "qlr_path": "parametri_puntuali.qlr",
-                "value_relations": {
-                    "id_indpu": {
-                        "relation_table": "indagini_puntuali",
-                        "relation_key": "id_indpu",
-                        "relation_value": "id_indpu",
-                        "order_by_value": True,
-                    },
-                    "attend_mis": {
-                        "relation_table": "vw_attend_mis",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "curve": {
-                "role": "editing",
-                "type": "table",
-                "layer_name": "Curve di riferimento",
-                "group": "Indagini",
-                "qlr_path": "curve.qlr",
-                "value_relations": {
-                    "id_parpu": {
-                        "relation_table": "parametri_puntuali",
-                        "relation_key": "id_parpu",
-                        "relation_value": "id_parpu",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "hvsr": {
-                "role": "editing",
-                "type": "table",
-                "layer_name": "Indagine stazione singola (HVSR)",
-                "group": "Indagini",
-                "qlr_path": "hvsr.qlr",
-                "value_relations": {
-                    "id_indpu": {
-                        "relation_table": "indagini_puntuali",
-                        "relation_key": "id_indpu",
-                        "relation_value": "id_indpu",
-                        "order_by_value": True,
-                    },
-                    "qualita": {
-                        "relation_table": "vw_qualita",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                    "tipo": {
-                        "relation_table": "vw_tipo_hvsr",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                        "allow_null": True,
-                    },
-                },
-            },
-            "sito_lineare": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Siti lineari",
-                "group": "Indagini",
-                "qlr_path": "siti_lineari.qlr",
-                "value_relations": {
-                    "mod_identcoord": {
-                        "relation_table": "vw_mod_identcoord",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "indagini_lineari": {
-                "role": "editing",
-                "type": "table",
-                "layer_name": "Indagini lineari",
-                "group": "Indagini",
-                "qlr_path": "indagini_lineari.qlr",
-                "value_relations": {
-                    "id_sln": {
-                        "relation_table": "sito_lineare",
-                        "relation_key": "id_sln",
-                        "relation_value": "id_sln",
-                        "order_by_value": True,
-                    },
-                    "classe_ind": {
-                        "relation_table": "vw_classe_ind_l",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "parametri_lineari": {
-                "role": "editing",
-                "type": "table",
-                "layer_name": "Parametri lineari",
-                "group": "Indagini",
-                "qlr_path": "parametri_lineari.qlr",
-                "value_relations": {
-                    "id_indln": {
-                        "relation_table": "indagini_lineari",
-                        "relation_key": "id_indln",
-                        "relation_value": "id_indln",
-                        "order_by_value": True,
-                    },
-                    "attend_mis": {
-                        "relation_table": "vw_attend_mis",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "isosub_l23": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Isobate liv 2-3",
-                "group": "MS livello 2-3",
-                "qlr_path": "isosub_l23.qlr",
-            },
-            "instab_l23": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Zone instabili liv 2-3",
-                "group": "MS livello 2-3",
-                "qlr_path": "instab_l23.qlr",
-                "value_relations": {
-                    "CAT": {
-                        "relation_table": "vw_cat_s",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                    "AMB": {
-                        "relation_table": "vw_amb",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                },
-            },
-            "stab_l23": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Zone stabili liv 2-3",
-                "group": "MS livello 2-3",
-                "qlr_path": "stab_l23.qlr",
-                "value_relations": {
-                    "Tipo_z": {
-                        "relation_table": "vw_cod_stab",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                    "CAT": {
-                        "relation_table": "vw_cat_s",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                },
-            },
-            "isosub_l1": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Isobate liv 1",
-                "group": "MS livello 1",
-                "qlr_path": "isosub_l1.qlr",
-            },
-            "instab_l1": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Zone instabili liv 1",
-                "group": "MS livello 1",
-                "qlr_path": "instab_l1.qlr",
-            },
-            "stab_l1": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Zone stabili liv 1",
-                "group": "MS livello 1",
-                "qlr_path": "stab_l1.qlr",
-                "value_relations": {
-                    "Tipo_z": {
-                        "relation_table": "vw_cod_stab",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": True,
-                    },
-                },
-            },
-            "nome_sezione": {
-                "role": "editing",
-                "type": "vector",
-                "geom_name": "GEOMETRY",
-                "layer_name": "Nome Sezione",
-                "group": "Geologico Tecnica",
-                "qlr_path": "nome_sezione.qlr",
-            },
-            "geoidr": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Elementi geologici e idrogeologici puntuali",
-                "group": "Geologico Tecnica",
-                "qlr_path": "geoidr.qlr",
-                "value_relations": {
-                    "Tipo_gi": {
-                        "relation_table": "vw_tipo_gi",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                },
-            },
-            "epuntuali": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Elementi puntuali",
-                "group": "Geologico Tecnica",
-                "qlr_path": "epuntuali.qlr",
-                "value_relations": {
-                    "Tipo_ep": {
-                        "relation_table": "vw_tipo_ep",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                },
-            },
-            "elineari": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Elementi lineari",
-                "group": "Geologico Tecnica",
-                "qlr_path": "elineari.qlr",
-                "value_relations": {
-                    "Tipo_el": {
-                        "relation_table": "vw_tipo_el",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                },
-            },
-            "forme": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Forme",
-                "group": "Geologico Tecnica",
-                "qlr_path": "forme.qlr",
-                "value_relations": {
-                    "Tipo_f": {
-                        "relation_table": "vw_tipo_f",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                },
-            },
-            "instab_geotec": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Instabilita' di versante",
-                "group": "Geologico Tecnica",
-                "qlr_path": "instab_geotec.qlr",
-            },
-            "geotec": {
-                "role": "editing",
-                "type": "vector",
-                "layer_name": "Unita' geologico-tecniche",
-                "group": "Geologico Tecnica",
-                "qlr_path": "geotec.qlr",
-                "value_relations": {
-                    "Tipo_gt": {
-                        "relation_table": "vw_tipo_gt",
-                        "relation_key": "cod",
-                        "relation_value": "descrizione",
-                        "order_by_value": False,
-                    },
-                },
-            },
-            "tabelle_accessorie": {
-                "role": "editing",
-                "type": "group",
-                "layer_name": "Tabelle accessorie",
-                "group": None,
-                "qlr_path": "tabelle_accessorie.qlr",
-            },
-        }
-
-        self.table_layers_names = [
-            "metadati",
-            "indice",
-            "vw_amb",
-            "vw_attend_mis",
-            "vw_cat_s",
-            "vw_classe_ind_l",
-            "vw_classe_ind_p",
-            "vw_cod_instab",
-            "vw_cod_stab",
-            "vw_gen",
-            "vw_mod_identcoord",
-            "vw_modo_quota",
-            "vw_param_l",
-            "vw_param_p",
-            "vw_qualita",
-            "vw_stato",
-            "vw_tipo_el",
-            "vw_tipo_ep",
-            "vw_tipo_f",
-            "vw_tipo_gi",
-            "vw_tipo_gt",
-            "vw_tipo_hvsr",
-            "vw_tipo_ind_l",
-            "vw_tipo_ind_p",
-        ]
-
-        self.default_layout_groups = {
-            "Carta delle Indagini": "carta_delle_indagini.qlr",
-            "Carta geologico-tecnica": "carta_geologico_tecnica.qlr",
-            "Carta delle microzone omogenee in prospettiva sismica (MOPS)": "carta_mops.qlr",
-            "Carta di microzonazione sismica (FA 0.1-0.5 s)": "carta_fa_01_05.qlr",
-            "Carta di microzonazione sismica (FA 0.4-0.8 s)": "carta_fa_04_08.qlr",
-            "Carta di microzonazione sismica (FA 0.7-1.1 s)": "carta_fa_07_11.qlr",
-            "Carta delle frequenze naturali dei terreni (f0)": "carta_frequenze_f0.qlr",
-            "Carta delle frequenze naturali dei terreni (fr)": "carta_frequenze_fr.qlr",
-        }
-
-        self.default_relations = {
-            "siti_indagini_puntuali": {
-                "parent": "sito_puntuale",
-                "child": "indagini_puntuali",
-                "parent_key": "id_spu",
-                "child_key": "id_spu",
-            },
-            "indagini_hvsr_puntuali": {
-                "parent": "indagini_puntuali",
-                "child": "hvsr",
-                "parent_key": "id_indpu",
-                "child_key": "id_indpu",
-            },
-            "indagini_parametri_puntuali": {
-                "parent": "indagini_puntuali",
-                "child": "parametri_puntuali",
-                "parent_key": "id_indpu",
-                "child_key": "id_indpu",
-            },
-            "parametri_curve_puntuali": {
-                "parent": "parametri_puntuali",
-                "child": "curve",
-                "parent_key": "id_parpu",
-                "child_key": "id_parpu",
-            },
-            "siti_indagini_lineari": {
-                "parent": "sito_lineare",
-                "child": "indagini_lineari",
-                "parent_key": "id_sln",
-                "child_key": "id_sln",
-            },
-            "indagini_parametri_lineari": {
-                "parent": "indagini_lineari",
-                "child": "parametri_lineari",
-                "parent_key": "id_indln",
-                "child_key": "id_indln",
-            },
-        }
-
         self.required_layer_map = {}
 
         self.project_issues = {}
@@ -539,7 +548,7 @@ class MzSProjectManager:
         self.db_path = db_path
 
         # setup db connection and save it to the manager
-        connected = self.setup_db_connection()
+        connected = self._setup_db_connection()
         if not connected:
             return False
 
@@ -576,11 +585,11 @@ class MzSProjectManager:
         self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
 
         # TEST!
-        self.check_project_custom_layer_properties()
+        # self.check_project_custom_layer_properties()
 
         return True
 
-    def setup_db_connection(self):
+    def _setup_db_connection(self):
         # setup db connection
         if not self.db_connection:
             self.log(f"Creating db connection to {self.db_path}...", log_level=4)
@@ -637,10 +646,64 @@ class MzSProjectManager:
                 cursor.close()
         return data
 
-    # def build_required_layers_registry(self):
-    #     for id, layer in self.current_project.mapLayers().items():
-    #         if type(layer) is QgsVectorLayer:
-    #             self.table_layer_map[layer.dataProvider().uri().table()] = layer
+    def _build_required_layers_registry(self):
+        table_layer_map = {}
+        if "layer_issues" not in self.project_issues:
+            self.project_issues["layer_issues"] = []
+        layer_issues = self.project_issues["layer_issues"]
+
+        # search the editing layers
+        for table_name, layer_data in MzSProjectManager.DEFAULT_EDITING_LAYERS.items():
+            if layer_data["role"] == "editing" and layer_data["type"] not in ["group", "service_group"]:
+                layers = self.find_layers_by_table_name(table_name)
+                editing_layers = []
+                for layer in layers:
+                    # check layer_role custom property
+                    if layer and (layer.customProperty("mzs_tools/layer_role") == "editing"):
+                        editing_layers.append(layer)
+                if not editing_layers:
+                    self.log(
+                        f"No editing layers found for table '{table_name}'",
+                        log_level=2,
+                    )
+                    layer_issues.append(f"No editing layers found for table '{table_name}'")
+                    continue
+                if len(editing_layers) > 1:
+                    self.log(
+                        f"Multiple editing layers found for table '{table_name}'",
+                        log_level=2,
+                    )
+                    layer_issues.append(f"Multiple editing layers found for table '{table_name}'")
+                    continue
+                table_layer_map[table_name] = editing_layers[0].id()
+
+        # search the lookup tables
+        for table_name in MzSProjectManager.DEFAULT_TABLE_LAYERS_NAMES:
+            layers = self.find_layers_by_table_name(table_name)
+            lookup_table_layers = []
+            for layer in layers:
+                # check layer_role custom property
+                if layer and layer.customProperty("mzs_tools/layer_role") == "editing":
+                    lookup_table_layers.append(layer)
+            if not lookup_table_layers:
+                self.log(
+                    f"No lookup table layers found for table '{table_name}'",
+                    log_level=2,
+                )
+                layer_issues.append(f"No lookup table layers found for table '{table_name}'")
+                continue
+            if len(lookup_table_layers) > 1:
+                self.log(
+                    f"Multiple lookup table layers found for table '{table_name}'",
+                    log_level=2,
+                )
+                layer_issues.append(f"Multiple lookup table layers found for table '{table_name}'")
+                continue
+            table_layer_map[table_name] = lookup_table_layers[0].id()
+
+        # TODO: search the base layers (comuni, comune_progetto)
+
+        return table_layer_map
 
     @staticmethod
     def set_project_layer_capabilities(
@@ -671,18 +734,20 @@ class MzSProjectManager:
 
     def check_project_custom_layer_properties(self):
         """check if the default layers have the required custom properties"""
-        self.set_layer_custom_properties_for_group(self.default_base_layers, {"layer_role": "base"})
-        self.set_layer_custom_properties_for_group(self.default_editing_layers, {"layer_role": "editing"})
+        self._set_layer_custom_properties_for_group(MzSProjectManager.DEFAULT_BASE_LAYERS, {"layer_role": "base"})
+        self._set_layer_custom_properties_for_group(
+            MzSProjectManager.DEFAULT_EDITING_LAYERS, {"layer_role": "editing"}
+        )
 
         # set properties for lookup tables
-        for table_name in self.table_layers_names:
+        for table_name in MzSProjectManager.DEFAULT_TABLE_LAYERS_NAMES:
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
-                self.set_layer_custom_property(layer, "layer_role", "lookup_table")
+                self.set_layer_custom_property(layer, "layer_role", "editing")
 
-        self.set_layer_custom_properties_for_group(self.default_layout_groups, {"layer_role": "layout"})
+        self._set_layer_custom_properties_for_group(MzSProjectManager.DEFAULT_LAYOUT_GROUPS, {"layer_role": "layout"})
 
-    def set_layer_custom_properties_for_group(self, group_dict: dict, custom_properties: dict):
+    def _set_layer_custom_properties_for_group(self, group_dict: dict, custom_properties: dict):
         for table_name, layer_data in group_dict.items():
             if type(layer_data) is dict and layer_data["role"] not in ["group", "service_group"]:
                 layers = self.find_layers_by_table_name(table_name)
@@ -697,21 +762,31 @@ class MzSProjectManager:
                             self.set_layer_custom_property(layer.layer(), prop_name, prop_value)
 
     def add_default_layers(self, add_base_layers=True, add_editing_layers=True, add_layout_groups=True):
-        if add_base_layers:
-            self.cleanup_base_layers()
-            self.add_default_layer_group(self.default_base_layers, "Cartografia di base", {"layer_role": "base"})
-        if add_layout_groups:
-            self.cleanup_layout_groups()
-            self.add_default_layout_groups("LAYOUT DI STAMPA", {"layer_role": "layout"})
-        if add_editing_layers:
-            self.cleanup_editing_layers()
-            self.add_default_layer_group(
-                self.default_editing_layers, "BANCA DATI GEOGRAFICA", {"layer_role": "editing"}
-            )
-            self.add_default_value_relations(self.default_editing_layers)
-            self.add_default_project_relations()
+        """Add the default layers to the project, removing first any existing layers of the
+           same category (base, editing or layout) pointing to the same database tables.
 
-    def add_default_layer_group(self, group_dict: dict, group_name: str, custom_properties: dict = {}):
+        Args:
+            add_base_layers (bool, optional): Add the default base layers. Defaults to True.
+            add_editing_layers (bool, optional): Add the default editing layers. Defaults to True.
+            add_layout_groups (bool, optional): Add the default layout layers. Defaults to True.
+        """
+        if add_base_layers:
+            self._cleanup_base_layers()
+            self._add_default_layer_group(
+                MzSProjectManager.DEFAULT_BASE_LAYERS, "Cartografia di base", {"layer_role": "base"}
+            )
+        if add_layout_groups:
+            self._cleanup_layout_groups()
+            self._add_default_layout_groups("LAYOUT DI STAMPA", {"layer_role": "layout"})
+        if add_editing_layers:
+            self._cleanup_editing_layers()
+            self._add_default_layer_group(
+                MzSProjectManager.DEFAULT_EDITING_LAYERS, "BANCA DATI GEOGRAFICA", {"layer_role": "editing"}
+            )
+            self._add_default_value_relations(MzSProjectManager.DEFAULT_EDITING_LAYERS)
+            self._add_default_project_relations()
+
+    def _add_default_layer_group(self, group_dict: dict, group_name: str, custom_properties: dict = {}):
         # create new group layer
         root_layer_group = QgsLayerTreeGroup(group_name)
         root_layer_group.setItemVisibilityChecked(False)
@@ -776,7 +851,7 @@ class MzSProjectManager:
                     if layer_data["type"] != "group":
                         break
 
-    def add_default_value_relations(self, group_dict: dict):
+    def _add_default_value_relations(self, group_dict: dict):
         for table_name, layer_data in group_dict.items():
             if "value_relations" in layer_data:
                 layers = self.find_layers_by_table_name(table_name)
@@ -821,7 +896,7 @@ class MzSProjectManager:
 
         layer.setEditorWidgetSetup(layer.fields().indexOf(field_name), setup)
 
-    def add_default_project_relations(self):
+    def _add_default_project_relations(self):
         # if the relations dict is not empty, return
         rel_manager = self.current_project.relationManager()
         if rel_manager.relations():
@@ -829,7 +904,7 @@ class MzSProjectManager:
             self.log("Project already has relations, skipping...", log_level=4)
             return
 
-        for relation_name, relation_data in self.default_relations.items():
+        for relation_name, relation_data in MzSProjectManager.DEFAULT_RELATIONS.items():
             parent_layers = self.find_layers_by_table_name(relation_data["parent"])
             child_layers = self.find_layers_by_table_name(relation_data["child"])
             if len(parent_layers) == 0 or len(child_layers) == 0:
@@ -862,12 +937,12 @@ class MzSProjectManager:
 
             rel_manager.addRelation(rel)
 
-    def add_default_layout_groups(self, group_name, custom_properties: dict = {}):
+    def _add_default_layout_groups(self, group_name, custom_properties: dict = {}):
         root_layer_group = QgsLayerTreeGroup(group_name)
         root_layer_group.setIsMutuallyExclusive(True)
         root_layer_group.setItemVisibilityChecked(False)
         self.current_project.layerTreeRoot().insertChildNode(0, root_layer_group)
-        for group_name, qlr_path in self.default_layout_groups.items():
+        for group_name, qlr_path in MzSProjectManager.DEFAULT_LAYOUT_GROUPS.items():
             qlr_full_path = DIR_PLUGIN_ROOT / "data" / "layer_defs" / "print_layout" / qlr_path
             self.add_layer_from_qlr(root_layer_group, qlr_full_path)
         # set custom property for all layout layers
@@ -897,9 +972,9 @@ class MzSProjectManager:
             )
             layer.setCustomProperty(f"mzs_tools/{property_name}", property_value)
 
-    def cleanup_base_layers(self):
+    def _cleanup_base_layers(self):
         self.log("Cleaning up base layers...", log_level=4)
-        for table_name in self.default_base_layers.keys():
+        for table_name in MzSProjectManager.DEFAULT_BASE_LAYERS.keys():
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
                 if layer and layer.customProperty("mzs_tools/layer_role") == "base":
@@ -913,9 +988,24 @@ class MzSProjectManager:
                     if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
                         parent_node.parent().removeChildNode(parent_node)
 
-    def cleanup_editing_layers(self):
+    def _cleanup_editing_layers(self):
+        self.log("Cleaning up removed layers...", log_level=4)
+        for table_name in MzSProjectManager.REMOVED_EDITING_LAYERS:
+            layers = self.find_layers_by_table_name(table_name)
+            for layer in layers:
+                if layer:
+                    self.log(f"Removing old layer '{layer.name()}' (table: '{table_name}')", log_level=4)
+                    layer_node = self.current_project.layerTreeRoot().findLayer(layer.id())
+                    parent_node = None
+                    if layer_node:
+                        parent_node = layer_node.parent()
+                    self.current_project.removeMapLayer(layer)
+                    # remove parent group if empty
+                    if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
+                        parent_node.parent().removeChildNode(parent_node)
+
         self.log("Cleaning up editing layers...", log_level=4)
-        for table_name in self.default_editing_layers.keys():
+        for table_name in MzSProjectManager.DEFAULT_EDITING_LAYERS.keys():
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
                 # TODO: use only the custom property
@@ -931,10 +1021,10 @@ class MzSProjectManager:
                         parent_node.parent().removeChildNode(parent_node)
 
         self.log("Cleaning up table layers...", log_level=4)
-        for table_name in self.table_layers_names:
+        for table_name in MzSProjectManager.DEFAULT_TABLE_LAYERS_NAMES:
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
-                # TODO: use layer.customProperty("mzs_tools/layer_role") == "lookup_table"
+                # TODO: use layer.customProperty("mzs_tools/layer_role") == "editing"
                 if layer and type(layer) is QgsVectorLayer:
                     self.log(f"Removing layer '{layer.name()}' (table: '{table_name}')", log_level=4)
                     layer_node = self.current_project.layerTreeRoot().findLayer(layer.id())
@@ -946,9 +1036,9 @@ class MzSProjectManager:
                     if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
                         parent_node.parent().removeChildNode(parent_node)
 
-    def cleanup_layout_groups(self):
+    def _cleanup_layout_groups(self):
         self.log("Cleaning up layout groups...", log_level=4)
-        for group_name in self.default_layout_groups.keys():
+        for group_name in MzSProjectManager.DEFAULT_LAYOUT_GROUPS.keys():
             group = self.current_project.layerTreeRoot().findGroup(group_name)
             if group:
                 parent_node = None
@@ -1045,7 +1135,7 @@ class MzSProjectManager:
         self.project_path = Path(self.current_project.absolutePath())
         self.db_path = self.project_path / "db" / "indagini.sqlite"
 
-        self.setup_db_connection()
+        self._setup_db_connection()
 
         self.customize_project_template(cod_istat)
 
@@ -1106,7 +1196,7 @@ class MzSProjectManager:
         # read the new project file inside the loaded (old) project
         self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
 
-        self.setup_db_connection()
+        self._setup_db_connection()
 
         # apply project customizations without creating comune feature
         self.customize_project_template(self.comune_data.cod_istat, insert_comune_progetto=False)
@@ -1234,6 +1324,24 @@ class MzSProjectManager:
         for layout in layouts:
             layout.refresh()
 
+    def update_project(self):
+        """Update the project without loading the project template
+        It's assumed that the database structure is already updated."""
+        if not self.project_updateable:
+            self.log("Requested project update for non-updateable project!", log_level=1)
+            return
+
+        if self.project_version < "1.9.2":
+            # version is too old, clear the project and start from scratch
+            self.current_project.clear()
+            self.add_default_layers()
+        elif self.project_version < "1.9.4":
+            # replace only the layout layers
+            self._cleanup_layout_groups()
+            self._add_default_layout_groups("LAYOUT DI STAMPA", {"layer_role": "layout"})
+
+        # TODO: apply customizations
+
     def update_db(self):
         sql_scripts = []
         if self.project_version < "0.8":
@@ -1255,6 +1363,13 @@ class MzSProjectManager:
             self.log(f"Executing: {upgrade_script}", log_level=1)
             self._exec_db_upgrade_sql(upgrade_script)
 
+        for upgrade_script in sql_scripts:
+            # doing this in a separate loop because the mzs_tools_update_history table was created only in v1.9.5
+            self.update_history_table("db", self.project_version, __version__, f"executed script {upgrade_script}")
+
+        # update mzs_tools_version table
+        self.update_db_version_info()
+
         self.log("Sql upgrades ok")
 
     def _exec_db_upgrade_sql(self, script_name):
@@ -1263,6 +1378,39 @@ class MzSProjectManager:
             script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name
             with script_path.open("r") as f:
                 cursor.executescript(f.read())
+            cursor.close()
+
+    def update_history_table(self, component: str, from_version: str, to_version: str, notes: str = None):
+        try:
+            with self.db_connection as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mzs_tools_update_history'")
+                if cursor.fetchone():
+                    cursor.execute(
+                        "INSERT INTO mzs_tools_update_history (updated_component, from_version, to_version, notes) VALUES (?, ? ,?, ?)",
+                        (component, from_version, to_version, notes),
+                    )
+                    conn.commit()
+        except Exception as e:
+            self.log(f"Failed to update history table: {e}", log_level=2)
+        finally:
+            cursor.close()
+
+    def update_db_version_info(self):
+        try:
+            with self.db_connection as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT OR REPLACE INTO mzs_tools_version (id, db_version) VALUES (?, ?)",
+                    (
+                        1,
+                        __version__,
+                    ),
+                )
+                conn.commit()
+        except Exception as e:
+            self.log(f"Failed to update version info: {e}", log_level=2)
+        finally:
             cursor.close()
 
     def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
