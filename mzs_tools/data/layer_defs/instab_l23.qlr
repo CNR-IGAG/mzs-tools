@@ -509,6 +509,7 @@
       </labeling>
       <customproperties>
         <Option type="Map">
+          <Option type="QString" name="mzs_tools/layer_role" value="editing"/>
           <Option name="QFieldSync/action" value="copy" type="QString"/>
           <Option name="QFieldSync/attachment_naming" value="{}" type="QString"/>
           <Option name="QFieldSync/cloud_action" value="offline" type="QString"/>

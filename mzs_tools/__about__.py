@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+from packaging.version import parse
 from datetime import date
 from pathlib import Path
 
@@ -50,6 +51,7 @@ __uri_tracker__: str = __plugin_md__.get("general").get("tracker")
 __uri__: str = __uri_repository__
 
 __version__: str = __plugin_md__.get("general").get("version")
+__base_version__: str = parse(__version__).base_version
 __version_info__: tuple = tuple(
     [int(num) if num.isdigit() else num for num in __version__.replace("-", ".", 1).split(".")]
 )

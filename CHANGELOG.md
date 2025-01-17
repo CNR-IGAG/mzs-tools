@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.9.5-beta1] - 2024-12-17 [Unreleased]
+## [2.0.0-beta1] - 2025-01-01 [Unreleased]
 
 - test
 

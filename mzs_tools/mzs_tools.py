@@ -255,7 +255,10 @@ class MzSTools:
                 # new_project = self.create_project(dir_out)
                 # reload the project
                 # self.iface.addProject(new_project)
-                project_path = self.prj_manager.create_project_from_template(
+                # project_path = self.prj_manager.create_project_from_template(
+                #     comune_name, cod_istat, study_author, author_email, dir_out
+                # )
+                project_path = self.prj_manager.create_project(
                     comune_name, cod_istat, study_author, author_email, dir_out
                 )
             except Exception as e:
@@ -388,7 +391,10 @@ class MzSTools:
                 self.log("Starting project update process.", log_level=1)
                 self.prj_manager.backup_project()
                 self.prj_manager.update_db()
-                self.prj_manager.update_project_from_template()
+                # old method
+                # self.prj_manager.update_project_from_template()
+                # new method
+                self.prj_manager.update_project()
                 return
             else:
                 self.log("Project update process cancelled.", log_level=1)

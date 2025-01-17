@@ -215,6 +215,7 @@
       </elevation>
       <customproperties>
         <Option type="Map">
+          <Option type="QString" name="mzs_tools/layer_role" value="editing"/>
           <Option value="copy" name="QFieldSync/action" type="QString"/>
           <Option value="{}" name="QFieldSync/attachment_naming" type="QString"/>
           <Option value="offline" name="QFieldSync/cloud_action" type="QString"/>

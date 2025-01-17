@@ -9,18 +9,22 @@ from sqlite3 import Connection
 from typing import Optional
 
 from qgis.core import (
+    QgsCoordinateReferenceSystem,
     QgsEditorWidgetSetup,
     QgsLayerDefinition,
     QgsLayerTreeGroup,
     QgsMapLayer,
+    QgsPrintLayout,
     QgsProject,
     QgsRelation,
     QgsVectorLayer,
+    QgsReadWriteContext,
 )
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.utils import iface, spatialite_connect
+from qgis.PyQt.QtXml import QDomDocument
 
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __version__
+from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
 
 from ..plugin_utils.misc import save_map_image
@@ -501,6 +505,17 @@ class MzSProjectManager:
         },
     }
 
+    PRINT_LAYOUT_MODELS = [
+        "carta_delle_indagini.qpt",
+        "carta_delle_mops.qpt",
+        "carta_frequenze_f0.qpt",
+        "carta_frequenze_fr.qpt",
+        "carta_geologico_tecnica.qpt",
+        "carta_ms_fa_01_05.qpt",
+        "carta_ms_fa_04_08.qpt",
+        "carta_ms_fa_07_11.qpt",
+    ]
+
     @classmethod
     def instance(cls):
         if cls._instance is None:
@@ -527,7 +542,9 @@ class MzSProjectManager:
 
         self.required_layer_map = {}
 
-        self.project_issues = {}
+        self.project_issues = {
+            "layer_issues": [],
+        }
 
         self.is_mzs_project: bool = False
 
@@ -563,9 +580,9 @@ class MzSProjectManager:
             self.log(f"Error reading project version: {e}", log_level=2)
             self.project_issues["version"] = "Error reading project version"
 
-        if self.project_version and self.project_version < __version__:
+        if self.project_version and self.project_version < __base_version__:
             self.log(
-                f"MzS Project is version {self.project_version} and should be updated to version {__version__}",
+                f"MzS Project is version {self.project_version} and should be updated to version {__base_version__}",
                 log_level=1,
             )
             self.project_updateable = True
@@ -648,60 +665,25 @@ class MzSProjectManager:
 
     def _build_required_layers_registry(self):
         table_layer_map = {}
-        if "layer_issues" not in self.project_issues:
-            self.project_issues["layer_issues"] = []
-        layer_issues = self.project_issues["layer_issues"]
-
         # search the editing layers
         for table_name, layer_data in MzSProjectManager.DEFAULT_EDITING_LAYERS.items():
             if layer_data["role"] == "editing" and layer_data["type"] not in ["group", "service_group"]:
-                layers = self.find_layers_by_table_name(table_name)
-                editing_layers = []
-                for layer in layers:
-                    # check layer_role custom property
-                    if layer and (layer.customProperty("mzs_tools/layer_role") == "editing"):
-                        editing_layers.append(layer)
-                if not editing_layers:
-                    self.log(
-                        f"No editing layers found for table '{table_name}'",
-                        log_level=2,
-                    )
-                    layer_issues.append(f"No editing layers found for table '{table_name}'")
-                    continue
-                if len(editing_layers) > 1:
-                    self.log(
-                        f"Multiple editing layers found for table '{table_name}'",
-                        log_level=2,
-                    )
-                    layer_issues.append(f"Multiple editing layers found for table '{table_name}'")
-                    continue
-                table_layer_map[table_name] = editing_layers[0].id()
+                layer_id = self.find_layer_by_table_name_role(table_name, "editing")
+                if layer_id:
+                    table_layer_map[table_name] = layer_id
 
         # search the lookup tables
         for table_name in MzSProjectManager.DEFAULT_TABLE_LAYERS_NAMES:
-            layers = self.find_layers_by_table_name(table_name)
-            lookup_table_layers = []
-            for layer in layers:
-                # check layer_role custom property
-                if layer and layer.customProperty("mzs_tools/layer_role") == "editing":
-                    lookup_table_layers.append(layer)
-            if not lookup_table_layers:
-                self.log(
-                    f"No lookup table layers found for table '{table_name}'",
-                    log_level=2,
-                )
-                layer_issues.append(f"No lookup table layers found for table '{table_name}'")
-                continue
-            if len(lookup_table_layers) > 1:
-                self.log(
-                    f"Multiple lookup table layers found for table '{table_name}'",
-                    log_level=2,
-                )
-                layer_issues.append(f"Multiple lookup table layers found for table '{table_name}'")
-                continue
-            table_layer_map[table_name] = lookup_table_layers[0].id()
+            layer_id = self.find_layer_by_table_name_role(table_name, "editing")
+            if layer_id:
+                table_layer_map[table_name] = layer_id
 
-        # TODO: search the base layers (comuni, comune_progetto)
+        # search the base layers (comuni, comune_progetto)
+        for table_name, layer_data in MzSProjectManager.DEFAULT_BASE_LAYERS.items():
+            if layer_data["role"] == "base" and layer_data["type"] not in ["group", "service_group"]:
+                layer_id = self.find_layer_by_table_name_role(table_name, "base")
+                if layer_id:
+                    table_layer_map[table_name] = layer_id
 
         return table_layer_map
 
@@ -732,8 +714,16 @@ class MzSProjectManager:
 
         layer.setFlags(QgsMapLayer.LayerFlag(flags))
 
-    def check_project_custom_layer_properties(self):
-        """check if the default layers have the required custom properties"""
+    def set_layer_custom_property(self, layer: QgsMapLayer, property_name: str, property_value: str):
+        if layer:
+            self.log(
+                f"Setting custom property 'mzs_tools/{property_name}': '{property_value}' for layer {layer.name()}",
+                log_level=4,
+            )
+            layer.setCustomProperty(f"mzs_tools/{property_name}", property_value)
+
+    def _set_custom_layer_properties(self):
+        """only for testing"""
         self._set_layer_custom_properties_for_group(MzSProjectManager.DEFAULT_BASE_LAYERS, {"layer_role": "base"})
         self._set_layer_custom_properties_for_group(
             MzSProjectManager.DEFAULT_EDITING_LAYERS, {"layer_role": "editing"}
@@ -748,6 +738,7 @@ class MzSProjectManager:
         self._set_layer_custom_properties_for_group(MzSProjectManager.DEFAULT_LAYOUT_GROUPS, {"layer_role": "layout"})
 
     def _set_layer_custom_properties_for_group(self, group_dict: dict, custom_properties: dict):
+        """only for testing"""
         for table_name, layer_data in group_dict.items():
             if type(layer_data) is dict and layer_data["role"] not in ["group", "service_group"]:
                 layers = self.find_layers_by_table_name(table_name)
@@ -787,6 +778,7 @@ class MzSProjectManager:
             self._add_default_project_relations()
 
     def _add_default_layer_group(self, group_dict: dict, group_name: str, custom_properties: dict = {}):
+        # TODO: the custom properties should already be in the .qlr files
         # create new group layer
         root_layer_group = QgsLayerTreeGroup(group_name)
         root_layer_group.setItemVisibilityChecked(False)
@@ -842,11 +834,11 @@ class MzSProjectManager:
                             layer_tree_layer.layer().setSubsetString(subset_string)
 
                     # set custom properties
-                    for prop_name, prop_value in custom_properties.items():
-                        self.set_layer_custom_property(layer_tree_layer.layer(), prop_name, prop_value)
+                    # for prop_name, prop_value in custom_properties.items():
+                    #     self.set_layer_custom_property(layer_tree_layer.layer(), prop_name, prop_value)
 
                     # TODO: reset flags for testing
-                    self.set_project_layer_capabilities(layer_tree_layer.layer())
+                    # self.set_project_layer_capabilities(layer_tree_layer.layer())
 
                     if layer_data["type"] != "group":
                         break
@@ -945,10 +937,10 @@ class MzSProjectManager:
         for group_name, qlr_path in MzSProjectManager.DEFAULT_LAYOUT_GROUPS.items():
             qlr_full_path = DIR_PLUGIN_ROOT / "data" / "layer_defs" / "print_layout" / qlr_path
             self.add_layer_from_qlr(root_layer_group, qlr_full_path)
-        # set custom property for all layout layers
-        for layer_tree_layer in root_layer_group.findLayers():
-            for prop_name, prop_value in custom_properties.items():
-                self.set_layer_custom_property(layer_tree_layer.layer(), prop_name, prop_value)
+        # TODO: remove. set custom property for all layout layers
+        # for layer_tree_layer in root_layer_group.findLayers():
+        #     for prop_name, prop_value in custom_properties.items():
+        #         self.set_layer_custom_property(layer_tree_layer.layer(), prop_name, prop_value)
 
     def add_layer_from_qlr(self, layer_group: QgsLayerTreeGroup, qlr_full_path: Path):
         # copy .qlr file in project folder
@@ -963,14 +955,6 @@ class MzSProjectManager:
         if not success:
             self.log(f"Error loading layer from .qlr ({qlr_full_path}): {error_msg}", log_level=2)
         return success
-
-    def set_layer_custom_property(self, layer: QgsMapLayer, property_name: str, property_value: str):
-        if layer:
-            self.log(
-                f"Setting custom property 'mzs_tools/{property_name}': '{property_value}' for layer {layer.name()}",
-                log_level=4,
-            )
-            layer.setCustomProperty(f"mzs_tools/{property_name}", property_value)
 
     def _cleanup_base_layers(self):
         self.log("Cleaning up base layers...", log_level=4)
@@ -1067,6 +1051,30 @@ class MzSProjectManager:
                     layers.append(layer)
         return layers
 
+    def find_layer_by_table_name_role(self, table_name: str, role: str) -> Optional[str]:
+        """Find a single vector layer by table name and custom property mzs_tools/layer_role
+
+        Args:
+            table_name (str): Name of the database table
+            role (str): Value of the custom property 'mzs_tools/layer_role' assigned to the layer
+
+        Returns:
+            Optional[str]: Layer ID or None if not found or multiple layers found
+        """
+        layers = self.find_layers_by_table_name(table_name)
+        valid_layers = [layer for layer in layers if layer and layer.customProperty("mzs_tools/layer_role") == role]
+        if not valid_layers:
+            msg = f"No '{role}' layers found for table '{table_name}'"
+            self.log(msg, log_level=2)
+            self.project_issues["layer_issues"].append(msg)
+            return None
+        if len(valid_layers) > 1:
+            msg = f"Multiple {role} layers found for table '{table_name}'"
+            self.log(msg, log_level=2)
+            self.project_issues["layer_issues"].append(msg)
+            return None
+        return valid_layers[0].id()
+
     # def add_editing_layer(self, table_name, layer_name, type):
     #     if not self.db_connection:
     #         self.log("No db connection available!", log_level=2)
@@ -1146,13 +1154,58 @@ class MzSProjectManager:
 
         # write the version file
         with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-            f.write(__version__)
+            f.write(__base_version__)
 
         # Save the project
         self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
 
         # completely reload the project
         iface.addProject(os.path.join(new_project_path, "progetto_MS.qgs"))
+
+        return new_project_path
+
+    def create_project(self, comune_name, cod_istat, study_author, author_email, dir_out):
+        comune_name = self.sanitize_comune_name(comune_name)
+        new_project_path = Path(dir_out) / f"{cod_istat}_{comune_name}"
+        # create the project directory
+        new_project_path.mkdir(parents=True, exist_ok=False)
+
+        loghi_path = new_project_path / "progetto" / "loghi"
+        loghi_path.mkdir(parents=True, exist_ok=False)
+
+        # copy the db file
+        db_path = new_project_path / "db"
+        db_path.mkdir(parents=True, exist_ok=False)
+        self.extract_database_template(db_path)
+
+        self.current_project = QgsProject.instance()
+
+        self.project_path = new_project_path
+        self.db_path = new_project_path / "db" / "indagini.sqlite"
+        self._setup_db_connection()
+
+        self.update_db_version_info()
+
+        self._insert_comune_progetto(cod_istat)
+        self.comune_data = self.get_project_comune_data()
+
+        self.add_default_layers()
+
+        self.customize_project(cod_istat)
+
+        self.create_basic_project_metadata(cod_istat, study_author, author_email)
+
+        self.refresh_project_layouts()
+
+        # write the version file
+        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+            f.write(__base_version__)
+
+        # Save the project
+        self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgz"))
+
+        # completely reload the project
+        iface.addProject(os.path.join(new_project_path, "progetto_MS.qgz"))
 
         return new_project_path
 
@@ -1185,7 +1238,7 @@ class MzSProjectManager:
 
         # write the new version to the version file
         with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-            f.write(__version__)
+            f.write(__base_version__)
 
         os.remove(os.path.join(self.project_path, "progetto_MS.qgs"))
         shutil.copyfile(
@@ -1214,6 +1267,23 @@ class MzSProjectManager:
         iface.addProject(os.path.join(self.project_path, "progetto_MS.qgs"))
 
         return self.project_path
+
+    def update_project(self):
+        """Update the project without loading the project template
+        It's assumed that the database structure is already updated."""
+        if not self.project_updateable:
+            self.log("Requested project update for non-updateable project!", log_level=1)
+            return
+
+        if self.project_version < "2.0.0":
+            # version is too old, clear the project and start from scratch
+            self.current_project.clear()
+            self.add_default_layers()
+            # TODO: apply customizations
+
+        # for future versions it should be possible to update what's needed without clearing the project
+        # elif self.project_version < "2.0.1-beta1":
+        #   self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
 
     def customize_project_template(self, cod_istat, insert_comune_progetto=True):
         """Customize the project with the selected comune data."""
@@ -1318,29 +1388,109 @@ class MzSProjectManager:
         project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
         self.current_project.setTitle(project_title)
 
+    def customize_project(self, cod_istat):
+        """Customize the project with the selected comune data."""
+
+        crs = QgsCoordinateReferenceSystem("EPSG:32633")
+        self.current_project.setCrs(crs)
+
+        logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", self.comune_data.cod_regio + ".png")
+        logo_regio_out = os.path.join(self.project_path, "progetto", "loghi", "logo_regio.png")
+        shutil.copyfile(logo_regio_in, logo_regio_out)
+
+        # TODO: define a resource list for a project
+        logo_regioni_path = DIR_PLUGIN_ROOT / "resources" / "img" / "logo_conferenza_regioni_province_autonome.jpg"
+        shutil.copy(logo_regioni_path, self.project_path / "progetto" / "loghi")
+        logo_dpc_path = DIR_PLUGIN_ROOT / "resources" / "img" / "logo_dpc.jpg"
+        shutil.copy(logo_dpc_path, self.project_path / "progetto" / "loghi")
+
+        mainPath = QgsProject.instance().homePath()
+        canvas = iface.mapCanvas()
+
+        image_file_path = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
+        layer_limiti_comunali_id = self.find_layer_by_table_name_role("comuni", "base")
+        layer_limiti_comunali_node = self.current_project.layerTreeRoot().findLayer(layer_limiti_comunali_id)
+        layer_limiti_comunali = layer_limiti_comunali_node.layer()
+
+        layer_comune_progetto_id = self.find_layer_by_table_name_role("comune_progetto", "base")
+        layer_comune_progetto_node = self.current_project.layerTreeRoot().findLayer(layer_comune_progetto_id)
+        layer_comune_progetto = layer_comune_progetto_node.layer()
+        layer_comune_progetto.dataProvider().updateExtents()
+        layer_comune_progetto.updateExtents()
+        # extent = layer_comune_progetto.dataProvider().extent()
+        canvas.setExtent(layer_comune_progetto.extent())
+
+        # TODO: this assumes comune_progetto and comuni layers are the only layers currently active
+        layer_limiti_comunali_node.setItemVisibilityCheckedParentRecursive(True)
+        layer_comune_progetto_node.setItemVisibilityCheckedParentRecursive(True)
+        save_map_image(image_file_path, layer_limiti_comunali, canvas)
+
+        canvas.setExtent(layer_comune_progetto.extent())
+
+        self.load_print_layouts()
+
+        layout_manager = QgsProject.instance().layoutManager()
+        layouts = layout_manager.printLayouts()
+
+        for layout in layouts:
+            map_item = layout.itemById("mappa_0")
+            map_item.zoomToExtent(canvas.extent())
+            map_item_2 = layout.itemById("regio_title")
+            map_item_2.setText("Regione " + self.comune_data.regione)
+            map_item_3 = layout.itemById("com_title")
+            map_item_3.setText("Comune di " + self.comune_data.comune)
+            map_item_4 = layout.itemById("logo")
+            map_item_4.refreshPicture()
+            map_item_5 = layout.itemById("mappa_1")
+            map_item_5.refreshPicture()
+
+        # set project title
+        project_title = f"MzS Tools - Comune di {self.comune_data.comune} ({self.comune_data.provincia}, {self.comune_data.regione}) - Studio di Microzonazione Sismica"
+        self.current_project.setTitle(project_title)
+
+    def _insert_comune_progetto(self, cod_istat):
+        with self.db_connection as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
+                        SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
+                    (cod_istat,),
+                )
+                conn.commit()
+            except Exception as e:
+                conn.rollback()
+                self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
+            finally:
+                cursor.close()
+
+    def load_print_layouts(self):
+        for model_file_name in MzSProjectManager.PRINT_LAYOUT_MODELS:
+            self.load_print_layout_model(model_file_name)
+
+    def load_print_layout_model(self, model_file_name: str):
+        layout_manager = self.current_project.layoutManager()
+
+        layout = QgsPrintLayout(self.current_project)
+
+        # load the layout model
+        layout_model_path = DIR_PLUGIN_ROOT / "data" / "print_layouts" / model_file_name
+
+        with layout_model_path.open("r") as f:
+            layout_model = f.read()
+
+        doc = QDomDocument()
+        doc.setContent(layout_model)
+
+        layout.loadFromTemplate(doc, QgsReadWriteContext())
+
+        layout_manager.addLayout(layout)
+
     def refresh_project_layouts(self):
         layout_manager = self.current_project.layoutManager()
         layouts = layout_manager.printLayouts()
         for layout in layouts:
             layout.refresh()
-
-    def update_project(self):
-        """Update the project without loading the project template
-        It's assumed that the database structure is already updated."""
-        if not self.project_updateable:
-            self.log("Requested project update for non-updateable project!", log_level=1)
-            return
-
-        if self.project_version < "1.9.2":
-            # version is too old, clear the project and start from scratch
-            self.current_project.clear()
-            self.add_default_layers()
-        elif self.project_version < "1.9.4":
-            # replace only the layout layers
-            self._cleanup_layout_groups()
-            self._add_default_layout_groups("LAYOUT DI STAMPA", {"layer_role": "layout"})
-
-        # TODO: apply customizations
 
     def update_db(self):
         sql_scripts = []
@@ -1356,8 +1506,8 @@ class MzSProjectManager:
             sql_scripts.append("query_v192.sql")
         if self.project_version < "1.9.3":
             sql_scripts.append("query_v193.sql")
-        if self.project_version < "1.9.5":
-            sql_scripts.append("query_v195.sql")
+        if self.project_version < "2.0.0":
+            sql_scripts.append("query_v200.sql")
 
         for upgrade_script in sql_scripts:
             self.log(f"Executing: {upgrade_script}", log_level=1)
@@ -1370,7 +1520,7 @@ class MzSProjectManager:
         # update mzs_tools_version table
         self.update_db_version_info()
 
-        self.log("Sql upgrades ok")
+        self.log(f"MzS Tools batabase upgrades completed! Database upgraded to version {__base_version__}", push=True)
 
     def _exec_db_upgrade_sql(self, script_name):
         with self.db_connection as conn:
@@ -1404,7 +1554,7 @@ class MzSProjectManager:
                     "INSERT OR REPLACE INTO mzs_tools_version (id, db_version) VALUES (?, ?)",
                     (
                         1,
-                        __version__,
+                        __base_version__,
                     ),
                 )
                 conn.commit()
@@ -1475,6 +1625,12 @@ class MzSProjectManager:
     def extract_project_template(dir_out):
         project_template_path = DIR_PLUGIN_ROOT / "data" / "progetto_MS.zip"
         with zipfile.ZipFile(str(project_template_path), "r") as zip_ref:
+            zip_ref.extractall(dir_out)
+
+    @staticmethod
+    def extract_database_template(dir_out):
+        database_template_path = DIR_PLUGIN_ROOT / "data" / "indagini.sqlite.zip"
+        with zipfile.ZipFile(str(database_template_path), "r") as zip_ref:
             zip_ref.extractall(dir_out)
 
     @staticmethod

@@ -280,6 +280,7 @@
       </selection>
       <customproperties>
         <Option type="Map">
+          <Option type="QString" name="mzs_tools/layer_role" value="base"/>
           <Option type="QString" name="QFieldSync/action" value="copy"/>
           <Option type="QString" name="QFieldSync/attachment_naming" value="{}"/>
           <Option type="QString" name="QFieldSync/cloud_action" value="offline"/>

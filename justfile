@@ -83,3 +83,15 @@ test:
     uv run qgis-plugin-ci package -c {{ VERSION }}
     just dev-link
     git add .
+
+# start latest QGIS LTR version in docker on Linux
+qgis-ltr QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
+    #!/bin/bash
+    xhost + 
+    docker run --rm --name qgis_ltr \
+        -it \
+        -e DISPLAY=unix$DISPLAY \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v ${HOME}/{{ QGIS_PYTHON_PATH }}:/root/.local/share/QGIS/QGIS3/profiles/default/python \
+        -v ${HOME}:/home/${USER} \
+        qgis/qgis:ltr qgis
