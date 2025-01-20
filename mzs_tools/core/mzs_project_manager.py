@@ -19,6 +19,8 @@ from qgis.core import (
     QgsRelation,
     QgsVectorLayer,
     QgsReadWriteContext,
+    Qgis,
+    QgsEditFormConfig,
 )
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.utils import iface, spatialite_connect
@@ -85,6 +87,7 @@ class MzSProjectManager:
             "layer_name": "Siti puntuali",
             "group": "Indagini",
             "qlr_path": "siti_puntuali.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "mod_identcoord": {
                     "relation_table": "vw_mod_identcoord",
@@ -106,6 +109,7 @@ class MzSProjectManager:
             "layer_name": "Indagini puntuali",
             "group": "Indagini",
             "qlr_path": "indagini_puntuali.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "id_spu": {
                     "relation_table": "sito_puntuale",
@@ -127,6 +131,7 @@ class MzSProjectManager:
             "layer_name": "Parametri puntuali",
             "group": "Indagini",
             "qlr_path": "parametri_puntuali.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "id_indpu": {
                     "relation_table": "indagini_puntuali",
@@ -148,6 +153,7 @@ class MzSProjectManager:
             "layer_name": "Curve di riferimento",
             "group": "Indagini",
             "qlr_path": "curve.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "id_parpu": {
                     "relation_table": "parametri_puntuali",
@@ -163,6 +169,7 @@ class MzSProjectManager:
             "layer_name": "Indagine stazione singola (HVSR)",
             "group": "Indagini",
             "qlr_path": "hvsr.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "id_indpu": {
                     "relation_table": "indagini_puntuali",
@@ -191,6 +198,7 @@ class MzSProjectManager:
             "layer_name": "Siti lineari",
             "group": "Indagini",
             "qlr_path": "siti_lineari.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "mod_identcoord": {
                     "relation_table": "vw_mod_identcoord",
@@ -206,6 +214,7 @@ class MzSProjectManager:
             "layer_name": "Indagini lineari",
             "group": "Indagini",
             "qlr_path": "indagini_lineari.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "id_sln": {
                     "relation_table": "sito_lineare",
@@ -227,6 +236,7 @@ class MzSProjectManager:
             "layer_name": "Parametri lineari",
             "group": "Indagini",
             "qlr_path": "parametri_lineari.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "id_indln": {
                     "relation_table": "indagini_lineari",
@@ -248,6 +258,7 @@ class MzSProjectManager:
             "layer_name": "Isobate liv 2-3",
             "group": "MS livello 2-3",
             "qlr_path": "isosub_l23.qlr",
+            "custom_editing_form": True,
         },
         "instab_l23": {
             "role": "editing",
@@ -255,6 +266,7 @@ class MzSProjectManager:
             "layer_name": "Zone instabili liv 2-3",
             "group": "MS livello 2-3",
             "qlr_path": "instab_l23.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "CAT": {
                     "relation_table": "vw_cat_s",
@@ -276,6 +288,7 @@ class MzSProjectManager:
             "layer_name": "Zone stabili liv 2-3",
             "group": "MS livello 2-3",
             "qlr_path": "stab_l23.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_z": {
                     "relation_table": "vw_cod_stab",
@@ -297,6 +310,7 @@ class MzSProjectManager:
             "layer_name": "Isobate liv 1",
             "group": "MS livello 1",
             "qlr_path": "isosub_l1.qlr",
+            "custom_editing_form": True,
         },
         "instab_l1": {
             "role": "editing",
@@ -304,6 +318,7 @@ class MzSProjectManager:
             "layer_name": "Zone instabili liv 1",
             "group": "MS livello 1",
             "qlr_path": "instab_l1.qlr",
+            "custom_editing_form": True,
         },
         "stab_l1": {
             "role": "editing",
@@ -311,6 +326,7 @@ class MzSProjectManager:
             "layer_name": "Zone stabili liv 1",
             "group": "MS livello 1",
             "qlr_path": "stab_l1.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_z": {
                     "relation_table": "vw_cod_stab",
@@ -334,6 +350,7 @@ class MzSProjectManager:
             "layer_name": "Elementi geologici e idrogeologici puntuali",
             "group": "Geologico Tecnica",
             "qlr_path": "geoidr.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_gi": {
                     "relation_table": "vw_tipo_gi",
@@ -349,6 +366,7 @@ class MzSProjectManager:
             "layer_name": "Elementi puntuali",
             "group": "Geologico Tecnica",
             "qlr_path": "epuntuali.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_ep": {
                     "relation_table": "vw_tipo_ep",
@@ -364,6 +382,7 @@ class MzSProjectManager:
             "layer_name": "Elementi lineari",
             "group": "Geologico Tecnica",
             "qlr_path": "elineari.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_el": {
                     "relation_table": "vw_tipo_el",
@@ -379,6 +398,7 @@ class MzSProjectManager:
             "layer_name": "Forme",
             "group": "Geologico Tecnica",
             "qlr_path": "forme.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_f": {
                     "relation_table": "vw_tipo_f",
@@ -394,6 +414,7 @@ class MzSProjectManager:
             "layer_name": "Instabilita' di versante",
             "group": "Geologico Tecnica",
             "qlr_path": "instab_geotec.qlr",
+            "custom_editing_form": True,
         },
         "geotec": {
             "role": "editing",
@@ -401,6 +422,7 @@ class MzSProjectManager:
             "layer_name": "Unita' geologico-tecniche",
             "group": "Geologico Tecnica",
             "qlr_path": "geotec.qlr",
+            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_gt": {
                     "relation_table": "vw_tipo_gt",
@@ -603,6 +625,8 @@ class MzSProjectManager:
 
         # TEST!
         # self.check_project_custom_layer_properties()
+
+        self.required_layer_map = self._build_required_layers_registry()
 
         return True
 
@@ -825,6 +849,24 @@ class MzSProjectManager:
                     # )
 
                     # TODO: set .ui files and editing functions for editing layers
+                    layer = layer_tree_layer.layer()
+                    if layer_data["role"] == "editing":
+                        form_config = layer.editFormConfig()
+                        # ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
+                        # self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
+                        # form_config.setUiForm(str(ui_path))
+
+                        try:
+                            # QGIS >= 3.32
+                            form_config.setInitCodeSource(Qgis.AttributeFormPythonInitCodeSource.Dialog)
+                        except:
+                            # QGIS < 3.32
+                            form_config.setInitCodeSource(QgsEditFormConfig.CodeSourceDialog)
+
+                        form_config.setInitFunction(f"{table_name}_form_init")
+                        form_config.setInitCode(f"from mzs_tools import {table_name}_form_init")
+
+                        layer.setEditFormConfig(form_config)
 
                     # set subset string if needed
                     if "subset_string" in layer_data and layer_data["subset_string"] is not None:

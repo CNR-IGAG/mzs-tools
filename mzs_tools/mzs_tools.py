@@ -27,13 +27,11 @@ from mzs_tools.plugin_utils.settings import PlgOptionsManager
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .gui.dlg_create_project import DlgCreateProject
-from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_info import PluginInfo
+from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
-
-# from .editing.instab_l1 import instab_l1_form_init
 
 
 class MzSTools:
@@ -91,9 +89,6 @@ class MzSTools:
         # when an entirely new project is started, disable the actions that require an open mzs tools project
         # https://qgis.org/pyqgis/master/gui/QgisInterface.html#qgis.gui.QgisInterface.newProjectCreated
         self.iface.newProjectCreated.connect(self.on_new_qgis_project)
-
-        # load form init functions
-        # self.instab_l1_form_init = instab_l1_form_init
 
     def add_action(
         self,
@@ -440,17 +435,23 @@ class MzSTools:
                         self.set_advanced_editing_config,
                         self.reset_editing_config,
                     )
-            # test for setting the ui form with qgis.core.QgsEditFormConfig.setUiForm
+        # test for setting the ui form with qgis.core.QgsEditFormConfig.setUiForm
+        for table_name, layer_id in self.prj_manager.required_layer_map.items():
+            layer_data = self.prj_manager.DEFAULT_EDITING_LAYERS.get(table_name)
+            if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
+                layer = self.prj_manager.current_project.mapLayer(layer_id)
+                if layer:
+                    layer.editingStarted.connect(partial(self.set_ui_file, layer, table_name))
 
     #         if layer.name() == "Zone instabili liv 1":
     #             layer.editingStarted.connect(partial(self.set_ui_file, layer, "instab_l1.ui"))
 
-    # def set_ui_file(self, layer: QgsVectorLayer, ui_file_name: str):
-    #     form_config = layer.editFormConfig()
-    #     ui_path = DIR_PLUGIN_ROOT / "editing" / ui_file_name
-    #     self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
-    #     form_config.setUiForm(str(ui_path))
-    #     layer.setEditFormConfig(form_config)
+    def set_ui_file(self, layer: QgsVectorLayer, table_name: str):
+        form_config = layer.editFormConfig()
+        ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
+        self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
+        form_config.setUiForm(str(ui_path))
+        layer.setEditFormConfig(form_config)
 
     def disconnect_editing_signals(self):
         """Disconnect specific editing signals."""

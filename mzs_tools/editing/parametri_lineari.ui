@@ -1,0 +1,788 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>parametri_lineari</class>
+    <widget class="QDialog" name="parametri_lineari">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>520</width>
+                <height>826</height>
+            </rect>
+        </property>
+        <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+            </sizepolicy>
+        </property>
+        <property name="minimumSize">
+            <size>
+                <width>520</width>
+                <height>660</height>
+            </size>
+        </property>
+        <property name="maximumSize">
+            <size>
+                <width>1500</width>
+                <height>1500</height>
+            </size>
+        </property>
+        <property name="windowTitle">
+            <string>Parametri lineari</string>
+        </property>
+        <property name="modal">
+            <bool>true</bool>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+                <widget class="QGroupBox" name="groupBox_2">
+                    <property name="font">
+                        <font>
+                            <weight>75</weight>
+                            <bold>true</bold>
+                        </font>
+                    </property>
+                    <property name="title">
+                        <string>Parametro lineare</string>
+                    </property>
+                    <layout class="QGridLayout" name="gridLayout_2">
+                        <item row="1" column="1">
+                            <widget class="QLineEdit" name="pkey_indln">
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="0">
+                            <widget class="QLabel" name="label_8">
+                                <property name="text">
+                                    <string>&lt;b&gt;Parametro&lt;/b&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="18" column="1">
+                            <widget class="QLineEdit" name="quota_slm_top">
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="18" column="0">
+                            <widget class="QLabel" name="label_14">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>45</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Quota slm del TOP (prof_slm_top)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="1">
+                            <widget class="QLineEdit" name="id_parln">
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="palette">
+                                    <palette>
+                                        <active>
+                                            <colorrole role="Text">
+                                                <brush brushstyle="SolidPattern">
+                                                    <color alpha="255">
+                                                        <red>113</red>
+                                                        <green>113</green>
+                                                        <blue>113</blue>
+                                                    </color>
+                                                </brush>
+                                            </colorrole>
+                                            <colorrole role="PlaceholderText">
+                                                <brush brushstyle="NoBrush">
+                                                    <color alpha="128">
+                                                        <red>113</red>
+                                                        <green>113</green>
+                                                        <blue>113</blue>
+                                                    </color>
+                                                </brush>
+                                            </colorrole>
+                                        </active>
+                                        <inactive>
+                                            <colorrole role="Text">
+                                                <brush brushstyle="SolidPattern">
+                                                    <color alpha="255">
+                                                        <red>113</red>
+                                                        <green>113</green>
+                                                        <blue>113</blue>
+                                                    </color>
+                                                </brush>
+                                            </colorrole>
+                                            <colorrole role="PlaceholderText">
+                                                <brush brushstyle="NoBrush">
+                                                    <color alpha="128">
+                                                        <red>113</red>
+                                                        <green>113</green>
+                                                        <blue>113</blue>
+                                                    </color>
+                                                </brush>
+                                            </colorrole>
+                                        </inactive>
+                                        <disabled>
+                                            <colorrole role="Text">
+                                                <brush brushstyle="SolidPattern">
+                                                    <color alpha="255">
+                                                        <red>120</red>
+                                                        <green>120</green>
+                                                        <blue>120</blue>
+                                                    </color>
+                                                </brush>
+                                            </colorrole>
+                                            <colorrole role="PlaceholderText">
+                                                <brush brushstyle="NoBrush">
+                                                    <color alpha="128">
+                                                        <red>113</red>
+                                                        <green>113</green>
+                                                        <blue>113</blue>
+                                                    </color>
+                                                </brush>
+                                            </colorrole>
+                                        </disabled>
+                                    </palette>
+                                </property>
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                                <property name="placeholderText">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="20" column="1">
+                            <widget class="Line" name="line_3">
+                                <property name="orientation">
+                                    <enum>Qt::Horizontal</enum>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="25" column="1">
+                            <widget class="QDateTimeEdit" name="data_par">
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="17" column="0">
+                            <widget class="QLabel" name="label_5">
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>Spessore complessivo (spessore)</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="15" column="1">
+                            <widget class="QLineEdit" name="prof_top">
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="2" column="1">
+                            <widget class="Line" name="line">
+                                <property name="orientation">
+                                    <enum>Qt::Horizontal</enum>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="0" column="0">
+                            <widget class="QLabel" name="label">
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>ID indagine (id_indln)</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="7" column="1">
+                            <layout class="QHBoxLayout" name="horizontalLayout_2">
+                                <item>
+                                    <widget class="QLineEdit" name="valore">
+                                        <property name="toolTip">
+                                            <string/>
+                                        </property>
+                                    </widget>
+                                </item>
+                                <item>
+                                    <widget class="QLabel" name="simbolo_val">
+                                        <property name="text">
+                                            <string/>
+                                        </property>
+                                    </widget>
+                                </item>
+                            </layout>
+                        </item>
+                        <item row="15" column="0">
+                            <widget class="QLabel" name="label_12">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>45</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Profondità del TOP (prof_top)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="11" column="1">
+                            <widget class="QComboBox" name="attend_mis">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="19" column="0">
+                            <widget class="QLabel" name="label_15">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>45</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Quota slm del BOTTOM (prof_slm_bot)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="6" column="0">
+                            <widget class="QLabel" name="label_9">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>45</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>Tipo del parametro (tipo_parln)</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="20" column="0">
+                            <widget class="QLabel" name="label_17">
+                                <property name="text">
+                                    <string>&lt;b&gt;Altro&lt;/b&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="6" column="1">
+                            <layout class="QHBoxLayout" name="horizontalLayout">
+                                <item>
+                                    <widget class="QComboBox" name="tipo_parln_box">
+                                        <property name="sizePolicy">
+                                            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                                                <horstretch>0</horstretch>
+                                                <verstretch>0</verstretch>
+                                            </sizepolicy>
+                                        </property>
+                                        <property name="toolTip">
+                                            <string/>
+                                        </property>
+                                    </widget>
+                                </item>
+                                <item>
+                                    <widget class="QLineEdit" name="tipo_parln">
+                                        <property name="enabled">
+                                            <bool>false</bool>
+                                        </property>
+                                        <property name="sizePolicy">
+                                            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                                                <horstretch>0</horstretch>
+                                                <verstretch>0</verstretch>
+                                            </sizepolicy>
+                                        </property>
+                                        <property name="minimumSize">
+                                            <size>
+                                                <width>50</width>
+                                                <height>20</height>
+                                            </size>
+                                        </property>
+                                        <property name="palette">
+                                            <palette>
+                                                <active>
+                                                    <colorrole role="Text">
+                                                        <brush brushstyle="SolidPattern">
+                                                            <color alpha="255">
+                                                                <red>113</red>
+                                                                <green>113</green>
+                                                                <blue>113</blue>
+                                                            </color>
+                                                        </brush>
+                                                    </colorrole>
+                                                    <colorrole role="PlaceholderText">
+                                                        <brush brushstyle="NoBrush">
+                                                            <color alpha="128">
+                                                                <red>113</red>
+                                                                <green>113</green>
+                                                                <blue>113</blue>
+                                                            </color>
+                                                        </brush>
+                                                    </colorrole>
+                                                </active>
+                                                <inactive>
+                                                    <colorrole role="Text">
+                                                        <brush brushstyle="SolidPattern">
+                                                            <color alpha="255">
+                                                                <red>113</red>
+                                                                <green>113</green>
+                                                                <blue>113</blue>
+                                                            </color>
+                                                        </brush>
+                                                    </colorrole>
+                                                    <colorrole role="PlaceholderText">
+                                                        <brush brushstyle="NoBrush">
+                                                            <color alpha="128">
+                                                                <red>113</red>
+                                                                <green>113</green>
+                                                                <blue>113</blue>
+                                                            </color>
+                                                        </brush>
+                                                    </colorrole>
+                                                </inactive>
+                                                <disabled>
+                                                    <colorrole role="Text">
+                                                        <brush brushstyle="SolidPattern">
+                                                            <color alpha="255">
+                                                                <red>120</red>
+                                                                <green>120</green>
+                                                                <blue>120</blue>
+                                                            </color>
+                                                        </brush>
+                                                    </colorrole>
+                                                    <colorrole role="PlaceholderText">
+                                                        <brush brushstyle="NoBrush">
+                                                            <color alpha="128">
+                                                                <red>113</red>
+                                                                <green>113</green>
+                                                                <blue>113</blue>
+                                                            </color>
+                                                        </brush>
+                                                    </colorrole>
+                                                </disabled>
+                                            </palette>
+                                        </property>
+                                    </widget>
+                                </item>
+                            </layout>
+                        </item>
+                        <item row="26" column="1">
+                            <widget class="QTextEdit" name="note_par">
+                                <property name="maximumSize">
+                                    <size>
+                                        <width>16777215</width>
+                                        <height>100</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="7" column="0">
+                            <widget class="QLabel" name="label_2">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>45</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Valore (valore)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="17" column="1">
+                            <widget class="QLineEdit" name="spessore">
+                                <property name="enabled">
+                                    <bool>false</bool>
+                                </property>
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="16" column="1">
+                            <widget class="QLineEdit" name="prof_bot">
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="0" column="1">
+                            <widget class="QComboBox" name="id_indln">
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="11" column="0">
+                            <widget class="QLabel" name="label_4">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>45</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>Attendibilità della misura (attend_mis)</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="16" column="0">
+                            <widget class="QLabel" name="label_13">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="minimumSize">
+                                    <size>
+                                        <width>45</width>
+                                        <height>0</height>
+                                    </size>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Profondità del BOTTOM (prof_bot)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="25" column="0">
+                            <widget class="QLabel" name="label_6">
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>Data (data_par)</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="26" column="0">
+                            <widget class="QLabel" name="label_7">
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>Note (note_par)</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="3" column="0">
+                            <widget class="QLabel" name="label_3">
+                                <property name="font">
+                                    <font>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>ID parametro</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="19" column="1">
+                            <widget class="QLineEdit" name="quota_slm_bot">
+                                <property name="toolTip">
+                                    <string/>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="14" column="0">
+                            <widget class="QLabel" name="label_11">
+                                <property name="text">
+                                    <string>&lt;b&gt;Quota&lt;/b&gt;</string>
+                                </property>
+                            </widget>
+                        </item>
+                        <item row="14" column="1">
+                            <widget class="Line" name="line_2">
+                                <property name="orientation">
+                                    <enum>Qt::Horizontal</enum>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </widget>
+            </item>
+            <item>
+                <widget class="QGroupBox" name="groupBox">
+                    <property name="sizePolicy">
+                        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                        <size>
+                            <width>0</width>
+                            <height>0</height>
+                        </size>
+                    </property>
+                    <property name="title">
+                        <string>Message box</string>
+                    </property>
+                    <layout class="QFormLayout" name="formLayout">
+                        <item row="0" column="1">
+                            <widget class="QLabel" name="alert_text">
+                                <property name="sizePolicy">
+                                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                                        <horstretch>0</horstretch>
+                                        <verstretch>0</verstretch>
+                                    </sizepolicy>
+                                </property>
+                                <property name="text">
+                                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#aa0000;&quot;&gt;In accordo con gli &amp;quot;Standard di rappresentazione e archiviazione informatica&amp;quot;, la tabella &amp;quot;Parametri lineari&amp;quot; non deve essere compilata per questo tipo di indagine. Il documento, in formato PDF, deve essere copiato nella cartella &amp;quot;Documenti&amp;quot;.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                                </property>
+                                <property name="textFormat">
+                                    <enum>Qt::RichText</enum>
+                                </property>
+                                <property name="alignment">
+                                    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                                </property>
+                                <property name="wordWrap">
+                                    <bool>true</bool>
+                                </property>
+                            </widget>
+                        </item>
+                    </layout>
+                </widget>
+            </item>
+            <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_3">
+                    <item>
+                        <widget class="QLabel" name="label_logo_cnr">
+                            <property name="maximumSize">
+                                <size>
+                                    <width>81</width>
+                                    <height>60</height>
+                                </size>
+                            </property>
+                            <property name="text">
+                                <string/>
+                            </property>
+                            <property name="pixmap">
+                                <pixmap>../loghi/Logo CNR-2010-Quadrato-ITA-high.png</pixmap>
+                            </property>
+                            <property name="scaledContents">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QLabel" name="label_logo_igag">
+                            <property name="maximumSize">
+                                <size>
+                                    <width>70</width>
+                                    <height>60</height>
+                                </size>
+                            </property>
+                            <property name="text">
+                                <string/>
+                            </property>
+                            <property name="pixmap">
+                                <pixmap>../loghi/IGAG-CMYK.png</pixmap>
+                            </property>
+                            <property name="scaledContents">
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <spacer name="horizontalSpacer">
+                            <property name="orientation">
+                                <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="sizeHint" stdset="0">
+                                <size>
+                                    <width>40</width>
+                                    <height>20</height>
+                                </size>
+                            </property>
+                        </spacer>
+                    </item>
+                    <item>
+                        <layout class="QVBoxLayout" name="verticalLayout">
+                            <item>
+                                <widget class="QDialogButtonBox" name="buttonBox">
+                                    <property name="sizePolicy">
+                                        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                                            <horstretch>0</horstretch>
+                                            <verstretch>0</verstretch>
+                                        </sizepolicy>
+                                    </property>
+                                    <property name="minimumSize">
+                                        <size>
+                                            <width>0</width>
+                                            <height>0</height>
+                                        </size>
+                                    </property>
+                                    <property name="cursor">
+                                        <cursorShape>PointingHandCursor</cursorShape>
+                                    </property>
+                                    <property name="orientation">
+                                        <enum>Qt::Vertical</enum>
+                                    </property>
+                                    <property name="standardButtons">
+                                        <set>QDialogButtonBox::Ok</set>
+                                    </property>
+                                    <property name="centerButtons">
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QPushButton" name="help_button">
+                                    <property name="cursor">
+                                        <cursorShape>PointingHandCursor</cursorShape>
+                                    </property>
+                                    <property name="text">
+                                        <string>Help</string>
+                                    </property>
+                                </widget>
+                            </item>
+                        </layout>
+                    </item>
+                </layout>
+            </item>
+        </layout>
+    </widget>
+    <tabstops>
+        <tabstop>id_indln</tabstop>
+        <tabstop>pkey_indln</tabstop>
+        <tabstop>id_parln</tabstop>
+        <tabstop>tipo_parln_box</tabstop>
+        <tabstop>tipo_parln</tabstop>
+        <tabstop>valore</tabstop>
+        <tabstop>attend_mis</tabstop>
+        <tabstop>prof_top</tabstop>
+        <tabstop>prof_bot</tabstop>
+        <tabstop>spessore</tabstop>
+        <tabstop>quota_slm_top</tabstop>
+        <tabstop>quota_slm_bot</tabstop>
+        <tabstop>data_par</tabstop>
+        <tabstop>note_par</tabstop>
+        <tabstop>help_button</tabstop>
+    </tabstops>
+    <resources/>
+    <connections/>
+</ui>
