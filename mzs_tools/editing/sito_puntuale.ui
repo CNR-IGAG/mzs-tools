@@ -2,32 +2,6 @@
 <ui version="4.0">
  <class>siti_puntuali</class>
  <widget class="QDialog" name="siti_puntuali">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>520</width>
-    <height>700</height>
-   </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>520</width>
-    <height>700</height>
-   </size>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>1500</width>
-    <height>1500</height>
-   </size>
-  </property>
   <property name="windowTitle">
    <string>Siti puntuali</string>
   </property>
@@ -39,70 +13,6 @@
     <widget class="QTabWidget" name="tabWidget">
      <property name="enabled">
       <bool>true</bool>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="minimumSize">
-      <size>
-       <width>502</width>
-       <height>435</height>
-      </size>
-     </property>
-     <property name="maximumSize">
-      <size>
-       <width>1450</width>
-       <height>1450</height>
-      </size>
-     </property>
-     <property name="palette">
-      <palette>
-       <active>
-        <colorrole role="Light">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>255</red>
-           <green>255</green>
-           <blue>255</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </active>
-       <inactive>
-        <colorrole role="Light">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>255</red>
-           <green>255</green>
-           <blue>255</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </inactive>
-       <disabled>
-        <colorrole role="Light">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>255</red>
-           <green>255</green>
-           <blue>255</blue>
-          </color>
-         </brush>
-        </colorrole>
-       </disabled>
-      </palette>
-     </property>
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="toolTip">
-      <string/>
      </property>
      <property name="currentIndex">
       <number>0</number>
@@ -249,18 +159,18 @@
             <colorrole role="Text">
              <brush brushstyle="SolidPattern">
               <color alpha="255">
-               <red>113</red>
-               <green>113</green>
-               <blue>113</blue>
+               <red>170</red>
+               <green>170</green>
+               <blue>172</blue>
               </color>
              </brush>
             </colorrole>
             <colorrole role="PlaceholderText">
              <brush brushstyle="NoBrush">
               <color alpha="128">
-               <red>113</red>
-               <green>113</green>
-               <blue>113</blue>
+               <red>120</red>
+               <green>120</green>
+               <blue>120</blue>
               </color>
              </brush>
             </colorrole>
@@ -269,18 +179,18 @@
             <colorrole role="Text">
              <brush brushstyle="SolidPattern">
               <color alpha="255">
-               <red>113</red>
-               <green>113</green>
-               <blue>113</blue>
+               <red>170</red>
+               <green>170</green>
+               <blue>172</blue>
               </color>
              </brush>
             </colorrole>
             <colorrole role="PlaceholderText">
              <brush brushstyle="NoBrush">
               <color alpha="128">
-               <red>113</red>
-               <green>113</green>
-               <blue>113</blue>
+               <red>120</red>
+               <green>120</green>
+               <blue>120</blue>
               </color>
              </brush>
             </colorrole>

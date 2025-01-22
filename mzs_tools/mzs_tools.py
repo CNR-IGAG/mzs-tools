@@ -399,9 +399,9 @@ class MzSTools:
         # connect to layer nameChanged signal to warn the user when renaming required layers
         # TODO: find a better way to protect required layers and stop relying on layer names
         # use layer IDs and/or the underlying database table instead
-        for layer in QgsProject.instance().requiredLayers():
-            layer.nameChanged.disconnect()
-            layer.nameChanged.connect(self.warning_layer_renamed)
+        # for layer in QgsProject.instance().requiredLayers():
+        #     layer.nameChanged.disconnect()
+        #     layer.nameChanged.connect(self.warning_layer_renamed)
 
         # get qgis version, warn the user if it's less than SUGGESTED_QGIS_VERSION
         qgis_version = Qgis.version()
@@ -414,15 +414,15 @@ class MzSTools:
                 ),
             )
 
-    def warning_layer_renamed(self):
-        """Function to handle the nameChanged signal for required layers."""
-        QMessageBox.warning(
-            None,
-            self.tr("Warning"),
-            self.tr(
-                "It is not possible at the moment to rename a required MzS Tools layer! Please revert the name to avoid possible issues."
-            ),
-        )
+    # def warning_layer_renamed(self):
+    #     """Function to handle the nameChanged signal for required layers."""
+    #     QMessageBox.warning(
+    #         None,
+    #         self.tr("Warning"),
+    #         self.tr(
+    #             "It is not possible at the moment to rename a required MzS Tools layer! Please revert the name to avoid possible issues."
+    #         ),
+    #     )
 
     def connect_editing_signals(self):
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
@@ -436,22 +436,20 @@ class MzSTools:
                         self.reset_editing_config,
                     )
         # test for setting the ui form with qgis.core.QgsEditFormConfig.setUiForm
-        for table_name, layer_id in self.prj_manager.required_layer_map.items():
-            layer_data = self.prj_manager.DEFAULT_EDITING_LAYERS.get(table_name)
-            if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
-                layer = self.prj_manager.current_project.mapLayer(layer_id)
-                if layer:
-                    layer.editingStarted.connect(partial(self.set_ui_file, layer, table_name))
 
-    #         if layer.name() == "Zone instabili liv 1":
-    #             layer.editingStarted.connect(partial(self.set_ui_file, layer, "instab_l1.ui"))
+    #     for table_name, layer_id in self.prj_manager.required_layer_map.items():
+    #         layer_data = self.prj_manager.DEFAULT_EDITING_LAYERS.get(table_name)
+    #         if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
+    #             layer = self.prj_manager.current_project.mapLayer(layer_id)
+    #             if layer:
+    #                 layer.editingStarted.connect(partial(self.set_ui_file, layer, table_name))
 
-    def set_ui_file(self, layer: QgsVectorLayer, table_name: str):
-        form_config = layer.editFormConfig()
-        ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
-        self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
-        form_config.setUiForm(str(ui_path))
-        layer.setEditFormConfig(form_config)
+    # def set_ui_file(self, layer: QgsVectorLayer, table_name: str):
+    #     form_config = layer.editFormConfig()
+    #     ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
+    #     self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
+    #     form_config.setUiForm(str(ui_path))
+    #     layer.setEditFormConfig(form_config)
 
     def disconnect_editing_signals(self):
         """Disconnect specific editing signals."""

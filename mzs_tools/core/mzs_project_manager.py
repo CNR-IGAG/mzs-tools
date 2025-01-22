@@ -562,10 +562,12 @@ class MzSProjectManager:
         self.comune_data: ComuneData = None
         self.project_metadata = None
 
-        self.required_layer_map = {}
+        self.required_layer_registry = {}
 
         self.project_issues = {
-            "layer_issues": [],
+            "general": [],
+            "layers": [],
+            "db": [],
         }
 
         self.is_mzs_project: bool = False
@@ -578,10 +580,11 @@ class MzSProjectManager:
         db_path = project_path / "db" / "indagini.sqlite"
         version_file_path = project_path / "progetto" / "versione.txt"
 
+        # TODO: better project detection
         if project_file_name != "progetto_MS" or not db_path.exists() or not version_file_path.exists():
             self.log("No MzS Tools project detected", log_level=4)
-            self.is_mzs_project = False
             return False
+        self.is_mzs_project = True
 
         self.project_path = project_path
         self.db_path = db_path
@@ -600,7 +603,7 @@ class MzSProjectManager:
                 self.project_version = f.read().strip()
         except Exception as e:
             self.log(f"Error reading project version: {e}", log_level=2)
-            self.project_issues["version"] = "Error reading project version"
+            self.project_issues["general"].append("Error reading project version file")
 
         if self.project_version and self.project_version < __base_version__:
             self.log(
@@ -615,20 +618,36 @@ class MzSProjectManager:
         self.comune_data = self.get_project_comune_data()
         if not self.comune_data:
             self.log("Error reading comune data from project db", log_level=2)
-            self.project_issues["comune"] = "Error reading comune data from project db"
+            self.project_issues["db"].append("Error reading comune data from project db")
 
         # TODO: load metadata from db if exists
         # self.sm_project_metadata = self.get_sm_project_metadata()
 
-        self.is_mzs_project = True
+        # check project structure
+        self._check_project_structure()
+
         self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
 
-        # TEST!
+        # TODO: report issues, if any
+
+    def _check_project_structure(self):
+        # TODO: general project health check
+        self.required_layer_registry = self._build_required_layers_registry()
+
+        # check if ui form files are present and set paths if needed
+        # eg. when opening project on different os or qgis installation type
+        for table_name, layer_id in self.required_layer_registry.items():
+            layer_data = MzSProjectManager.DEFAULT_EDITING_LAYERS.get(table_name)
+            if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
+                layer = self.current_project.mapLayer(layer_id)
+                if layer:
+                    self._set_form_ui_file(layer, table_name)
+
         # self.check_project_custom_layer_properties()
 
-        self.required_layer_map = self._build_required_layers_registry()
-
-        return True
+        # check relations
+        if not self._check_default_project_relations():
+            self._add_default_project_relations()
 
     def _setup_db_connection(self):
         # setup db connection
@@ -638,7 +657,7 @@ class MzSProjectManager:
             if self.db_path.stat().st_size == 0:
                 err_msg = self.tr(f"The database file is empty! {self.db_path}")
                 self.log(err_msg, log_level=2, push=True, duration=0)
-                self.project_issues["db"] = "Empty database file"
+                self.project_issues["db"].append("Empty database file")
                 self.cleanup_db_connection()
                 return False
 
@@ -710,6 +729,23 @@ class MzSProjectManager:
                     table_layer_map[table_name] = layer_id
 
         return table_layer_map
+
+    def _set_form_ui_file(self, layer: QgsVectorLayer, table_name: str):
+        form_config = layer.editFormConfig()
+        current_ui_path = form_config.uiForm()
+        if not current_ui_path:
+            return False
+        # check if the file exists
+        current_ui_path = Path(current_ui_path)
+        if not current_ui_path.exists():
+            ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
+            self.log(
+                f"UI form file '{current_ui_path}' for layer {layer.name()} does not exist. Setting new file: '{ui_path}'",
+                log_level=1,
+            )
+            form_config.setUiForm(str(ui_path.absolute()))
+            layer.setEditFormConfig(form_config)
+        return True
 
     @staticmethod
     def set_project_layer_capabilities(
@@ -785,6 +821,9 @@ class MzSProjectManager:
             add_editing_layers (bool, optional): Add the default editing layers. Defaults to True.
             add_layout_groups (bool, optional): Add the default layout layers. Defaults to True.
         """
+        # TODO: group names translation
+        if not add_base_layers and not add_editing_layers and not add_layout_groups:
+            return
         if add_base_layers:
             self._cleanup_base_layers()
             self._add_default_layer_group(
@@ -800,6 +839,14 @@ class MzSProjectManager:
             )
             self._add_default_value_relations(MzSProjectManager.DEFAULT_EDITING_LAYERS)
             self._add_default_project_relations()
+
+        # remove empty groups from root
+        empty_groups = [group for group in self.current_project.layerTreeRoot().children() if group.children() == []]
+        for group in empty_groups:
+            self.current_project.layerTreeRoot().removeChildNode(group)
+
+        # check project structure
+        self._check_project_structure()
 
     def _add_default_layer_group(self, group_dict: dict, group_name: str, custom_properties: dict = {}):
         # TODO: the custom properties should already be in the .qlr files
@@ -927,46 +974,67 @@ class MzSProjectManager:
                 "AllowNull": relation_data.get("allow_null", False),
             },
         )
-
         layer.setEditorWidgetSetup(layer.fields().indexOf(field_name), setup)
+
+    def _check_default_project_relations(self):
+        rel_manager = self.current_project.relationManager()
+        for relation_name, relation_data in MzSProjectManager.DEFAULT_RELATIONS.items():
+            rels = rel_manager.relationsByName(relation_name)
+            if not rels:
+                self.log(f"Error: relation '{relation_name}' not found", log_level=2)
+                return False
+            if not rels[0].isValid():
+                self.log(f"Error: relation '{relation_name}' is not valid: {rels[0].validationError()}", log_level=2)
+                return False
+
+            parent_layer_id = self.find_layer_by_table_name_role(relation_data["parent"], "editing")
+            child_layer_id = self.find_layer_by_table_name_role(relation_data["child"], "editing")
+            if not parent_layer_id or not child_layer_id:
+                self.log(f"Error: relation '{relation_name}' parent or child layer not found", log_level=2)
+                return False
+            if rels[0].referencedLayerId() != parent_layer_id:
+                self.log(f"Error: relation '{relation_name}' parent layer is not set correctly", log_level=2)
+                return False
+            if rels[0].referencingLayerId() != child_layer_id:
+                self.log(f"Error: relation '{relation_name}' child layer is not set correctly", log_level=2)
+                return False
+
+        return True
 
     def _add_default_project_relations(self):
         # if the relations dict is not empty, return
+        # rel_manager = self.current_project.relationManager()
+        # if rel_manager.relations():
+        #     # rel_manager.clear()
+        #     self.log("Project already has relations, skipping...", log_level=4)
+        #     return
+
+        # if self._check_default_project_relations():
+        #     self.log("Project relations are already set correctly, skipping...", log_level=4)
+        #     return
+
         rel_manager = self.current_project.relationManager()
-        if rel_manager.relations():
-            # rel_manager.clear()
-            self.log("Project already has relations, skipping...", log_level=4)
-            return
 
         for relation_name, relation_data in MzSProjectManager.DEFAULT_RELATIONS.items():
-            parent_layers = self.find_layers_by_table_name(relation_data["parent"])
-            child_layers = self.find_layers_by_table_name(relation_data["child"])
-            if len(parent_layers) == 0 or len(child_layers) == 0:
-                self.log(
-                    f"Error adding value relations: parent or child layer not found for relation '{relation_name}'",
-                    log_level=2,
-                )
+            parent_layer_id = self.find_layer_by_table_name_role(relation_data["parent"], "editing")
+            child_layer_id = self.find_layer_by_table_name_role(relation_data["child"], "editing")
+            if not parent_layer_id or not child_layer_id:
+                msg = f"Error adding relations: parent or child layer not found for relation '{relation_name}'"
+                self.log(msg, log_level=2)
+                self.project_issues["layers"].append(msg)
                 continue
-
-            for layer in parent_layers:
-                # TODO: use only the custom property
-                if layer and (layer.customProperty("mzs_tools/layer_role") == "editing" or not layer.readOnly()):
-                    parent_layer = layer
-
-            for layer in child_layers:
-                # TODO: use only the custom property
-                if layer and (layer.customProperty("mzs_tools/layer_role") == "editing" or not layer.readOnly()):
-                    child_layer = layer
 
             rel = QgsRelation()
             rel.setId(relation_name)
             rel.setName(relation_name)
-            rel.setReferencedLayer(parent_layer.id())
-            rel.setReferencingLayer(child_layer.id())
+            rel.setReferencedLayer(parent_layer_id)
+            rel.setReferencingLayer(child_layer_id)
             rel.addFieldPair(relation_data["parent_key"], relation_data["child_key"])
 
             if not rel.isValid():
-                self.log(f"Error creating relation '{relation_name}': {rel.validationError()}", log_level=2)
+                msg = f"Error creating relation '{relation_name}': {rel.validationError()}"
+                self.log(msg, log_level=2)
+                self.project_issues["layers"].append(msg)
                 continue
 
             rel_manager.addRelation(rel)
@@ -1000,9 +1068,18 @@ class MzSProjectManager:
 
     def _cleanup_base_layers(self):
         self.log("Cleaning up base layers...", log_level=4)
-        for table_name in MzSProjectManager.DEFAULT_BASE_LAYERS.keys():
+        for table_name, layer_data in MzSProjectManager.DEFAULT_BASE_LAYERS.items():
+            if layer_data["type"] == "service_group":
+                group = self.current_project.layerTreeRoot().findGroup(layer_data["layer_name"])
+                if group:
+                    self.log(f"Removing group '{table_name}'", log_level=4)
+                    parent_node = group.parent()
+                    parent_node.removeChildNode(group)
+                continue
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
+                # To remove old layers without the custom property, the "required" flag could be used.
+                # However, this is not necessary if the projects are cleared on update to 2.0.0
                 if layer and layer.customProperty("mzs_tools/layer_role") == "base":
                     self.log(f"Removing layer '{layer.name()}' (table: '{table_name}')", log_level=4)
                     layer_node = self.current_project.layerTreeRoot().findLayer(layer.id())
@@ -1034,8 +1111,7 @@ class MzSProjectManager:
         for table_name in MzSProjectManager.DEFAULT_EDITING_LAYERS.keys():
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
-                # TODO: use only the custom property
-                if layer and (layer.customProperty("mzs_tools/layer_role") == "editing" or not layer.readOnly()):
+                if layer and layer.customProperty("mzs_tools/layer_role") == "editing":
                     self.log(f"Removing layer '{layer.name()}' (table: '{table_name}')", log_level=4)
                     layer_node = self.current_project.layerTreeRoot().findLayer(layer.id())
                     parent_node = None
@@ -1050,8 +1126,7 @@ class MzSProjectManager:
         for table_name in MzSProjectManager.DEFAULT_TABLE_LAYERS_NAMES:
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
-                # TODO: use layer.customProperty("mzs_tools/layer_role") == "editing"
-                if layer and type(layer) is QgsVectorLayer:
+                if layer and layer.customProperty("mzs_tools/layer_role") == "editing":
                     self.log(f"Removing layer '{layer.name()}' (table: '{table_name}')", log_level=4)
                     layer_node = self.current_project.layerTreeRoot().findLayer(layer.id())
                     parent_node = None
@@ -1108,12 +1183,12 @@ class MzSProjectManager:
         if not valid_layers:
             msg = f"No '{role}' layers found for table '{table_name}'"
             self.log(msg, log_level=2)
-            self.project_issues["layer_issues"].append(msg)
+            self.project_issues["layers"].append(msg)
             return None
         if len(valid_layers) > 1:
             msg = f"Multiple {role} layers found for table '{table_name}'"
             self.log(msg, log_level=2)
-            self.project_issues["layer_issues"].append(msg)
+            self.project_issues["layers"].append(msg)
             return None
         return valid_layers[0].id()
 

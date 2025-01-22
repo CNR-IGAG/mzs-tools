@@ -28,7 +28,7 @@ def sito_puntuale_form_init(dialog, layer, feature):
     # help_button = dialog.findChild(QPushButton, "help_button")
 
     # nome_layer(tab, layer)
-    # tab.setTabEnabled(1, feature.id() > 0)
+    tab.setTabEnabled(1, feature.id() > 0)
     MzSToolsLogger.log("Sito puntuale form init")
 
     # data_sito.setDate(today)
@@ -74,14 +74,16 @@ def indagini_puntuali_form_init(dialog, layer, feature):
     prof_bot = dialog.findChild(QLineEdit, "prof_bot")
     quota_slm_top = dialog.findChild(QLineEdit, "quota_slm_top")
     quota_slm_bot = dialog.findChild(QLineEdit, "quota_slm_bot")
-    buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
+    # buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
     today = QDate.currentDate()
     tab = dialog.findChild(QTabWidget, "tabWidget")
-    help_button = dialog.findChild(QPushButton, "help_button")
+    # help_button = dialog.findChild(QPushButton, "help_button")
+
+    # tipo_ind.setText(None)
 
     nome_layer(tab, layer)
     data_ind.setDate(today)
-    buttonBox.setEnabled(False)
+    # buttonBox.setEnabled(False)
 
     pkey_spu.setText(id_spu.currentText().split("P")[-1])
     id_spu.currentIndexChanged.connect(partial(update_pkey, id_spu, pkey_spu, "P"))
@@ -89,9 +91,9 @@ def indagini_puntuali_form_init(dialog, layer, feature):
     classe_ind.currentIndexChanged.connect(partial(update_box_ind, classe_ind, tipo_ind_box, codici_indagini))
     tipo_ind_box.currentIndexChanged.connect(partial(update_tipo_ind_p, tipo_ind, tipo_ind_box))
     button_doc.clicked.connect(partial(select_output_file, button_doc, doc_ind))
-    tipo_ind_box.currentIndexChanged.connect(partial(disableButton_p, tipo_ind_box, classe_ind, id_spu, buttonBox))
-    classe_ind.currentIndexChanged.connect(partial(disableButton_p, tipo_ind_box, classe_ind, id_spu, buttonBox))
-    id_spu.currentIndexChanged.connect(partial(disableButton_p, tipo_ind_box, classe_ind, id_spu, buttonBox))
+    # tipo_ind_box.currentIndexChanged.connect(partial(disableButton_p, tipo_ind_box, classe_ind, id_spu, buttonBox))
+    # classe_ind.currentIndexChanged.connect(partial(disableButton_p, tipo_ind_box, classe_ind, id_spu, buttonBox))
+    # id_spu.currentIndexChanged.connect(partial(disableButton_p, tipo_ind_box, classe_ind, id_spu, buttonBox))
     prof_top.textEdited.connect(partial(update_valore, prof_top))
     prof_bot.textEdited.connect(partial(update_valore, prof_bot))
     quota_slm_top.textEdited.connect(partial(update_valore_slm, quota_slm_top))
@@ -101,7 +103,7 @@ def indagini_puntuali_form_init(dialog, layer, feature):
     quota_slm_top.editingFinished.connect(partial(alert_spessore, quota_slm_bot, quota_slm_top, 1))
     quota_slm_bot.editingFinished.connect(partial(alert_spessore, quota_slm_bot, quota_slm_top, 1))
     id_indpu.textChanged.connect(partial(update_name_combobox, layer, tipo_ind_box, tipo_ind, codici_indagini))
-    help_button.clicked.connect(lambda: webbrowser.open("https://www.youtube.com/watch?v=aP2buSJk8iE&t=5s"))
+    # help_button.clicked.connect(lambda: webbrowser.open("https://www.youtube.com/watch?v=aP2buSJk8iE&t=5s"))
 
 
 def indagini_lineari_form_init(dialog, layer, feature):
@@ -119,7 +121,7 @@ def indagini_lineari_form_init(dialog, layer, feature):
     buttonBox = dialog.findChild(QDialogButtonBox, "buttonBox")
     today = QDate.currentDate()
     tab = dialog.findChild(QTabWidget, "tabWidget")
-    help_button = dialog.findChild(QPushButton, "help_button")
+    # help_button = dialog.findChild(QPushButton, "help_button")
 
     nome_layer(tab, layer)
     data_ind.setDate(today)
@@ -142,7 +144,7 @@ def indagini_lineari_form_init(dialog, layer, feature):
     button_doc.clicked.connect(partial(select_output_file, button_doc, doc_ind))
     doc_ind.textChanged.connect(partial(document, doc_ind, buttonBox))
     id_indln.textChanged.connect(partial(update_name_combobox, layer, tipo_ind_box, tipo_ind, codici_indagini))
-    help_button.clicked.connect(lambda: webbrowser.open("https://www.youtube.com/watch?v=aP2buSJk8iE&t=5s"))
+    # help_button.clicked.connect(lambda: webbrowser.open("https://www.youtube.com/watch?v=aP2buSJk8iE&t=5s"))
 
 
 def parametri_puntuali_form_init(dialog, layer, feature):
@@ -163,7 +165,7 @@ def parametri_puntuali_form_init(dialog, layer, feature):
     today = QDate.currentDate()
     simbolo_val = dialog.findChild(QLabel, "simbolo_val")
     tab = dialog.findChild(QTabWidget, "tabWidget")
-    help_button = dialog.findChild(QPushButton, "help_button")
+    # help_button = dialog.findChild(QPushButton, "help_button")
 
     nome_layer(tab, layer)
     valore.setEnabled(False)
@@ -209,7 +211,7 @@ def parametri_puntuali_form_init(dialog, layer, feature):
     tipo_parpu_box.currentIndexChanged.connect(
         partial(update_name_combobox, layer, tipo_parpu_box, tipo_parpu, codici_parametri)
     )
-    help_button.clicked.connect(lambda: webbrowser.open("https://www.youtube.com/watch?v=-tjezNh1m1A&t=1s"))
+    # help_button.clicked.connect(lambda: webbrowser.open("https://www.youtube.com/watch?v=-tjezNh1m1A&t=1s"))
 
 
 def parametri_lineari_form_init(dialog, layer, feature):
