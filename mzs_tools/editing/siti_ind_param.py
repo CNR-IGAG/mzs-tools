@@ -3,7 +3,8 @@ import re
 import webbrowser
 from functools import partial
 
-from qgis.core import QgsFeatureRequest, QgsProject
+from mzs_tools.core.mzs_project_manager import MzSProjectManager
+from qgis.core import QgsFeatureRequest, QgsProject, QgsFieldConstraints, QgsEditorWidgetSetup
 from qgis.PyQt.QtCore import QDate
 from qgis.PyQt.QtWidgets import (
     QComboBox,
@@ -18,6 +19,48 @@ from qgis.PyQt.QtWidgets import (
     QTextEdit,
 )
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
+
+
+def change_editor_widget(form, layer, feature):
+    prj_manager = MzSProjectManager.instance()
+    relation_table_layer_id = prj_manager.find_layer_by_table_name_role("vw_tipo_gt", "editing")
+    if feature.attributeMap():
+        if feature["tipo_parpu"] == "L":
+            setup = QgsEditorWidgetSetup(
+                "ValueRelation",
+                {
+                    "Layer": relation_table_layer_id,
+                    "Key": "cod",
+                    "Value": "descrizione",
+                    "OrderByValue": False,
+                    "AllowNull": False,
+                },
+            )
+            # layer.removeFieldConstraint(layer.fields().indexOf("valore"), QgsFieldConstraints.ConstraintExpression)
+            layer.setConstraintExpression(
+                layer.fields().indexOf("valore"),
+                "",
+            )
+        else:
+            setup = QgsEditorWidgetSetup(
+                "TextEdit",
+                {"DefaultValue": ""},
+            )
+            # constraint = QgsFieldConstraints()
+            # constraint.setConstraintExpression(
+            #     "regexp_match(\"valore\",'^([1-9]\\d*|0)(\\.\\d+)?$')",
+            #     "Inserire un valore numerico utilizzando il punto per separare i decimali",
+            # )
+            # layer.fields().field("valore").setConstraints(constraint)
+            layer.setFieldConstraint(layer.fields().indexOf("valore"), QgsFieldConstraints.ConstraintExpression)
+            val = '"valore"'
+            regex = r"'^([1-9]\\d*|0)(\\.\\d+)?$'"
+            layer.setConstraintExpression(
+                layer.fields().indexOf("valore"),
+                f"regexp_match({val},{regex})",
+                "Inserire un valore numerico utilizzando il punto per separare i decimali",
+            )
+        layer.setEditorWidgetSetup(layer.fields().indexOf("valore"), setup)
 
 
 def sito_puntuale_form_init(dialog, layer, feature):

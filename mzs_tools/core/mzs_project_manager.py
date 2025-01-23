@@ -123,6 +123,13 @@ class MzSProjectManager:
                     "relation_value": "descrizione",
                     "order_by_value": True,
                 },
+                "tipo_ind": {
+                    "relation_table": "vw_tipo_ind_p",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "filter_expression": "cod_classe = current_value('classe_ind')",
+                },
             },
         },
         "parametri_puntuali": {
@@ -144,6 +151,13 @@ class MzSProjectManager:
                     "relation_key": "cod",
                     "relation_value": "descrizione",
                     "order_by_value": True,
+                },
+                "tipo_parpu": {
+                    "relation_table": "vw_param_p",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "filter_expression": r"cod_ind = regexp_replace(substr(current_value('id_indpu'), 9), '\\d+', '')",
                 },
             },
         },
@@ -636,12 +650,12 @@ class MzSProjectManager:
 
         # check if ui form files are present and set paths if needed
         # eg. when opening project on different os or qgis installation type
-        for table_name, layer_id in self.required_layer_registry.items():
-            layer_data = MzSProjectManager.DEFAULT_EDITING_LAYERS.get(table_name)
-            if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
-                layer = self.current_project.mapLayer(layer_id)
-                if layer:
-                    self._set_form_ui_file(layer, table_name)
+        # for table_name, layer_id in self.required_layer_registry.items():
+        #     layer_data = MzSProjectManager.DEFAULT_EDITING_LAYERS.get(table_name)
+        #     if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
+        #         layer = self.current_project.mapLayer(layer_id)
+        #         if layer:
+        #             self._set_form_ui_file(layer, table_name)
 
         # self.check_project_custom_layer_properties()
 
@@ -896,24 +910,24 @@ class MzSProjectManager:
                     # )
 
                     # TODO: set .ui files and editing functions for editing layers
-                    layer = layer_tree_layer.layer()
-                    if layer_data["role"] == "editing":
-                        form_config = layer.editFormConfig()
-                        # ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
-                        # self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
-                        # form_config.setUiForm(str(ui_path))
+                    # layer = layer_tree_layer.layer()
+                    # if layer_data["role"] == "editing":
+                    #     form_config = layer.editFormConfig()
+                    #     # ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
+                    #     # self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
+                    #     # form_config.setUiForm(str(ui_path))
 
-                        try:
-                            # QGIS >= 3.32
-                            form_config.setInitCodeSource(Qgis.AttributeFormPythonInitCodeSource.Dialog)
-                        except:
-                            # QGIS < 3.32
-                            form_config.setInitCodeSource(QgsEditFormConfig.CodeSourceDialog)
+                    #     try:
+                    #         # QGIS >= 3.32
+                    #         form_config.setInitCodeSource(Qgis.AttributeFormPythonInitCodeSource.Dialog)
+                    #     except:
+                    #         # QGIS < 3.32
+                    #         form_config.setInitCodeSource(QgsEditFormConfig.CodeSourceDialog)
 
-                        form_config.setInitFunction(f"{table_name}_form_init")
-                        form_config.setInitCode(f"from mzs_tools import {table_name}_form_init")
+                    #     form_config.setInitFunction(f"{table_name}_form_init")
+                    #     form_config.setInitCode(f"from mzs_tools import {table_name}_form_init")
 
-                        layer.setEditFormConfig(form_config)
+                    #     layer.setEditFormConfig(form_config)
 
                     # set subset string if needed
                     if "subset_string" in layer_data and layer_data["subset_string"] is not None:
@@ -972,6 +986,7 @@ class MzSProjectManager:
                 "Value": relation_data["relation_value"],
                 "OrderByValue": relation_data.get("order_by_value", False),
                 "AllowNull": relation_data.get("allow_null", False),
+                "FilterExpression": relation_data.get("filter_expression", ""),
             },
         )
         layer.setEditorWidgetSetup(layer.fields().indexOf(field_name), setup)

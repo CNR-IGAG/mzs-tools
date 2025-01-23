@@ -22,6 +22,7 @@ from .editing.instab_geotec import instab_geotec_form_init
 from .editing.instab_l1 import instab_l1_form_init
 from .editing.instab_l23 import instab_l23_form_init
 from .editing.siti_ind_param import (
+    change_editor_widget,
     curve_form_init,
     hvsr_form_init,
     indagini_lineari_form_init,
