@@ -9,27 +9,26 @@ from sqlite3 import Connection
 from typing import Optional
 
 from qgis.core import (
+    Qgis,
     QgsCoordinateReferenceSystem,
+    QgsEditFormConfig,
     QgsEditorWidgetSetup,
     QgsLayerDefinition,
     QgsLayerTreeGroup,
     QgsMapLayer,
     QgsPrintLayout,
     QgsProject,
+    QgsReadWriteContext,
     QgsRelation,
     QgsVectorLayer,
-    QgsReadWriteContext,
-    Qgis,
-    QgsEditFormConfig,
 )
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.utils import iface, spatialite_connect
 from qgis.PyQt.QtXml import QDomDocument
+from qgis.utils import iface, spatialite_connect
 
 from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
-
-from ..plugin_utils.misc import save_map_image
+from mzs_tools.plugin_utils.misc import save_map_image
 
 
 @dataclass
@@ -87,7 +86,6 @@ class MzSProjectManager:
             "layer_name": "Siti puntuali",
             "group": "Indagini",
             "qlr_path": "siti_puntuali.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "mod_identcoord": {
                     "relation_table": "vw_mod_identcoord",
@@ -109,7 +107,6 @@ class MzSProjectManager:
             "layer_name": "Indagini puntuali",
             "group": "Indagini",
             "qlr_path": "indagini_puntuali.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "id_spu": {
                     "relation_table": "sito_puntuale",
@@ -138,7 +135,6 @@ class MzSProjectManager:
             "layer_name": "Parametri puntuali",
             "group": "Indagini",
             "qlr_path": "parametri_puntuali.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "id_indpu": {
                     "relation_table": "indagini_puntuali",
@@ -167,7 +163,6 @@ class MzSProjectManager:
             "layer_name": "Curve di riferimento",
             "group": "Indagini",
             "qlr_path": "curve.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "id_parpu": {
                     "relation_table": "parametri_puntuali",
@@ -183,7 +178,6 @@ class MzSProjectManager:
             "layer_name": "Indagine stazione singola (HVSR)",
             "group": "Indagini",
             "qlr_path": "hvsr.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "id_indpu": {
                     "relation_table": "indagini_puntuali",
@@ -212,7 +206,6 @@ class MzSProjectManager:
             "layer_name": "Siti lineari",
             "group": "Indagini",
             "qlr_path": "siti_lineari.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "mod_identcoord": {
                     "relation_table": "vw_mod_identcoord",
@@ -228,7 +221,6 @@ class MzSProjectManager:
             "layer_name": "Indagini lineari",
             "group": "Indagini",
             "qlr_path": "indagini_lineari.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "id_sln": {
                     "relation_table": "sito_lineare",
@@ -242,6 +234,13 @@ class MzSProjectManager:
                     "relation_value": "descrizione",
                     "order_by_value": True,
                 },
+                "tipo_ind": {
+                    "relation_table": "vw_tipo_ind_l",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "filter_expression": "cod_classe = current_value('classe_ind')",
+                },
             },
         },
         "parametri_lineari": {
@@ -250,7 +249,6 @@ class MzSProjectManager:
             "layer_name": "Parametri lineari",
             "group": "Indagini",
             "qlr_path": "parametri_lineari.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "id_indln": {
                     "relation_table": "indagini_lineari",
@@ -264,6 +262,13 @@ class MzSProjectManager:
                     "relation_value": "descrizione",
                     "order_by_value": True,
                 },
+                "tipo_parpu": {
+                    "relation_table": "vw_param_l",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "filter_expression": r"cod_ind = regexp_replace(substr(current_value('id_indln'), 9), '\\d+', '')",
+                },
             },
         },
         "isosub_l23": {
@@ -272,7 +277,6 @@ class MzSProjectManager:
             "layer_name": "Isobate liv 2-3",
             "group": "MS livello 2-3",
             "qlr_path": "isosub_l23.qlr",
-            "custom_editing_form": True,
         },
         "instab_l23": {
             "role": "editing",
@@ -324,7 +328,6 @@ class MzSProjectManager:
             "layer_name": "Isobate liv 1",
             "group": "MS livello 1",
             "qlr_path": "isosub_l1.qlr",
-            "custom_editing_form": True,
         },
         "instab_l1": {
             "role": "editing",
@@ -364,7 +367,6 @@ class MzSProjectManager:
             "layer_name": "Elementi geologici e idrogeologici puntuali",
             "group": "Geologico Tecnica",
             "qlr_path": "geoidr.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_gi": {
                     "relation_table": "vw_tipo_gi",
@@ -380,7 +382,6 @@ class MzSProjectManager:
             "layer_name": "Elementi puntuali",
             "group": "Geologico Tecnica",
             "qlr_path": "epuntuali.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_ep": {
                     "relation_table": "vw_tipo_ep",
@@ -396,7 +397,6 @@ class MzSProjectManager:
             "layer_name": "Elementi lineari",
             "group": "Geologico Tecnica",
             "qlr_path": "elineari.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_el": {
                     "relation_table": "vw_tipo_el",
@@ -412,7 +412,6 @@ class MzSProjectManager:
             "layer_name": "Forme",
             "group": "Geologico Tecnica",
             "qlr_path": "forme.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_f": {
                     "relation_table": "vw_tipo_f",
@@ -428,7 +427,13 @@ class MzSProjectManager:
             "layer_name": "Instabilita' di versante",
             "group": "Geologico Tecnica",
             "qlr_path": "instab_geotec.qlr",
-            "custom_editing_form": True,
+            "Tipo_i": {
+                "relation_table": "vw_cod_instab",
+                "relation_key": "cod",
+                "relation_value": "descrizione",
+                "order_by_value": True,
+                "filter_expression": r'"cod" NOT IN (3001,3002,3050,3051,3052,3053,3054,3055,3056,3060,3061,3062,3069,3070,3080,3081,3082,3090,3091,3092)',
+            },
         },
         "geotec": {
             "role": "editing",

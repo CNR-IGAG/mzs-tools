@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS mzs_tools_update_history (
 	notes TEXT
 );
 
+-- add column valore_appoggio to parametri_puntuali
+ALTER TABLE parametri_puntuali ADD COLUMN "valore_appoggio" TEXT;;
+
 -- elineari triggers
 DROP TRIGGER IF EXISTS ins_data_elineari;;
 DROP TRIGGER IF EXISTS upd_data_elineari;;
@@ -530,7 +533,12 @@ FOR EACH ROW
 BEGIN 
 UPDATE parametri_puntuali 
 SET "id_parpu" = "id_indpu" || "tipo_parpu" || "pkuid",
-    "spessore" = "prof_bot" - "prof_top"
+    "spessore" = "prof_bot" - "prof_top",
+	"valore" = CASE 
+				WHEN "valore_appoggio" IS NOT NULL
+					THEN "valore_appoggio"
+					ELSE "valore"
+			    END
 WHERE pkuid = NEW.pkuid; 
 END;;
 
@@ -540,7 +548,12 @@ FOR EACH ROW
 BEGIN 
 UPDATE parametri_puntuali 
 SET "id_parpu" = "id_indpu" || "tipo_parpu" || "pkuid",
-    "spessore" = "prof_bot" - "prof_top"
+    "spessore" = "prof_bot" - "prof_top",
+	"valore" = CASE 
+				WHEN "valore_appoggio" IS NOT NULL
+					THEN "valore_appoggio"
+					ELSE "valore"
+			    END
 WHERE pkuid = NEW.pkuid; 
 END;;
 

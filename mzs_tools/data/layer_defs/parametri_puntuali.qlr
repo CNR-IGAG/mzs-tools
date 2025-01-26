@@ -1,20 +1,20 @@
 <!DOCTYPE qgis-layer-definition>
 <qlr>
-  <layer-tree-group checked="Qt::Checked" expanded="1" groupLayer="" name="">
+  <layer-tree-group checked="Qt::Checked" name="" expanded="1" groupLayer="">
     <customproperties>
       <Option/>
     </customproperties>
-    <layer-tree-layer checked="Qt::Unchecked" expanded="1" id="Parametri_puntuali_3cc209ce_aef6_464a_83b5_5e6af5caef76" source="dbname='./db/indagini.sqlite' table=&quot;parametri_puntuali&quot;" legend_split_behavior="0" legend_exp="" patch_size="0,0" name="Parametri puntuali" providerKey="spatialite">
+    <layer-tree-layer source="dbname='./db/indagini.sqlite' table=&quot;parametri_puntuali&quot;" legend_exp="" checked="Qt::Unchecked" providerKey="spatialite" name="Parametri puntuali" id="Parametri_puntuali_bd95f420_74f0_4231_87c8_38333ab908a2" expanded="1" legend_split_behavior="0" patch_size="0,0">
       <customproperties>
         <Option type="Map">
-          <Option name="cached_name" type="QString" value="Parametri puntuali"/>
+          <Option type="QString" name="cached_name" value="Parametri puntuali"/>
         </Option>
       </customproperties>
     </layer-tree-layer>
   </layer-tree-group>
   <maplayers>
-    <maplayer wkbType="NoGeometry" maxScale="0" readOnly="0" autoRefreshMode="Disabled" styleCategories="AllStyleCategories" legendPlaceholderImage="" minScale="1e+08" hasScaleBasedVisibilityFlag="0" autoRefreshTime="0" refreshOnNotifyMessage="" refreshOnNotifyEnabled="0" type="vector" geometry="No geometry">
-      <id>Parametri_puntuali_3cc209ce_aef6_464a_83b5_5e6af5caef76</id>
+    <maplayer type="vector" maxScale="0" autoRefreshMode="Disabled" geometry="No geometry" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="0" refreshOnNotifyMessage="" readOnly="0" wkbType="NoGeometry" legendPlaceholderImage="" minScale="1e+08" autoRefreshTime="0" refreshOnNotifyEnabled="0">
+      <id>Parametri_puntuali_bd95f420_74f0_4231_87c8_38333ab908a2</id>
       <datasource>dbname='./db/indagini.sqlite' table="parametri_puntuali"</datasource>
       <keywordList>
         <value></value>
@@ -22,7 +22,7 @@
       <layername>Parametri puntuali</layername>
       <srs>
         <spatialrefsys nativeFormat="Wkt">
-          <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
+          <wkt>GEOGCRS["WGS 84",ENSEMBLE["World Geodetic System 1984 ensemble",MEMBER["World Geodetic System 1984 (Transit)"],MEMBER["World Geodetic System 1984 (G730)"],MEMBER["World Geodetic System 1984 (G873)"],MEMBER["World Geodetic System 1984 (G1150)"],MEMBER["World Geodetic System 1984 (G1674)"],MEMBER["World Geodetic System 1984 (G1762)"],MEMBER["World Geodetic System 1984 (G2139)"],MEMBER["World Geodetic System 1984 (G2296)"],ELLIPSOID["WGS 84",6378137,298.257223563,LENGTHUNIT["metre",1]],ENSEMBLEACCURACY[2.0]],PRIMEM["Greenwich",0,ANGLEUNIT["degree",0.0174532925199433]],CS[ellipsoidal,2],AXIS["geodetic latitude (Lat)",north,ORDER[1],ANGLEUNIT["degree",0.0174532925199433]],AXIS["geodetic longitude (Lon)",east,ORDER[2],ANGLEUNIT["degree",0.0174532925199433]],USAGE[SCOPE["Horizontal component of 3D system."],AREA["World."],BBOX[-90,-180,90,180]],ID["EPSG",4326]]</wkt>
           <proj4>+proj=longlat +datum=WGS84 +no_defs</proj4>
           <srsid>3452</srsid>
           <srid>4326</srid>
@@ -67,7 +67,7 @@
           </spatialrefsys>
         </crs>
         <extent>
-          <spatial crs="" maxx="-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368" miny="179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368" minz="0" dimensions="2" maxy="-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368" maxz="0" minx="179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368"/>
+          <spatial minx="179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368" crs="" dimensions="2" maxz="0" minz="0" maxy="-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368" miny="179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368" maxx="-179769313486231570814527423731704356798070567525844996598917476803157260780028538760589558632766878171540458953514382464234321326889464182768467546703537516986049910576551282076245490090389328944075868508455133942304583236903222948165808559332123348274797826204144723168738177180919299881250404026184124858368"/>
           <temporal>
             <period>
               <start></start>
@@ -92,138 +92,138 @@
         <Searchable>1</Searchable>
         <Private>0</Private>
       </flags>
-      <temporal endField="" enabled="0" durationField="pkuid" limitMode="0" endExpression="" fixedDuration="0" accumulate="0" durationUnit="min" startExpression="" startField="" mode="0">
+      <temporal limitMode="0" enabled="0" mode="0" endExpression="" fixedDuration="0" durationUnit="min" startField="" startExpression="" accumulate="0" endField="" durationField="pkuid">
         <fixedRange>
           <start></start>
           <end></end>
         </fixedRange>
       </temporal>
-      <elevation zscale="1" extrusionEnabled="0" symbology="Line" showMarkerSymbolInSurfacePlots="0" respectLayerSymbol="1" zoffset="0" extrusion="0" binding="Centroid" clamping="Terrain" type="IndividualFeatures">
+      <elevation type="IndividualFeatures" clamping="Terrain" extrusionEnabled="0" zoffset="0" extrusion="0" binding="Centroid" symbology="Line" respectLayerSymbol="1" showMarkerSymbolInSurfacePlots="0" zscale="1">
         <data-defined-properties>
           <Option type="Map">
-            <Option name="name" type="QString" value=""/>
+            <Option type="QString" name="name" value=""/>
             <Option name="properties"/>
-            <Option name="type" type="QString" value="collection"/>
+            <Option type="QString" name="type" value="collection"/>
           </Option>
         </data-defined-properties>
         <profileLineSymbol>
-          <symbol force_rhr="0" is_animated="0" alpha="1" clip_to_extent="1" name="" type="line" frame_rate="10">
+          <symbol type="line" clip_to_extent="1" is_animated="0" alpha="1" name="" force_rhr="0" frame_rate="10">
             <data_defined_properties>
               <Option type="Map">
-                <Option name="name" type="QString" value=""/>
+                <Option type="QString" name="name" value=""/>
                 <Option name="properties"/>
-                <Option name="type" type="QString" value="collection"/>
+                <Option type="QString" name="type" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer enabled="1" class="SimpleLine" id="{2f90eb10-99e3-4e29-b588-cc4fa2aa9c53}" pass="0" locked="0">
+            <layer class="SimpleLine" locked="0" pass="0" enabled="1" id="{2f90eb10-99e3-4e29-b588-cc4fa2aa9c53}">
               <Option type="Map">
-                <Option name="align_dash_pattern" type="QString" value="0"/>
-                <Option name="capstyle" type="QString" value="square"/>
-                <Option name="customdash" type="QString" value="5;2"/>
-                <Option name="customdash_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="customdash_unit" type="QString" value="MM"/>
-                <Option name="dash_pattern_offset" type="QString" value="0"/>
-                <Option name="dash_pattern_offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="dash_pattern_offset_unit" type="QString" value="MM"/>
-                <Option name="draw_inside_polygon" type="QString" value="0"/>
-                <Option name="joinstyle" type="QString" value="bevel"/>
-                <Option name="line_color" type="QString" value="152,125,183,255"/>
-                <Option name="line_style" type="QString" value="solid"/>
-                <Option name="line_width" type="QString" value="0.6"/>
-                <Option name="line_width_unit" type="QString" value="MM"/>
-                <Option name="offset" type="QString" value="0"/>
-                <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="ring_filter" type="QString" value="0"/>
-                <Option name="trim_distance_end" type="QString" value="0"/>
-                <Option name="trim_distance_end_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="trim_distance_end_unit" type="QString" value="MM"/>
-                <Option name="trim_distance_start" type="QString" value="0"/>
-                <Option name="trim_distance_start_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="trim_distance_start_unit" type="QString" value="MM"/>
-                <Option name="tweak_dash_pattern_on_corners" type="QString" value="0"/>
-                <Option name="use_custom_dash" type="QString" value="0"/>
-                <Option name="width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="align_dash_pattern" value="0"/>
+                <Option type="QString" name="capstyle" value="square"/>
+                <Option type="QString" name="customdash" value="5;2"/>
+                <Option type="QString" name="customdash_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="customdash_unit" value="MM"/>
+                <Option type="QString" name="dash_pattern_offset" value="0"/>
+                <Option type="QString" name="dash_pattern_offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="dash_pattern_offset_unit" value="MM"/>
+                <Option type="QString" name="draw_inside_polygon" value="0"/>
+                <Option type="QString" name="joinstyle" value="bevel"/>
+                <Option type="QString" name="line_color" value="152,125,183,255,rgb:0.59607843137254901,0.49019607843137253,0.71764705882352942,1"/>
+                <Option type="QString" name="line_style" value="solid"/>
+                <Option type="QString" name="line_width" value="0.6"/>
+                <Option type="QString" name="line_width_unit" value="MM"/>
+                <Option type="QString" name="offset" value="0"/>
+                <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="offset_unit" value="MM"/>
+                <Option type="QString" name="ring_filter" value="0"/>
+                <Option type="QString" name="trim_distance_end" value="0"/>
+                <Option type="QString" name="trim_distance_end_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="trim_distance_end_unit" value="MM"/>
+                <Option type="QString" name="trim_distance_start" value="0"/>
+                <Option type="QString" name="trim_distance_start_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="trim_distance_start_unit" value="MM"/>
+                <Option type="QString" name="tweak_dash_pattern_on_corners" value="0"/>
+                <Option type="QString" name="use_custom_dash" value="0"/>
+                <Option type="QString" name="width_map_unit_scale" value="3x:0,0,0,0,0,0"/>
               </Option>
               <data_defined_properties>
                 <Option type="Map">
-                  <Option name="name" type="QString" value=""/>
+                  <Option type="QString" name="name" value=""/>
                   <Option name="properties"/>
-                  <Option name="type" type="QString" value="collection"/>
+                  <Option type="QString" name="type" value="collection"/>
                 </Option>
               </data_defined_properties>
             </layer>
           </symbol>
         </profileLineSymbol>
         <profileFillSymbol>
-          <symbol force_rhr="0" is_animated="0" alpha="1" clip_to_extent="1" name="" type="fill" frame_rate="10">
+          <symbol type="fill" clip_to_extent="1" is_animated="0" alpha="1" name="" force_rhr="0" frame_rate="10">
             <data_defined_properties>
               <Option type="Map">
-                <Option name="name" type="QString" value=""/>
+                <Option type="QString" name="name" value=""/>
                 <Option name="properties"/>
-                <Option name="type" type="QString" value="collection"/>
+                <Option type="QString" name="type" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer enabled="1" class="SimpleFill" id="{bdfc40de-51fc-4337-b5bb-ce9178d96c27}" pass="0" locked="0">
+            <layer class="SimpleFill" locked="0" pass="0" enabled="1" id="{bdfc40de-51fc-4337-b5bb-ce9178d96c27}">
               <Option type="Map">
-                <Option name="border_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="color" type="QString" value="152,125,183,255"/>
-                <Option name="joinstyle" type="QString" value="bevel"/>
-                <Option name="offset" type="QString" value="0,0"/>
-                <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="109,89,131,255"/>
-                <Option name="outline_style" type="QString" value="solid"/>
-                <Option name="outline_width" type="QString" value="0.2"/>
-                <Option name="outline_width_unit" type="QString" value="MM"/>
-                <Option name="style" type="QString" value="solid"/>
+                <Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="color" value="152,125,183,255,rgb:0.59607843137254901,0.49019607843137253,0.71764705882352942,1"/>
+                <Option type="QString" name="joinstyle" value="bevel"/>
+                <Option type="QString" name="offset" value="0,0"/>
+                <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="offset_unit" value="MM"/>
+                <Option type="QString" name="outline_color" value="109,89,131,255,rgb:0.42745098039215684,0.34901960784313724,0.51372549019607838,1"/>
+                <Option type="QString" name="outline_style" value="solid"/>
+                <Option type="QString" name="outline_width" value="0.2"/>
+                <Option type="QString" name="outline_width_unit" value="MM"/>
+                <Option type="QString" name="style" value="solid"/>
               </Option>
               <data_defined_properties>
                 <Option type="Map">
-                  <Option name="name" type="QString" value=""/>
+                  <Option type="QString" name="name" value=""/>
                   <Option name="properties"/>
-                  <Option name="type" type="QString" value="collection"/>
+                  <Option type="QString" name="type" value="collection"/>
                 </Option>
               </data_defined_properties>
             </layer>
           </symbol>
         </profileFillSymbol>
         <profileMarkerSymbol>
-          <symbol force_rhr="0" is_animated="0" alpha="1" clip_to_extent="1" name="" type="marker" frame_rate="10">
+          <symbol type="marker" clip_to_extent="1" is_animated="0" alpha="1" name="" force_rhr="0" frame_rate="10">
             <data_defined_properties>
               <Option type="Map">
-                <Option name="name" type="QString" value=""/>
+                <Option type="QString" name="name" value=""/>
                 <Option name="properties"/>
-                <Option name="type" type="QString" value="collection"/>
+                <Option type="QString" name="type" value="collection"/>
               </Option>
             </data_defined_properties>
-            <layer enabled="1" class="SimpleMarker" id="{42c37c1d-0125-4079-8f0a-d72fbc79a691}" pass="0" locked="0">
+            <layer class="SimpleMarker" locked="0" pass="0" enabled="1" id="{42c37c1d-0125-4079-8f0a-d72fbc79a691}">
               <Option type="Map">
-                <Option name="angle" type="QString" value="0"/>
-                <Option name="cap_style" type="QString" value="square"/>
-                <Option name="color" type="QString" value="152,125,183,255"/>
-                <Option name="horizontal_anchor_point" type="QString" value="1"/>
-                <Option name="joinstyle" type="QString" value="bevel"/>
-                <Option name="name" type="QString" value="diamond"/>
-                <Option name="offset" type="QString" value="0,0"/>
-                <Option name="offset_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="offset_unit" type="QString" value="MM"/>
-                <Option name="outline_color" type="QString" value="109,89,131,255"/>
-                <Option name="outline_style" type="QString" value="solid"/>
-                <Option name="outline_width" type="QString" value="0.2"/>
-                <Option name="outline_width_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="outline_width_unit" type="QString" value="MM"/>
-                <Option name="scale_method" type="QString" value="diameter"/>
-                <Option name="size" type="QString" value="3"/>
-                <Option name="size_map_unit_scale" type="QString" value="3x:0,0,0,0,0,0"/>
-                <Option name="size_unit" type="QString" value="MM"/>
-                <Option name="vertical_anchor_point" type="QString" value="1"/>
+                <Option type="QString" name="angle" value="0"/>
+                <Option type="QString" name="cap_style" value="square"/>
+                <Option type="QString" name="color" value="152,125,183,255,rgb:0.59607843137254901,0.49019607843137253,0.71764705882352942,1"/>
+                <Option type="QString" name="horizontal_anchor_point" value="1"/>
+                <Option type="QString" name="joinstyle" value="bevel"/>
+                <Option type="QString" name="name" value="diamond"/>
+                <Option type="QString" name="offset" value="0,0"/>
+                <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="offset_unit" value="MM"/>
+                <Option type="QString" name="outline_color" value="109,89,131,255,rgb:0.42745098039215684,0.34901960784313724,0.51372549019607838,1"/>
+                <Option type="QString" name="outline_style" value="solid"/>
+                <Option type="QString" name="outline_width" value="0.2"/>
+                <Option type="QString" name="outline_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="outline_width_unit" value="MM"/>
+                <Option type="QString" name="scale_method" value="diameter"/>
+                <Option type="QString" name="size" value="3"/>
+                <Option type="QString" name="size_map_unit_scale" value="3x:0,0,0,0,0,0"/>
+                <Option type="QString" name="size_unit" value="MM"/>
+                <Option type="QString" name="vertical_anchor_point" value="1"/>
               </Option>
               <data_defined_properties>
                 <Option type="Map">
-                  <Option name="name" type="QString" value=""/>
+                  <Option type="QString" name="name" value=""/>
                   <Option name="properties"/>
-                  <Option name="type" type="QString" value="collection"/>
+                  <Option type="QString" name="type" value="collection"/>
                 </Option>
               </data_defined_properties>
             </layer>
@@ -232,36 +232,40 @@
       </elevation>
       <customproperties>
         <Option type="Map">
-          <Option name="QFieldSync/action" type="QString" value="copy"/>
-          <Option name="QFieldSync/attachment_naming" type="QString" value="{}"/>
-          <Option name="QFieldSync/cloud_action" type="QString" value="offline"/>
-          <Option name="QFieldSync/geometry_locked_expression" type="invalid"/>
-          <Option name="QFieldSync/photo_naming" type="QString" value="{}"/>
-          <Option name="QFieldSync/relationship_maximum_visible" type="QString" value="{}"/>
-          <Option name="QFieldSync/tracking_distance_requirement_minimum_meters" type="int" value="30"/>
-          <Option name="QFieldSync/tracking_erroneous_distance_safeguard_maximum_meters" type="bool" value="false"/>
-          <Option name="QFieldSync/tracking_measurement_type" type="int" value="0"/>
-          <Option name="QFieldSync/tracking_time_requirement_interval_seconds" type="int" value="30"/>
-          <Option name="QFieldSync/value_map_button_interface_threshold" type="int" value="0"/>
-          <Option name="dualview/previewExpressions" type="List">
+          <Option type="QString" name="QFieldSync/action" value="copy"/>
+          <Option type="QString" name="QFieldSync/attachment_naming" value="{}"/>
+          <Option type="QString" name="QFieldSync/cloud_action" value="offline"/>
+          <Option type="invalid" name="QFieldSync/geometry_locked_expression"/>
+          <Option type="QString" name="QFieldSync/photo_naming" value="{}"/>
+          <Option type="QString" name="QFieldSync/relationship_maximum_visible" value="{}"/>
+          <Option type="int" name="QFieldSync/tracking_distance_requirement_minimum_meters" value="30"/>
+          <Option type="bool" name="QFieldSync/tracking_erroneous_distance_safeguard_maximum_meters" value="false"/>
+          <Option type="int" name="QFieldSync/tracking_measurement_type" value="0"/>
+          <Option type="int" name="QFieldSync/tracking_time_requirement_interval_seconds" value="30"/>
+          <Option type="int" name="QFieldSync/value_map_button_interface_threshold" value="0"/>
+          <Option type="List" name="dualview/previewExpressions">
+            <Option type="QString" value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )"/>
+            <Option type="QString" value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )"/>
+            <Option type="QString" value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )"/>
+            <Option type="QString" value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )"/>
             <Option type="QString" value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )"/>
             <Option type="QString" value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )"/>
             <Option type="QString" value="COALESCE( &quot;id_parpu&quot;, '&lt;NULL>' )"/>
           </Option>
-          <Option name="embeddedWidgets/count" type="int" value="0"/>
-          <Option name="mzs_tools/layer_role" type="QString" value="editing"/>
-          <Option name="variableNames" type="invalid"/>
-          <Option name="variableValues" type="invalid"/>
+          <Option type="int" name="embeddedWidgets/count" value="0"/>
+          <Option type="QString" name="mzs_tools/layer_role" value="editing"/>
+          <Option name="variableNames"/>
+          <Option name="variableValues"/>
         </Option>
       </customproperties>
-      <geometryOptions geometryPrecision="0" removeDuplicateNodes="0">
+      <geometryOptions removeDuplicateNodes="0" geometryPrecision="0">
         <activeChecks/>
         <checkConfiguration/>
       </geometryOptions>
-      <legend showLabelLegend="0" type="default-vector"/>
+      <legend type="default-vector" showLabelLegend="0"/>
       <referencedLayers>
-        <relation layerName="Indagini puntuali" referencingLayer="Parametri_puntuali_3cc209ce_aef6_464a_83b5_5e6af5caef76" id="indagini_parametri_puntuali" layerId="Indagini_puntuali_b10b0c0f_aa64_41b5_96b0_ce893e27868c" name="indagini_parametri_puntuali" providerKey="spatialite" referencedLayer="Indagini_puntuali_b10b0c0f_aa64_41b5_96b0_ce893e27868c" strength="Association" dataSource="dbname='/mnt/KS1/TestMzS1.9.2/072030_Monopoli/db/indagini.sqlite' table=&quot;indagini_puntuali&quot;">
-          <fieldRef referencedField="id_indpu" referencingField="id_indpu"/>
+        <relation strength="Association" layerId="Indagini_puntuali_cc6ffcdf_5e53_44c9_a62b_4fc5866f722f" dataSource="dbname='/home/francesco/temp/072030_Monopoli/db/indagini.sqlite' table=&quot;indagini_puntuali&quot;" referencingLayer="Parametri_puntuali_bd95f420_74f0_4231_87c8_38333ab908a2" providerKey="spatialite" name="indagini_parametri_puntuali" id="indagini_parametri_puntuali" referencedLayer="Indagini_puntuali_cc6ffcdf_5e53_44c9_a62b_4fc5866f722f" layerName="Indagini puntuali">
+          <fieldRef referencingField="id_indpu" referencedField="id_indpu"/>
         </relation>
       </referencedLayers>
       <fieldConfiguration>
@@ -269,8 +273,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="bool" value="false"/>
-                <Option name="UseHtml" type="bool" value="false"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -279,19 +283,12 @@
           <editWidget type="ValueRelation">
             <config>
               <Option type="Map">
-                <Option name="AllowMulti" type="bool" value="false"/>
-                <Option name="AllowNull" type="bool" value="false"/>
-                <Option name="Description" type="QString" value=""/>
-                <Option name="FilterExpression" type="QString" value=""/>
-                <Option name="Key" type="QString" value="id_indpu"/>
-                <Option name="Layer" type="QString" value="Indagini_puntuali_b10b0c0f_aa64_41b5_96b0_ce893e27868c"/>
-                <Option name="LayerName" type="QString" value="Indagini puntuali"/>
-                <Option name="LayerProviderName" type="QString" value="spatialite"/>
-                <Option name="LayerSource" type="QString" value="dbname='/mnt/KS1/TestMzS1.9.2/072030_Monopoli/db/indagini.sqlite' table=&quot;indagini_puntuali&quot;"/>
-                <Option name="NofColumns" type="int" value="1"/>
-                <Option name="OrderByValue" type="bool" value="true"/>
-                <Option name="UseCompleter" type="bool" value="false"/>
-                <Option name="Value" type="QString" value="id_indpu"/>
+                <Option type="bool" name="AllowNull" value="false"/>
+                <Option type="invalid" name="FilterExpression"/>
+                <Option type="QString" name="Key" value="id_indpu"/>
+                <Option type="QString" name="Layer" value="Indagini_puntuali_cc6ffcdf_5e53_44c9_a62b_4fc5866f722f"/>
+                <Option type="bool" name="OrderByValue" value="true"/>
+                <Option type="QString" name="Value" value="id_indpu"/>
               </Option>
             </config>
           </editWidget>
@@ -300,19 +297,12 @@
           <editWidget type="ValueRelation">
             <config>
               <Option type="Map">
-                <Option name="AllowMulti" type="bool" value="false"/>
-                <Option name="AllowNull" type="bool" value="false"/>
-                <Option name="Description" type="QString" value="&quot;descrizione&quot;"/>
-                <Option name="FilterExpression" type="QString" value="cod_ind = regexp_replace(substr(current_value('id_indpu'), 9), '\\d+', '')"/>
-                <Option name="Key" type="QString" value="cod"/>
-                <Option name="Layer" type="QString" value="vw_param_p_3462c173_2408_4ef8_a181_1652c29ecd15"/>
-                <Option name="LayerName" type="QString" value="vw_param_p"/>
-                <Option name="LayerProviderName" type="QString" value="spatialite"/>
-                <Option name="LayerSource" type="QString" value="dbname='/mnt/KS1/TestMzS1.9.2/072030_Monopoli/db/indagini.sqlite' table=&quot;vw_param_p&quot;"/>
-                <Option name="NofColumns" type="int" value="1"/>
-                <Option name="OrderByValue" type="bool" value="false"/>
-                <Option name="UseCompleter" type="bool" value="false"/>
-                <Option name="Value" type="QString" value="descrizione"/>
+                <Option type="bool" name="AllowNull" value="false"/>
+                <Option type="QString" name="FilterExpression" value="cod_ind = regexp_replace(substr(current_value('id_indpu'), 9), '\\d+', '')"/>
+                <Option type="QString" name="Key" value="cod"/>
+                <Option type="QString" name="Layer" value="vw_param_p_b7fb8945_aacd_4b18_80af_5e8f6590bb18"/>
+                <Option type="bool" name="OrderByValue" value="true"/>
+                <Option type="QString" name="Value" value="descrizione"/>
               </Option>
             </config>
           </editWidget>
@@ -321,8 +311,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="bool" value="false"/>
-                <Option name="UseHtml" type="bool" value="false"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -331,8 +321,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -341,8 +331,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -351,8 +341,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -361,8 +351,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -371,8 +361,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -381,8 +371,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="bool" name="IsMultiline" value="false"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -391,21 +381,35 @@
           <editWidget type="ValueRelation">
             <config>
               <Option type="Map">
-                <Option name="AllowNull" type="bool" value="false"/>
-                <Option name="Key" type="QString" value="cod"/>
-                <Option name="Layer" type="QString" value="vw_attend_mis_f6fbbc13_eca3_4c14_8dc3_e420623f894a"/>
-                <Option name="OrderByValue" type="bool" value="true"/>
-                <Option name="Value" type="QString" value="descrizione"/>
+                <Option type="bool" name="AllowNull" value="false"/>
+                <Option type="invalid" name="FilterExpression"/>
+                <Option type="QString" name="Key" value="cod"/>
+                <Option type="QString" name="Layer" value="vw_attend_mis_9a7c9001_42e0_4e3f_9098_12abd43e9c2b"/>
+                <Option type="bool" name="OrderByValue" value="true"/>
+                <Option type="QString" name="Value" value="descrizione"/>
               </Option>
             </config>
           </editWidget>
         </field>
         <field configurationFlags="NoFlag" name="tab_curve">
-          <editWidget type="TextEdit">
+          <editWidget type="ExternalResource">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="int" name="DocumentViewer" value="0"/>
+                <Option type="int" name="DocumentViewerHeight" value="0"/>
+                <Option type="int" name="DocumentViewerWidth" value="0"/>
+                <Option type="bool" name="FileWidget" value="true"/>
+                <Option type="bool" name="FileWidgetButton" value="true"/>
+                <Option type="invalid" name="FileWidgetFilter"/>
+                <Option type="Map" name="PropertyCollection">
+                  <Option type="invalid" name="name"/>
+                  <Option type="invalid" name="properties"/>
+                  <Option type="QString" name="type" value="collection"/>
+                </Option>
+                <Option type="int" name="RelativeStorage" value="1"/>
+                <Option type="invalid" name="StorageAuthConfigId"/>
+                <Option type="int" name="StorageMode" value="0"/>
+                <Option type="invalid" name="StorageType"/>
               </Option>
             </config>
           </editWidget>
@@ -414,8 +418,8 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="bool" value="false"/>
-                <Option name="UseHtml" type="bool" value="false"/>
+                <Option type="bool" name="IsMultiline" value="true"/>
+                <Option type="bool" name="UseHtml" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -424,12 +428,12 @@
           <editWidget type="DateTime">
             <config>
               <Option type="Map">
-                <Option name="allow_null" type="bool" value="false"/>
-                <Option name="calendar_popup" type="bool" value="true"/>
-                <Option name="display_format" type="QString" value="dd-MM-yyyy"/>
-                <Option name="field_format" type="QString" value="yyyy-MM-dd"/>
-                <Option name="field_format_overwrite" type="bool" value="false"/>
-                <Option name="field_iso_format" type="bool" value="false"/>
+                <Option type="bool" name="allow_null" value="false"/>
+                <Option type="bool" name="calendar_popup" value="true"/>
+                <Option type="QString" name="display_format" value="dd-MM-yyyy"/>
+                <Option type="QString" name="field_format" value="yyyy-MM-dd"/>
+                <Option type="bool" name="field_format_overwrite" value="false"/>
+                <Option type="bool" name="field_iso_format" value="false"/>
               </Option>
             </config>
           </editWidget>
@@ -438,120 +442,168 @@
           <editWidget type="TextEdit">
             <config>
               <Option type="Map">
-                <Option name="IsMultiline" type="QString" value="0"/>
-                <Option name="UseHtml" type="QString" value="0"/>
+                <Option type="QString" name="IsMultiline" value="0"/>
+                <Option type="QString" name="UseHtml" value="0"/>
+              </Option>
+            </config>
+          </editWidget>
+        </field>
+        <field configurationFlags="NoFlag" name="valore_appoggio">
+          <editWidget type="ValueRelation">
+            <config>
+              <Option type="Map">
+                <Option type="bool" name="AllowMulti" value="false"/>
+                <Option type="bool" name="AllowNull" value="true"/>
+                <Option type="int" name="CompleterMatchFlags" value="2"/>
+                <Option type="invalid" name="Description"/>
+                <Option type="bool" name="DisplayGroupName" value="false"/>
+                <Option type="invalid" name="FilterExpression"/>
+                <Option type="invalid" name="Group"/>
+                <Option type="QString" name="Key" value="cod"/>
+                <Option type="QString" name="Layer" value="vw_tipo_gt_89f44061_7c3e_42cb_b63f_561e1dfbbe25"/>
+                <Option type="QString" name="LayerName" value="vw_tipo_gt"/>
+                <Option type="QString" name="LayerProviderName" value="spatialite"/>
+                <Option type="QString" name="LayerSource" value="dbname='/home/francesco/temp/072030_Monopoli/db/indagini.sqlite' table=&quot;vw_tipo_gt&quot;"/>
+                <Option type="int" name="NofColumns" value="1"/>
+                <Option type="bool" name="OrderByValue" value="false"/>
+                <Option type="bool" name="UseCompleter" value="false"/>
+                <Option type="QString" name="Value" value="descrizione"/>
               </Option>
             </config>
           </editWidget>
         </field>
       </fieldConfiguration>
       <aliases>
-        <alias index="0" field="pkuid" name=""/>
-        <alias index="1" field="id_indpu" name=""/>
-        <alias index="2" field="tipo_parpu" name=""/>
-        <alias index="3" field="id_parpu" name=""/>
-        <alias index="4" field="prof_top" name=""/>
-        <alias index="5" field="prof_bot" name=""/>
-        <alias index="6" field="spessore" name=""/>
-        <alias index="7" field="quota_slm_top" name=""/>
-        <alias index="8" field="quota_slm_bot" name=""/>
-        <alias index="9" field="valore" name=""/>
-        <alias index="10" field="attend_mis" name=""/>
-        <alias index="11" field="tab_curve" name=""/>
-        <alias index="12" field="note_par" name=""/>
-        <alias index="13" field="data_par" name=""/>
-        <alias index="14" field="pkey_indpu" name=""/>
+        <alias index="0" name="" field="pkuid"/>
+        <alias index="1" name="" field="id_indpu"/>
+        <alias index="2" name="" field="tipo_parpu"/>
+        <alias index="3" name="" field="id_parpu"/>
+        <alias index="4" name="" field="prof_top"/>
+        <alias index="5" name="" field="prof_bot"/>
+        <alias index="6" name="" field="spessore"/>
+        <alias index="7" name="" field="quota_slm_top"/>
+        <alias index="8" name="" field="quota_slm_bot"/>
+        <alias index="9" name="Valore" field="valore"/>
+        <alias index="10" name="" field="attend_mis"/>
+        <alias index="11" name="" field="tab_curve"/>
+        <alias index="12" name="" field="note_par"/>
+        <alias index="13" name="" field="data_par"/>
+        <alias index="14" name="" field="pkey_indpu"/>
+        <alias index="15" name="Valore" field="valore_appoggio"/>
       </aliases>
       <splitPolicies>
-        <policy policy="DefaultValue" field="pkuid"/>
-        <policy policy="DefaultValue" field="id_indpu"/>
-        <policy policy="DefaultValue" field="tipo_parpu"/>
-        <policy policy="DefaultValue" field="id_parpu"/>
-        <policy policy="Duplicate" field="prof_top"/>
-        <policy policy="Duplicate" field="prof_bot"/>
-        <policy policy="Duplicate" field="spessore"/>
-        <policy policy="Duplicate" field="quota_slm_top"/>
-        <policy policy="Duplicate" field="quota_slm_bot"/>
-        <policy policy="Duplicate" field="valore"/>
-        <policy policy="Duplicate" field="attend_mis"/>
-        <policy policy="Duplicate" field="tab_curve"/>
-        <policy policy="DefaultValue" field="note_par"/>
-        <policy policy="DefaultValue" field="data_par"/>
-        <policy policy="Duplicate" field="pkey_indpu"/>
+        <policy field="pkuid" policy="DefaultValue"/>
+        <policy field="id_indpu" policy="DefaultValue"/>
+        <policy field="tipo_parpu" policy="DefaultValue"/>
+        <policy field="id_parpu" policy="DefaultValue"/>
+        <policy field="prof_top" policy="DefaultValue"/>
+        <policy field="prof_bot" policy="DefaultValue"/>
+        <policy field="spessore" policy="DefaultValue"/>
+        <policy field="quota_slm_top" policy="DefaultValue"/>
+        <policy field="quota_slm_bot" policy="DefaultValue"/>
+        <policy field="valore" policy="DefaultValue"/>
+        <policy field="attend_mis" policy="Duplicate"/>
+        <policy field="tab_curve" policy="DefaultValue"/>
+        <policy field="note_par" policy="DefaultValue"/>
+        <policy field="data_par" policy="DefaultValue"/>
+        <policy field="pkey_indpu" policy="Duplicate"/>
+        <policy field="valore_appoggio" policy="DefaultValue"/>
       </splitPolicies>
+      <duplicatePolicies>
+        <policy field="pkuid" policy="Duplicate"/>
+        <policy field="id_indpu" policy="Duplicate"/>
+        <policy field="tipo_parpu" policy="Duplicate"/>
+        <policy field="id_parpu" policy="Duplicate"/>
+        <policy field="prof_top" policy="Duplicate"/>
+        <policy field="prof_bot" policy="Duplicate"/>
+        <policy field="spessore" policy="Duplicate"/>
+        <policy field="quota_slm_top" policy="Duplicate"/>
+        <policy field="quota_slm_bot" policy="Duplicate"/>
+        <policy field="valore" policy="Duplicate"/>
+        <policy field="attend_mis" policy="Duplicate"/>
+        <policy field="tab_curve" policy="Duplicate"/>
+        <policy field="note_par" policy="Duplicate"/>
+        <policy field="data_par" policy="Duplicate"/>
+        <policy field="pkey_indpu" policy="Duplicate"/>
+        <policy field="valore_appoggio" policy="Duplicate"/>
+      </duplicatePolicies>
       <defaults>
         <default expression="" applyOnUpdate="0" field="pkuid"/>
         <default expression="" applyOnUpdate="0" field="id_indpu"/>
         <default expression="" applyOnUpdate="0" field="tipo_parpu"/>
         <default expression="0" applyOnUpdate="0" field="id_parpu"/>
-        <default expression="''" applyOnUpdate="0" field="prof_top"/>
-        <default expression="''" applyOnUpdate="0" field="prof_bot"/>
-        <default expression="''" applyOnUpdate="0" field="spessore"/>
-        <default expression="''" applyOnUpdate="0" field="quota_slm_top"/>
-        <default expression="''" applyOnUpdate="0" field="quota_slm_bot"/>
-        <default expression="''" applyOnUpdate="0" field="valore"/>
+        <default expression="" applyOnUpdate="0" field="prof_top"/>
+        <default expression="" applyOnUpdate="0" field="prof_bot"/>
+        <default expression="&quot;prof_bot&quot; - &quot;prof_top&quot;" applyOnUpdate="1" field="spessore"/>
+        <default expression="" applyOnUpdate="0" field="quota_slm_top"/>
+        <default expression="" applyOnUpdate="0" field="quota_slm_bot"/>
+        <default expression="" applyOnUpdate="0" field="valore"/>
         <default expression="" applyOnUpdate="0" field="attend_mis"/>
         <default expression="''" applyOnUpdate="0" field="tab_curve"/>
         <default expression="''" applyOnUpdate="0" field="note_par"/>
         <default expression="" applyOnUpdate="0" field="data_par"/>
         <default expression="" applyOnUpdate="0" field="pkey_indpu"/>
+        <default expression="" applyOnUpdate="0" field="valore_appoggio"/>
       </defaults>
       <constraints>
-        <constraint notnull_strength="1" field="pkuid" constraints="3" exp_strength="0" unique_strength="1"/>
-        <constraint notnull_strength="1" field="id_indpu" constraints="1" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="1" field="tipo_parpu" constraints="1" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="1" field="id_parpu" constraints="3" exp_strength="0" unique_strength="1"/>
-        <constraint notnull_strength="0" field="prof_top" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="prof_bot" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="spessore" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="quota_slm_top" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="quota_slm_bot" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="valore" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="attend_mis" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="tab_curve" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="note_par" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="data_par" constraints="0" exp_strength="0" unique_strength="0"/>
-        <constraint notnull_strength="0" field="pkey_indpu" constraints="0" exp_strength="0" unique_strength="0"/>
+        <constraint notnull_strength="1" unique_strength="1" constraints="3" exp_strength="0" field="pkuid"/>
+        <constraint notnull_strength="1" unique_strength="0" constraints="1" exp_strength="0" field="id_indpu"/>
+        <constraint notnull_strength="1" unique_strength="0" constraints="1" exp_strength="0" field="tipo_parpu"/>
+        <constraint notnull_strength="1" unique_strength="1" constraints="3" exp_strength="0" field="id_parpu"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="4" exp_strength="2" field="prof_top"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="4" exp_strength="2" field="prof_bot"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="0" exp_strength="0" field="spessore"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="4" exp_strength="2" field="quota_slm_top"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="4" exp_strength="2" field="quota_slm_bot"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="4" exp_strength="2" field="valore"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="0" exp_strength="0" field="attend_mis"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="0" exp_strength="0" field="tab_curve"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="0" exp_strength="0" field="note_par"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="0" exp_strength="0" field="data_par"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="0" exp_strength="0" field="pkey_indpu"/>
+        <constraint notnull_strength="0" unique_strength="0" constraints="0" exp_strength="0" field="valore_appoggio"/>
       </constraints>
       <constraintExpressions>
-        <constraint desc="" exp="" field="pkuid"/>
-        <constraint desc="" exp="" field="id_indpu"/>
-        <constraint desc="" exp="" field="tipo_parpu"/>
-        <constraint desc="" exp="" field="id_parpu"/>
-        <constraint desc="" exp="" field="prof_top"/>
-        <constraint desc="" exp="" field="prof_bot"/>
-        <constraint desc="" exp="" field="spessore"/>
-        <constraint desc="" exp="" field="quota_slm_top"/>
-        <constraint desc="" exp="" field="quota_slm_bot"/>
-        <constraint desc="" exp="" field="valore"/>
-        <constraint desc="" exp="" field="attend_mis"/>
-        <constraint desc="" exp="" field="tab_curve"/>
-        <constraint desc="" exp="" field="note_par"/>
-        <constraint desc="" exp="" field="data_par"/>
-        <constraint desc="" exp="" field="pkey_indpu"/>
+        <constraint exp="" field="pkuid" desc=""/>
+        <constraint exp="" field="id_indpu" desc=""/>
+        <constraint exp="" field="tipo_parpu" desc=""/>
+        <constraint exp="" field="id_parpu" desc=""/>
+        <constraint exp=" &quot;prof_top&quot; &lt;= &quot;prof_bot&quot; " field="prof_top" desc="La profondità del top deve essere minore della profondità del bottom"/>
+        <constraint exp=" &quot;prof_bot&quot; >= &quot;prof_top&quot; " field="prof_bot" desc="La profondità del bottom deve essere maggiore della profondità del top"/>
+        <constraint exp="" field="spessore" desc=""/>
+        <constraint exp=" &quot;quota_slm_top&quot; >= &quot;quota_slm_bot&quot; AND round(( &quot;prof_bot&quot;  -  &quot;prof_top&quot; ),2) = round(( &quot;quota_slm_top&quot;  -  &quot;quota_slm_bot&quot; ),2)" field="quota_slm_top" desc="La quota del top deve essere maggiore della quota del bottom e la differenza deve essere pari allo spessore"/>
+        <constraint exp=" &quot;quota_slm_bot&quot; &lt;= &quot;quota_slm_top&quot; AND round(( &quot;prof_bot&quot;  -  &quot;prof_top&quot; ),2) = round(( &quot;quota_slm_top&quot;  -  &quot;quota_slm_bot&quot; ),2)" field="quota_slm_bot" desc="La quota del bottom deve essere minore della quota del top e la differenza deve essere pari allo spessore"/>
+        <constraint exp="regexp_match(&quot;valore&quot;,'^([1-9]\\d*|0)(\\.\\d+)?$')" field="valore" desc="Inserire un valore numerico utilizzando il punto per separare i decimali"/>
+        <constraint exp="" field="attend_mis" desc=""/>
+        <constraint exp="" field="tab_curve" desc=""/>
+        <constraint exp="" field="note_par" desc=""/>
+        <constraint exp="" field="data_par" desc=""/>
+        <constraint exp="" field="pkey_indpu" desc=""/>
+        <constraint exp="" field="valore_appoggio" desc=""/>
       </constraintExpressions>
       <expressionfields/>
       <attributeactions>
         <defaultAction key="Canvas" value="{00000000-0000-0000-0000-000000000000}"/>
       </attributeactions>
-      <attributetableconfig actionWidgetStyle="dropDown" sortExpression="" sortOrder="0">
+      <attributetableconfig sortOrder="0" actionWidgetStyle="dropDown" sortExpression="&quot;prof_top&quot;">
         <columns>
-          <column width="-1" hidden="0" name="pkuid" type="field"/>
-          <column width="-1" hidden="0" name="id_indpu" type="field"/>
-          <column width="-1" hidden="0" name="tipo_parpu" type="field"/>
-          <column width="-1" hidden="0" name="id_parpu" type="field"/>
-          <column width="-1" hidden="0" name="prof_top" type="field"/>
-          <column width="-1" hidden="0" name="prof_bot" type="field"/>
-          <column width="-1" hidden="0" name="spessore" type="field"/>
-          <column width="-1" hidden="0" name="quota_slm_top" type="field"/>
-          <column width="-1" hidden="0" name="quota_slm_bot" type="field"/>
-          <column width="-1" hidden="0" name="valore" type="field"/>
-          <column width="339" hidden="0" name="attend_mis" type="field"/>
-          <column width="-1" hidden="0" name="tab_curve" type="field"/>
-          <column width="-1" hidden="0" name="note_par" type="field"/>
-          <column width="-1" hidden="0" name="data_par" type="field"/>
-          <column width="-1" hidden="0" name="pkey_indpu" type="field"/>
-          <column width="-1" hidden="1" type="actions"/>
+          <column type="field" width="-1" name="pkuid" hidden="0"/>
+          <column type="field" width="-1" name="id_indpu" hidden="0"/>
+          <column type="field" width="-1" name="tipo_parpu" hidden="0"/>
+          <column type="field" width="-1" name="id_parpu" hidden="0"/>
+          <column type="field" width="-1" name="prof_top" hidden="0"/>
+          <column type="field" width="-1" name="prof_bot" hidden="0"/>
+          <column type="field" width="-1" name="spessore" hidden="0"/>
+          <column type="field" width="-1" name="quota_slm_top" hidden="0"/>
+          <column type="field" width="-1" name="quota_slm_bot" hidden="0"/>
+          <column type="field" width="-1" name="valore" hidden="0"/>
+          <column type="field" width="339" name="attend_mis" hidden="0"/>
+          <column type="field" width="-1" name="tab_curve" hidden="0"/>
+          <column type="field" width="-1" name="note_par" hidden="0"/>
+          <column type="field" width="-1" name="data_par" hidden="0"/>
+          <column type="field" width="-1" name="pkey_indpu" hidden="0"/>
+          <column type="field" width="-1" name="valore_appoggio" hidden="0"/>
+          <column type="actions" width="-1" hidden="1"/>
         </columns>
       </attributetableconfig>
       <conditionalstyles>
@@ -561,107 +613,144 @@
       <storedexpressions/>
       <editform tolerant="1">../../GIT/mzs-tools/mzs_tools/editing/parametri_puntuali.ui</editform>
       <editforminit>change_editor_widget</editforminit>
-      <editforminitcodesource>2</editforminitcodesource>
+      <editforminitcodesource>0</editforminitcodesource>
       <editforminitfilepath>./progetto/script/siti_ind_param.py</editforminitfilepath>
       <editforminitcode><![CDATA[from mzs_tools import change_editor_widget]]></editforminitcode>
       <featformsuppress>0</featformsuppress>
       <editorlayout>tablayout</editorlayout>
       <attributeEditorForm>
-        <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-          <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+        <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+          <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
         </labelStyle>
-        <attributeEditorContainer collapsedExpression="" collapsedExpressionEnabled="0" groupBox="1" visibilityExpressionEnabled="0" name="Tipologia parametro" columnCount="2" visibilityExpression="" horizontalStretch="0" verticalStretch="0" type="GroupBox" collapsed="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+        <attributeEditorContainer groupBox="1" type="GroupBox" visibilityExpression="" horizontalStretch="0" columnCount="2" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" verticalStretch="0" showLabel="1" name="Tipologia parametro" collapsed="0" collapsedExpression="">
+          <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
           </labelStyle>
-          <attributeEditorField index="1" name="id_indpu" horizontalStretch="0" verticalStretch="0" showLabel="1">
-            <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="1" name="id_indpu">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
             </labelStyle>
           </attributeEditorField>
-          <attributeEditorField index="3" name="id_parpu" horizontalStretch="0" verticalStretch="0" showLabel="1">
-            <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="3" name="id_parpu">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
             </labelStyle>
           </attributeEditorField>
-          <attributeEditorField index="2" name="tipo_parpu" horizontalStretch="0" verticalStretch="0" showLabel="1">
-            <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="2" name="tipo_parpu">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
             </labelStyle>
           </attributeEditorField>
-          <attributeEditorField index="13" name="data_par" horizontalStretch="0" verticalStretch="0" showLabel="1">
-            <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="13" name="data_par">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
             </labelStyle>
           </attributeEditorField>
         </attributeEditorContainer>
-        <attributeEditorField index="4" name="prof_top" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+        <attributeEditorContainer groupBox="1" type="GroupBox" visibilityExpression="" horizontalStretch="0" columnCount="3" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" verticalStretch="0" showLabel="1" name="Profondità e quota" collapsed="0" collapsedExpression="">
+          <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+            <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+          </labelStyle>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="4" name="prof_top">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="5" name="prof_bot">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="6" name="spessore">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="7" name="quota_slm_top">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="8" name="quota_slm_bot">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+        </attributeEditorContainer>
+        <attributeEditorContainer groupBox="0" type="Row" visibilityExpression="&quot;tipo_parpu&quot; != 'L'" horizontalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="1" verticalStretch="0" showLabel="0" name="Valore" collapsed="0" collapsedExpression="">
+          <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+            <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+          </labelStyle>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="9" name="valore">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+        </attributeEditorContainer>
+        <attributeEditorContainer groupBox="0" type="Row" visibilityExpression="&quot;tipo_parpu&quot; = 'L'" horizontalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="1" verticalStretch="0" showLabel="0" name="Valore L" collapsed="0" collapsedExpression="">
+          <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+            <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+          </labelStyle>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="15" name="valore_appoggio">
+            <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+              <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+        </attributeEditorContainer>
+        <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="10" name="attend_mis">
+          <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField index="5" name="prof_bot" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+        <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="11" name="tab_curve">
+          <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
           </labelStyle>
         </attributeEditorField>
-        <attributeEditorField index="6" name="spessore" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+        <attributeEditorContainer groupBox="1" type="GroupBox" visibilityExpression="" horizontalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="0" verticalStretch="0" showLabel="1" name="Note parametro" collapsed="1" collapsedExpression="">
+          <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+            <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
           </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField index="7" name="quota_slm_top" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
+          <attributeEditorField horizontalStretch="0" verticalStretch="0" showLabel="1" index="12" name="note_par">
+            <labelStyle overrideLabelFont="0" labelColor="0,0,0,255,rgb:0,0,0,1" overrideLabelColor="0">
+              <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+          </attributeEditorField>
+        </attributeEditorContainer>
+        <attributeEditorContainer groupBox="1" type="GroupBox" visibilityExpression="id IS NOT NULL" horizontalStretch="0" columnCount="1" collapsedExpressionEnabled="0" visibilityExpressionEnabled="1" verticalStretch="0" showLabel="1" name="Curve" collapsed="1" collapsedExpression="">
+          <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+            <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
           </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField index="8" name="quota_slm_bot" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField index="9" name="valore" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField index="10" name="attend_mis" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField index="11" name="tab_curve" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField index="12" name="note_par" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
-        <attributeEditorField index="14" name="pkey_indpu" horizontalStretch="0" verticalStretch="0" showLabel="1">
-          <labelStyle labelColor="0,0,0,255" overrideLabelFont="0" overrideLabelColor="0">
-            <labelFont description="Ubuntu,10,-1,5,50,0,0,0,0,0" style="" underline="0" bold="0" italic="0" strikethrough="0"/>
-          </labelStyle>
-        </attributeEditorField>
+          <attributeEditorRelation horizontalStretch="0" relation="parametri_curve_puntuali" relationWidgetTypeId="relation_editor" verticalStretch="0" showLabel="0" name="parametri_curve_puntuali" forceSuppressFormPopup="0" nmRelationId="" label="">
+            <labelStyle overrideLabelFont="0" labelColor="" overrideLabelColor="0">
+              <labelFont description="Fira Sans,10,-1,5,50,0,0,0,0,0" bold="0" underline="0" italic="0" strikethrough="0" style=""/>
+            </labelStyle>
+            <editor_configuration type="Map">
+              <Option type="bool" name="allow_add_child_feature_with_no_geometry" value="false"/>
+              <Option type="QString" name="buttons" value="AllButtons"/>
+              <Option type="invalid" name="filter_expression"/>
+              <Option type="bool" name="show_first_feature" value="false"/>
+            </editor_configuration>
+          </attributeEditorRelation>
+        </attributeEditorContainer>
       </attributeEditorForm>
       <editable>
-        <field editable="1" name="attend_mis"/>
-        <field editable="1" name="data_par"/>
-        <field editable="1" name="id_indpu"/>
-        <field editable="1" name="id_parpu"/>
-        <field editable="1" name="note_par"/>
-        <field editable="1" name="pkey_indpu"/>
-        <field editable="1" name="pkuid"/>
-        <field editable="1" name="prof_bot"/>
-        <field editable="1" name="prof_top"/>
-        <field editable="1" name="quota_slm_bot"/>
-        <field editable="1" name="quota_slm_top"/>
-        <field editable="1" name="spessore"/>
-        <field editable="1" name="tab_curve"/>
-        <field editable="1" name="tipo_parpu"/>
-        <field editable="1" name="valore"/>
+        <field name="attend_mis" editable="1"/>
+        <field name="data_par" editable="1"/>
+        <field name="id_indpu" editable="1"/>
+        <field name="id_parpu" editable="0"/>
+        <field name="note_par" editable="1"/>
+        <field name="pkey_indpu" editable="1"/>
+        <field name="pkuid" editable="1"/>
+        <field name="prof_bot" editable="1"/>
+        <field name="prof_top" editable="1"/>
+        <field name="quota_slm_bot" editable="1"/>
+        <field name="quota_slm_top" editable="1"/>
+        <field name="spessore" editable="0"/>
+        <field name="tab_curve" editable="1"/>
+        <field name="tipo_parpu" editable="1"/>
+        <field name="valore" editable="1"/>
+        <field name="valore_appoggio" editable="1"/>
       </editable>
       <labelOnTop>
         <field labelOnTop="0" name="attend_mis"/>
@@ -679,6 +768,7 @@
         <field labelOnTop="0" name="tab_curve"/>
         <field labelOnTop="0" name="tipo_parpu"/>
         <field labelOnTop="0" name="valore"/>
+        <field labelOnTop="0" name="valore_appoggio"/>
       </labelOnTop>
       <reuseLastValue>
         <field reuseLastValue="0" name="attend_mis"/>
@@ -696,6 +786,7 @@
         <field reuseLastValue="0" name="tab_curve"/>
         <field reuseLastValue="0" name="tipo_parpu"/>
         <field reuseLastValue="0" name="valore"/>
+        <field reuseLastValue="0" name="valore_appoggio"/>
       </reuseLastValue>
       <dataDefinedFieldProperties/>
       <widgets>
