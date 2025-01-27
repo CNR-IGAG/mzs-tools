@@ -284,19 +284,34 @@ class MzSProjectManager:
             "layer_name": "Zone instabili liv 2-3",
             "group": "MS livello 2-3",
             "qlr_path": "instab_l23.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "CAT": {
                     "relation_table": "vw_cat_s",
                     "relation_key": "cod",
                     "relation_value": "descrizione",
                     "order_by_value": False,
+                    "allow_null": True,
                 },
                 "AMB": {
                     "relation_table": "vw_amb",
                     "relation_key": "cod",
                     "relation_value": "descrizione",
                     "order_by_value": False,
+                    "allow_null": True,
+                },
+                "cod_instab": {
+                    "relation_table": "vw_cod_instab",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                },
+                "cod_stab": {
+                    "relation_table": "vw_cod_stab",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "allow_null": True,
+                    "filter_expression": "\"cod\" > (if( array_contains(array(3060, 3061, 3062, 3070, 3080, 3081, 3082, 3090, 3091, 3092, 3069),current_value('cod_instab')), 99999, 2000))",
                 },
             },
         },
@@ -306,7 +321,6 @@ class MzSProjectManager:
             "layer_name": "Zone stabili liv 2-3",
             "group": "MS livello 2-3",
             "qlr_path": "stab_l23.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_z": {
                     "relation_table": "vw_cod_stab",
@@ -319,6 +333,7 @@ class MzSProjectManager:
                     "relation_key": "cod",
                     "relation_value": "descrizione",
                     "order_by_value": False,
+                    "allow_null": True,
                 },
             },
         },
@@ -335,7 +350,23 @@ class MzSProjectManager:
             "layer_name": "Zone instabili liv 1",
             "group": "MS livello 1",
             "qlr_path": "instab_l1.qlr",
-            "custom_editing_form": True,
+            "value_relations": {
+                "cod_instab": {
+                    "relation_table": "vw_cod_instab",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "filter_expression": '"cod" NOT IN (3001, 3002, 3052, 3053, 3055, 3056, 3061, 3062, 3081, 3082, 3091, 3092)',
+                },
+                "cod_stab": {
+                    "relation_table": "vw_cod_stab",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "allow_null": True,
+                    "filter_expression": "\"cod\" > (if( array_contains(array(3060, 3069, 3070, 3080, 3090),current_value('cod_instab')), 99999, 2000))",
+                },
+            },
         },
         "stab_l1": {
             "role": "editing",
@@ -343,7 +374,6 @@ class MzSProjectManager:
             "layer_name": "Zone stabili liv 1",
             "group": "MS livello 1",
             "qlr_path": "stab_l1.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_z": {
                     "relation_table": "vw_cod_stab",
@@ -427,12 +457,14 @@ class MzSProjectManager:
             "layer_name": "Instabilita' di versante",
             "group": "Geologico Tecnica",
             "qlr_path": "instab_geotec.qlr",
-            "Tipo_i": {
-                "relation_table": "vw_cod_instab",
-                "relation_key": "cod",
-                "relation_value": "descrizione",
-                "order_by_value": True,
-                "filter_expression": r'"cod" NOT IN (3001,3002,3050,3051,3052,3053,3054,3055,3056,3060,3061,3062,3069,3070,3080,3081,3082,3090,3091,3092)',
+            "value_relations": {
+                "Tipo_i": {
+                    "relation_table": "vw_cod_instab",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "filter_expression": '"cod" NOT IN (3001,3002,3050,3051,3052,3053,3054,3055,3056,3060,3061,3062,3069,3070,3080,3081,3082,3090,3091,3092)',
+                },
             },
         },
         "geotec": {
@@ -441,13 +473,28 @@ class MzSProjectManager:
             "layer_name": "Unita' geologico-tecniche",
             "group": "Geologico Tecnica",
             "qlr_path": "geotec.qlr",
-            "custom_editing_form": True,
             "value_relations": {
                 "Tipo_gt": {
                     "relation_table": "vw_tipo_gt",
                     "relation_key": "cod",
                     "relation_value": "descrizione",
                     "order_by_value": False,
+                },
+                "Stato": {
+                    "relation_table": "vw_stato",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "allow_null": True,
+                    "filter_expression": "\"cod\" > (if( array_contains(array('RI','GW','GP','GM','GC','SW','SP','SM','SC','OL','OH','MH','ML','CL','CH','PT','LC'),current_value('Tipo_gt')), 0, 99))",
+                },
+                "Gen": {
+                    "relation_table": "vw_gen",
+                    "relation_key": "cod",
+                    "relation_value": "descrizione",
+                    "order_by_value": True,
+                    "allow_null": True,
+                    "filter_expression": "\"cod\" > (if( array_contains(array('RI','GW','GP','GM','GC','SW','SP','SM','SC','OL','OH','MH','ML','CL','CH','PT','LC'),current_value('Tipo_gt')), 0, 'zz'))",
                 },
             },
         },
@@ -858,6 +905,9 @@ class MzSProjectManager:
             )
             self._add_default_value_relations(MzSProjectManager.DEFAULT_EDITING_LAYERS)
             self._add_default_project_relations()
+            # the project must be reloaded after adding the default relations to refresh the relation editor widgets
+            # self.current_project.write()
+            # iface.addProject(str(self.current_project.absoluteFilePath()))
 
         # remove empty groups from root
         empty_groups = [group for group in self.current_project.layerTreeRoot().children() if group.children() == []]

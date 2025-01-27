@@ -46,6 +46,12 @@ CREATE TABLE IF NOT EXISTS mzs_tools_update_history (
 -- add column valore_appoggio to parametri_puntuali
 ALTER TABLE parametri_puntuali ADD COLUMN "valore_appoggio" TEXT;;
 
+-- add cod_instab and cod_stab to instab_l1 and instab_l23
+ALTER TABLE instab_l1 ADD cod_instab INTEGER;
+ALTER TABLE instab_l1 ADD cod_stab INTEGER;
+ALTER TABLE instab_l23 ADD cod_instab INTEGER;
+ALTER TABLE instab_l23 ADD cod_stab INTEGER;
+
 -- elineari triggers
 DROP TRIGGER IF EXISTS ins_data_elineari;;
 DROP TRIGGER IF EXISTS upd_data_elineari;;
