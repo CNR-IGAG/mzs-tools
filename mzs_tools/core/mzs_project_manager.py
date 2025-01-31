@@ -650,16 +650,27 @@ class MzSProjectManager:
     def init_manager(self):
         """Detect if the current project is a MzS Tools project and setup the manager."""
         self.current_project = QgsProject.instance()
-        # project_file_name = self.current_project.baseName()
-        project_path = Path(self.current_project.absolutePath())
-        db_path = project_path / "db" / "indagini.sqlite"
-        version_file_path = project_path / "progetto" / "versione.txt"
+
+        # be careful using Path with QgsProject functions such as absolutePath(), fileName(), baseName(), etc.
+        # when clicking on New Project these functions will return empty strings but Path.resolve() will return
+        # the paths relative to the last opened project!
+        project_path = self.current_project.absolutePath()
+        self.log(f"Current project path: {project_path}", log_level=4)
+        db_path = Path(project_path) / "db" / "indagini.sqlite"
+        version_file_path = Path(project_path) / "progetto" / "versione.txt"
 
         # TODO: better project detection
         # if project_file_name != "progetto_MS" or not db_path.exists() or not version_file_path.exists():
-        if not db_path.exists():
+        if not project_path or not db_path.exists():
             self.log("No MzS Tools project detected", log_level=4)
+            self.is_mzs_project = False
+            self.project_path = None
+            self.db_path = None
+            self.db_connection = None
+            self.project_updateable = False
+            self.project_issues = None
             return False
+
         self.is_mzs_project = True
 
         self.project_path = project_path
@@ -798,7 +809,7 @@ class MzSProjectManager:
             for table_name in group:
                 layer_id = self.find_layer_by_table_name_role(table_name, "editing")
                 layer = self.current_project.mapLayer(layer_id)
-                if layer not in self.editing_signals_connected_layers:
+                if layer and layer not in self.editing_signals_connected_layers:
                     layer.editingStarted.connect(partial(self.set_advanced_editing_config, layer, table_name))
                     layer.editingStopped.connect(self.reset_advanced_editing_config)
                     self.editing_signals_connected_layers[layer] = (
@@ -1045,12 +1056,15 @@ class MzSProjectManager:
             return
         if add_base_layers:
             self._cleanup_base_layers()
+            self.log("Adding default base layers")
             self._add_default_layer_group(MzSProjectManager.DEFAULT_BASE_LAYERS, "Cartografia di base")
         if add_layout_groups:
             self._cleanup_layout_groups()
+            self.log("Adding default layout groups")
             self._add_default_layout_groups("LAYOUT DI STAMPA")
         if add_editing_layers:
             self._cleanup_editing_layers()
+            self.log("Adding default editing layers")
             self._add_default_layer_group(MzSProjectManager.DEFAULT_EDITING_LAYERS, "BANCA DATI GEOGRAFICA")
             self._add_default_value_relations(MzSProjectManager.DEFAULT_EDITING_LAYERS)
             self._add_default_project_relations()
@@ -1064,7 +1078,7 @@ class MzSProjectManager:
             self.current_project.layerTreeRoot().removeChildNode(group)
 
         # check project structure
-        self._check_project_structure()
+        # self._check_project_structure()
 
     def _add_default_layer_group(self, group_dict: dict, group_name: str):
         # create new group layer
@@ -1961,10 +1975,9 @@ class MzSProjectManager:
 
     def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
         """Create a basic metadata record for an MzS Tools project."""
-        # orig_gdb = self.current_project.readPath(os.path.join("db", "indagini.sqlite"))
         date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
-        # TODO: get layer from self.table_layer_map
-        extent = self.current_project.mapLayersByName("Comune del progetto")[0].dataProvider().extent()
+        layer_comune_id = self.find_layer_by_table_name_role("comune_progetto", "base")
+        extent = self.current_project.layerTreeRoot().findLayer(layer_comune_id).layer().extent()
         values = {
             "id_metadato": f"{cod_istat}M1",
             "liv_gerarchico": "series",
@@ -1987,7 +2000,6 @@ class MzSProjectManager:
             "estensione_sud": str(extent.yMinimum()),
             "estensione_nord": str(extent.yMaximum()),
         }
-
         with self.db_connection as conn:
             conn.execute(
                 """

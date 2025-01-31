@@ -1,19 +1,12 @@
-import configparser
 import os
 import shutil
 import traceback
-from functools import partial
-from itertools import chain
 from pathlib import Path
 
 from qgis.core import (
-    Qgis,
     QgsApplication,
     QgsProject,
     QgsSettings,
-    QgsSnappingConfig,
-    QgsTolerance,
-    QgsVectorLayer,
 )
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
@@ -22,10 +15,8 @@ from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.gui.dlg_settings import PlgOptionsFactory
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.plugin_utils.settings import PlgOptionsManager
 
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
-from .constants import NO_OVERLAPS_LAYER_GROUPS, SUGGESTED_QGIS_VERSION
 from .gui.dlg_create_project import DlgCreateProject
 from .gui.dlg_info import PluginInfo
 from .gui.dlg_metadata_edit import DlgMetadataEdit
@@ -88,9 +79,10 @@ class MzSTools:
         # connect to projectRead signal
         self.iface.projectRead.connect(self.check_project)
 
-        # when an entirely new project is started, disable the actions that require an open mzs tools project
+        # check project also when clicking on "New project" in the QGIS interface, to reinit the project manager
+        # and set some gui elements (actions) even when reloading the plugin in an already open project
         # https://qgis.org/pyqgis/master/gui/QgisInterface.html#qgis.gui.QgisInterface.newProjectCreated
-        self.iface.newProjectCreated.connect(self.enable_plugin_actions)
+        self.iface.newProjectCreated.connect(self.check_project)
 
     def add_action(
         self,
@@ -226,7 +218,7 @@ class MzSTools:
 
         # disconnect QgisInterface signals
         self.iface.projectRead.disconnect(self.check_project)
-        self.iface.newProjectCreated.disconnect(self.enable_plugin_actions)
+        self.iface.newProjectCreated.disconnect(self.check_project)
 
     # def on_new_qgis_project(self):
     #     self.action_edit_metadata.setEnabled(False)
@@ -433,6 +425,8 @@ class MzSTools:
         self.action_export_data.setEnabled(enabled)
 
     def update_current_project(self):
+        if not self.prj_manager.is_mzs_project or not self.prj_manager.project_updateable:
+            return
         self.log("Starting project update process.", log_level=1)
         self.iface.messageBar().clearWidgets()
 
