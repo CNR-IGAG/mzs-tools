@@ -1,4 +1,5 @@
 *.qgs~
+*.mdb
 /*.zip
 
 # shpinx build

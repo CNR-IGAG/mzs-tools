@@ -10,7 +10,7 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QInputDialog, QLineEdit
 
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.gui.dlg_settings import PlgOptionsFactory
@@ -20,6 +20,7 @@ from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .gui.dlg_create_project import DlgCreateProject
 from .gui.dlg_info import PluginInfo
 from .gui.dlg_metadata_edit import DlgMetadataEdit
+from .gui.dlg_import_data import DlgImportData
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
@@ -51,6 +52,9 @@ class MzSTools:
         self.dlg_metadata_edit = None
         self.info_dlg = PluginInfo(self.iface.mainWindow())
         self.import_shp_dlg = importa_shp()
+
+        self.dlg_import_data = None
+
         self.export_shp_dlg = esporta_shp()
         self.edit_win_dlg = edit_win()
 
@@ -159,7 +163,8 @@ class MzSTools:
             str(ico_importa),
             enabled_flag=enabled_flag,
             text=self.tr("Import project folder from geodatabase"),
-            callback=self.import_project,
+            # callback=self.import_project,
+            callback=self.open_dlg_import_data,
             parent=self.iface.mainWindow(),
         )
 
@@ -198,6 +203,10 @@ class MzSTools:
 
     def test_add_layers(self):
         self.prj_manager.add_default_layers(add_base_layers=True, add_editing_layers=True, add_layout_groups=True)
+
+    def open_dlg_import_data(self):
+        self.dlg_import_data = DlgImportData(self.iface.mainWindow())
+        self.dlg_import_data.show()
 
     def unload(self):
         # close db connections
