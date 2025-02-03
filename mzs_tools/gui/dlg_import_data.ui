@@ -44,14 +44,38 @@
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_6">
       <item>
-       <widget class="QRadioButton" name="radio_button_mdb">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>CdI_Tabelle.mdb</string>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QRadioButton" name="radio_button_mdb">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>CdI_Tabelle.mdb</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_mdb_msg">
+          <property name="text">
+           <string>TextLabel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QRadioButton" name="radio_button_csv">
@@ -103,8 +127,8 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>556</width>
-           <height>243</height>
+           <width>550</width>
+           <height>255</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -137,7 +161,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>474</width>
+           <width>556</width>
            <height>104</height>
           </rect>
          </property>

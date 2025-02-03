@@ -1,28 +1,38 @@
 from pathlib import Path
 
-import jpype
-import jpype.imports
-from jpype.types import *  # noqa: F403
-from qgis.core import QgsApplication, QgsAuthMethodConfig
-from qgis.gui import QgsAuthConfigSelect
+from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig
+from qgis.gui import QgsAuthConfigSelect, QgsMessageBarItem
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt
 from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import (
     QAction,
+    QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
     QInputDialog,
     QLabel,
     QLineEdit,
-    QMessageBox,
+    QProgressBar,
+    QPushButton,
     QVBoxLayout,
 )
 from qgis.utils import iface
 
 from mzs_tools.core.access_db_connection import AccessDbConnection
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from mzs_tools.tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
+
+EXT_LIBS_LOADED = True
+
+try:
+    import jpype
+    import jpype.imports
+    from jpype.types import *  # noqa: F403
+except ImportError:
+    EXT_LIBS_LOADED = False
+
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -31,6 +41,7 @@ class DlgImportData(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.log = MzSToolsLogger().log
+        self.iface = iface
         self.setupUi(self)
 
         self.help_button = self.button_box.button(QDialogButtonBox.Help)
@@ -47,6 +58,12 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.radio_button_csv.toggled.connect(self.enable_csv_selection)
 
         self.group_box_content.setVisible(False)
+        self.label_mdb_msg.setText("")
+        self.label_mdb_msg.setVisible(False)
+
+        self.input_path = None
+
+        self.accepted.connect(self.start_import_tasks)
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -72,18 +89,31 @@ class DlgImportData(QDialog, FORM_CLASS):
 
             self.radio_button_csv.setEnabled(False)
 
+            self.label_mdb_msg.setVisible(False)
+
             return
 
+        self.label_mdb_msg.setVisible(True)
+
         mdb_path = Path(input_dir) / "Indagini" / "CdI_Tabelle.mdb"
-        if mdb_path.exists():
-            self.check_mdb_connection(mdb_path)
+        if EXT_LIBS_LOADED:
+            if mdb_path.exists():
+                self.check_mdb_connection(mdb_path)
+            else:
+                self.label_mdb_msg.setText("[File non trovato]")
+                self.radio_button_mdb.setEnabled(False)
         else:
-            self.radio_button_mdb.setText("CdI_Tabelle.mdb [File non trovato]")
+            self.log(
+                "Required external libraries not loaded. Use 'qpip' QGIS plugin to install dependencies.", log_level=2
+            )
+            self.label_mdb_msg.setText("[Librerie non caricate]")
             self.radio_button_mdb.setEnabled(False)
 
         if self.check_project_dir(input_dir):
             self.radio_button_csv.setEnabled(True)
             self.group_box_content.setVisible(True)
+
+            self.input_path = Path(input_dir)
 
     def enable_csv_selection(self):
         self.csv_dir_widget.setEnabled(self.radio_button_csv.isChecked())
@@ -109,7 +139,7 @@ class DlgImportData(QDialog, FORM_CLASS):
             connected = mdb_conn.open()
         except Exception as e:
             if not jpype.isJVMStarted():
-                self.radio_button_mdb.setText("CdI_Tabelle.mdb [Errore JVM]")
+                self.label_mdb_msg.setText("[Errore JVM]")
                 self.radio_button_mdb.setEnabled(False)
                 return False
             from net.ucanaccess.exception import AuthenticationException  # type: ignore
@@ -122,27 +152,126 @@ class DlgImportData(QDialog, FORM_CLASS):
                 # password, ok = QInputDialog.getText(self, title, label, mode, text)
                 # if ok:
                 #     return self.check_mdb_connection(mdb_path, password=password)
-                dialog = CustomDialog(self)
+
+                # dialog = CustomDialog(self)
+                # dialog.exec_()
+                # if dialog.result() == QDialog.Accepted:
+                #     self.log(f"Selected auth config: {dialog.config_id}", log_level=4)
+                #     if dialog.config_id:
+                #         authManager = QgsApplication.authManager()
+                #         config = QgsAuthMethodConfig()
+                #         success = authManager.loadAuthenticationConfig(dialog.config_id, config, full=True)
+                #         if success:
+                #             return self.check_mdb_connection(mdb_path, password=config.configMap()["password"])
+
+                if password is None:
+                    # check if the password was saved in the QGIS auth manager
+                    authManager = QgsApplication.authManager()
+                    stored_config_id = self.retrieve_auth_config_by_name("MzS Tools CdI_Tabelle.mdb password")
+                    if stored_config_id:
+                        config = QgsAuthMethodConfig()
+                        success = authManager.loadAuthenticationConfig(stored_config_id, config, full=True)
+                        if success:
+                            self.log(f"Loaded stored password from config id: {stored_config_id}", log_level=4)
+                            return self.check_mdb_connection(mdb_path, password=config.configMap()["password"])
+                else:
+                    # password was stored but it's incorrect, remove it
+                    authManager = QgsApplication.authManager()
+                    stored_config_id = self.retrieve_auth_config_by_name("MzS Tools CdI_Tabelle.mdb password")
+                    if stored_config_id:
+                        authManager.removeAuthenticationConfig(stored_config_id)
+                        self.log(f"Removed invalid auth config with id: {stored_config_id}", log_level=4)
+
+                dialog = DlgMdbPassword(self)
                 dialog.exec_()
                 if dialog.result() == QDialog.Accepted:
-                    self.log(f"Selected auth config: {dialog.config_id}", log_level=4)
-                    if dialog.config_id:
-                        authManager = QgsApplication.authManager()
-                        config = QgsAuthMethodConfig()
-                        success = authManager.loadAuthenticationConfig(dialog.config_id, config, full=True)
-                        if success:
-                            return self.check_mdb_connection(mdb_path, password=config.configMap()["password"])
+                    self.log(f"Password: {dialog.input.text()}", log_level=4)
+                    if dialog.input.text():
+                        if dialog.save_password:
+                            authManager = QgsApplication.authManager()
+                            config = QgsAuthMethodConfig()
+                            config.setMethod("Basic")
+                            config.setName("MzS Tools CdI_Tabelle.mdb password")
+                            config.setConfig("password", dialog.input.text())
+                            authManager.storeAuthenticationConfig(config)
+                            self.log(f"Password saved in QGIS auth manager: {config.id()}", log_level=4)
+                    return self.check_mdb_connection(mdb_path, password=dialog.input.text())
 
-                self.radio_button_mdb.setText("CdI_Tabelle.mdb [Password richiesta]")
+                self.label_mdb_msg.setText("[Password richiesta]")
             else:
-                self.radio_button_mdb.setText("CdI_Tabelle.mdb [Connessione non riuscita]")
+                self.label_mdb_msg.setText("[Connessione non riuscita]")
                 self.radio_button_mdb.setEnabled(False)
             return False
 
         if connected:
-            self.radio_button_mdb.setText("CdI_Tabelle.mdb [Connessione riuscita]")
+            self.label_mdb_msg.setText(f"[Connessione {"con password" if password else ""} riuscita]")
             self.radio_button_mdb.setEnabled(True)
             mdb_conn.close()
+
+    def retrieve_auth_config_by_name(self, name):
+        authManager = QgsApplication.authManager()
+        for id, config in authManager.availableAuthMethodConfigs().items():
+            if config.name() == name:
+                return id
+        return None
+
+    def start_import_tasks(self):
+        if not self.input_path:
+            self.log("No input path selected", log_level=2)
+            return
+        self.log("Starting import tasks")
+
+        if self.radio_button_mdb.isChecked():
+            self.log("Starting import tasks for CdI_Tabelle.mdb")
+        elif self.radio_button_csv.isChecked():
+            self.log("Starting import tasks for CSV files")
+        else:
+            self.log("No import tasks selected", log_level=2)
+
+        self.log(f"Importing data from {self.input_path}")
+
+        # issue n.1: the task does not start if it is not assigned to self
+        # https://gis.stackexchange.com/a/435487
+        self.task = ImportSitiPuntualiTask(self.input_path)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage("Import Progress: ")
+        progress_msg.layout().addWidget(self.progress_bar)
+
+        cancel_button = QPushButton()
+        cancel_button.setText("Cancel")
+        cancel_button.clicked.connect(self.task_cancelled)
+        progress_msg.layout().addWidget(cancel_button)
+
+        self.iface.messageBar().pushWidget(progress_msg, Qgis.Info)
+
+        # issue n.2: don't use task.progress() - it does not work properly
+        # self.task.progressChanged.connect(lambda: self.log(f"Progress: {self.task.progress()}"))
+        # self.task.progressChanged.connect(self.log_progress)
+        self.task.progressChanged.connect(lambda p: self.log(f"Progress: {p}"))
+
+        self.task.progressChanged.connect(lambda v: self.progress_bar.setValue(int(v)))
+        self.task.taskCompleted.connect(self.task_completed)
+
+        # self.task.progressChanged.connect(lambda: self.log("Progress"))
+        QgsApplication.taskManager().addTask(self.task)
+
+        self.close()
+
+    def task_completed(self):
+        self.log("Task completed.")
+        self.iface.messageBar().clearWidgets()
+        self.iface.messageBar().pushMessage("Import completed", "Data imported successfully", level=Qgis.Success)
+
+    def task_cancelled(self):
+        self.task.taskCompleted.disconnect()
+        self.task.progressChanged.disconnect()
+        self.task.cancel()
+        self.log("Task cancelled.")
+        self.iface.messageBar().clearWidgets()
+        self.iface.messageBar().pushMessage("Import cancelled", "Data import cancelled", level=Qgis.Warning)
 
 
 class CustomDialog(QDialog):
@@ -171,3 +300,36 @@ class CustomDialog(QDialog):
 
     def get_config_id(self):
         self.config_id = self.auth_config_selector.configId()
+
+
+class DlgMdbPassword(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Enter database password")
+
+        self.layout = QVBoxLayout()
+
+        self.label = QLabel("A password is required to access CdI_Tabelle.mdb")
+        self.layout.addWidget(self.label)
+
+        self.input = QLineEdit()
+        self.input.setEchoMode(QLineEdit.Password)
+        self.layout.addWidget(self.input)
+
+        self.chkbox_save = QCheckBox("Save password in QGIS auth manager")
+        self.chkbox_save.setCheckState(Qt.Checked)
+        self.chkbox_save.stateChanged.connect(self.on_chkbox_save_state_changed)
+        self.layout.addWidget(self.chkbox_save)
+
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.layout.addWidget(self.button_box)
+
+        self.setLayout(self.layout)
+
+        self.save_password = True
+        self.password = None
+
+    def on_chkbox_save_state_changed(self, state):
+        self.save_password = state == Qt.Checked
