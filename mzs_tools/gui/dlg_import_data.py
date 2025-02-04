@@ -20,18 +20,9 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.utils import iface
 
-from mzs_tools.core.access_db_connection import AccessDbConnection
+from mzs_tools.core.access_db_connection import AccessDbConnection, MdbAuthError, JVMError
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
 from mzs_tools.tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
-
-EXT_LIBS_LOADED = True
-
-try:
-    import jpype
-    import jpype.imports
-    from jpype.types import *  # noqa: F403
-except ImportError:
-    EXT_LIBS_LOADED = False
 
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
@@ -90,29 +81,20 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.radio_button_csv.setEnabled(False)
 
             self.label_mdb_msg.setVisible(False)
-
             return
 
         self.label_mdb_msg.setVisible(True)
 
         mdb_path = Path(input_dir) / "Indagini" / "CdI_Tabelle.mdb"
-        if EXT_LIBS_LOADED:
-            if mdb_path.exists():
-                self.check_mdb_connection(mdb_path)
-            else:
-                self.label_mdb_msg.setText("[File non trovato]")
-                self.radio_button_mdb.setEnabled(False)
+        if mdb_path.exists():
+            self.check_mdb_connection(mdb_path)
         else:
-            self.log(
-                "Required external libraries not loaded. Use 'qpip' QGIS plugin to install dependencies.", log_level=2
-            )
-            self.label_mdb_msg.setText("[Librerie non caricate]")
+            self.label_mdb_msg.setText("[File non trovato]")
             self.radio_button_mdb.setEnabled(False)
 
         if self.check_project_dir(input_dir):
             self.radio_button_csv.setEnabled(True)
             self.group_box_content.setVisible(True)
-
             self.input_path = Path(input_dir)
 
     def enable_csv_selection(self):
@@ -132,81 +114,63 @@ class DlgImportData(QDialog, FORM_CLASS):
         return True
 
     def check_mdb_connection(self, mdb_path, password=None):
-        mdb_conn = AccessDbConnection(mdb_path, password=password)
-
         connected = False
+        mdb_conn = None
         try:
+            mdb_conn = AccessDbConnection(mdb_path, password=password)
             connected = mdb_conn.open()
-        except Exception as e:
-            if not jpype.isJVMStarted():
-                self.label_mdb_msg.setText("[Errore JVM]")
-                self.radio_button_mdb.setEnabled(False)
-                return False
-            from net.ucanaccess.exception import AuthenticationException  # type: ignore
-
-            if isinstance(e.getCause(), AuthenticationException):
-                # title = "Enter database password"
-                # label = "A password is required to access the database"
-                # text = ""
-                # mode = QLineEdit.Password
-                # password, ok = QInputDialog.getText(self, title, label, mode, text)
-                # if ok:
-                #     return self.check_mdb_connection(mdb_path, password=password)
-
-                # dialog = CustomDialog(self)
-                # dialog.exec_()
-                # if dialog.result() == QDialog.Accepted:
-                #     self.log(f"Selected auth config: {dialog.config_id}", log_level=4)
-                #     if dialog.config_id:
-                #         authManager = QgsApplication.authManager()
-                #         config = QgsAuthMethodConfig()
-                #         success = authManager.loadAuthenticationConfig(dialog.config_id, config, full=True)
-                #         if success:
-                #             return self.check_mdb_connection(mdb_path, password=config.configMap()["password"])
-
-                if password is None:
-                    # check if the password was saved in the QGIS auth manager
-                    authManager = QgsApplication.authManager()
-                    stored_config_id = self.retrieve_auth_config_by_name("MzS Tools CdI_Tabelle.mdb password")
-                    if stored_config_id:
-                        config = QgsAuthMethodConfig()
-                        success = authManager.loadAuthenticationConfig(stored_config_id, config, full=True)
-                        if success:
-                            self.log(f"Loaded stored password from config id: {stored_config_id}", log_level=4)
-                            return self.check_mdb_connection(mdb_path, password=config.configMap()["password"])
-                else:
-                    # password was stored but it's incorrect, remove it
-                    authManager = QgsApplication.authManager()
-                    stored_config_id = self.retrieve_auth_config_by_name("MzS Tools CdI_Tabelle.mdb password")
-                    if stored_config_id:
-                        authManager.removeAuthenticationConfig(stored_config_id)
-                        self.log(f"Removed invalid auth config with id: {stored_config_id}", log_level=4)
-
-                dialog = DlgMdbPassword(self)
-                dialog.exec_()
-                if dialog.result() == QDialog.Accepted:
-                    self.log(f"Password: {dialog.input.text()}", log_level=4)
-                    if dialog.input.text():
-                        if dialog.save_password:
-                            authManager = QgsApplication.authManager()
-                            config = QgsAuthMethodConfig()
-                            config.setMethod("Basic")
-                            config.setName("MzS Tools CdI_Tabelle.mdb password")
-                            config.setConfig("password", dialog.input.text())
-                            authManager.storeAuthenticationConfig(config)
-                            self.log(f"Password saved in QGIS auth manager: {config.id()}", log_level=4)
-                    return self.check_mdb_connection(mdb_path, password=dialog.input.text())
-
-                self.label_mdb_msg.setText("[Password richiesta]")
+        except ImportError as e:
+            self.log(f"{e}. Use 'qpip' QGIS plugin to install dependencies.", log_level=2)
+            self.label_mdb_msg.setText(f"[{e}]")
+        except JVMError as e:
+            self.log(f"{e}", log_level=2)
+            self.label_mdb_msg.setText(f"[{e} - check your Java JVM installation]")
+        except MdbAuthError as e:
+            self.log(f"{e}", log_level=1)
+            if password is None:
+                # check if the password was saved in the QGIS auth manager
+                authManager = QgsApplication.authManager()
+                stored_config_id = self.retrieve_auth_config_by_name("MzS Tools CdI_Tabelle.mdb password")
+                if stored_config_id:
+                    config = QgsAuthMethodConfig()
+                    success = authManager.loadAuthenticationConfig(stored_config_id, config, full=True)
+                    if success:
+                        self.log(f"Loaded stored password from config id: {stored_config_id}", log_level=4)
+                        return self.check_mdb_connection(mdb_path, password=config.configMap()["password"])
             else:
-                self.label_mdb_msg.setText("[Connessione non riuscita]")
-                self.radio_button_mdb.setEnabled(False)
-            return False
+                # password was stored but it's incorrect, remove it
+                authManager = QgsApplication.authManager()
+                stored_config_id = self.retrieve_auth_config_by_name("MzS Tools CdI_Tabelle.mdb password")
+                if stored_config_id:
+                    authManager.removeAuthenticationConfig(stored_config_id)
+                    self.log(f"Removed invalid auth config with id: {stored_config_id}", log_level=4)
 
-        if connected:
-            self.label_mdb_msg.setText(f"[Connessione {"con password" if password else ""} riuscita]")
-            self.radio_button_mdb.setEnabled(True)
-            mdb_conn.close()
+            dialog = DlgMdbPassword(self)
+            dialog.exec_()
+            if dialog.result() == QDialog.Accepted:
+                self.log(f"Password: {dialog.input.text()}", log_level=4)
+                if dialog.input.text():
+                    if dialog.save_password:
+                        authManager = QgsApplication.authManager()
+                        config = QgsAuthMethodConfig()
+                        config.setMethod("Basic")
+                        config.setName("MzS Tools CdI_Tabelle.mdb password")
+                        config.setConfig("password", dialog.input.text())
+                        authManager.storeAuthenticationConfig(config)
+                        self.log(f"Password saved in QGIS auth manager: {config.id()}", log_level=4)
+                return self.check_mdb_connection(mdb_path, password=dialog.input.text())
+            # dialog rejected
+            self.label_mdb_msg.setText(f"[{e}]")
+        except Exception as e:
+            self.log(f"{e}", log_level=2)
+            self.label_mdb_msg.setText("[Connessione non riuscita]")
+        finally:
+            if connected:
+                mdb_conn.close()
+                self.label_mdb_msg.setText(f"[Connessione {"con password" if password else ""} riuscita]")
+            self.radio_button_mdb.setEnabled(connected)
+
+        return connected
 
     def retrieve_auth_config_by_name(self, name):
         authManager = QgsApplication.authManager()

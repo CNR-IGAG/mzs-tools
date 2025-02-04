@@ -673,7 +673,7 @@ class MzSProjectManager:
 
         self.is_mzs_project = True
 
-        self.project_path = project_path
+        self.project_path = Path(project_path)
         self.db_path = db_path
 
         # setup db connection and save it to the manager

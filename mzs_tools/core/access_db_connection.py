@@ -35,7 +35,7 @@ class AccessDbConnection:
                 jpype.startJVM(classpath=self.classpath, convertStrings=False)
         except Exception as e:
             self.log(f"Error starting JVM: {e} ", log_level=2)
-            raise e
+            raise JVMError("Error starting JVM")
 
         from java.lang import System  # type: ignore
 
@@ -48,11 +48,14 @@ class AccessDbConnection:
             self.connection = jaydebeapi.connect(self.driver, self.url, self.options)
         except Exception as e:
             # can import only when the JVM is running
-            # from net.ucanaccess.exception import AuthenticationException, UcanaccessSQLException
+            from net.ucanaccess.exception import AuthenticationException  # type: ignore
 
             self.log(f"{e} - {e.getMessage()}", log_level=1)
             self.log(f"cause: {e.getCause()}", log_level=4)
             # self.log(f"getErrorCode: {e.getErrorCode()}", log_level=4)
+
+            if isinstance(e.getCause(), AuthenticationException):
+                raise MdbAuthError("Invalid password")
 
             raise e
 
@@ -86,3 +89,11 @@ class AccessDbConnection:
     def rollback(self):
         # Rollback the transaction
         self.connection.rollback()
+
+
+class MdbAuthError(Exception):
+    pass
+
+
+class JVMError(Exception):
+    pass

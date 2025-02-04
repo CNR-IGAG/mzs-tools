@@ -559,7 +559,12 @@ SET "id_parpu" = "id_indpu" || "tipo_parpu" || "pkuid",
 				WHEN "valore_appoggio" IS NOT NULL
 					THEN "valore_appoggio"
 					ELSE "valore"
-			    END
+			    END,
+    "valore_appoggio" = CASE
+	                     WHEN "valore"/1 > 0
+	                      THEN NULL
+	                     ELSE "valore_appoggio"
+	                    END
 WHERE pkuid = NEW.pkuid; 
 END;;
 
