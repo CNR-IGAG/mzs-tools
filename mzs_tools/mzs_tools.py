@@ -411,7 +411,6 @@ class MzSTools:
         self.prj_manager.connect_editing_signals()
 
         # connect to layer nameChanged signal to warn the user when renaming required layers
-        # TODO: find a better way to protect required layers and stop relying on layer names
         # use layer IDs and/or the underlying database table instead
         # for layer in QgsProject.instance().requiredLayers():
         #     layer.nameChanged.disconnect()
@@ -440,6 +439,7 @@ class MzSTools:
         self.iface.messageBar().clearWidgets()
 
         self.prj_manager.backup_project()
+        # TODO: rollback if something goes wrong
         self.prj_manager.update_db()
         self.prj_manager.update_project()
 

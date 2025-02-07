@@ -2016,6 +2016,69 @@ class MzSProjectManager:
                 values,
             )
 
+    def count_indagini_data(self):
+        result = {
+            "sito_puntuale": [],
+            "indagini_puntuali": [],
+            "parametri_puntuali": [],
+            "curve": [],
+            "sito_lineare": [],
+            "indagini_lineari": [],
+            "parametri_lineari": [],
+        }
+        with self.db_connection as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM sito_puntuale")
+            result["sito_puntuale"].append(cursor.fetchone()[0])
+            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="sito_puntuale"').fetchone()
+            result["sito_puntuale"].append(res[0] if res else 0)
+
+            cursor.execute("SELECT COUNT(*) FROM indagini_puntuali")
+            result["indagini_puntuali"].append(cursor.fetchone()[0])
+            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="indagini_puntuali"').fetchone()
+            result["indagini_puntuali"].append(res[0] if res else 0)
+
+            cursor.execute("SELECT COUNT(*) FROM parametri_puntuali")
+            result["parametri_puntuali"].append(cursor.fetchone()[0])
+            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="parametri_puntuali"').fetchone()
+            result["parametri_puntuali"].append(res[0] if res else 0)
+
+            cursor.execute("SELECT COUNT(*) FROM curve")
+            result["curve"].append(cursor.fetchone()[0])
+            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="curve"').fetchone()
+            result["curve"].append(res[0] if res else 0)
+
+            cursor.execute("SELECT COUNT(*) FROM sito_lineare")
+            result["sito_lineare"].append(cursor.fetchone()[0])
+            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="sito_lineare"').fetchone()
+            result["sito_lineare"].append(res[0] if res else 0)
+
+            cursor.execute("SELECT COUNT(*) FROM indagini_lineari")
+            result["indagini_lineari"].append(cursor.fetchone()[0])
+            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="indagini_lineari"').fetchone()
+            result["indagini_lineari"].append(res[0] if res else 0)
+
+            cursor.execute("SELECT COUNT(*) FROM parametri_lineari")
+            result["parametri_lineari"].append(cursor.fetchone()[0])
+            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="parametri_lineari"').fetchone()
+            result["parametri_lineari"].append(res[0] if res else 0)
+
+            cursor.close()
+        return result
+
+    def reset_indagini_sequences(self):
+        with self.db_connection as conn:
+            cursor = conn.cursor()
+            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="sito_puntuale"')
+            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="indagini_puntuali"')
+            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="parametri_puntuali"')
+            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="curve"')
+            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="sito_lineare"')
+            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="indagini_lineari"')
+            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="parametri_lineari"')
+            conn.commit()
+            cursor.close()
+
     def backup_project(self, out_dir=None):
         if not out_dir:
             out_dir = self.project_path.parent
