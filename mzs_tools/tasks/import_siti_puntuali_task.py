@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+import shutil
 
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
@@ -66,8 +67,8 @@ class ImportSitiPuntualiTask(QgsTask):
             pass
 
         # TODO: testing only
-        # self.log("Deleting all siti_puntuali", log_level=1)
-        # self.delete_all_siti_puntuali()
+        self.log("Deleting all siti_puntuali", log_level=1)
+        self.delete_all_siti_puntuali()
 
         for feature in features:
             self.iterations += 1
@@ -148,11 +149,22 @@ class ImportSitiPuntualiTask(QgsTask):
                             value[k] = None
                     # change counters when data is already present
                     indagine_puntuale_source_pkey = value["pkey_indpu"]
+                    indagine_puntuale_source_id_indpu = value["ID_INDPU"]
                     if self.adapt_counters and self.indagini_puntuali_seq > 0:
                         value["pkey_indpu"] = int(value["pkey_indpu"]) + self.indagini_puntuali_seq
                         value["ID_INDPU"] = value["ID_SPU"] + value["tipo_ind"] + str(value["pkey_indpu"])
 
-                    # TODO: copy and adapt attachments
+                    # copy and adapt attachments
+                    try:
+                        if value["doc_ind"]:
+                            # self.log(f"Copying attachment {value['doc_ind']}")
+                            new_file_name = self.copy_attachment(
+                                value["doc_ind"], indagine_puntuale_source_id_indpu, value["ID_INDPU"]
+                            )
+                            if new_file_name:
+                                value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
+                    except Exception as e:
+                        self.log(f"Error copying indagine puntuale attachment {value['doc_ind']}: {e}", log_level=1)
 
                     try:
                         self.insert_indagine_puntuale(value)
@@ -192,11 +204,22 @@ class ImportSitiPuntualiTask(QgsTask):
 
                         # change counters when data is already present
                         parametro_puntuale_source_pkey = value["pkey_parpu"]
+                        parametro_puntuale_source_id_parpu = value["ID_PARPU"]
                         if self.adapt_counters and self.parametri_puntuali_seq > 0:
                             value["pkey_parpu"] = int(value["pkey_parpu"]) + self.parametri_puntuali_seq
                             value["ID_PARPU"] = value["ID_INDPU"] + value["tipo_parpu"] + str(value["pkey_parpu"])
 
-                            # TODO: copy and adapt attachments
+                        # copy and adapt attachments
+                        try:
+                            if value["tab_curve"]:
+                                # self.log(f"Copying tab_curve {value['tab_curve']}")
+                                new_file_name = self.copy_attachment(
+                                    value["tab_curve"], parametro_puntuale_source_id_parpu, value["ID_PARPU"]
+                                )
+                                if new_file_name:
+                                    value["tab_curve"] = "./Allegati/Documenti/" + new_file_name
+                        except Exception as e:
+                            self.log(f"Error copying parametro attachment {value['tab_curve']}: {e}", log_level=1)
 
                         try:
                             self.insert_parametro_puntuale(value)
@@ -296,7 +319,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="sito_puntuale"''')
             data = cursor.fetchall()
             cursor.close()
-        return data[0][0]
+        return data[0][0] if data else 0
 
     def get_indagini_puntuali_seq(self):
         with self.get_spatialite_db_connection() as conn:
@@ -304,7 +327,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="indagini_puntuali"''')
             data = cursor.fetchall()
             cursor.close()
-        return data[0][0]
+        return data[0][0] if data else 0
 
     def get_parametri_puntuali_seq(self):
         with self.get_spatialite_db_connection() as conn:
@@ -312,7 +335,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="parametri_puntuali"''')
             data = cursor.fetchall()
             cursor.close()
-        return data[0][0]
+        return data[0][0] if data else 0
 
     def get_curve_seq(self):
         with self.get_spatialite_db_connection() as conn:
@@ -320,7 +343,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="curve"''')
             data = cursor.fetchall()
             cursor.close()
-        return data[0][0]
+        return data[0][0] if data else 0
 
     def insert_indagine_puntuale(self, data: dict):
         with self.get_spatialite_db_connection() as conn:
@@ -365,3 +388,25 @@ class ImportSitiPuntualiTask(QgsTask):
         if not self.spatialite_db_connection:
             self.spatialite_db_connection = spatialite_connect(str(self.prj_manager.db_path))
         return self.spatialite_db_connection
+
+    def copy_attachment(self, attachment_file_name: str, old_id: str, new_id: str):
+        # check file exists
+        file_path = Path(self.input_path) / "Indagini" / "Documenti" / attachment_file_name
+        if not Path(file_path).exists():
+            self.log(f"Attachment {file_path} not found, skipping", log_level=1)
+            return None
+        # copy in the project folder
+        dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"
+
+        # if a new ID has been assigned to the indagine or parametro, add it to the file name
+        new_file_name = None
+        if old_id != new_id:
+            new_file_name = f"{new_id}_[{file_path.stem}]{file_path.suffix}"
+
+        if new_file_name:
+            shutil.copy(file_path, dest_path / new_file_name)
+        else:
+            shutil.copy(file_path, dest_path)
+
+        # self.log(f"Attachment {attachment_file_name} copied to project folder", log_level=4)
+        return new_file_name or attachment_file_name

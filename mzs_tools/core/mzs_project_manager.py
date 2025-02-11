@@ -2092,6 +2092,13 @@ class MzSProjectManager:
 
         return backup_path
 
+    # TODO: function to check, copy and fix all file attachments
+    # indagini puntuali (doc_ind, tab_curve), indagini lineari (doc_ind), stab + instab lv.3 (spettri)
+    # when inserting data, the attachments have a path relative to the project folder:
+    # the function should (for every indagine):
+    # - check if the file exists and copy it in the project folder
+    # - update the attachment path in the database
+
     @staticmethod
     def extract_project_template(dir_out):
         project_template_path = DIR_PLUGIN_ROOT / "data" / "progetto_MS.zip"

@@ -205,8 +205,33 @@ class MzSTools:
         self.prj_manager.add_default_layers(add_base_layers=True, add_editing_layers=True, add_layout_groups=True)
 
     def open_dlg_import_data(self):
-        self.dlg_import_data = DlgImportData(self.iface.mainWindow())
-        self.dlg_import_data.show()
+        if self.dlg_import_data is None:
+            self.dlg_import_data = DlgImportData(self.iface.mainWindow())
+
+        indagini_count = self.prj_manager.count_indagini_data()
+        # self.log(f"Indagini data count: {indagini_count}", log_level=4)
+        prj_contains_indagini_data = False
+        sequences_gt_0 = False
+        for tab, count in indagini_count.items():
+            # count[0] is the table rows count, count[1] is the sequence for the primary key
+            if count[0] > 0:
+                prj_contains_indagini_data = True
+            if count[1] > 0:
+                sequences_gt_0 = True
+
+        if prj_contains_indagini_data:
+            title = self.tr("Warning!")
+            message = self.tr(
+                "The project already contains 'Indagini' data and/or related data (siti, indagini, parametri, curve)."
+                "\n\nThe imported data numeric IDs will be different from the original data."
+                "\n\nTo preserve the original IDs, use a new, empy project, or delete all punctual and linear sites before running the import tool."
+            )
+            QMessageBox.warning(self.iface.mainWindow(), title, message)
+            self.dlg_import_data.reset_sequences = False
+        else:
+            self.dlg_import_data.reset_sequences = sequences_gt_0
+
+        self.dlg_import_data.exec()
 
     def unload(self):
         # close db connections

@@ -116,6 +116,34 @@ class AccessDbConnection:
             for row in data
         }
 
+    def get_sito_lineare_data(self):
+        field_names = [
+            "pkey_sln",
+            "ubicazione_prov",
+            "ubicazione_com",
+            "ID_SLN",
+            "Acoord_X",
+            "Acoord_Y",
+            "Bcoord_X",
+            "Bcoord_Y",
+            "mod_identcoord",
+            "desc_modcoord",
+            "data_sito",
+            "note_sito",
+            "Aquota",
+            "Bquota",
+        ]
+        query = """SELECT [pkey_sln], [ubicazione_prov], [ubicazione_com], ID_SLN, [Acoord_X], [Acoord_Y], [Bcoord_X],
+                [Bcoord_Y], [mod_identcoord], [desc_modcoord], [data_sito], [note_sito], [Aquota], [Bquota] FROM
+                [Sito_Lineare]"""
+        data = self.execute(query)
+        return {
+            row[3]: {
+                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+            }
+            for row in data
+        }
+
     def get_indagini_puntuali_data(self):
         field_names = [
             "pkey_spu",
@@ -146,6 +174,30 @@ class AccessDbConnection:
             for row in data
         }
 
+    def get_indagini_lineari_data(self):
+        field_names = [
+            "pkey_sln",
+            "pkey_indln",
+            "classe_ind",
+            "tipo_ind",
+            "ID_INDLN",
+            "id_indlnex",
+            "arch_ex",
+            "note_indln",
+            "data_ind",
+            "doc_pag",
+            "doc_ind",
+        ]
+        query = """SELECT [pkey_sln], [pkey_indln], [classe_ind], [tipo_ind], ID_INDLN, [id_indlnex], [arch_ex],
+                [note_indln], [data_ind], [doc_pag], [doc_ind] FROM [Indagini_Lineari]"""
+        data = self.execute(query)
+        return {
+            (row[0], row[4]): {
+                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+            }
+            for row in data
+        }
+
     def get_parametri_puntuali_data(self):
         field_names = [
             "pkey_indpu",
@@ -166,6 +218,33 @@ class AccessDbConnection:
         query = """SELECT [pkey_indpu], [pkey_parpu], [tipo_parpu], ID_PARPU, [prof_top], [prof_bot], [spessore],
                    [quota_slm_top], [quota_slm_bot], [valore], [attend_mis], [tab_curve], [note_par], [data_par]
                    FROM [Parametri_Puntuali]"""
+        data = self.execute(query)
+        return {
+            (row[0], row[3]): {
+                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+            }
+            for row in data
+        }
+
+    def get_parametri_lineari_data(self):
+        field_names = [
+            "pkey_indln",
+            "pkey_parln",
+            "tipo_parln",
+            "ID_PARLN",
+            "prof_top",
+            "prof_bot",
+            "spessore",
+            "quota_slm_top",
+            "quota_slm_bot",
+            "valore",
+            "attend_mis",
+            "note_par",
+            "data_par",
+        ]
+        query = """SELECT [pkey_indln], [pkey_parln], [tipo_parln], ID_PARLN, [prof_top], [prof_bot], [spessore],
+                [quota_slm_top], [quota_slm_bot], [valore], [attend_mis], [note_par], [data_par]
+                   FROM [Parametri_Lineari]"""
         data = self.execute(query)
         return {
             (row[0], row[3]): {
