@@ -7,11 +7,18 @@ from qgis.utils import spatialite_connect
 
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from mzs_tools.plugin_utils.misc import retry_on_lock
 from mzs_tools.tasks.common_functions import setup_mdb_connection
 
 
 class ImportSitiPuntualiTask(QgsTask):
-    def __init__(self, input_path: Path, data_source: str, mdb_password: str = None, adapt_counters: bool = True):
+    def __init__(
+        self,
+        proj_paths: dict,
+        data_source: str,
+        mdb_password: str = None,
+        adapt_counters: bool = True,
+    ):
         super().__init__("Import siti puntuali (siti, indagini, parametri, curve)", QgsTask.CanCancel)
 
         self.iterations = 0
@@ -19,7 +26,6 @@ class ImportSitiPuntualiTask(QgsTask):
 
         self.log = MzSToolsLogger().log
 
-        self.input_path = input_path
         self.data_source = data_source
         self.mdb_password = mdb_password
 
@@ -27,10 +33,10 @@ class ImportSitiPuntualiTask(QgsTask):
         self.spatialite_db_connection = None
         self.mdb_connection = None
 
-        siti_puntuali_shapefile_path = input_path / "Indagini" / "Ind_pu.shp"
-        self.mdb_path = input_path / "Indagini" / "CdI_Tabelle.mdb"
+        self.proj_paths = proj_paths
+        self.mdb_path = self.proj_paths["CdI_Tabelle.mdb"]["path"]
 
-        self.siti_puntuali_shapefile = QgsVectorLayer(str(siti_puntuali_shapefile_path), "Ind_pu", "ogr")
+        self.siti_puntuali_shapefile = QgsVectorLayer(str(self.proj_paths["Ind_pu.shp"]["path"]), "Ind_pu", "ogr")
         self.num_siti = self.siti_puntuali_shapefile.featureCount()
 
         # option to adapt the primary keys of the imported data to avoid conflicts with existing data
@@ -283,6 +289,7 @@ class ImportSitiPuntualiTask(QgsTask):
         self.log(f"Task {self.description()} was canceled", log_level=1)
         super().cancel()
 
+    @retry_on_lock()
     def insert_sito_puntuale(self, data: dict):
         """Insert a new 'sito_puntuale' record into the database."""
         with self.get_spatialite_db_connection() as conn:
@@ -297,6 +304,7 @@ class ImportSitiPuntualiTask(QgsTask):
             conn.commit()
             cursor.close()
 
+    @retry_on_lock()
     def delete_sito_puntuale(self, pkuid: int):
         """Delete a 'sito_puntuale' record from the database."""
         with self.get_spatialite_db_connection() as conn:
@@ -305,6 +313,7 @@ class ImportSitiPuntualiTask(QgsTask):
             conn.commit()
             cursor.close()
 
+    @retry_on_lock()
     def delete_all_siti_puntuali(self):
         """Delete all 'sito_puntuale' records from the database."""
         with self.get_spatialite_db_connection() as conn:
@@ -313,6 +322,7 @@ class ImportSitiPuntualiTask(QgsTask):
             conn.commit()
             cursor.close()
 
+    @retry_on_lock()
     def get_sito_puntuale_seq(self):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -321,6 +331,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.close()
         return data[0][0] if data else 0
 
+    @retry_on_lock()
     def get_indagini_puntuali_seq(self):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -329,6 +340,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.close()
         return data[0][0] if data else 0
 
+    @retry_on_lock()
     def get_parametri_puntuali_seq(self):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -337,6 +349,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.close()
         return data[0][0] if data else 0
 
+    @retry_on_lock()
     def get_curve_seq(self):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -345,6 +358,7 @@ class ImportSitiPuntualiTask(QgsTask):
             cursor.close()
         return data[0][0] if data else 0
 
+    @retry_on_lock()
     def insert_indagine_puntuale(self, data: dict):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -359,6 +373,7 @@ class ImportSitiPuntualiTask(QgsTask):
             conn.commit()
             cursor.close()
 
+    @retry_on_lock()
     def insert_parametro_puntuale(self, data: dict):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -373,6 +388,7 @@ class ImportSitiPuntualiTask(QgsTask):
             conn.commit()
             cursor.close()
 
+    @retry_on_lock()
     def insert_curve(self, data: dict):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -391,7 +407,7 @@ class ImportSitiPuntualiTask(QgsTask):
 
     def copy_attachment(self, attachment_file_name: str, old_id: str, new_id: str):
         # check file exists
-        file_path = Path(self.input_path) / "Indagini" / "Documenti" / attachment_file_name
+        file_path = self.proj_paths["Documenti"]["path"] / attachment_file_name
         if not Path(file_path).exists():
             self.log(f"Attachment {file_path} not found, skipping", log_level=1)
             return None

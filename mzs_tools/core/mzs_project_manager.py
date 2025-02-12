@@ -1534,6 +1534,12 @@ class MzSProjectManager:
         # create the project directory
         new_project_path.mkdir(parents=True, exist_ok=False)
 
+        # Allegati paths
+        allegati_paths = ["Altro", "Documenti", "log", "Plot", "Spettri"]
+        for sub_dir in allegati_paths:
+            sub_dir_path = new_project_path / "Allegati" / sub_dir
+            sub_dir_path.mkdir(parents=True, exist_ok=False)
+
         loghi_path = new_project_path / "progetto" / "loghi"
         loghi_path.mkdir(parents=True, exist_ok=False)
 

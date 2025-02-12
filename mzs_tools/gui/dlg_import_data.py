@@ -1,27 +1,25 @@
-from functools import partial
 from pathlib import Path
 
-from mzs_tools.tasks.import_siti_lineari_task import ImportSitiLineariTask
 from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import Qt, QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
     QLabel,
     QLineEdit,
-    QMessageBox,
-    QProgressBar,
     QPushButton,
     QVBoxLayout,
 )
 from qgis.utils import iface
 
-from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from mzs_tools.plugin_utils.misc import get_path_for_name
+from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
+from mzs_tools.tasks.import_siti_lineari_task import ImportSitiLineariTask
 from mzs_tools.tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
@@ -68,41 +66,13 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.reset_sequences = False
 
+        self.standard_proj_paths = None
+
     def showEvent(self, e):
         super().showEvent(e)
         self.input_dir_widget.lineEdit().setText("")
 
-    # def showEvent(self, e):
-    #     super().showEvent(e)
-    #     self.log(f"showEvent {e}")
-    #     indagini_count = self.prj_manager.count_indagini_data()
-    #     # self.log(f"Indagini data count: {indagini_count}", log_level=4)
-    #     prj_contains_indagini_data = False
-    #     sequences_gt_0 = False
-    #     for tab, count in indagini_count.items():
-    #         # count[0] is the table rows count, count[1] is the sequence for the primary key
-    #         if count[0] > 0:
-    #             prj_contains_indagini_data = True
-    #         if count[1] > 0:
-    #             sequences_gt_0 = True
-
-    #     if prj_contains_indagini_data:
-    #         title = self.tr("Warning!")
-    #         message = self.tr(
-    #             "The project already contains 'Indagini' data and/or related data (siti, indagini, parametri, curve)."
-    #             "\n\nThe imported data numeric IDs will be different from the original data."
-    #             "\n\nTo preserve the original IDs, use a new, empy project, or delete all punctual and linear sites before running the import tool."
-    #         )
-    #         QMessageBox.warning(self, title, message)
-    #         self.reset_sequences = False
-    #     else:
-    #         self.reset_sequences = sequences_gt_0
-
     def validate_input(self):
-        # if not self.input_path:
-        #     self.ok_button.setEnabled(False)
-        #     return False
-        # if not self.input_path:
         if not self.validate_input_dir():
             self.log("Input path is not valid", log_level=1)
             self.ok_button.setEnabled(False)
@@ -110,8 +80,14 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         if not self.radio_button_mdb.isChecked() and not self.radio_button_csv.isChecked():
             self.log("No data source selected", log_level=1)
-            self.ok_button.setEnabled(False)
-            return False
+            # self.ok_button.setEnabled(False)
+            self.chk_siti_puntuali.setEnabled(False)
+            self.chk_siti_lineari.setEnabled(False)
+            # return False
+        else:
+            # self.chk_siti_puntuali.setEnabled(True)
+            # self.chk_siti_lineari.setEnabled(True)
+            self.validate_input_dir()
 
         if self.radio_button_csv.isChecked():
             if not self.validate_csv_dir():
@@ -156,6 +132,7 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.group_box_content.setVisible(True)
             self.input_path = Path(input_dir)
             self.label_mdb_msg.setVisible(True)
+
             return True
 
         self.input_path = None
@@ -176,41 +153,54 @@ class DlgImportData(QDialog, FORM_CLASS):
     def check_project_dir(self, input_dir):
         if not Path(input_dir).exists():
             self.log(self.tr("Project folder does not exist"), log_level=4)
+            self.standard_proj_paths = None
             return False
 
-        # if not (Path(input_dir) / "Indagini").exists():
-        #     self.log("La cartella selezionata non contiene la cartella 'Indagini'", log_level=2)
-        #     return False
+        self.standard_proj_paths = {
+            "GeoTec": {"parent": None, "path": None, "checkbox": None},
+            "Elineari.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_elineari},
+            "Epuntuali.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_epuntuali},
+            "Forme.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_forme},
+            "Geotec.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_geotec},
+            "Instab_geotec.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_instab_geotec},
+            "Indagini": {"parent": None, "path": None, "checkbox": None},
+            "Documenti": {"parent": "Indagini", "path": None, "checkbox": None},
+            "CdI_Tabelle.mdb": {"parent": "Indagini", "path": None, "checkbox": None},
+            "Ind_pu.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_puntuali},
+            "Ind_ln.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_lineari},
+            "MS1": {"parent": None, "path": None, "checkbox": None},
+            "MS1-Instab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_instab},
+            "MS1-Isosub.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_isosub},
+            "MS1-Stab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_stab},
+            "MS23": {"parent": None, "path": None, "checkbox": None},
+            "MS23-Instab.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_instab},
+            "MS23-Isosub.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_isosub},
+            "MS23-Stab.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_stab},
+            "Plot": {"parent": None, "path": None, "checkbox": None},
+        }
 
-        # TODO: case_insensitive parameter for pathlib glob() and match() was added only in Python 3.12
-        input_path = Path(input_dir).resolve()
-        subdirs = [d.name for d in input_path.iterdir() if d.is_dir()]
+        for name, data in self.standard_proj_paths.items():
+            parent_path = Path(input_dir) if not data["parent"] else Path(input_dir) / data["parent"]
+            data["path"] = get_path_for_name(parent_path, name.split("-")[1] if "-" in name else name)
+            self.log(f"{name}: {data['path']}", log_level=4)
+            if data["checkbox"]:
+                self.log(f"Enabling checkbox for {name}", log_level=4)
+                data["checkbox"].setEnabled(True if data["path"] else False)
+                data["checkbox"].setChecked(True if data["path"] else False)
 
-        indagini_dir = None
-        for s in subdirs:
-            if s.lower() == "indagini":
-                indagini_dir = input_path / s
-                break
+        # self.log(f"Standard project paths: {self.standard_proj_paths}", log_level=4)
 
-        if not indagini_dir:
+        if not self.standard_proj_paths["Indagini"]["path"]:
             self.log(self.tr("Project folder does not contain 'Indagini' subfolder"), log_level=1)
             return False
 
-        indagini_files = [f.name for f in indagini_dir.iterdir() if f.is_file()]
-        indagini_subdirs = [d.name for d in indagini_dir.iterdir() if d.is_dir()]
-
-        cdi_tabelle_file = None
-        for f in indagini_files:
-            if f.lower() == "cdi_tabelle.mdb":
-                cdi_tabelle_file = indagini_dir / f
-                connected = self.check_mdb_connection(cdi_tabelle_file)
-                self.radio_button_mdb.setEnabled(connected)
-
-        if not cdi_tabelle_file:
-            self.label_mdb_msg.setText("[File non trovato]")
+        cdi_tabelle_path = self.standard_proj_paths["CdI_Tabelle.mdb"]["path"]
+        if not cdi_tabelle_path:
+            self.label_mdb_msg.setText(self.tr("[File not found]"))
             self.radio_button_mdb.setEnabled(False)
-
-        # TODO: etc...
+        else:
+            connected = self.check_mdb_connection(cdi_tabelle_path)
+            self.radio_button_mdb.setEnabled(connected)
 
         return True
 
@@ -285,11 +275,11 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.log("No input path selected", log_level=2)
             return
 
-        data_source = None
+        indagini_data_source = None
         if self.radio_button_mdb.isChecked():
-            data_source = "mdb"
+            indagini_data_source = "mdb"
         elif self.radio_button_csv.isChecked():
-            data_source = "csv"
+            indagini_data_source = "csv"
         else:
             self.log("No import source selected", log_level=2)
 
@@ -297,16 +287,23 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.log("Resetting indagini sequences", log_level=1)
             self.prj_manager.reset_indagini_sequences()
 
-        self.log(f"Importing data from {self.input_path} using {data_source} for Indagini data")
+        self.log(f"Importing data from {self.input_path} using {indagini_data_source} for Indagini data")
 
-        # issue n.1: the task does not start if it is not assigned to self
-        # https://gis.stackexchange.com/a/435487
-        self.import_spu_task = ImportSitiPuntualiTask(
-            self.input_path, data_source=data_source, mdb_password=self.mdb_password
-        )
-        self.import_sln_task = ImportSitiLineariTask(
-            self.input_path, data_source=data_source, mdb_password=self.mdb_password
-        )
+        tasks = []
+        if self.chk_siti_puntuali.isEnabled() and self.chk_siti_puntuali.isChecked():
+            self.import_spu_task = ImportSitiPuntualiTask(
+                self.standard_proj_paths, data_source=indagini_data_source, mdb_password=self.mdb_password
+            )
+            tasks.append(self.import_spu_task)
+        if self.chk_siti_lineari.isEnabled() and self.chk_siti_lineari.isChecked():
+            self.import_sln_task = ImportSitiLineariTask(
+                self.standard_proj_paths, data_source=indagini_data_source, mdb_password=self.mdb_password
+            )
+            tasks.append(self.import_sln_task)
+
+        if not tasks:
+            self.log("No tasks selected for import", log_level=2)
+            return
 
         # self.progress_bar = QProgressBar()
         # self.progress_bar.setMaximum(100)
@@ -343,8 +340,10 @@ class DlgImportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().allTasksFinished.connect(self.task_completed)
 
         # self.task.progressChanged.connect(lambda: self.log("Progress"))
-        QgsApplication.taskManager().addTask(self.import_spu_task)
-        QgsApplication.taskManager().addTask(self.import_sln_task)
+        # QgsApplication.taskManager().addTask(self.import_spu_task)
+        # QgsApplication.taskManager().addTask(self.import_sln_task)
+        for task in tasks:
+            QgsApplication.taskManager().addTask(task)
 
         self.close()
 

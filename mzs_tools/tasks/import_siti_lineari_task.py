@@ -7,11 +7,18 @@ from qgis.utils import spatialite_connect
 
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from mzs_tools.plugin_utils.misc import retry_on_lock
 from mzs_tools.tasks.common_functions import setup_mdb_connection
 
 
 class ImportSitiLineariTask(QgsTask):
-    def __init__(self, input_path: Path, data_source: str, mdb_password: str = None, adapt_counters: bool = True):
+    def __init__(
+        self,
+        proj_paths: dict,
+        data_source: str,
+        mdb_password: str = None,
+        adapt_counters: bool = True,
+    ):
         super().__init__("Import siti lineari (siti, indagini, parametri)", QgsTask.CanCancel)
 
         self.iterations = 0
@@ -19,7 +26,6 @@ class ImportSitiLineariTask(QgsTask):
 
         self.log = MzSToolsLogger().log
 
-        self.input_path = input_path
         self.data_source = data_source
         self.mdb_password = mdb_password
 
@@ -27,10 +33,10 @@ class ImportSitiLineariTask(QgsTask):
         self.spatialite_db_connection = None
         self.mdb_connection = None
 
-        siti_lineari_shapefile_path = input_path / "Indagini" / "Ind_ln.shp"
-        self.mdb_path = input_path / "Indagini" / "CdI_Tabelle.mdb"
+        self.proj_paths = proj_paths
+        self.mdb_path = self.proj_paths["CdI_Tabelle.mdb"]["path"]
 
-        self.siti_lineari_shapefile = QgsVectorLayer(str(siti_lineari_shapefile_path), "Ind_ln", "ogr")
+        self.siti_lineari_shapefile = QgsVectorLayer(str(self.proj_paths["Ind_ln.shp"]["path"]), "Ind_ln", "ogr")
         self.num_siti = self.siti_lineari_shapefile.featureCount()
 
         # option to adapt the primary keys of the imported data to avoid conflicts with existing data
@@ -238,6 +244,7 @@ class ImportSitiLineariTask(QgsTask):
         self.log(f"Task {self.description()} was canceled", log_level=1)
         super().cancel()
 
+    @retry_on_lock()
     def insert_sito_lineare(self, data: dict):
         """Insert a new 'sito_lineare' record into the database."""
         with self.get_spatialite_db_connection() as conn:
@@ -260,6 +267,7 @@ class ImportSitiLineariTask(QgsTask):
     #         conn.commit()
     #         cursor.close()
 
+    @retry_on_lock()
     def delete_all_siti_lineari(self):
         """Delete all 'sito_lineare' records from the database."""
         with self.get_spatialite_db_connection() as conn:
@@ -268,6 +276,7 @@ class ImportSitiLineariTask(QgsTask):
             conn.commit()
             cursor.close()
 
+    @retry_on_lock()
     def get_sito_lineare_seq(self):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -276,6 +285,7 @@ class ImportSitiLineariTask(QgsTask):
             cursor.close()
         return data[0][0] if data else 0
 
+    @retry_on_lock()
     def get_indagini_lineari_seq(self):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -284,6 +294,7 @@ class ImportSitiLineariTask(QgsTask):
             cursor.close()
         return data[0][0] if data else 0
 
+    @retry_on_lock()
     def get_parametri_lineari_seq(self):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -292,6 +303,7 @@ class ImportSitiLineariTask(QgsTask):
             cursor.close()
         return data[0][0] if data else 0
 
+    @retry_on_lock()
     def insert_indagine_lineare(self, data: dict):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -305,6 +317,7 @@ class ImportSitiLineariTask(QgsTask):
             conn.commit()
             cursor.close()
 
+    @retry_on_lock()
     def insert_parametro_lineare(self, data: dict):
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
@@ -325,7 +338,7 @@ class ImportSitiLineariTask(QgsTask):
 
     def copy_attachment(self, attachment_file_name: str, old_id: str, new_id: str):
         # check file exists
-        file_path = Path(self.input_path) / "Indagini" / "Documenti" / attachment_file_name
+        file_path = self.proj_paths["Documenti"]["path"] / attachment_file_name
         if not Path(file_path).exists():
             self.log(f"Attachment {file_path} not found, skipping", log_level=1)
             return None

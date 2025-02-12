@@ -113,30 +113,96 @@
      <property name="title">
       <string>Contenuto progetto</string>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <widget class="QScrollArea" name="scrollArea_2">
-        <property name="widgetResizable">
-         <bool>true</bool>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="chk_elineari">
+        <property name="text">
+         <string>Elineari.shp</string>
         </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="chk_epuntuali">
+        <property name="text">
+         <string>Epuntuali.shp</string>
         </property>
-        <widget class="QWidget" name="scrollAreaWidgetContents_2">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>550</width>
-           <height>209</height>
-          </rect>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_4">
-          <item>
-           <widget class="QListWidget" name="listWidget"/>
-          </item>
-         </layout>
-        </widget>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="chk_siti_puntuali">
+        <property name="text">
+         <string>Siti, indagini, parametri puntuali</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="chk_siti_lineari">
+        <property name="text">
+         <string>Siti, indagini, parametri lineari</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="chk_forme">
+        <property name="text">
+         <string>Forme.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QCheckBox" name="chk_instab_geotec">
+        <property name="text">
+         <string>Instab_geotec.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="chk_geotec">
+        <property name="text">
+         <string>Geotec.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="chk_ms1_instab">
+        <property name="text">
+         <string>MS1 Instab.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="chk_ms1_isosub">
+        <property name="text">
+         <string>MS1 Isosub.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QCheckBox" name="chk_ms1_stab">
+        <property name="text">
+         <string>MS1 Stab.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="chk_ms23_instab">
+        <property name="text">
+         <string>MS23 Instab.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QCheckBox" name="chk_ms23_isosub">
+        <property name="text">
+         <string>MS23 Isosub.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QCheckBox" name="chk_ms23_stab">
+        <property name="text">
+         <string>MS23 Stab.shp</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -162,7 +228,7 @@
            <x>0</x>
            <y>0</y>
            <width>556</width>
-           <height>103</height>
+           <height>97</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">
