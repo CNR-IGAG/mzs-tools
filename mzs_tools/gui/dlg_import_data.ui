@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>594</width>
-    <height>578</height>
+    <height>612</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox">
      <property name="title">
-      <string>Progetto originale basato su standard MS</string>
+      <string>Original MS standard-based project</string>
      </property>
      <layout class="QFormLayout" name="formLayout">
       <item row="0" column="0">
@@ -40,7 +40,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox_3">
      <property name="title">
-      <string>Formato di origine delle indagini puntuali e lineari</string>
+      <string>Source format of Indagini puntuali and lineari</string>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_6">
       <item>
@@ -80,7 +80,7 @@
       <item>
        <widget class="QRadioButton" name="radio_button_csv">
         <property name="text">
-         <string>Tabelle esportate in formato CSV</string>
+         <string>Tables exported in CSV format files</string>
         </property>
        </widget>
       </item>
@@ -89,7 +89,7 @@
         <item>
          <widget class="QLabel" name="label_3">
           <property name="text">
-           <string>Cartella dei file CSV</string>
+           <string>CSV files folder</string>
           </property>
          </widget>
         </item>
@@ -111,7 +111,7 @@
    <item>
     <widget class="QGroupBox" name="group_box_content">
      <property name="title">
-      <string>Contenuto progetto</string>
+      <string>Data import selection</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="1" column="0">
@@ -211,7 +211,7 @@
    <item>
     <widget class="QgsCollapsibleGroupBox" name="mGroupBox">
      <property name="title">
-      <string>Informazioni</string>
+      <string>Information</string>
      </property>
      <property name="collapsed">
       <bool>true</bool>
@@ -228,7 +228,7 @@
            <x>0</x>
            <y>0</y>
            <width>556</width>
-           <height>97</height>
+           <height>93</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_2">

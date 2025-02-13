@@ -223,7 +223,7 @@ class MzSTools:
             title = self.tr("Warning!")
             message = self.tr(
                 "The project already contains 'Indagini' data and/or related data (siti, indagini, parametri, curve)."
-                "\n\nThe imported data numeric IDs will be different from the original data."
+                "\n\nThe imported data numeric IDs (and composite ID such as 'ID_SPU', 'ID_INDPU', etc.), will be different from the original data."
                 "\n\nTo preserve the original IDs, use a new, empy project, or delete all punctual and linear sites before running the import tool."
             )
             QMessageBox.warning(self.iface.mainWindow(), title, message)

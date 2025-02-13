@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig
+from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig, QgsTask
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication, Qt
@@ -10,6 +10,7 @@ from qgis.PyQt.QtWidgets import (
     QDialogButtonBox,
     QLabel,
     QLineEdit,
+    QProgressBar,
     QPushButton,
     QVBoxLayout,
 )
@@ -19,6 +20,7 @@ from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
 from mzs_tools.plugin_utils.misc import get_path_for_name
 from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
+from mzs_tools.tasks.import_shapefile_task import ImportShapefileTask
 from mzs_tools.tasks.import_siti_lineari_task import ImportSitiLineariTask
 from mzs_tools.tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
 
@@ -58,15 +60,11 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.label_mdb_msg.setText("")
         self.label_mdb_msg.setVisible(False)
 
-        # self.check_box_preserve_ids.setChecked(False)
-
         self.input_path = None
+        self.reset_sequences = False
+        self.standard_proj_paths = None
 
         self.accepted.connect(self.start_import_tasks)
-
-        self.reset_sequences = False
-
-        self.standard_proj_paths = None
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -80,19 +78,17 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         if not self.radio_button_mdb.isChecked() and not self.radio_button_csv.isChecked():
             self.log("No data source selected", log_level=1)
-            # self.ok_button.setEnabled(False)
             self.chk_siti_puntuali.setEnabled(False)
             self.chk_siti_lineari.setEnabled(False)
-            # return False
         else:
-            # self.chk_siti_puntuali.setEnabled(True)
-            # self.chk_siti_lineari.setEnabled(True)
             self.validate_input_dir()
 
         if self.radio_button_csv.isChecked():
             if not self.validate_csv_dir():
                 self.log("CSV directory is not valid", log_level=1)
                 self.ok_button.setEnabled(False)
+                self.chk_siti_puntuali.setEnabled(False)
+                self.chk_siti_lineari.setEnabled(False)
                 return False
 
         self.ok_button.setEnabled(True)
@@ -118,14 +114,6 @@ class DlgImportData(QDialog, FORM_CLASS):
 
             self.label_mdb_msg.setVisible(False)
             return False
-
-        # mdb_path = Path(input_dir) / "Indagini" / "CdI_Tabelle.mdb"
-        # if mdb_path.exists():
-        #     connected = self.check_mdb_connection(mdb_path)
-        #     self.radio_button_mdb.setEnabled(connected)
-        # else:
-        #     self.label_mdb_msg.setText("[File non trovato]")
-        #     self.radio_button_mdb.setEnabled(False)
 
         if self.check_project_dir(input_dir):
             self.radio_button_csv.setEnabled(True)
@@ -158,24 +146,40 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.standard_proj_paths = {
             "GeoTec": {"parent": None, "path": None, "checkbox": None},
-            "Elineari.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_elineari},
-            "Epuntuali.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_epuntuali},
-            "Forme.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_forme},
-            "Geotec.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_geotec},
-            "Instab_geotec.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_instab_geotec},
+            "Elineari.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_elineari, "table": "elineari"},
+            "Epuntuali.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_epuntuali, "table": "epuntuali"},
+            "Forme.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_forme, "table": "forme"},
+            "Geotec.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_geotec, "table": "geotec"},
+            "Instab_geotec.shp": {
+                "parent": "GeoTec",
+                "path": None,
+                "checkbox": self.chk_instab_geotec,
+                "table": "instab_geotec",
+            },
             "Indagini": {"parent": None, "path": None, "checkbox": None},
             "Documenti": {"parent": "Indagini", "path": None, "checkbox": None},
             "CdI_Tabelle.mdb": {"parent": "Indagini", "path": None, "checkbox": None},
             "Ind_pu.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_puntuali},
             "Ind_ln.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_lineari},
             "MS1": {"parent": None, "path": None, "checkbox": None},
-            "MS1-Instab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_instab},
-            "MS1-Isosub.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_isosub},
-            "MS1-Stab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_stab},
+            "MS1-Instab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_instab, "table": "instab_l1"},
+            "MS1-Isosub.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_isosub, "table": "isosub_l1"},
+            "MS1-Stab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_stab, "table": "stab_l1"},
             "MS23": {"parent": None, "path": None, "checkbox": None},
-            "MS23-Instab.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_instab},
-            "MS23-Isosub.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_isosub},
-            "MS23-Stab.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_stab},
+            "MS23-Instab.shp": {
+                "parent": "MS23",
+                "path": None,
+                "checkbox": self.chk_ms23_instab,
+                "table": "instab_l23",
+            },
+            "MS23-Isosub.shp": {
+                "parent": "MS23",
+                "path": None,
+                "checkbox": self.chk_ms23_isosub,
+                "table": "isosub_l23",
+            },
+            "MS23-Stab.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_stab, "table": "stab_l23"},
+            "Spettri": {"parent": "MS23", "path": None, "checkbox": None},
             "Plot": {"parent": None, "path": None, "checkbox": None},
         }
 
@@ -254,11 +258,11 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.label_mdb_msg.setText(f"[{e}]")
         except Exception as e:
             self.log(f"{e}", log_level=2)
-            self.label_mdb_msg.setText("[Connessione non riuscita]")
+            self.label_mdb_msg.setText(self.tr("[Connection failed]"))
         finally:
             if connected:
                 mdb_conn.close()
-                self.label_mdb_msg.setText(f"[Connessione {"con password" if password else ""} riuscita]")
+                self.label_mdb_msg.setText(self.tr(f"[Connection {"with password" if password else ""} established]"))
                 self.mdb_password = password
 
         return connected
@@ -289,6 +293,12 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.log(f"Importing data from {self.input_path} using {indagini_data_source} for Indagini data")
 
+        # make sure document paths exist
+        allegati_paths = ["Altro", "Documenti", "log", "Plot", "Spettri"]
+        for sub_dir in allegati_paths:
+            sub_dir_path = self.prj_manager.project_path / "Allegati" / sub_dir
+            sub_dir_path.mkdir(parents=True, exist_ok=True)
+
         tasks = []
         if self.chk_siti_puntuali.isEnabled() and self.chk_siti_puntuali.isChecked():
             self.import_spu_task = ImportSitiPuntualiTask(
@@ -300,76 +310,104 @@ class DlgImportData(QDialog, FORM_CLASS):
                 self.standard_proj_paths, data_source=indagini_data_source, mdb_password=self.mdb_password
             )
             tasks.append(self.import_sln_task)
+        self.import_shapefile_tasks = {}
+        for name, data in self.standard_proj_paths.items():
+            if (
+                ".shp" in name
+                and "table" in data
+                and data["checkbox"]
+                and data["checkbox"].isEnabled()
+                and data["checkbox"].isChecked()
+            ):
+                self.log(f"Importing {name} data", log_level=4)
+                task_name = f"import_shapefile_task_{name}"
+                self.import_shapefile_tasks[task_name] = ImportShapefileTask(self.standard_proj_paths, name)
+                tasks.append(self.import_shapefile_tasks[task_name])
 
         if not tasks:
             self.log("No tasks selected for import", log_level=2)
             return
 
-        # self.progress_bar = QProgressBar()
-        # self.progress_bar.setMaximum(100)
-        # self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
             "MzS Tools", "Data import in progress..."
         )
-        # progress_msg.layout().addWidget(self.progress_bar)
+        self.progress_msg.layout().addWidget(self.progress_bar)
 
         cancel_button = QPushButton()
         cancel_button.setText("Cancel")
-        cancel_button.clicked.connect(self.task_cancelled)
+        cancel_button.clicked.connect(self.cancel_tasks)
         self.progress_msg.layout().addWidget(cancel_button)
 
         self.iface.messageBar().pushWidget(self.progress_msg, Qgis.Info)
 
-        # issue n.2: don't use task.progress() - it does not work properly
-        # self.task.progressChanged.connect(lambda p: self.log(f"Progress: {p}"))
+        QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
+        # QgsApplication.taskManager().countActiveTasksChanged.connect(self.set_progress_msg)
+        QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
 
-        # self.import_spu_task.progressChanged.connect(lambda v: self.progress_bar.setValue(int(v)))
-        # self.import_sln_task.progressChanged.connect(lambda v: self.progress_bar.setValue(int(v)))
-        # self.task.progressChanged.connect(lambda v: progress_msg.setText(f"Import Progress: {int(v)}"))
-        # self.import_spu_task.taskCompleted.connect(self.task_completed)
-        # self.import_sln_task.taskCompleted.connect(self.task_completed)
+        if len(tasks) == 1:
+            QgsApplication.taskManager().addTask(tasks[0])
+            return
 
-        # TODO: does not work
-        QgsApplication.taskManager().countActiveTasksChanged.connect(
-            # lambda v: progress_msg.setText(f"Data import: {v} tasks active")
-            self.set_progress_msg
-        )
-        # QgsApplication.taskManager().countActiveTasksChanged.connect(
-        #     lambda v: self.log(f"Import data: {v} tasks active")
-        # )
-        QgsApplication.taskManager().allTasksFinished.connect(self.task_completed)
+        # this way the tasks are independent from each other and run concurrently
+        # probably dangerous for db writes
+        # for task in tasks:
+        #     QgsApplication.taskManager().addTask(task)
 
-        # self.task.progressChanged.connect(lambda: self.log("Progress"))
-        # QgsApplication.taskManager().addTask(self.import_spu_task)
-        # QgsApplication.taskManager().addTask(self.import_sln_task)
+        # run the tasks sequentially:
+        # every task is a subtask of the previous one and the parent task is dependent on the subtask
+        task_count = 0
+        first_task = None
+        previous_task = None
         for task in tasks:
-            QgsApplication.taskManager().addTask(task)
+            task_count += 1
+            if task_count == 1:
+                first_task = previous_task = task
+            else:
+                previous_task.addSubTask(task, [], QgsTask.ParentDependsOnSubTask)
+                previous_task = task
 
-        self.close()
+        QgsApplication.taskManager().addTask(first_task)
 
-    def set_progress_msg(self, num_tasks):
-        try:
-            self.progress_msg.setText(f"Import Progress: {num_tasks} tasks active")
-        except:  # noqa: E722
-            pass
+    def on_tasks_progress(self, taskid, progress):
+        # if there is only one main task with a series of subtasks, progress
+        # seems to be reported as the average of the subtasks' progress
+        # task_desc = QgsApplication.taskManager().task(taskid).description()
+        # num_tasks_remaining = QgsApplication.taskManager().countActiveTasks()
+        # try:
+        #     self.progress_msg.setText(f"{task_desc} - {num_tasks_remaining} tasks remaining")
+        #     self.progress_bar.setValue(int(progress))
+        # except:  # noqa: E722
+        #     pass
+        self.progress_bar.setValue(int(progress))
 
-    def task_completed(self):
+    # def set_progress_msg(self, num_tasks):
+    #     try:
+    #         self.progress_msg.setText(f"Import Progress: {num_tasks} tasks active")
+    #     except:  # noqa: E722
+    #         pass
+
+    def on_tasks_completed(self):
         self.log("Import completed.")
         self.iface.messageBar().clearWidgets()
         self.iface.messageBar().pushMessage(
             "Mzs Tools", "Data imported successfully", "more info", level=Qgis.Success, duration=0
         )
         # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.task_completed)
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
 
         self.iface.mapCanvas().refreshAllLayers()
 
-    def task_cancelled(self):
+    def cancel_tasks(self):
         self.log(
             f"Data import cancelled. Terminating {QgsApplication.taskManager().countActiveTasks()} tasks", log_level=1
         )
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.task_completed)
-        QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
+        # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()

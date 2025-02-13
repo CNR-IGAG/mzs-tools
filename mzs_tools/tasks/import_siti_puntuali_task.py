@@ -46,231 +46,244 @@ class ImportSitiPuntualiTask(QgsTask):
         self.log(f"Starting task {self.description()}")
         self.iterations = 0
 
-        # get features from the shapefile
-        features = self.siti_puntuali_shapefile.getFeatures()
+        try:
+            # get features from the shapefile
+            features = self.siti_puntuali_shapefile.getFeatures()
 
-        if self.data_source == "mdb":
-            # setup mdb connection
-            try:
-                connected, self.mdb_connection = setup_mdb_connection(self.mdb_path, password=self.mdb_password)
-            except Exception as e:
-                self.exception = e
-                return False
-
-            if connected:
-                # prepare data
-                self.sito_puntuale_data = self.mdb_connection.get_sito_puntuale_data()
-                self.sito_puntuale_seq = self.get_sito_puntuale_seq()
-                self.indagini_puntuali_data = self.mdb_connection.get_indagini_puntuali_data()
-                self.indagini_puntuali_seq = self.get_indagini_puntuali_seq()
-                self.parametri_puntuali_data = self.mdb_connection.get_parametri_puntuali_data()
-                self.parametri_puntuali_seq = self.get_parametri_puntuali_seq()
-                self.curve_data = self.mdb_connection.get_curve_data()
-                self.curve_seq = self.get_curve_seq()
-
-        else:
-            # TODO: get data from csv
-            pass
-
-        # TODO: testing only
-        self.log("Deleting all siti_puntuali", log_level=1)
-        self.delete_all_siti_puntuali()
-
-        for feature in features:
-            self.iterations += 1
-            # self.log(f"{self.iterations} / {self.num_siti}")
-            self.setProgress(self.iterations * 100 / self.num_siti)
-            # self.log(f"ID_SPU: {feature['ID_SPU']} - {self.progress()}")
-
-            # take sito_puntuale data from db or csv
             if self.data_source == "mdb":
+                # setup mdb connection
                 try:
-                    sito_puntuale = self.sito_puntuale_data[feature["ID_SPU"]]
-                    # self.log(f"Data from mdb: {sito_puntuale}")
-                except KeyError:
-                    self.log(f"ID_SPU {feature['ID_SPU']} not found in mdb, skipping", log_level=1)
-                    continue
+                    connected, self.mdb_connection = setup_mdb_connection(self.mdb_path, password=self.mdb_password)
+                except Exception as e:
+                    self.exception = e
+                    return False
 
-                sito_puntuale["geom"] = feature.geometry().asWkt()
-                # geometry = feature.geometry()
-                # # Convert to single part
-                # if geometry.isMultipart():
-                #     parts = geometry.asGeometryCollection()
-                #     geometry = parts[0]
-                #     if len(parts) > 1:
-                #         self.set_log_message.emit(
-                #             "Geometry from layer %s is multipart with more than one part: taking first part only"
-                #             % (vector_layer.name())
-                #         )
-                # geom = geometry.asWkt()
-                # if not geometry.isGeosValid():
-                #     self.set_log_message.emit(
-                #         "Wrong geometry from layer %s, expression: %s: %s"
-                #         % (vector_layer.name(), exp, geom)
-                #     )
-                # if geometry.isNull():
-                #     self.set_log_message.emit(
-                #         "Null geometry from layer %s, expression: %s: %s"
-                #         % (vector_layer.name(), exp, geom)
-                #     )
+                if connected:
+                    # prepare data
+                    self.sito_puntuale_data = self.mdb_connection.get_sito_puntuale_data()
+                    self.sito_puntuale_seq = self.get_sito_puntuale_seq()
+                    self.indagini_puntuali_data = self.mdb_connection.get_indagini_puntuali_data()
+                    self.indagini_puntuali_seq = self.get_indagini_puntuali_seq()
+                    self.parametri_puntuali_data = self.mdb_connection.get_parametri_puntuali_data()
+                    self.parametri_puntuali_seq = self.get_parametri_puntuali_seq()
+                    self.curve_data = self.mdb_connection.get_curve_data()
+                    self.curve_seq = self.get_curve_seq()
 
-                # change counters when data is already present
-                sito_puntuale_source_pkey = sito_puntuale["pkey_spu"]
-                if self.adapt_counters and self.sito_puntuale_seq > 0:
-                    sito_puntuale["pkey_spu"] = int(sito_puntuale["pkey_spu"]) + self.sito_puntuale_seq
-                    sito_puntuale["ID_SPU"] = (
-                        sito_puntuale["ubicazione_prov"]
-                        + sito_puntuale["ubicazione_com"]
-                        + "P"
-                        + str(sito_puntuale["pkey_spu"])
+            else:
+                # TODO: get data from csv
+                pass
+
+            # TODO: testing only
+            self.log("Deleting all siti_puntuali", log_level=1)
+            self.delete_all_siti_puntuali()
+
+            for feature in features:
+                self.iterations += 1
+                # self.log(f"{self.iterations} / {self.num_siti}")
+                self.setProgress(self.iterations * 100 / self.num_siti)
+                # self.log(f"ID_SPU: {feature['ID_SPU']} - {self.progress()}")
+
+                # take sito_puntuale data from db or csv
+                if self.data_source == "mdb":
+                    try:
+                        sito_puntuale = self.sito_puntuale_data[feature["ID_SPU"]]
+                        # self.log(f"Data from mdb: {sito_puntuale}")
+                    except KeyError:
+                        self.log(f"ID_SPU {feature['ID_SPU']} not found in mdb, skipping", log_level=1)
+                        continue
+
+                    sito_puntuale["geom"] = feature.geometry().asWkt()
+                    # geometry = feature.geometry()
+                    # # Convert to single part
+                    # if geometry.isMultipart():
+                    #     parts = geometry.asGeometryCollection()
+                    #     geometry = parts[0]
+                    #     if len(parts) > 1:
+                    #         self.set_log_message.emit(
+                    #             "Geometry from layer %s is multipart with more than one part: taking first part only"
+                    #             % (vector_layer.name())
+                    #         )
+                    # geom = geometry.asWkt()
+                    # if not geometry.isGeosValid():
+                    #     self.set_log_message.emit(
+                    #         "Wrong geometry from layer %s, expression: %s: %s"
+                    #         % (vector_layer.name(), exp, geom)
+                    #     )
+                    # if geometry.isNull():
+                    #     self.set_log_message.emit(
+                    #         "Null geometry from layer %s, expression: %s: %s"
+                    #         % (vector_layer.name(), exp, geom)
+                    #     )
+
+                    # change counters when data is already present
+                    sito_puntuale_source_pkey = sito_puntuale["pkey_spu"]
+                    if self.adapt_counters and self.sito_puntuale_seq > 0:
+                        sito_puntuale["pkey_spu"] = int(sito_puntuale["pkey_spu"]) + self.sito_puntuale_seq
+                        sito_puntuale["ID_SPU"] = (
+                            sito_puntuale["ubicazione_prov"]
+                            + sito_puntuale["ubicazione_com"]
+                            + "P"
+                            + str(sito_puntuale["pkey_spu"])
+                        )
+
+                    # add import note
+                    sito_puntuale["note_sito"] = (
+                        f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da database Access in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_puntuale["note_sito"]}"
                     )
 
-                # add import note
-                sito_puntuale["note_sito"] = (
-                    f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da database Access in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_puntuale["note_sito"]}"
-                )
-
-                try:
-                    self.insert_sito_puntuale(sito_puntuale)
-                except Exception as e:
-                    self.log(f"Error inserting sito_puntuale {sito_puntuale['ID_SPU']}: {e}", log_level=2)
-                    continue
-
-                ############################################################
-                # insert indagini_puntuali
-                current_pkey_spu = sito_puntuale_source_pkey if self.adapt_counters else sito_puntuale["pkey_spu"]
-
-                filtered_indagini = {
-                    key: value for key, value in self.indagini_puntuali_data.items() if str(key[0]) == current_pkey_spu
-                }
-                # self.log(f"pkey_spu: {current_spu_id} - Filtered elements: {filtered_indagini}")
-
-                for key, value in filtered_indagini.items():
-                    # self.log(f"Inserting indagine puntuale - Key: {key}, Value: {value}")
-                    # add ID_SPU to the data
-                    value["ID_SPU"] = sito_puntuale["ID_SPU"]
-                    # turn empty strings into None to avoid CHECK constraint errors
-                    for k in value.keys():
-                        if value[k] == "":
-                            value[k] = None
-                    # change counters when data is already present
-                    indagine_puntuale_source_pkey = value["pkey_indpu"]
-                    indagine_puntuale_source_id_indpu = value["ID_INDPU"]
-                    if self.adapt_counters and self.indagini_puntuali_seq > 0:
-                        value["pkey_indpu"] = int(value["pkey_indpu"]) + self.indagini_puntuali_seq
-                        value["ID_INDPU"] = value["ID_SPU"] + value["tipo_ind"] + str(value["pkey_indpu"])
-
-                    # copy and adapt attachments
                     try:
-                        if value["doc_ind"]:
-                            # self.log(f"Copying attachment {value['doc_ind']}")
-                            new_file_name = self.copy_attachment(
-                                value["doc_ind"], indagine_puntuale_source_id_indpu, value["ID_INDPU"]
-                            )
-                            if new_file_name:
-                                value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
+                        self.insert_sito_puntuale(sito_puntuale)
                     except Exception as e:
-                        self.log(f"Error copying indagine puntuale attachment {value['doc_ind']}: {e}", log_level=1)
-
-                    try:
-                        self.insert_indagine_puntuale(value)
-                    except Exception as e:
-                        self.log(f"Error inserting indagine puntuale {value['ID_INDPU']}: {e}", log_level=2)
+                        self.log(f"Error inserting sito_puntuale {sito_puntuale['ID_SPU']}: {e}", log_level=2)
                         continue
 
                     ############################################################
-                    # insert parametri_puntuali
-                    current_pkey_indpu = indagine_puntuale_source_pkey if self.adapt_counters else value["pkey_indpu"]
-                    current_idindpu = value["ID_INDPU"]
+                    # insert indagini_puntuali
+                    current_pkey_spu = sito_puntuale_source_pkey if self.adapt_counters else sito_puntuale["pkey_spu"]
 
-                    filtered_parametri = {
+                    filtered_indagini = {
                         key: value
-                        for key, value in self.parametri_puntuali_data.items()
-                        if str(key[0]) == current_pkey_indpu
+                        for key, value in self.indagini_puntuali_data.items()
+                        if str(key[0]) == current_pkey_spu
                     }
-                    # self.log(f"pkey_indpu: {current_pkey_indpu} - Filtered elements: {filtered_parametri}")
+                    # self.log(f"pkey_spu: {current_spu_id} - Filtered elements: {filtered_indagini}")
 
-                    for key, value in filtered_parametri.items():
-                        # self.log(f"Inserting parametro puntuale - Key: {key}, Value: {value}")
-                        # add ID_INDPU to the data
-                        value["ID_INDPU"] = current_idindpu
-                        # add valore_appoggio if valore is not a number
-                        value["valore_appoggio"] = None
-                        try:
-                            int(value["valore"].strip().replace(",", "."))
-                        except ValueError:
-                            try:
-                                float(value["valore"].strip().replace(",", "."))
-                            except ValueError:
-                                value["valore_appoggio"] = value["valore"]
+                    for key, value in filtered_indagini.items():
+                        # self.log(f"Inserting indagine puntuale - Key: {key}, Value: {value}")
+                        # add ID_SPU to the data
+                        value["ID_SPU"] = sito_puntuale["ID_SPU"]
                         # turn empty strings into None to avoid CHECK constraint errors
                         for k in value.keys():
                             if value[k] == "":
                                 value[k] = None
-
                         # change counters when data is already present
-                        parametro_puntuale_source_pkey = value["pkey_parpu"]
-                        parametro_puntuale_source_id_parpu = value["ID_PARPU"]
-                        if self.adapt_counters and self.parametri_puntuali_seq > 0:
-                            value["pkey_parpu"] = int(value["pkey_parpu"]) + self.parametri_puntuali_seq
-                            value["ID_PARPU"] = value["ID_INDPU"] + value["tipo_parpu"] + str(value["pkey_parpu"])
+                        indagine_puntuale_source_pkey = value["pkey_indpu"]
+                        indagine_puntuale_source_id_indpu = value["ID_INDPU"]
+                        if self.adapt_counters and self.indagini_puntuali_seq > 0:
+                            value["pkey_indpu"] = int(value["pkey_indpu"]) + self.indagini_puntuali_seq
+                            value["ID_INDPU"] = value["ID_SPU"] + value["tipo_ind"] + str(value["pkey_indpu"])
 
                         # copy and adapt attachments
                         try:
-                            if value["tab_curve"]:
-                                # self.log(f"Copying tab_curve {value['tab_curve']}")
+                            if value["doc_ind"]:
+                                # self.log(f"Copying attachment {value['doc_ind']}")
                                 new_file_name = self.copy_attachment(
-                                    value["tab_curve"], parametro_puntuale_source_id_parpu, value["ID_PARPU"]
+                                    value["doc_ind"], indagine_puntuale_source_id_indpu, value["ID_INDPU"]
                                 )
                                 if new_file_name:
-                                    value["tab_curve"] = "./Allegati/Documenti/" + new_file_name
+                                    value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
                         except Exception as e:
-                            self.log(f"Error copying parametro attachment {value['tab_curve']}: {e}", log_level=1)
+                            self.log(
+                                f"Error copying indagine puntuale attachment {value['doc_ind']}: {e}", log_level=1
+                            )
 
                         try:
-                            self.insert_parametro_puntuale(value)
+                            self.insert_indagine_puntuale(value)
                         except Exception as e:
-                            self.log(f"Error inserting parametro puntuale {value['ID_PARPU']}: {e}", log_level=2)
+                            self.log(f"Error inserting indagine puntuale {value['ID_INDPU']}: {e}", log_level=2)
                             continue
 
                         ############################################################
-                        # insert curve
-                        current_pkey_parpu = (
-                            parametro_puntuale_source_pkey if self.adapt_counters else value["pkey_parpu"]
+                        # insert parametri_puntuali
+                        current_pkey_indpu = (
+                            indagine_puntuale_source_pkey if self.adapt_counters else value["pkey_indpu"]
                         )
-                        current_idparpu = value["ID_PARPU"]
-                        filtered_curve = {
-                            key: value for key, value in self.curve_data.items() if str(key[0]) == current_pkey_parpu
+                        current_idindpu = value["ID_INDPU"]
+
+                        filtered_parametri = {
+                            key: value
+                            for key, value in self.parametri_puntuali_data.items()
+                            if str(key[0]) == current_pkey_indpu
                         }
-                        # self.log(f"pkey_parpu: {current_pkey_parpu} - Filtered elements: {filtered_curve}")
-                        for key, value in filtered_curve.items():
-                            # self.log(f"Inserting curve - Key: {key}, Value: {value}")
-                            # add ID_PARPU to the data
-                            value["ID_PARPU"] = current_idparpu
+                        # self.log(f"pkey_indpu: {current_pkey_indpu} - Filtered elements: {filtered_parametri}")
+
+                        for key, value in filtered_parametri.items():
+                            # self.log(f"Inserting parametro puntuale - Key: {key}, Value: {value}")
+                            # add ID_INDPU to the data
+                            value["ID_INDPU"] = current_idindpu
+                            # add valore_appoggio if valore is not a number
+                            value["valore_appoggio"] = None
+                            try:
+                                int(value["valore"].strip().replace(",", "."))
+                            except ValueError:
+                                try:
+                                    float(value["valore"].strip().replace(",", "."))
+                                except ValueError:
+                                    value["valore_appoggio"] = value["valore"]
                             # turn empty strings into None to avoid CHECK constraint errors
                             for k in value.keys():
                                 if value[k] == "":
                                     value[k] = None
 
                             # change counters when data is already present
-                            if self.adapt_counters and self.curve_seq > 0:
-                                value["pkey_curve"] = int(value["pkey_curve"]) + self.curve_seq
+                            parametro_puntuale_source_pkey = value["pkey_parpu"]
+                            parametro_puntuale_source_id_parpu = value["ID_PARPU"]
+                            if self.adapt_counters and self.parametri_puntuali_seq > 0:
+                                value["pkey_parpu"] = int(value["pkey_parpu"]) + self.parametri_puntuali_seq
+                                value["ID_PARPU"] = value["ID_INDPU"] + value["tipo_parpu"] + str(value["pkey_parpu"])
+
+                            # copy and adapt attachments
+                            try:
+                                if value["tab_curve"]:
+                                    # self.log(f"Copying tab_curve {value['tab_curve']}")
+                                    new_file_name = self.copy_attachment(
+                                        value["tab_curve"], parametro_puntuale_source_id_parpu, value["ID_PARPU"]
+                                    )
+                                    if new_file_name:
+                                        value["tab_curve"] = "./Allegati/Documenti/" + new_file_name
+                            except Exception as e:
+                                self.log(f"Error copying parametro attachment {value['tab_curve']}: {e}", log_level=1)
 
                             try:
-                                self.insert_curve(value)
+                                self.insert_parametro_puntuale(value)
                             except Exception as e:
-                                self.log(f"Error inserting 'curve' value {value['pkey_curve']}: {e}", log_level=2)
+                                self.log(f"Error inserting parametro puntuale {value['ID_PARPU']}: {e}", log_level=2)
                                 continue
 
-            # check isCanceled() to handle cancellation
-            if self.isCanceled():
-                return False
+                            ############################################################
+                            # insert curve
+                            current_pkey_parpu = (
+                                parametro_puntuale_source_pkey if self.adapt_counters else value["pkey_parpu"]
+                            )
+                            current_idparpu = value["ID_PARPU"]
+                            filtered_curve = {
+                                key: value
+                                for key, value in self.curve_data.items()
+                                if str(key[0]) == current_pkey_parpu
+                            }
+                            # self.log(f"pkey_parpu: {current_pkey_parpu} - Filtered elements: {filtered_curve}")
+                            for key, value in filtered_curve.items():
+                                # self.log(f"Inserting curve - Key: {key}, Value: {value}")
+                                # add ID_PARPU to the data
+                                value["ID_PARPU"] = current_idparpu
+                                # turn empty strings into None to avoid CHECK constraint errors
+                                for k in value.keys():
+                                    if value[k] == "":
+                                        value[k] = None
 
-        # close connections
-        if self.mdb_connection:
-            self.mdb_connection.close()
-        if self.spatialite_db_connection:
-            self.spatialite_db_connection.close()
+                                # change counters when data is already present
+                                if self.adapt_counters and self.curve_seq > 0:
+                                    value["pkey_curve"] = int(value["pkey_curve"]) + self.curve_seq
+
+                                try:
+                                    self.insert_curve(value)
+                                except Exception as e:
+                                    self.log(f"Error inserting 'curve' value {value['pkey_curve']}: {e}", log_level=2)
+                                    continue
+
+                # check isCanceled() to handle cancellation
+                if self.isCanceled():
+                    return False
+
+            # close connections
+            if self.mdb_connection:
+                self.mdb_connection.close()
+            if self.spatialite_db_connection:
+                self.spatialite_db_connection.close()
+
+        except Exception as e:
+            self.exception = e
+            return False
 
         return True
 
