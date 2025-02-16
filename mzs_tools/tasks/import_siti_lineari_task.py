@@ -1,3 +1,4 @@
+import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -18,13 +19,17 @@ class ImportSitiLineariTask(QgsTask):
         data_source: str,
         mdb_password: str = None,
         adapt_counters: bool = True,
+        debug: bool = False,
     ):
         super().__init__("Import siti lineari (siti, indagini, parametri)", QgsTask.CanCancel)
 
         self.iterations = 0
         self.exception = None
 
-        self.log = MzSToolsLogger().log
+        # self.log = MzSToolsLogger().log
+
+        # the logger is configured in the import data dialog module
+        self.logger = logging.getLogger("mzs_tools.tasks.import_data")
 
         self.data_source = data_source
         self.mdb_password = mdb_password
@@ -42,17 +47,27 @@ class ImportSitiLineariTask(QgsTask):
         # option to adapt the primary keys of the imported data to avoid conflicts with existing data
         self.adapt_counters = adapt_counters
 
+        self.debug = debug
+
     def run(self):
-        self.log(f"Starting task {self.description()}")
+        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        if self.debug:
+            self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#'*50}")
+
         self.iterations = 0
 
         try:
             # get features from the shapefile
             features = self.siti_lineari_shapefile.getFeatures()
 
+            self.logger.info(f"Getting data from {self.data_source}")
             if self.data_source == "mdb":
                 # setup mdb connection
-                connected, self.mdb_connection = setup_mdb_connection(self.mdb_path, password=self.mdb_password)
+                try:
+                    connected, self.mdb_connection = setup_mdb_connection(self.mdb_path, password=self.mdb_password)
+                except Exception as e:
+                    self.exception = e
+                    return False
 
                 if connected:
                     # prepare data
@@ -67,156 +82,150 @@ class ImportSitiLineariTask(QgsTask):
                 # TODO: get data from csv
                 pass
 
-            # TODO: testing only
-            self.log("Deleting all siti_lineari", log_level=1)
-            self.delete_all_siti_lineari()
+            if self.debug:
+                self.logger.warning(f"{'#'*15} Deleting all siti_lineari!")
+                self.delete_all_siti_lineari()
 
             for feature in features:
                 self.iterations += 1
-                # self.log(f"{self.iterations} / {self.num_siti}")
                 self.setProgress(self.iterations * 100 / self.num_siti)
-                # self.log(f"ID_SPU: {feature['ID_SPU']} - {self.progress()}")
 
-                # take sito_puntuale data from db or csv
-                if self.data_source == "mdb":
-                    try:
-                        sito_lineare = self.sito_lineare_data[feature["ID_SLN"]]
-                        # self.log(f"Data from mdb: {sito_puntuale}")
-                    except KeyError:
-                        self.log(f"ID_SLN {feature['ID_SLN']} not found in mdb, skipping", log_level=1)
-                        continue
+                try:
+                    self.logger.debug(f"Processing feature {feature['ID_SLN']}")
+                    sito_lineare = self.sito_lineare_data[feature["ID_SLN"]]
+                except KeyError:
+                    self.logger.warning(f"ID_SLN {feature['ID_SLN']} not found in {self.data_source}, skipping")
+                    continue
 
-                    sito_lineare["geom"] = feature.geometry().asWkt()
-                    geometry = feature.geometry()
-                    # Convert to single part
-                    if geometry.isMultipart():
-                        parts = geometry.asGeometryCollection()
-                        geometry = parts[0]
-                        # if len(parts) > 1:
-                        #     self.set_log_message.emit(
-                        #         "Geometry from layer %s is multipart with more than one part: taking first part only"
-                        #         % (vector_layer.name())
-                        #     )
-                        sito_lineare["geom"] = geometry.asWkt()
-                    # geom = geometry.asWkt()
-                    # if not geometry.isGeosValid():
+                sito_lineare["geom"] = feature.geometry().asWkt()
+                geometry = feature.geometry()
+                # Convert to single part
+                if geometry.isMultipart():
+                    parts = geometry.asGeometryCollection()
+                    geometry = parts[0]
+                    # if len(parts) > 1:
                     #     self.set_log_message.emit(
-                    #         "Wrong geometry from layer %s, expression: %s: %s"
-                    #         % (vector_layer.name(), exp, geom)
+                    #         "Geometry from layer %s is multipart with more than one part: taking first part only"
+                    #         % (vector_layer.name())
                     #     )
-                    # if geometry.isNull():
-                    #     self.set_log_message.emit(
-                    #         "Null geometry from layer %s, expression: %s: %s"
-                    #         % (vector_layer.name(), exp, geom)
-                    #     )
+                    sito_lineare["geom"] = geometry.asWkt()
+                # geom = geometry.asWkt()
+                # if not geometry.isGeosValid():
+                #     self.set_log_message.emit(
+                #         "Wrong geometry from layer %s, expression: %s: %s"
+                #         % (vector_layer.name(), exp, geom)
+                #     )
+                # if geometry.isNull():
+                #     self.set_log_message.emit(
+                #         "Null geometry from layer %s, expression: %s: %s"
+                #         % (vector_layer.name(), exp, geom)
+                #     )
 
-                    # avoid CHECK constraint errors
-                    if not sito_lineare["Aquota"]:
-                        sito_lineare["Aquota"] = None
-                    if not sito_lineare["Bquota"]:
-                        sito_lineare["Bquota"] = None
+                # avoid CHECK constraint errors
+                if not sito_lineare["Aquota"]:
+                    sito_lineare["Aquota"] = None
+                if not sito_lineare["Bquota"]:
+                    sito_lineare["Bquota"] = None
 
-                    # change counters when data is already present
-                    sito_lineare_source_pkey = sito_lineare["pkey_sln"]
-                    if self.adapt_counters and self.sito_lineare_seq > 0:
-                        sito_lineare["pkey_sln"] = int(sito_lineare["pkey_sln"]) + self.sito_lineare_seq
-                        sito_lineare["ID_SLN"] = (
-                            sito_lineare["ubicazione_prov"]
-                            + sito_lineare["ubicazione_com"]
-                            + "L"
-                            + str(sito_lineare["pkey_sln"])
-                        )
-
-                    # add import note
-                    sito_lineare["note_sito"] = (
-                        f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da database Access in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_lineare["note_sito"]}"
+                # change counters when data is already present
+                sito_lineare_source_pkey = sito_lineare["pkey_sln"]
+                if self.adapt_counters and self.sito_lineare_seq > 0:
+                    new_pkey_sln = int(sito_lineare["pkey_sln"]) + self.sito_lineare_seq
+                    self.logger.debug(f"pkey_sln: {sito_lineare["pkey_sln"]} -> {new_pkey_sln}")
+                    sito_lineare["pkey_sln"] = new_pkey_sln
+                    sito_lineare["ID_SLN"] = (
+                        sito_lineare["ubicazione_prov"]
+                        + sito_lineare["ubicazione_com"]
+                        + "L"
+                        + str(sito_lineare["pkey_sln"])
                     )
 
+                # add import note
+                sito_lineare["note_sito"] = (
+                    f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da {self.data_source} in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_lineare["note_sito"]}"
+                )
+
+                try:
+                    self.insert_sito_lineare(sito_lineare)
+                except Exception as e:
+                    self.logger.error(f"Error inserting sito_lineare {sito_lineare['ID_SLN']}: {e}")
+                    continue
+
+                ############################################################
+                # insert indagini_lineari
+                current_pkey_sln = sito_lineare_source_pkey if self.adapt_counters else sito_lineare["pkey_sln"]
+
+                filtered_indagini = {
+                    key: value for key, value in self.indagini_lineari_data.items() if str(key[0]) == current_pkey_sln
+                }
+                # self.log(f"pkey_spu: {current_spu_id} - Filtered elements: {filtered_indagini}")
+
+                for key, value in filtered_indagini.items():
+                    # self.log(f"Inserting indagine puntuale - Key: {key}, Value: {value}")
+                    # add ID_SPU to the data
+                    value["ID_SLN"] = sito_lineare["ID_SLN"]
+                    # turn empty strings into None to avoid CHECK constraint errors
+                    for k in value.keys():
+                        if value[k] == "":
+                            value[k] = None
+                    # change counters when data is already present
+                    indagine_lineare_source_pkey = value["pkey_indln"]
+                    indagine_lineare_source_id_indln = value["ID_INDLN"]
+                    if self.adapt_counters and self.indagini_lineari_seq > 0:
+                        value["pkey_indln"] = int(value["pkey_indln"]) + self.indagini_lineari_seq
+                        value["ID_INDLN"] = value["ID_SLN"] + value["tipo_ind"] + str(value["pkey_indln"])
+
+                    # copy and adapt attachments
                     try:
-                        self.insert_sito_lineare(sito_lineare)
+                        if value["doc_ind"]:
+                            # self.log(f"Copying attachment {value['doc_ind']}")
+                            new_file_name = self.copy_attachment(
+                                value["doc_ind"], indagine_lineare_source_id_indln, value["ID_INDLN"]
+                            )
+                            if new_file_name:
+                                value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
                     except Exception as e:
-                        self.log(f"Error inserting sito_lineare {sito_lineare['ID_SLN']}: {e}", log_level=2)
+                        self.logger.warning(f"Error copying indagine lineare attachment {value['doc_ind']}: {e}")
+
+                    try:
+                        self.insert_indagine_lineare(value)
+                    except Exception as e:
+                        self.logger.error(f"Error inserting indagine lineare {value['ID_INDLN']}: {e}")
                         continue
 
                     ############################################################
-                    # insert indagini_lineari
-                    current_pkey_sln = sito_lineare_source_pkey if self.adapt_counters else sito_lineare["pkey_sln"]
+                    # insert parametri_lineari
+                    current_pkey_indln = indagine_lineare_source_pkey if self.adapt_counters else value["pkey_indln"]
+                    current_idindln = value["ID_INDLN"]
 
-                    filtered_indagini = {
+                    filtered_parametri = {
                         key: value
-                        for key, value in self.indagini_lineari_data.items()
-                        if str(key[0]) == current_pkey_sln
+                        for key, value in self.parametri_lineari_data.items()
+                        if str(key[0]) == current_pkey_indln
                     }
-                    # self.log(f"pkey_spu: {current_spu_id} - Filtered elements: {filtered_indagini}")
+                    # self.log(f"pkey_indpu: {current_pkey_indpu} - Filtered elements: {filtered_parametri}")
 
-                    for key, value in filtered_indagini.items():
-                        # self.log(f"Inserting indagine puntuale - Key: {key}, Value: {value}")
-                        # add ID_SPU to the data
-                        value["ID_SLN"] = sito_lineare["ID_SLN"]
+                    for key, value in filtered_parametri.items():
+                        # self.log(f"Inserting parametro puntuale - Key: {key}, Value: {value}")
+                        # add ID_INDPU to the data
+                        value["ID_INDLN"] = current_idindln
+
                         # turn empty strings into None to avoid CHECK constraint errors
                         for k in value.keys():
                             if value[k] == "":
                                 value[k] = None
+
                         # change counters when data is already present
-                        indagine_lineare_source_pkey = value["pkey_indln"]
-                        indagine_lineare_source_id_indln = value["ID_INDLN"]
-                        if self.adapt_counters and self.indagini_lineari_seq > 0:
-                            value["pkey_indln"] = int(value["pkey_indln"]) + self.indagini_lineari_seq
-                            value["ID_INDLN"] = value["ID_SLN"] + value["tipo_ind"] + str(value["pkey_indln"])
-
-                        # copy and adapt attachments
-                        try:
-                            if value["doc_ind"]:
-                                # self.log(f"Copying attachment {value['doc_ind']}")
-                                new_file_name = self.copy_attachment(
-                                    value["doc_ind"], indagine_lineare_source_id_indln, value["ID_INDLN"]
-                                )
-                                if new_file_name:
-                                    value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
-                        except Exception as e:
-                            self.log(f"Error copying indagine lineare attachment {value['doc_ind']}: {e}", log_level=1)
+                        # parametro_lineare_source_pkey = value["pkey_parpu"]
+                        if self.adapt_counters and self.parametri_lineari_seq > 0:
+                            value["pkey_parln"] = int(value["pkey_parln"]) + self.parametri_lineari_seq
+                            value["ID_PARLN"] = value["ID_PARLN"] + value["tipo_parln"] + str(value["pkey_parln"])
 
                         try:
-                            self.insert_indagine_lineare(value)
+                            self.insert_parametro_lineare(value)
                         except Exception as e:
-                            self.log(f"Error inserting indagine lineare {value['ID_INDLN']}: {e}", log_level=2)
+                            self.logger.error(f"Error inserting parametro lineare {value['ID_PARLN']}: {e}")
                             continue
-
-                        ############################################################
-                        # insert parametri_lineari
-                        current_pkey_indln = (
-                            indagine_lineare_source_pkey if self.adapt_counters else value["pkey_indln"]
-                        )
-                        current_idindln = value["ID_INDLN"]
-
-                        filtered_parametri = {
-                            key: value
-                            for key, value in self.parametri_lineari_data.items()
-                            if str(key[0]) == current_pkey_indln
-                        }
-                        # self.log(f"pkey_indpu: {current_pkey_indpu} - Filtered elements: {filtered_parametri}")
-
-                        for key, value in filtered_parametri.items():
-                            # self.log(f"Inserting parametro puntuale - Key: {key}, Value: {value}")
-                            # add ID_INDPU to the data
-                            value["ID_INDLN"] = current_idindln
-
-                            # turn empty strings into None to avoid CHECK constraint errors
-                            for k in value.keys():
-                                if value[k] == "":
-                                    value[k] = None
-
-                            # change counters when data is already present
-                            # parametro_lineare_source_pkey = value["pkey_parpu"]
-                            if self.adapt_counters and self.parametri_lineari_seq > 0:
-                                value["pkey_parln"] = int(value["pkey_parln"]) + self.parametri_lineari_seq
-                                value["ID_PARLN"] = value["ID_PARLN"] + value["tipo_parln"] + str(value["pkey_parln"])
-
-                            try:
-                                self.insert_parametro_lineare(value)
-                            except Exception as e:
-                                self.log(f"Error inserting parametro lineare {value['ID_PARLN']}: {e}", log_level=2)
-                                continue
 
                 # check isCanceled() to handle cancellation
                 if self.isCanceled():
@@ -236,17 +245,16 @@ class ImportSitiLineariTask(QgsTask):
 
     def finished(self, result):
         if result:
-            self.log(f"Task {self.description()} completed with {self.iterations} iterations")
+            self.logger.info(f"Task {self.description()} completed with {self.iterations} iterations")
         else:
             if self.exception is None:
-                self.log(f"Task {self.description()} was canceled", log_level=1)
+                self.logger.warning(f"Task {self.description()} was canceled")
             else:
-                self.log(f"Task {self.description()} failed: {self.exception}", log_level=2)
-
+                self.logger.error(f"Task {self.description()} failed: {self.exception}")
                 raise self.exception
 
     def cancel(self):
-        self.log(f"Task {self.description()} was canceled", log_level=1)
+        self.logger.warning(f"Task {self.description()} was canceled")
         super().cancel()
 
     @retry_on_lock()
@@ -345,7 +353,7 @@ class ImportSitiLineariTask(QgsTask):
         # check file exists
         file_path = self.proj_paths["Documenti"]["path"] / attachment_file_name
         if not Path(file_path).exists():
-            self.log(f"Attachment {file_path} not found, skipping", log_level=1)
+            self.logger.warning(f"Attachment {file_path} not found, skipping")
             return None
         # copy in the project folder
         dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"
@@ -360,5 +368,7 @@ class ImportSitiLineariTask(QgsTask):
         else:
             shutil.copy(file_path, dest_path)
 
-        # self.log(f"Attachment {attachment_file_name} copied to project folder", log_level=4)
+        self.logger.debug(
+            f"Attachment {attachment_file_name} copied to project folder {"as " + new_file_name if new_file_name else ""}"
+        )
         return new_file_name or attachment_file_name

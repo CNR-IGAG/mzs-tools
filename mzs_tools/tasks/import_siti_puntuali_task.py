@@ -1,6 +1,7 @@
+import logging
+import shutil
 from datetime import datetime
 from pathlib import Path
-import shutil
 
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
@@ -18,13 +19,17 @@ class ImportSitiPuntualiTask(QgsTask):
         data_source: str,
         mdb_password: str = None,
         adapt_counters: bool = True,
+        debug: bool = False,
     ):
         super().__init__("Import siti puntuali (siti, indagini, parametri, curve)", QgsTask.CanCancel)
 
         self.iterations = 0
         self.exception = None
 
-        self.log = MzSToolsLogger().log
+        # self.log = MzSToolsLogger.log
+
+        # the logger is configured in the import data dialog module
+        self.logger = logging.getLogger("mzs_tools.tasks.import_data")
 
         self.data_source = data_source
         self.mdb_password = mdb_password
@@ -42,14 +47,26 @@ class ImportSitiPuntualiTask(QgsTask):
         # option to adapt the primary keys of the imported data to avoid conflicts with existing data
         self.adapt_counters = adapt_counters
 
+        self.debug = debug
+
     def run(self):
-        self.log(f"Starting task {self.description()}")
+        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        if self.debug:
+            self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#'*50}")
+
         self.iterations = 0
+
+        self.logger.info(f"{self.num_siti} siti puntuali detected in 'Ind_pu.shp'")
+
+        if self.num_siti == 0:
+            self.logger.info("Shapefile is empty, nothing to do.")
+            return False
 
         try:
             # get features from the shapefile
             features = self.siti_puntuali_shapefile.getFeatures()
 
+            self.logger.info(f"Getting data from {self.data_source}")
             if self.data_source == "mdb":
                 # setup mdb connection
                 try:
@@ -73,203 +90,193 @@ class ImportSitiPuntualiTask(QgsTask):
                 # TODO: get data from csv
                 pass
 
-            # TODO: testing only
-            self.log("Deleting all siti_puntuali", log_level=1)
-            self.delete_all_siti_puntuali()
+            if self.debug:
+                self.logger.warning(f"{'#'*15} Deleting all siti_puntuali!")
+                self.delete_all_siti_puntuali()
 
             for feature in features:
                 self.iterations += 1
-                # self.log(f"{self.iterations} / {self.num_siti}")
                 self.setProgress(self.iterations * 100 / self.num_siti)
-                # self.log(f"ID_SPU: {feature['ID_SPU']} - {self.progress()}")
 
-                # take sito_puntuale data from db or csv
-                if self.data_source == "mdb":
-                    try:
-                        sito_puntuale = self.sito_puntuale_data[feature["ID_SPU"]]
-                        # self.log(f"Data from mdb: {sito_puntuale}")
-                    except KeyError:
-                        self.log(f"ID_SPU {feature['ID_SPU']} not found in mdb, skipping", log_level=1)
-                        continue
+                try:
+                    self.logger.debug(f"Processing feature {feature['ID_SPU']}")
+                    sito_puntuale = self.sito_puntuale_data[feature["ID_SPU"]]
+                except KeyError:
+                    self.logger.warning(f"ID_SPU {feature['ID_SPU']} not found in {self.data_source}, skipping")
+                    continue
 
-                    sito_puntuale["geom"] = feature.geometry().asWkt()
-                    # geometry = feature.geometry()
-                    # # Convert to single part
-                    # if geometry.isMultipart():
-                    #     parts = geometry.asGeometryCollection()
-                    #     geometry = parts[0]
-                    #     if len(parts) > 1:
-                    #         self.set_log_message.emit(
-                    #             "Geometry from layer %s is multipart with more than one part: taking first part only"
-                    #             % (vector_layer.name())
-                    #         )
-                    # geom = geometry.asWkt()
-                    # if not geometry.isGeosValid():
-                    #     self.set_log_message.emit(
-                    #         "Wrong geometry from layer %s, expression: %s: %s"
-                    #         % (vector_layer.name(), exp, geom)
-                    #     )
-                    # if geometry.isNull():
-                    #     self.set_log_message.emit(
-                    #         "Null geometry from layer %s, expression: %s: %s"
-                    #         % (vector_layer.name(), exp, geom)
-                    #     )
+                sito_puntuale["geom"] = feature.geometry().asWkt()
+                # geometry = feature.geometry()
+                # # Convert to single part
+                # if geometry.isMultipart():
+                #     parts = geometry.asGeometryCollection()
+                #     geometry = parts[0]
+                #     if len(parts) > 1:
+                #         self.set_log_message.emit(
+                #             "Geometry from layer %s is multipart with more than one part: taking first part only"
+                #             % (vector_layer.name())
+                #         )
+                # geom = geometry.asWkt()
+                # if not geometry.isGeosValid():
+                #     self.set_log_message.emit(
+                #         "Wrong geometry from layer %s, expression: %s: %s"
+                #         % (vector_layer.name(), exp, geom)
+                #     )
+                # if geometry.isNull():
+                #     self.set_log_message.emit(
+                #         "Null geometry from layer %s, expression: %s: %s"
+                #         % (vector_layer.name(), exp, geom)
+                #     )
 
-                    # change counters when data is already present
-                    sito_puntuale_source_pkey = sito_puntuale["pkey_spu"]
-                    if self.adapt_counters and self.sito_puntuale_seq > 0:
-                        sito_puntuale["pkey_spu"] = int(sito_puntuale["pkey_spu"]) + self.sito_puntuale_seq
-                        sito_puntuale["ID_SPU"] = (
-                            sito_puntuale["ubicazione_prov"]
-                            + sito_puntuale["ubicazione_com"]
-                            + "P"
-                            + str(sito_puntuale["pkey_spu"])
-                        )
-
-                    # add import note
-                    sito_puntuale["note_sito"] = (
-                        f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da database Access in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_puntuale["note_sito"]}"
+                # adapt counters when data is already present
+                sito_puntuale_source_pkey = sito_puntuale["pkey_spu"]
+                if self.adapt_counters and self.sito_puntuale_seq > 0:
+                    new_pkey_spu = int(sito_puntuale["pkey_spu"]) + self.sito_puntuale_seq
+                    self.logger.debug(f"pkey_spu: {sito_puntuale["pkey_spu"]} -> {new_pkey_spu}")
+                    sito_puntuale["pkey_spu"] = new_pkey_spu
+                    sito_puntuale["ID_SPU"] = (
+                        sito_puntuale["ubicazione_prov"]
+                        + sito_puntuale["ubicazione_com"]
+                        + "P"
+                        + str(sito_puntuale["pkey_spu"])
                     )
 
+                # add import note
+                sito_puntuale["note_sito"] = (
+                    f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da {self.data_source} in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_puntuale["note_sito"]}"
+                )
+
+                try:
+                    self.insert_sito_puntuale(sito_puntuale)
+                except Exception as e:
+                    self.logger.error(f"Error inserting sito_puntuale {sito_puntuale['ID_SPU']}: {e}")
+                    continue
+
+                ############################################################
+                # insert indagini_puntuali
+                current_pkey_spu = sito_puntuale_source_pkey if self.adapt_counters else sito_puntuale["pkey_spu"]
+
+                filtered_indagini = {
+                    key: value for key, value in self.indagini_puntuali_data.items() if str(key[0]) == current_pkey_spu
+                }
+                # self.log(f"pkey_spu: {current_spu_id} - Filtered elements: {filtered_indagini}")
+
+                for key, value in filtered_indagini.items():
+                    # self.log(f"Inserting indagine puntuale - Key: {key}, Value: {value}")
+                    # add ID_SPU to the data
+                    value["ID_SPU"] = sito_puntuale["ID_SPU"]
+                    # turn empty strings into None to avoid CHECK constraint errors
+                    for k in value.keys():
+                        if value[k] == "":
+                            value[k] = None
+                    # change counters when data is already present
+                    indagine_puntuale_source_pkey = value["pkey_indpu"]
+                    indagine_puntuale_source_id_indpu = value["ID_INDPU"]
+                    if self.adapt_counters and self.indagini_puntuali_seq > 0:
+                        value["pkey_indpu"] = int(value["pkey_indpu"]) + self.indagini_puntuali_seq
+                        value["ID_INDPU"] = value["ID_SPU"] + value["tipo_ind"] + str(value["pkey_indpu"])
+
+                    # copy and adapt attachments
                     try:
-                        self.insert_sito_puntuale(sito_puntuale)
+                        if value["doc_ind"]:
+                            # self.log(f"Copying attachment {value['doc_ind']}")
+                            new_file_name = self.copy_attachment(
+                                value["doc_ind"], indagine_puntuale_source_id_indpu, value["ID_INDPU"]
+                            )
+                            if new_file_name:
+                                value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
                     except Exception as e:
-                        self.log(f"Error inserting sito_puntuale {sito_puntuale['ID_SPU']}: {e}", log_level=2)
+                        self.logger.warning(f"Error copying indagine puntuale attachment {value['doc_ind']}: {e}")
+
+                    try:
+                        self.insert_indagine_puntuale(value)
+                    except Exception as e:
+                        self.logger.error(f"Error inserting indagine puntuale {value['ID_INDPU']}: {e}")
                         continue
 
                     ############################################################
-                    # insert indagini_puntuali
-                    current_pkey_spu = sito_puntuale_source_pkey if self.adapt_counters else sito_puntuale["pkey_spu"]
+                    # insert parametri_puntuali
+                    current_pkey_indpu = indagine_puntuale_source_pkey if self.adapt_counters else value["pkey_indpu"]
+                    current_idindpu = value["ID_INDPU"]
 
-                    filtered_indagini = {
+                    filtered_parametri = {
                         key: value
-                        for key, value in self.indagini_puntuali_data.items()
-                        if str(key[0]) == current_pkey_spu
+                        for key, value in self.parametri_puntuali_data.items()
+                        if str(key[0]) == current_pkey_indpu
                     }
-                    # self.log(f"pkey_spu: {current_spu_id} - Filtered elements: {filtered_indagini}")
+                    # self.log(f"pkey_indpu: {current_pkey_indpu} - Filtered elements: {filtered_parametri}")
 
-                    for key, value in filtered_indagini.items():
-                        # self.log(f"Inserting indagine puntuale - Key: {key}, Value: {value}")
-                        # add ID_SPU to the data
-                        value["ID_SPU"] = sito_puntuale["ID_SPU"]
+                    for key, value in filtered_parametri.items():
+                        # self.log(f"Inserting parametro puntuale - Key: {key}, Value: {value}")
+                        # add ID_INDPU to the data
+                        value["ID_INDPU"] = current_idindpu
+                        # add valore_appoggio if valore is not a number
+                        value["valore_appoggio"] = None
+                        try:
+                            int(value["valore"].strip().replace(",", "."))
+                        except ValueError:
+                            try:
+                                float(value["valore"].strip().replace(",", "."))
+                            except ValueError:
+                                value["valore_appoggio"] = value["valore"]
                         # turn empty strings into None to avoid CHECK constraint errors
                         for k in value.keys():
                             if value[k] == "":
                                 value[k] = None
+
                         # change counters when data is already present
-                        indagine_puntuale_source_pkey = value["pkey_indpu"]
-                        indagine_puntuale_source_id_indpu = value["ID_INDPU"]
-                        if self.adapt_counters and self.indagini_puntuali_seq > 0:
-                            value["pkey_indpu"] = int(value["pkey_indpu"]) + self.indagini_puntuali_seq
-                            value["ID_INDPU"] = value["ID_SPU"] + value["tipo_ind"] + str(value["pkey_indpu"])
+                        parametro_puntuale_source_pkey = value["pkey_parpu"]
+                        parametro_puntuale_source_id_parpu = value["ID_PARPU"]
+                        if self.adapt_counters and self.parametri_puntuali_seq > 0:
+                            value["pkey_parpu"] = int(value["pkey_parpu"]) + self.parametri_puntuali_seq
+                            value["ID_PARPU"] = value["ID_INDPU"] + value["tipo_parpu"] + str(value["pkey_parpu"])
 
                         # copy and adapt attachments
                         try:
-                            if value["doc_ind"]:
-                                # self.log(f"Copying attachment {value['doc_ind']}")
+                            if value["tab_curve"]:
+                                # self.log(f"Copying tab_curve {value['tab_curve']}")
                                 new_file_name = self.copy_attachment(
-                                    value["doc_ind"], indagine_puntuale_source_id_indpu, value["ID_INDPU"]
+                                    value["tab_curve"], parametro_puntuale_source_id_parpu, value["ID_PARPU"]
                                 )
                                 if new_file_name:
-                                    value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
+                                    value["tab_curve"] = "./Allegati/Documenti/" + new_file_name
                         except Exception as e:
-                            self.log(
-                                f"Error copying indagine puntuale attachment {value['doc_ind']}: {e}", log_level=1
-                            )
+                            self.logger.warning(f"Error copying parametro attachment {value['tab_curve']}: {e}")
 
                         try:
-                            self.insert_indagine_puntuale(value)
+                            self.insert_parametro_puntuale(value)
                         except Exception as e:
-                            self.log(f"Error inserting indagine puntuale {value['ID_INDPU']}: {e}", log_level=2)
+                            self.logger.error(f"Error inserting parametro puntuale {value['ID_PARPU']}: {e}")
                             continue
 
                         ############################################################
-                        # insert parametri_puntuali
-                        current_pkey_indpu = (
-                            indagine_puntuale_source_pkey if self.adapt_counters else value["pkey_indpu"]
+                        # insert curve
+                        current_pkey_parpu = (
+                            parametro_puntuale_source_pkey if self.adapt_counters else value["pkey_parpu"]
                         )
-                        current_idindpu = value["ID_INDPU"]
-
-                        filtered_parametri = {
-                            key: value
-                            for key, value in self.parametri_puntuali_data.items()
-                            if str(key[0]) == current_pkey_indpu
+                        current_idparpu = value["ID_PARPU"]
+                        filtered_curve = {
+                            key: value for key, value in self.curve_data.items() if str(key[0]) == current_pkey_parpu
                         }
-                        # self.log(f"pkey_indpu: {current_pkey_indpu} - Filtered elements: {filtered_parametri}")
-
-                        for key, value in filtered_parametri.items():
-                            # self.log(f"Inserting parametro puntuale - Key: {key}, Value: {value}")
-                            # add ID_INDPU to the data
-                            value["ID_INDPU"] = current_idindpu
-                            # add valore_appoggio if valore is not a number
-                            value["valore_appoggio"] = None
-                            try:
-                                int(value["valore"].strip().replace(",", "."))
-                            except ValueError:
-                                try:
-                                    float(value["valore"].strip().replace(",", "."))
-                                except ValueError:
-                                    value["valore_appoggio"] = value["valore"]
+                        # self.log(f"pkey_parpu: {current_pkey_parpu} - Filtered elements: {filtered_curve}")
+                        for key, value in filtered_curve.items():
+                            # self.log(f"Inserting curve - Key: {key}, Value: {value}")
+                            # add ID_PARPU to the data
+                            value["ID_PARPU"] = current_idparpu
                             # turn empty strings into None to avoid CHECK constraint errors
                             for k in value.keys():
                                 if value[k] == "":
                                     value[k] = None
 
                             # change counters when data is already present
-                            parametro_puntuale_source_pkey = value["pkey_parpu"]
-                            parametro_puntuale_source_id_parpu = value["ID_PARPU"]
-                            if self.adapt_counters and self.parametri_puntuali_seq > 0:
-                                value["pkey_parpu"] = int(value["pkey_parpu"]) + self.parametri_puntuali_seq
-                                value["ID_PARPU"] = value["ID_INDPU"] + value["tipo_parpu"] + str(value["pkey_parpu"])
-
-                            # copy and adapt attachments
-                            try:
-                                if value["tab_curve"]:
-                                    # self.log(f"Copying tab_curve {value['tab_curve']}")
-                                    new_file_name = self.copy_attachment(
-                                        value["tab_curve"], parametro_puntuale_source_id_parpu, value["ID_PARPU"]
-                                    )
-                                    if new_file_name:
-                                        value["tab_curve"] = "./Allegati/Documenti/" + new_file_name
-                            except Exception as e:
-                                self.log(f"Error copying parametro attachment {value['tab_curve']}: {e}", log_level=1)
+                            if self.adapt_counters and self.curve_seq > 0:
+                                value["pkey_curve"] = int(value["pkey_curve"]) + self.curve_seq
 
                             try:
-                                self.insert_parametro_puntuale(value)
+                                self.insert_curve(value)
                             except Exception as e:
-                                self.log(f"Error inserting parametro puntuale {value['ID_PARPU']}: {e}", log_level=2)
+                                self.logger.error(f"Error inserting 'curve' value {value['pkey_curve']}: {e}")
                                 continue
-
-                            ############################################################
-                            # insert curve
-                            current_pkey_parpu = (
-                                parametro_puntuale_source_pkey if self.adapt_counters else value["pkey_parpu"]
-                            )
-                            current_idparpu = value["ID_PARPU"]
-                            filtered_curve = {
-                                key: value
-                                for key, value in self.curve_data.items()
-                                if str(key[0]) == current_pkey_parpu
-                            }
-                            # self.log(f"pkey_parpu: {current_pkey_parpu} - Filtered elements: {filtered_curve}")
-                            for key, value in filtered_curve.items():
-                                # self.log(f"Inserting curve - Key: {key}, Value: {value}")
-                                # add ID_PARPU to the data
-                                value["ID_PARPU"] = current_idparpu
-                                # turn empty strings into None to avoid CHECK constraint errors
-                                for k in value.keys():
-                                    if value[k] == "":
-                                        value[k] = None
-
-                                # change counters when data is already present
-                                if self.adapt_counters and self.curve_seq > 0:
-                                    value["pkey_curve"] = int(value["pkey_curve"]) + self.curve_seq
-
-                                try:
-                                    self.insert_curve(value)
-                                except Exception as e:
-                                    self.log(f"Error inserting 'curve' value {value['pkey_curve']}: {e}", log_level=2)
-                                    continue
 
                 # check isCanceled() to handle cancellation
                 if self.isCanceled():
@@ -289,17 +296,16 @@ class ImportSitiPuntualiTask(QgsTask):
 
     def finished(self, result):
         if result:
-            self.log(f"Task {self.description()} completed with {self.iterations} iterations")
+            self.logger.info(f"Task {self.description()} completed with {self.iterations} iterations")
         else:
             if self.exception is None:
-                self.log(f"Task {self.description()} was canceled", log_level=1)
+                self.logger.warning(f"Task {self.description()} was canceled")
             else:
-                self.log(f"Task {self.description()} failed: {self.exception}", log_level=2)
-
+                self.logger.error(f"Task {self.description()} failed: {self.exception}")
                 raise self.exception
 
     def cancel(self):
-        self.log(f"Task {self.description()} was canceled", log_level=1)
+        self.logger.warning(f"Task {self.description()} was canceled")
         super().cancel()
 
     @retry_on_lock()
@@ -422,7 +428,7 @@ class ImportSitiPuntualiTask(QgsTask):
         # check file exists
         file_path = self.proj_paths["Documenti"]["path"] / attachment_file_name
         if not Path(file_path).exists():
-            self.log(f"Attachment {file_path} not found, skipping", log_level=1)
+            self.logger.warning(f"Attachment {file_path} not found, skipping")
             return None
         # copy in the project folder
         dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"
@@ -437,5 +443,7 @@ class ImportSitiPuntualiTask(QgsTask):
         else:
             shutil.copy(file_path, dest_path)
 
-        # self.log(f"Attachment {attachment_file_name} copied to project folder", log_level=4)
+        self.logger.debug(
+            f"Attachment {attachment_file_name} copied to project folder {"as " + new_file_name if new_file_name else ""}"
+        )
         return new_file_name or attachment_file_name

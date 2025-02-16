@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import traceback
@@ -384,6 +385,23 @@ class MzSTools:
         """
         # initialize the project manager
         self.prj_manager.init_manager()
+
+        if self.prj_manager.project_issues:
+            formatted_issues = json.dumps(self.prj_manager.project_issues, indent=4)
+            msg_box = QMessageBox()
+            msg_box.setIcon(QMessageBox.Warning)
+            msg_box.setWindowTitle(self.tr("MzS Tools - Project Issues"))
+            msg_box.setText(
+                self.tr(
+                    "The current project seems to be a MzS Tools project, but some issues have been found.\n\n"
+                    "It is suggested to use the 'Fix project' menu in the MzS Tools toolbar to try to solve the issues."
+                )
+            )
+            # msg_box.setInformativeText(self.tr("Do you want to proceed?"))
+            msg_box.setDetailedText(formatted_issues)
+            msg_box.setStandardButtons(QMessageBox.Ok)
+            msg_box.setDefaultButton(QMessageBox.Ok)
+            msg_box.exec_()
 
         self.enable_plugin_actions(self.prj_manager.is_mzs_project and not self.prj_manager.project_updateable)
 

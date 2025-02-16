@@ -16,8 +16,21 @@ import mzs_tools.plugin_utils.settings as plg_prefs_hdlr
 from mzs_tools.__about__ import __title__
 
 
+# map python logging levels to QGIS message levels
+QGIS_LEVELS = {
+    logging.DEBUG: 4,
+    logging.INFO: 0,
+    logging.WARNING: 1,
+    logging.ERROR: 2,
+    logging.CRITICAL: 2,
+}
+
+
 class MzSToolsLogger(logging.Handler):
     """Python logging handler supercharged with QGIS useful methods."""
+
+    def emit(self, record):
+        self.log(record.getMessage(), log_level=QGIS_LEVELS.get(record.levelno, 0))
 
     @staticmethod
     def log(

@@ -1,3 +1,4 @@
+import logging
 import shutil
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
@@ -5,20 +6,34 @@ from qgis.core import QgsProject, QgsTask, QgsVectorLayer, edit
 
 
 class ImportShapefileTask(QgsTask):
-    def __init__(self, proj_paths: dict, shapefile_name: str):
+    def __init__(
+        self,
+        proj_paths: dict,
+        shapefile_name: str,
+        debug: bool = False,
+    ):
         super().__init__(f"Import shapefile {shapefile_name}", QgsTask.CanCancel)
 
         self.iterations = 0
         self.exception = None
 
-        self.log = MzSToolsLogger().log
+        # self.log = MzSToolsLogger().log
+
+        # the logger is configured in the import data dialog module
+        self.logger = logging.getLogger("mzs_tools.tasks.import_data")
+
         self.prj_manager = MzSProjectManager.instance()
 
         self.proj_paths = proj_paths
         self.shapefile_name = shapefile_name
 
+        self.debug = debug
+
     def run(self):
-        self.log(f"Starting task {self.description()}")
+        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        if self.debug:
+            self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#'*50}")
+
         self.iterations = 0
 
         try:
@@ -46,16 +61,16 @@ class ImportShapefileTask(QgsTask):
 
     def finished(self, result):
         if result:
-            self.log(f"Task {self.description()} completed with {self.iterations} iterations")
+            self.logger.info(f"Task {self.description()} completed with {self.iterations} iterations")
         else:
             if self.exception is None:
-                self.log(f"Task {self.description()} was canceled", log_level=1)
+                self.logger.warning(f"Task {self.description()} was canceled")
             else:
-                self.log(f"Task {self.description()} failed: {self.exception}", log_level=2)
+                self.logger.error(f"Task {self.description()} failed: {self.exception}")
                 raise self.exception
 
     def cancel(self):
-        self.log(f"Task {self.description()} was cancelled", log_level=1)
+        self.logger.warning(f"Task {self.description()} was cancelled")
         super().cancel()
 
     def attribute_adaptor(self, targetLayer, sourceLayer):
@@ -106,9 +121,15 @@ class ImportShapefileTask(QgsTask):
     def insert_features(self, source_features, dest_layer: QgsVectorLayer, common_fields):
         feature_list = []
 
+        self.logger.info(f"Inserting features from {self.shapefile_name} to {dest_layer.name()}")
+
+        features_are_3d = False
         for feature in source_features:
             geometry = feature.geometry()
             if geometry.get().is3D():
+                if not features_are_3d:
+                    features_are_3d = True
+                    self.logger.warning(f"3D features detected in {self.shapefile_name}! Z values will be dropped.")
                 geometry.get().dropZValue()
                 feature.setGeometry(geometry)
 
@@ -118,17 +139,19 @@ class ImportShapefileTask(QgsTask):
                     if "SPETTRI" in feature.attributeMap() and feature["SPETTRI"]:
                         feature["SPETTRI"] = f"./Allegati/Spettri/{feature['SPETTRI']}"
             except Exception as e:
-                self.log(f"Error setting SPETTRI field for feature {feature}: {e}", log_level=1)
+                self.logger.warning(f"Error setting SPETTRI field for feature {feature}: {e}")
 
             modifiedFeature = self.attribute_fill(feature, dest_layer, common_fields)
             feature_list.append(modifiedFeature)
 
-        # TODO: testing only
-        self.log(f"Truncating layer {dest_layer.name()}!", log_level=1)
-        dest_layer.dataProvider().truncate()
-
         if dest_layer.isEditable():
+            self.logger.warning(f"Layer {dest_layer.name()} is in editing mode! Committing changes...")
             dest_layer.commitChanges()
+
+        if self.debug:
+            self.logger.warning(f"{'#'*15} Truncating layer {dest_layer.name()}!")
+            # TODO: causes random QGIS crashes
+            dest_layer.dataProvider().truncate()
 
         with edit(dest_layer):
             # set AllowIntersections and disable digitizing geometry checks
@@ -142,6 +165,7 @@ class ImportShapefileTask(QgsTask):
 
             for f in feature_list:
                 self.iterations += 1
+                self.logger.debug(f"Inserting feature {self.iterations}/{len(feature_list)}")
                 dest_layer.addFeature(f)
                 if self.isCanceled():
                     return False

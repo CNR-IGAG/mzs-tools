@@ -724,8 +724,6 @@ class MzSProjectManager:
 
         self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
 
-        # TODO: report issues, if any
-
     def _add_project_issue(self, issue_type: str, issue: str, traceback: str = None, log=True):
         if issue_type not in self.project_issues:
             self.project_issues[issue_type] = []
@@ -739,24 +737,8 @@ class MzSProjectManager:
         # TODO: general project health check
         self.required_layer_registry = self._build_required_layers_registry()
 
-        # check if ui form files are present and set paths if needed
-        # eg. when opening project on different os or qgis installation type
-        # for table_name, layer_id in self.required_layer_registry.items():
-        #     layer_data = MzSProjectManager.DEFAULT_EDITING_LAYERS.get(table_name)
-        #     if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
-        #         layer = self.current_project.mapLayer(layer_id)
-        #         if layer:
-        #             self._set_form_ui_file(layer, table_name)
-
-        # self.check_project_custom_layer_properties()
-
         # check relations
         self._check_default_project_relations()
-        # if not relations_ok:
-        #     self._add_default_project_relations()
-
-        formatted_issues = json.dumps(self.project_issues, indent=4)
-        self.log(f"Project structure checked. Issues found: {formatted_issues}", log_level=4)
 
     def _setup_db_connection(self):
         # setup db connection
@@ -797,13 +779,6 @@ class MzSProjectManager:
 
     def connect_editing_signals(self):
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
-        # TODO: should be called when changing options
-        auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
-            "auto_advanced_editing", default=True, exp_type=bool
-        )
-        if not auto_advanced_editing_setting:
-            return
-
         # for layer in self.current_project.mapLayers().values():
         for group in self.NO_OVERLAPS_LAYER_GROUPS:
             for table_name in group:
@@ -818,6 +793,12 @@ class MzSProjectManager:
                     )
 
     def set_advanced_editing_config(self, layer, table_name):
+        auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
+            "auto_advanced_editing", default=True, exp_type=bool
+        )
+        if not auto_advanced_editing_setting:
+            return
+
         self.log("Setting advanced editing options")
 
         # TODO: config in plugin options? groups, snapping tolerance, etc.
@@ -892,11 +873,11 @@ class MzSProjectManager:
             self.log(f"Error setting advanced editing config: {e}", log_level=2)
 
     def reset_advanced_editing_config(self):
-        # auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
-        #     "auto_advanced_editing", default=True, exp_type=bool
-        # )
-        # if not auto_advanced_editing_setting:
-        #     return
+        auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
+            "auto_advanced_editing", default=True, exp_type=bool
+        )
+        if not auto_advanced_editing_setting:
+            return
 
         self.log("Resetting advanced editing settings")
 
@@ -1210,35 +1191,41 @@ class MzSProjectManager:
 
     def _check_default_project_relations(self):
         rel_manager = self.current_project.relationManager()
+        relations_ok = True
         for relation_name, relation_data in MzSProjectManager.DEFAULT_RELATIONS.items():
             rels = rel_manager.relationsByName(relation_name)
             if not rels:
                 # self.log(f"Error: relation '{relation_name}' not found", log_level=2)
                 self._add_project_issue("project", f"Relation '{relation_name}' not found")
-                return False
+                relations_ok = False
+                continue
             if not rels[0].isValid():
                 # self.log(f"Error: relation '{relation_name}' is not valid: {rels[0].validationError()}", log_level=2)
                 self._add_project_issue(
                     "project", f"Relation '{relation_name}' is not valid: {rels[0].validationError()}"
                 )
-                return False
+                relations_ok = False
+                continue
 
             parent_layer_id = self.find_layer_by_table_name_role(relation_data["parent"], "editing")
             child_layer_id = self.find_layer_by_table_name_role(relation_data["child"], "editing")
             if not parent_layer_id or not child_layer_id:
                 # self.log(f"Error: relation '{relation_name}' parent or child layer not found", log_level=2)
                 self._add_project_issue("project", f"Relation '{relation_name}' parent or child layer not found")
-                return False
+                relations_ok = False
+                continue
             if rels[0].referencedLayerId() != parent_layer_id:
                 # self.log(f"Error: relation '{relation_name}' parent layer is not set correctly", log_level=2)
                 self._add_project_issue("project", f"Relation '{relation_name}' parent layer is not set correctly")
-                return False
+                relations_ok = False
+                continue
             if rels[0].referencingLayerId() != child_layer_id:
                 # self.log(f"Error: relation '{relation_name}' child layer is not set correctly", log_level=2)
                 self._add_project_issue("project", f"Relation '{relation_name}' child layer is not set correctly")
-                return False
+                relations_ok = False
+                continue
 
-        return True
+        return relations_ok
 
     def _add_default_project_relations(self):
         rel_manager = self.current_project.relationManager()
@@ -2097,6 +2084,20 @@ class MzSProjectManager:
         shutil.copytree(self.project_path, backup_path)
 
         return backup_path
+
+    def backup_database(self, out_dir=None):
+        if not out_dir:
+            out_dir = self.project_path / "db"
+
+        db_backup_path = (
+            out_dir
+            / f"indagini_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}.sqlite"
+        )
+
+        self.log(f"Backing up database in {db_backup_path}...")
+        shutil.copy(self.db_path, db_backup_path)
+
+        return db_backup_path
 
     # TODO: function to check, copy and fix all file attachments
     # indagini puntuali (doc_ind, tab_curve), indagini lineari (doc_ind), stab + instab lv.3 (spettri)
