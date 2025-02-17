@@ -78,7 +78,20 @@
        </layout>
       </item>
       <item>
+       <widget class="QRadioButton" name="radio_button_sqlite">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>CdI_Tabelle.sqlite</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QRadioButton" name="radio_button_csv">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Tables exported in CSV format files</string>
         </property>
@@ -202,6 +215,22 @@
        <widget class="QCheckBox" name="chk_ms23_stab">
         <property name="text">
          <string>MS23 Stab.shp</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="group_box_options">
+     <property name="title">
+      <string>Import options</string>
+     </property>
+     <layout class="QFormLayout" name="formLayout_2">
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="chk_debug_logging">
+        <property name="text">
+         <string>Debug logging</string>
         </property>
        </widget>
       </item>

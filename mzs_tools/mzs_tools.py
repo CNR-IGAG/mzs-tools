@@ -9,9 +9,16 @@ from qgis.core import (
     QgsProject,
     QgsSettings,
 )
+from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QMessageBox, QInputDialog, QLineEdit
+from qgis.PyQt.QtWidgets import (
+    QAction,
+    QFileDialog,
+    QMenu,
+    QMessageBox,
+    QToolButton,
+)
 
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.gui.dlg_settings import PlgOptionsFactory
@@ -19,9 +26,9 @@ from mzs_tools.plugin_utils.logging import MzSToolsLogger
 
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .gui.dlg_create_project import DlgCreateProject
+from .gui.dlg_import_data import DlgImportData
 from .gui.dlg_info import PluginInfo
 from .gui.dlg_metadata_edit import DlgMetadataEdit
-from .gui.dlg_import_data import DlgImportData
 from .tb_edit_win import edit_win
 from .tb_esporta_shp import esporta_shp
 from .tb_importa_shp import importa_shp
@@ -29,11 +36,8 @@ from .tb_importa_shp import importa_shp
 
 class MzSTools:
     def __init__(self, iface):
-        self.iface = iface
-        self.log = MzSToolsLogger().log
-
-        # # keep track of connected layers to avoid reconnecting signals
-        # self.editing_signals_connected_layers = {}
+        self.iface: QgisInterface = iface
+        self.log = MzSToolsLogger.log
 
         # initialize locale
         try:
@@ -135,20 +139,57 @@ class MzSTools:
 
         enabled_flag = (self.prj_manager and self.prj_manager.is_mzs_project) or False
 
-        self.add_action(
+        project_menu_button = QToolButton()
+        project_menu_button.setIcon(QIcon(str(ico_nuovo_progetto)))
+        project_menu_button.setPopupMode(QToolButton.InstantPopup)
+        menu_project = QMenu()
+        self.toolbar.addWidget(project_menu_button)
+        new_project_action = self.add_action(
             str(ico_nuovo_progetto),
             text=self.tr("New project"),
             callback=self.open_dlg_create_project,
             parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
         )
+        menu_project.addAction(new_project_action)
+        project_menu_button.setMenu(menu_project)
 
-        # TEST
-        self.add_action(
-            str(ico_nuovo_progetto),
-            text=self.tr("test"),
+        layers_menu_button = QToolButton()
+        layers_menu_button.setIcon(QgsApplication.getThemeIcon("mIconLayerTree.svg"))
+        layers_menu_button.setPopupMode(QToolButton.InstantPopup)
+        layers_menu_button.setToolTip(self.tr("Tools for managing MzS Tools project layers"))
+        menu_layers = QMenu()
+        self.toolbar.addWidget(layers_menu_button)
+        self.action_check_project = self.add_action(
+            QgsApplication.getThemeIcon("mIconQgsProjectFile.svg"),
+            enabled_flag=enabled_flag,
+            text=self.tr("Check the integrity of the current MzS Tools QQGIS project"),
+            status_tip=self.tr("Check the current MzS Tools QQGIS project for common issues"),
+            callback=self.check_project_issues,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_layers.addAction(self.action_check_project)
+        self.action_add_default_layers = self.add_action(
+            QgsApplication.getThemeIcon("mActionAddLayer.svg"),
+            enabled_flag=enabled_flag,
+            text=self.tr("Replace/repair default MzS Tools project layers"),
+            status_tip=self.tr("Replace or repair the default MzS Tools project layers"),
             callback=self.test_add_layers,
             parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
         )
+        menu_layers.addAction(self.action_add_default_layers)
+        self.action_add_ogc_services = self.add_action(
+            QgsApplication.getThemeIcon("mActionAddWmsLayer.svg"),
+            enabled_flag=enabled_flag,
+            text=self.tr("Add regional WMS services"),
+            callback=lambda: self.log("Add regional WMS services"),
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_layers.addAction(self.action_add_ogc_services)
+        layers_menu_button.setMenu(menu_layers)
 
         self.action_edit_metadata = self.add_action(
             QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
@@ -386,23 +427,6 @@ class MzSTools:
         # initialize the project manager
         self.prj_manager.init_manager()
 
-        if self.prj_manager.project_issues:
-            formatted_issues = json.dumps(self.prj_manager.project_issues, indent=4)
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Warning)
-            msg_box.setWindowTitle(self.tr("MzS Tools - Project Issues"))
-            msg_box.setText(
-                self.tr(
-                    "The current project seems to be a MzS Tools project, but some issues have been found.\n\n"
-                    "It is suggested to use the 'Fix project' menu in the MzS Tools toolbar to try to solve the issues."
-                )
-            )
-            # msg_box.setInformativeText(self.tr("Do you want to proceed?"))
-            msg_box.setDetailedText(formatted_issues)
-            msg_box.setStandardButtons(QMessageBox.Ok)
-            msg_box.setDefaultButton(QMessageBox.Ok)
-            msg_box.exec_()
-
         self.enable_plugin_actions(self.prj_manager.is_mzs_project and not self.prj_manager.project_updateable)
 
         if not self.prj_manager.is_mzs_project:
@@ -450,7 +474,8 @@ class MzSTools:
                 )
                 return
 
-        # self.connect_editing_signals()
+        self.report_project_issues()
+
         self.prj_manager.connect_editing_signals()
 
         # connect to layer nameChanged signal to warn the user when renaming required layers
@@ -470,7 +495,40 @@ class MzSTools:
         #         ),
         #     )
 
+    def report_project_issues(self):
+        if not self.prj_manager.project_issues:
+            return
+        formatted_issues = json.dumps(self.prj_manager.project_issues, indent=4)
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setWindowTitle(self.tr("MzS Tools - Project Issues"))
+        msg_box.setText(
+            self.tr(
+                "The current project seems to be a MzS Tools project, but some issues have been found.\n\n"
+                "It is suggested to use the 'Fix project' menu in the MzS Tools toolbar to try to solve the issues."
+            )
+        )
+        # msg_box.setInformativeText(self.tr("Do you want to proceed?"))
+        msg_box.setDetailedText(formatted_issues)
+        msg_box.setStandardButtons(QMessageBox.Ok)
+        msg_box.setDefaultButton(QMessageBox.Ok)
+        msg_box.exec_()
+
+    def check_project_issues(self):
+        self.prj_manager.check_project_structure()
+        if self.prj_manager.project_issues:
+            self.report_project_issues()
+        else:
+            QMessageBox.information(
+                None,
+                self.tr("MzS Tools - Project Issues"),
+                self.tr("No issues found in the current project."),
+            )
+
     def enable_plugin_actions(self, enabled: bool = False):
+        self.action_check_project.setEnabled(enabled)
+        self.action_add_default_layers.setEnabled(enabled)
+        self.action_add_ogc_services.setEnabled(enabled)
         self.action_edit_metadata.setEnabled(enabled)
         self.action_import_data.setEnabled(enabled)
         self.action_export_data.setEnabled(enabled)

@@ -1,7 +1,6 @@
 import logging
 import shutil
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
 from qgis.core import QgsProject, QgsTask, QgsVectorLayer, edit
 
 
@@ -16,8 +15,6 @@ class ImportShapefileTask(QgsTask):
 
         self.iterations = 0
         self.exception = None
-
-        # self.log = MzSToolsLogger().log
 
         # the logger is configured in the import data dialog module
         self.logger = logging.getLogger("mzs_tools.tasks.import_data")

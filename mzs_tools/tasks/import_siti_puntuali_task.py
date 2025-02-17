@@ -7,7 +7,6 @@ from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
 
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
 from mzs_tools.plugin_utils.misc import retry_on_lock
 from mzs_tools.tasks.common_functions import setup_mdb_connection
 
@@ -25,8 +24,6 @@ class ImportSitiPuntualiTask(QgsTask):
 
         self.iterations = 0
         self.exception = None
-
-        # self.log = MzSToolsLogger.log
 
         # the logger is configured in the import data dialog module
         self.logger = logging.getLogger("mzs_tools.tasks.import_data")

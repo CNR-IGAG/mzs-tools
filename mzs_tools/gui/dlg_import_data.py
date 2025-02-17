@@ -33,6 +33,9 @@ class DlgImportData(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         super().__init__(parent)
 
+        self.setupUi(self)
+        self.iface = iface
+
         self.log = MzSToolsLogger.log
 
         # DEBUG MODE: all existent data will be deleted before importing new data!
@@ -40,17 +43,11 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.debug_mode = True
         ########################
 
-        # TODO: debug level for tasks, set by checkbox
-        self.debug_logging = False
-
         # setup proper python logger to be used in tasks with file-based logging
-        self.file_logger = logging.getLogger("mzs_tools.tasks.import_data")
-        self.file_logger.setLevel(logging.DEBUG)
-        handler = MzSToolsLogger()
-        self.file_logger.addHandler(handler)
-
-        self.iface = iface
-        self.setupUi(self)
+        self.file_logger: logging.Logger = logging.getLogger("mzs_tools.tasks.import_data")
+        if not self.file_logger.hasHandlers():
+            handler = MzSToolsLogger()
+            self.file_logger.addHandler(handler)
 
         self.prj_manager = MzSProjectManager.instance()
 
@@ -64,7 +61,6 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.radio_button_csv.setEnabled(False)
         self.csv_dir_widget.setEnabled(False)
 
-        # self.input_dir_widget.lineEdit().textChanged.connect(self.validate_input_dir)
         self.input_dir_widget.lineEdit().textChanged.connect(self.validate_input)
 
         self.radio_button_mdb.toggled.connect(self.enable_csv_selection)
@@ -304,16 +300,16 @@ class DlgImportData(QDialog, FORM_CLASS):
             sub_dir_path.mkdir(parents=True, exist_ok=True)
 
         # setup file-based logging
-        # TODO: get log level from checkbox
-        # self.file_logger.setLevel(logging.DEBUG)
         timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
         filename = f"data_import_{timestamp}.log"
-        file_path = self.prj_manager.project_path / "Allegati" / "log" / filename
-        self.file_handler = logging.FileHandler(file_path, encoding="utf-8")
+        self.log_file_path = self.prj_manager.project_path / "Allegati" / "log" / filename
+        self.file_handler = logging.FileHandler(self.log_file_path, encoding="utf-8")
         self.file_logger.addHandler(self.file_handler)
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         self.file_handler.setFormatter(formatter)
+        self.file_logger.setLevel(logging.DEBUG if self.chk_debug_logging.isChecked() else logging.INFO)
         self.file_logger.info(f"MzS Tools version {__version__} - Data import log")
+        self.file_logger.info(f"Log file: {self.log_file_path}")
         self.file_logger.info(f"############### Data import started at {timestamp}")
 
         indagini_data_source = None
@@ -382,7 +378,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.progress_bar.setMaximum(100)
         self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
-            "MzS Tools", "Data import in progress..."
+            "MzS Tools", self.tr("Data import in progress...")
         )
         self.progress_msg.layout().addWidget(self.progress_bar)
 
@@ -431,19 +427,23 @@ class DlgImportData(QDialog, FORM_CLASS):
         #     self.progress_bar.setValue(int(progress))
         # except:  # noqa: E722
         #     pass
-        self.progress_bar.setValue(int(progress))
 
-    # def set_progress_msg(self, num_tasks):
-    #     try:
-    #         self.progress_msg.setText(f"Import Progress: {num_tasks} tasks active")
-    #     except:  # noqa: E722
-    #         pass
+        # refresh layers every 20%
+        if progress % 20 == 0:
+            self.iface.mapCanvas().refreshAllLayers()
+        self.progress_bar.setValue(int(progress))
 
     def on_tasks_completed(self):
         self.file_logger.info(f"{"#"*15} Data imported successfully.")
         self.iface.messageBar().clearWidgets()
+        # load log file
+        log_text = self.log_file_path.read_text(encoding="utf-8")
         self.iface.messageBar().pushMessage(
-            "Mzs Tools", "Data imported successfully", "more info", level=Qgis.Success, duration=0
+            "MzS Tools",
+            self.tr("Data imported successfully"),
+            log_text if log_text else "...",
+            level=Qgis.Success,
+            duration=0,
         )
         # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
         QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
@@ -454,14 +454,14 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.file_logger.removeHandler(self.file_handler)
 
     def cancel_tasks(self):
-        self.file_logger.warning(f"{"#"*15} Data import cancelled. Terminating all tasks", log_level=1)
+        self.file_logger.warning(f"{"#"*15} Data import cancelled. Terminating all tasks")
         QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
         QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
         # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("Import cancelled", "Data import cancelled", level=Qgis.Warning)
+        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data import cancelled!"), level=Qgis.Warning)
 
         self.iface.mapCanvas().refreshAllLayers()
 

@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 import shutil
 import traceback
@@ -46,6 +45,9 @@ class ComuneData:
 
 
 class MzSProjectManager:
+    """Singleton class to manage MzS Tools project data and structure. It provides various functionalities to handle
+    project initialization, database connections, layer management, and project customization."""
+
     _instance = None
 
     DEFAULT_BASE_LAYERS = {
@@ -638,11 +640,6 @@ class MzSProjectManager:
 
         self.required_layer_registry = {}
 
-        # self.project_issues = {
-        #     "project": [],
-        #     "layers": [],
-        #     "db": [],
-        # }
         self.project_issues = None
 
         self.is_mzs_project: bool = False
@@ -657,7 +654,6 @@ class MzSProjectManager:
         project_path = self.current_project.absolutePath()
         self.log(f"Current project path: {project_path}", log_level=4)
         db_path = Path(project_path) / "db" / "indagini.sqlite"
-        version_file_path = Path(project_path) / "progetto" / "versione.txt"
 
         # TODO: better project detection
         # if project_file_name != "progetto_MS" or not db_path.exists() or not version_file_path.exists():
@@ -681,13 +677,38 @@ class MzSProjectManager:
         if not connected:
             return False
 
-        # init project issues dict
-        self.project_issues = {}
-
         # cleanup db connection on project close
         self.current_project.cleared.connect(self.cleanup_db_connection)
 
+        # TODO: load metadata from db if exists
+        # self.sm_project_metadata = self.get_sm_project_metadata()
+
+        # check project structure
+        # if not self.project_updateable:
+        self.check_project_structure()
+
+        # keep track of connected layers to avoid reconnecting signals
+        self.editing_signals_connected_layers = {}
+
+        self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
+
+    def _add_project_issue(self, issue_type: str, issue: str, traceback: str = None, log=True):
+        if issue_type not in self.project_issues:
+            self.project_issues[issue_type] = []
+        if traceback:
+            issue = f"{issue}\n{traceback}"
+        self.project_issues[issue_type].append(issue)
+        if log:
+            self.log(f"Project issue found: {issue_type} - {issue}", log_level=2)
+
+    def check_project_structure(self):
+        # init project issues dict
+        self.project_issues = {}
+
+        # TODO: general project health check
+
         # check project version
+        version_file_path = Path(self.project_path) / "progetto" / "versione.txt"
         try:
             with version_file_path.open("r") as f:
                 self.project_version = f.read().strip()
@@ -708,33 +729,9 @@ class MzSProjectManager:
         # get comune data from db
         self.comune_data = self.get_project_comune_data()
         if not self.comune_data:
-            # self.log("Error reading comune data from project db", log_level=2)
-            # self.project_issues["db"].append("Error reading comune data from project db")
             self._add_project_issue("db", "Error reading comune data from project db")
 
-        # TODO: load metadata from db if exists
-        # self.sm_project_metadata = self.get_sm_project_metadata()
-
-        # check project structure
-        # if not self.project_updateable:
-        self._check_project_structure()
-
-        # keep track of connected layers to avoid reconnecting signals
-        self.editing_signals_connected_layers = {}
-
-        self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
-
-    def _add_project_issue(self, issue_type: str, issue: str, traceback: str = None, log=True):
-        if issue_type not in self.project_issues:
-            self.project_issues[issue_type] = []
-        if traceback:
-            issue = f"{issue}\n{traceback}"
-        self.project_issues[issue_type].append(issue)
-        if log:
-            self.log(f"Project issue found: {issue_type} - {issue}", log_level=2)
-
-    def _check_project_structure(self):
-        # TODO: general project health check
+        # check required layers
         self.required_layer_registry = self._build_required_layers_registry()
 
         # check relations
@@ -922,9 +919,20 @@ class MzSProjectManager:
         # search the editing layers
         for table_name, layer_data in MzSProjectManager.DEFAULT_EDITING_LAYERS.items():
             if layer_data["role"] == "editing" and layer_data["type"] not in ["group", "service_group"]:
-                layer_id = self.find_layer_by_table_name_role(table_name, "editing")
-                if layer_id:
-                    table_layer_map[table_name] = layer_id
+                # layer_id = self.find_layer_by_table_name_role(table_name, "editing")
+                layers = self.find_layers_by_table_name(table_name)
+                valid_layers = [
+                    layer for layer in layers if layer and layer.customProperty("mzs_tools/layer_role") == "editing"
+                ]
+
+                if not valid_layers:
+                    msg = f"No 'editing' layers found for table '{table_name}'"
+                    self._add_project_issue("layers", msg)
+                elif len(valid_layers) > 1:
+                    msg = f"Multiple 'editing' layers found for table '{table_name}'"
+                    self._add_project_issue("layers", msg)
+                else:
+                    table_layer_map[table_name] = valid_layers[0].id()
 
         # search the lookup tables
         for table_name in MzSProjectManager.DEFAULT_TABLE_LAYERS_NAMES:
@@ -1207,20 +1215,27 @@ class MzSProjectManager:
                 relations_ok = False
                 continue
 
-            parent_layer_id = self.find_layer_by_table_name_role(relation_data["parent"], "editing")
-            child_layer_id = self.find_layer_by_table_name_role(relation_data["child"], "editing")
-            if not parent_layer_id or not child_layer_id:
-                # self.log(f"Error: relation '{relation_name}' parent or child layer not found", log_level=2)
-                self._add_project_issue("project", f"Relation '{relation_name}' parent or child layer not found")
+            parent_layers = self.find_layers_by_table_name(relation_data["parent"])
+            if not parent_layers:
+                self._add_project_issue("project", f"Parent layer not found for relation '{relation_name}'")
                 relations_ok = False
                 continue
-            if rels[0].referencedLayerId() != parent_layer_id:
-                # self.log(f"Error: relation '{relation_name}' parent layer is not set correctly", log_level=2)
+            child_layers = self.find_layers_by_table_name(relation_data["child"])
+            if not child_layers:
+                self._add_project_issue("project", f"Child layer not found for relation '{relation_name}'")
+                relations_ok = False
+                continue
+            parent_layer_ids = [
+                layer.id() for layer in parent_layers if layer.customProperty("mzs_tools/layer_role") == "editing"
+            ]
+            if rels[0].referencedLayerId() not in parent_layer_ids:
                 self._add_project_issue("project", f"Relation '{relation_name}' parent layer is not set correctly")
                 relations_ok = False
                 continue
-            if rels[0].referencingLayerId() != child_layer_id:
-                # self.log(f"Error: relation '{relation_name}' child layer is not set correctly", log_level=2)
+            child_layer_ids = [
+                layer.id() for layer in child_layers if layer.customProperty("mzs_tools/layer_role") == "editing"
+            ]
+            if rels[0].referencingLayerId() not in child_layer_ids:
                 self._add_project_issue("project", f"Relation '{relation_name}' child layer is not set correctly")
                 relations_ok = False
                 continue
@@ -1397,17 +1412,7 @@ class MzSProjectManager:
         """
         layers = self.find_layers_by_table_name(table_name)
         valid_layers = [layer for layer in layers if layer and layer.customProperty("mzs_tools/layer_role") == role]
-        if not valid_layers:
-            msg = f"No '{role}' layers found for table '{table_name}'"
-            # self.log(msg, log_level=2)
-            # self.project_issues["layers"].append(msg)
-            self._add_project_issue("layers", msg)
-            return None
-        if len(valid_layers) > 1:
-            msg = f"Multiple {role} layers found for table '{table_name}'"
-            # self.log(msg, log_level=2)
-            # self.project_issues["layers"].append(msg)
-            self._add_project_issue("layers", msg)
+        if not valid_layers or len(valid_layers) > 1:
             return None
         return valid_layers[0].id()
 

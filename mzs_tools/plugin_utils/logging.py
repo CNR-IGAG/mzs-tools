@@ -1,8 +1,3 @@
-"""
-Plugin logger.
-Based on https://gitlab.com/Oslandia/qgis/template-qgis-plugin
-"""
-
 import logging
 from functools import partial
 from typing import Callable
@@ -27,7 +22,11 @@ QGIS_LEVELS = {
 
 
 class MzSToolsLogger(logging.Handler):
-    """Python logging handler supercharged with QGIS useful methods."""
+    """Python logging handler for QgsMessageLog."""
+
+    def __init__(self):
+        """Initialize a logging handler outputting messages to QGIS message log."""
+        super().__init__()
 
     def emit(self, record):
         self.log(record.getMessage(), log_level=QGIS_LEVELS.get(record.levelno, 0))
@@ -49,6 +48,8 @@ class MzSToolsLogger(logging.Handler):
         """Send messages to QGIS messages windows and to the user as a message bar. \
         Plugin name is used as title. If debug mode is disabled, only warnings (1) and \
         errors (2) or with push are sent.
+
+        Based on https://gitlab.com/Oslandia/qgis/template-qgis-plugin
 
         :param message: message to display
         :type message: str
