@@ -21,6 +21,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
+from mzs_tools.gui.dlg_export_data import DlgExportData
 from mzs_tools.gui.dlg_settings import PlgOptionsFactory
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
 
@@ -29,9 +30,6 @@ from .gui.dlg_create_project import DlgCreateProject
 from .gui.dlg_import_data import DlgImportData
 from .gui.dlg_info import PluginInfo
 from .gui.dlg_metadata_edit import DlgMetadataEdit
-from .tb_edit_win import edit_win
-from .tb_esporta_shp import esporta_shp
-from .tb_importa_shp import importa_shp
 
 
 class MzSTools:
@@ -56,26 +54,27 @@ class MzSTools:
         self.dlg_create_project = None
         self.dlg_metadata_edit = None
         self.info_dlg = PluginInfo(self.iface.mainWindow())
-        self.import_shp_dlg = importa_shp()
+        # self.import_shp_dlg = importa_shp()
 
         self.dlg_import_data = None
+        self.dlg_export_data = None
 
-        self.export_shp_dlg = esporta_shp()
-        self.edit_win_dlg = edit_win()
+        # self.export_shp_dlg = esporta_shp()
+        # self.edit_win_dlg = edit_win()
 
         self.actions = []
         self.menu = self.tr("&MzS Tools")
         self.toolbar = self.iface.addToolBar("MzSTools")
         self.toolbar.setObjectName("MzSTools")
 
-        self.import_shp_dlg.dir_input.clear()
-        self.import_shp_dlg.pushButton_in.clicked.connect(self.select_input_fld_4)
+        # self.import_shp_dlg.dir_input.clear()
+        # self.import_shp_dlg.pushButton_in.clicked.connect(self.select_input_fld_4)
 
-        self.import_shp_dlg.tab_input.clear()
-        self.import_shp_dlg.pushButton_tab.clicked.connect(self.select_tab_fld_4)
+        # self.import_shp_dlg.tab_input.clear()
+        # self.import_shp_dlg.pushButton_tab.clicked.connect(self.select_tab_fld_4)
 
-        self.export_shp_dlg.dir_output.clear()
-        self.export_shp_dlg.pushButton_out.clicked.connect(self.select_output_fld_5)
+        # self.export_shp_dlg.dir_output.clear()
+        # self.export_shp_dlg.pushButton_out.clicked.connect(self.select_output_fld_5)
 
         QgsSettings().setValue("qgis/enableMacros", 3)
 
@@ -213,8 +212,8 @@ class MzSTools:
         self.action_export_data = self.add_action(
             str(ico_esporta),
             enabled_flag=enabled_flag,
-            text=self.tr("Export geodatabase to project folder"),
-            callback=self.export_project,
+            text=self.tr("Export data to Ms standard data structure"),
+            callback=self.open_dlg_export_data,
             parent=self.iface.mainWindow(),
         )
 
@@ -274,6 +273,12 @@ class MzSTools:
             self.dlg_import_data.reset_sequences = sequences_gt_0
 
         self.dlg_import_data.exec()
+
+    def open_dlg_export_data(self):
+        # if self.dlg_export_data is None:
+        self.dlg_export_data = DlgExportData(self.iface.mainWindow())
+
+        self.dlg_export_data.exec()
 
     def unload(self):
         # close db connections
@@ -362,11 +367,11 @@ class MzSTools:
         if result:
             self.dlg_metadata_edit.save_data()
 
-    def import_project(self):
-        self.import_shp_dlg.importa_prog()
+    # def import_project(self):
+    #     self.import_shp_dlg.importa_prog()
 
-    def export_project(self):
-        self.export_shp_dlg.esporta_prog()
+    # def export_project(self):
+    #     self.export_shp_dlg.esporta_prog()
 
     # def add_site(self):
     #     self.edit_win_dlg.edita()

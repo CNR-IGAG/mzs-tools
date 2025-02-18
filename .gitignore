@@ -1,5 +1,6 @@
 *.qgs~
 *.mdb
+!mzs_tools/data/CdI_Tabelle_4.2.mdb
 /*.zip
 
 # shpinx build
