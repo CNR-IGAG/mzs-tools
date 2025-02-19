@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>594</width>
-    <height>612</height>
+    <height>711</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -127,17 +127,17 @@
       <string>Data import selection</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="chk_elineari">
+      <item row="7" column="0">
+       <widget class="QCheckBox" name="chk_ms1_stab">
         <property name="text">
-         <string>Elineari.shp</string>
+         <string>MS1 Stab.shp</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="chk_epuntuali">
+      <item row="6" column="0">
+       <widget class="QCheckBox" name="chk_ms1_isosub">
         <property name="text">
-         <string>Epuntuali.shp</string>
+         <string>MS1 Isosub.shp</string>
         </property>
        </widget>
       </item>
@@ -148,6 +148,13 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="chk_epuntuali">
+        <property name="text">
+         <string>Epuntuali.shp</string>
+        </property>
+       </widget>
+      </item>
       <item row="0" column="1">
        <widget class="QCheckBox" name="chk_siti_lineari">
         <property name="text">
@@ -155,17 +162,38 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="chk_forme">
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="chk_elineari">
         <property name="text">
-         <string>Forme.shp</string>
+         <string>Elineari.shp</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="0">
-       <widget class="QCheckBox" name="chk_instab_geotec">
+      <item row="5" column="1">
+       <widget class="QCheckBox" name="chk_ms23_instab">
         <property name="text">
-         <string>Instab_geotec.shp</string>
+         <string>MS23 Instab.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="chk_ms1_instab">
+        <property name="text">
+         <string>MS1 Instab.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QCheckBox" name="chk_ms23_isosub">
+        <property name="text">
+         <string>MS23 Isosub.shp</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QCheckBox" name="chk_ms23_stab">
+        <property name="text">
+         <string>MS23 Stab.shp</string>
         </property>
        </widget>
       </item>
@@ -176,45 +204,24 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="chk_ms1_instab">
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="chk_forme">
         <property name="text">
-         <string>MS1 Instab.shp</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QCheckBox" name="chk_ms1_isosub">
-        <property name="text">
-         <string>MS1 Isosub.shp</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="chk_ms1_stab">
-        <property name="text">
-         <string>MS1 Stab.shp</string>
+         <string>Forme.shp</string>
         </property>
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QCheckBox" name="chk_ms23_instab">
+       <widget class="QCheckBox" name="chk_instab_geotec">
         <property name="text">
-         <string>MS23 Instab.shp</string>
+         <string>Instab_geotec.shp</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="QCheckBox" name="chk_ms23_isosub">
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="chk_geoidr">
         <property name="text">
-         <string>MS23 Isosub.shp</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="1">
-       <widget class="QCheckBox" name="chk_ms23_stab">
-        <property name="text">
-         <string>MS23 Stab.shp</string>
+         <string>Geoidr.shp</string>
         </property>
        </widget>
       </item>

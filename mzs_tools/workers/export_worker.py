@@ -274,27 +274,27 @@ class ExportWorker(AbstractWorker):
     def esporta(self, list_attr, selected_layer):
         field_ids = []
         fieldnames = set(list_attr[1])
-        if list_attr[0] == 0:
+        if list_attr[0] == 0:  # siti puntuali e lineari
             for field in selected_layer.fields():
                 if field.name() not in fieldnames:
                     field_ids.append(selected_layer.fields().lookupField(field.name()))
-            selected_layer.dataProvider().deleteAttributes(field_ids)
+            selected_layer.dataProvider().deleteAttributes(field_ids)  # elimina tutti i campi tranne id_spu o id_sln
             selected_layer.updateFields()
-            self.cambia_nome(list_attr, selected_layer)
-        elif list_attr[0] == 1:
+            self.cambia_nome(list_attr, selected_layer)  # rinomina uppercase id_spu o id_sln
+        elif list_attr[0] == 1:  # altri shapefile
             for field in selected_layer.fields():
-                if field.name() in fieldnames:
+                if field.name() in fieldnames:  # ["pkuid"]
                     field_ids.append(selected_layer.fields().lookupField(field.name()))
-            selected_layer.dataProvider().deleteAttributes(field_ids)
+            selected_layer.dataProvider().deleteAttributes(field_ids)  # tutto questo per eliminare pkuid...
             selected_layer.updateFields()
             if selected_layer.name() == "Isosub":
                 nome_attr = "Quota"
                 tipo_attr = QVariant.Int
-                self.cambia_tipo(selected_layer, nome_attr, tipo_attr)
+                self.cambia_tipo(selected_layer, nome_attr, tipo_attr)  # trasforma Quota da double a int
             elif selected_layer.name() in ("Stab", "Instab"):
                 nome_attr = "LIVELLO"
                 tipo_attr = QVariant.Double
-                self.cambia_tipo(selected_layer, nome_attr, tipo_attr)
+                self.cambia_tipo(selected_layer, nome_attr, tipo_attr)  # trasforma LIVELLO da int a double
 
     def cambia_nome(self, list_attr, selected_layer):
         selected_layer.startEditing()

@@ -1,3 +1,4 @@
+from functools import partial
 import logging
 from pathlib import Path
 import shutil
@@ -129,7 +130,29 @@ class DlgExportData(QDialog, FORM_CLASS):
         return connected
 
     def start_export_tasks(self):
+        # setup file-based logging
+        timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
+        filename = f"data_export_{timestamp}.log"
+        self.log_file_path = self.prj_manager.project_path / "Allegati" / "log" / filename
+        self.file_handler = logging.FileHandler(self.log_file_path, encoding="utf-8")
+        self.file_logger.addHandler(self.file_handler)
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        self.file_handler.setFormatter(formatter)
+        self.file_logger.setLevel(logging.DEBUG if self.chk_debug_logging.isChecked() else logging.INFO)
+        self.file_logger.info(f"MzS Tools version {__version__} - Data export log")
+        self.file_logger.info(f"Log file: {self.log_file_path}")
+        self.file_logger.info("############### Data export started")
+
+        indagini_output_format = None
+        if self.radio_button_mdb.isChecked():
+            indagini_output_format = "mdb"
+        elif self.radio_button_sqlite.isChecked():
+            indagini_output_format = "sqlite"
+        else:
+            self.log("No import source selected", log_level=1)
+
         # create output directory
+        self.file_logger.info(f"Output directory: {self.output_path}")
         if not self.output_path.exists():
             self.output_path.mkdir(parents=True)
 
@@ -143,6 +166,7 @@ class DlgExportData(QDialog, FORM_CLASS):
             exported_project_path = self.output_path / f"{comune_name}_S42_Shapefile_{timestamp}"
 
         exported_project_path.mkdir(parents=True, exist_ok=False)
+        self.file_logger.info(f"Exported project path: {exported_project_path}")
 
         ms_paths = [
             "BasiDati",
@@ -165,16 +189,122 @@ class DlgExportData(QDialog, FORM_CLASS):
         cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
         shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.mdb")
 
-        layer_id = self.prj_manager.find_layer_by_table_name_role("sito_puntuale", "editing")
-        if layer_id:
-            layer = self.prj_manager.current_project.mapLayer(layer_id)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setMaximum(100)
+        self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
+            "MzS Tools", self.tr("Data import in progress...")
+        )
+        self.progress_msg.layout().addWidget(self.progress_bar)
 
-            # export shapefiles
-            task = QgsVectorLayerExporterTask(
-                layer,
-                str(exported_project_path / "Indagini" / "Ind_pu.shp"),
-                "ogr",
-                layer.crs(),
-                options={"driverName": "ESRI Shapefile"},
-            )
-            QgsApplication.taskManager().addTask(task)
+        cancel_button = QPushButton()
+        cancel_button.setText("Cancel")
+        cancel_button.clicked.connect(self.cancel_tasks)
+        self.progress_msg.layout().addWidget(cancel_button)
+
+        self.iface.messageBar().pushWidget(self.progress_msg, Qgis.Info)
+
+        QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
+        # QgsApplication.taskManager().countActiveTasksChanged.connect(self.set_progress_msg)
+        QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
+
+        # table - shapefile mapping
+        shapefile_mapping = {
+            "comuni": "BasiDati/comuni_istat.shp",
+            "comune_progetto": "BasiDati/comune_progetto.shp",
+            "elineari": "GeoTec/Elineari.shp",
+            "epuntuali": "GeoTec/Epuntuali.shp",
+            "forme": "GeoTec/Forme.shp",
+            "geoidr": "GeoTec/Geoidr.shp",
+            "geotec": "GeoTec/Geotec.shp",
+            "instab_geotec": "GeoTec/Instab_geotec.shp",
+            "sito_puntuale": "Indagini/Ind_pu.shp",
+            "sito_lineare": "Indagini/Ind_ln.shp",
+            "instab_l1": "MS1/Instab.shp",
+            "isosub_l1": "MS1/Isosub.shp",
+            "stab_l1": "MS1/Stab.shp",
+            "instab_l23": "MS23/Instab.shp",
+            "isosub_l23": "MS23/Isosub.shp",
+            "stab_l23": "MS23/Stab.shp",
+        }
+
+        # create tasks to export shapefiles
+        for table_name, shapefile_name in shapefile_mapping.items():
+            layer_id = self.prj_manager.find_layer_by_table_name_role(table_name, "editing")
+            if layer_id:
+                layer = self.prj_manager.current_project.mapLayer(layer_id)
+                task = QgsVectorLayerExporterTask(
+                    layer,
+                    str(exported_project_path / shapefile_name),
+                    "ogr",
+                    layer.crs(),
+                    options={"driverName": "ESRI Shapefile"},
+                )
+                task.exportComplete.connect(
+                    partial(self.file_logger.info, f"Exported {table_name} to {shapefile_name}")
+                )
+                task.errorOccurred.connect(
+                    partial(self.file_logger.error, f"Error exporting {table_name} to {shapefile_name}")
+                )
+                self.file_logger.info(f"Starting task to export {table_name} to {shapefile_name}")
+                QgsApplication.taskManager().addTask(task)
+
+    def on_tasks_progress(self, taskid, progress):
+        # if there is only one main task with a series of subtasks, progress
+        # seems to be reported as the average of all the subtasks' progress
+        # task_desc = QgsApplication.taskManager().task(taskid).description()
+        # num_tasks_remaining = QgsApplication.taskManager().countActiveTasks()
+        # try:
+        #     self.progress_msg.setText(f"{task_desc} - {num_tasks_remaining} tasks remaining")
+        #     self.progress_bar.setValue(int(progress))
+        # except:  # noqa: E722
+        #     pass
+
+        self.progress_bar.setValue(int(progress))
+
+    def on_tasks_completed(self):
+        self.file_logger.info(f"{"#"*15} Data exported successfully.")
+        self.iface.messageBar().clearWidgets()
+        # load log file
+        log_text = self.log_file_path.read_text(encoding="utf-8")
+        self.iface.messageBar().pushMessage(
+            "MzS Tools",
+            self.tr("Data exported successfully"),
+            log_text if log_text else "...",
+            level=Qgis.Success,
+            duration=0,
+        )
+        # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
+
+        # self.iface.mapCanvas().refreshAllLayers()
+
+        self.file_logger.removeHandler(self.file_handler)
+
+    def cancel_tasks(self):
+        self.file_logger.warning(f"{"#"*15} Data import cancelled. Terminating all tasks")
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
+        # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
+        QgsApplication.taskManager().cancelAll()
+
+        self.iface.messageBar().clearWidgets()
+        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data import cancelled!"), level=Qgis.Warning)
+
+        self.iface.mapCanvas().refreshAllLayers()
+
+        self.file_logger.removeHandler(self.file_handler)
+
+    def tr(self, message: str) -> str:
+        return QCoreApplication.translate(self.__class__.__name__, message)
+
+    def cambia_nome(self, list_attr, selected_layer):
+        selected_layer.startEditing()
+        for field in selected_layer.fields():
+            if field.name() in list_attr[1]:
+                selected_layer.renameAttribute(
+                    selected_layer.fields().lookupField(field.name()),
+                    field.name().upper(),
+                )
+        selected_layer.commitChanges()

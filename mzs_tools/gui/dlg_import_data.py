@@ -164,6 +164,7 @@ class DlgImportData(QDialog, FORM_CLASS):
             "Epuntuali.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_epuntuali, "table": "epuntuali"},
             "Forme.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_forme, "table": "forme"},
             "Geotec.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_geotec, "table": "geotec"},
+            "Geoidr.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_geoidr, "table": "geoidr"},
             "Instab_geotec.shp": {
                 "parent": "GeoTec",
                 "path": None,
@@ -310,7 +311,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.file_logger.setLevel(logging.DEBUG if self.chk_debug_logging.isChecked() else logging.INFO)
         self.file_logger.info(f"MzS Tools version {__version__} - Data import log")
         self.file_logger.info(f"Log file: {self.log_file_path}")
-        self.file_logger.info(f"############### Data import started at {timestamp}")
+        self.file_logger.info("############### Data import started")
 
         indagini_data_source = None
         if self.radio_button_mdb.isChecked():
