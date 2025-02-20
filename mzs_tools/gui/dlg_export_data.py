@@ -1,32 +1,32 @@
-from functools import partial
 import logging
-from pathlib import Path
 import shutil
+from functools import partial
+from pathlib import Path
 
-from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig, QgsTask, QgsVectorLayerExporterTask
+from qgis.core import (
+    Qgis,
+    QgsApplication,
+    QgsField,
+    QgsVectorLayer,
+    QgsVectorLayerExporterTask,
+    edit,
+)
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
-from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtCore import QCoreApplication, Qt, QVariant
 from qgis.PyQt.QtWidgets import (
-    QCheckBox,
     QDialog,
     QDialogButtonBox,
-    QLabel,
-    QLineEdit,
     QProgressBar,
     QPushButton,
-    QVBoxLayout,
 )
 from qgis.utils import iface
 
 from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __version__
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.plugin_utils.misc import get_path_for_name
-from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
-from mzs_tools.tasks.import_shapefile_task import ImportShapefileTask
-from mzs_tools.tasks.import_siti_lineari_task import ImportSitiLineariTask
-from mzs_tools.tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
+from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError
+from mzs_tools.tasks.export_siti_puntuali_task import ExportSitiPuntualiTask
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -72,11 +72,16 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.accepted.connect(self.start_export_tasks)
 
+        self.indagini_output_format = None
+
         # test mdb connection
         cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
         connected = self.check_mdb_connection(cdi_tabelle_path)
         if connected:
             self.radio_button_mdb.setEnabled(True)
+
+        self.total_tasks = 0
+        self.completed_tasks = 0
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -143,11 +148,10 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.file_logger.info(f"Log file: {self.log_file_path}")
         self.file_logger.info("############### Data export started")
 
-        indagini_output_format = None
         if self.radio_button_mdb.isChecked():
-            indagini_output_format = "mdb"
+            self.indagini_output_format = "mdb"
         elif self.radio_button_sqlite.isChecked():
-            indagini_output_format = "sqlite"
+            self.indagini_output_format = "sqlite"
         else:
             self.log("No import source selected", log_level=1)
 
@@ -193,7 +197,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.progress_bar.setMaximum(100)
         self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
-            "MzS Tools", self.tr("Data import in progress...")
+            "MzS Tools", self.tr("Data export in progress...")
         )
         self.progress_msg.layout().addWidget(self.progress_bar)
 
@@ -205,7 +209,10 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.iface.messageBar().pushWidget(self.progress_msg, Qgis.Info)
 
         QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
-        # QgsApplication.taskManager().countActiveTasksChanged.connect(self.set_progress_msg)
+        # QgsApplication.taskManager().countActiveTasksChanged.connect(self.on_tasks_completed)
+
+        # weird behavior: the signal is not emitted when the last task is finished, but
+        # when *every* task is finished
         QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
 
         # table - shapefile mapping
@@ -233,64 +240,88 @@ class DlgExportData(QDialog, FORM_CLASS):
             layer_id = self.prj_manager.find_layer_by_table_name_role(table_name, "editing")
             if layer_id:
                 layer = self.prj_manager.current_project.mapLayer(layer_id)
+                path = exported_project_path / shapefile_name
                 task = QgsVectorLayerExporterTask(
                     layer,
-                    str(exported_project_path / shapefile_name),
+                    str(path),
                     "ogr",
                     layer.crs(),
                     options={"driverName": "ESRI Shapefile"},
                 )
-                task.exportComplete.connect(
-                    partial(self.file_logger.info, f"Exported {table_name} to {shapefile_name}")
-                )
+                task.exportComplete.connect(partial(self.on_shapefile_export_complete, table_name, path))
                 task.errorOccurred.connect(
                     partial(self.file_logger.error, f"Error exporting {table_name} to {shapefile_name}")
                 )
                 self.file_logger.info(f"Starting task to export {table_name} to {shapefile_name}")
                 QgsApplication.taskManager().addTask(task)
+                # task.hold()
+                # QTimer.singleShot(count * 1000, lambda: task.unhold())
+
+        self.export_siti_puntuali_task = ExportSitiPuntualiTask(
+            exported_project_path, self.indagini_output_format, self.debug_mode
+        )
+        QgsApplication.taskManager().addTask(self.export_siti_puntuali_task)
+
+        self.total_tasks = QgsApplication.taskManager().count()
+
+    def on_shapefile_export_complete(self, table_name, path: Path):
+        self.file_logger.info(f"Exported {table_name} to {path}")
+
+        # modify specific datasets
+        if table_name == "sito_puntuale":
+            self.rename_field(QgsVectorLayer(str(path), str(path.stem), "ogr"), "id_spu", "ID_SPU")
+        elif table_name == "sito_lineare":
+            self.rename_field(QgsVectorLayer(str(path), str(path.stem), "ogr"), "id_sln", "ID_SLN")
+        elif table_name in ["isosub_l1", "isosub_l23"]:
+            # for some absurd reason, the field "Quota" must be a string
+            self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "Quota", QVariant.Int)
+        elif table_name in ["stab_l1", "stab_l23", "instab_l1", "instab_l23"]:
+            # for some absurd reason, the field "LIVELLO" must be a double
+            self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QVariant.Double)
 
     def on_tasks_progress(self, taskid, progress):
-        # if there is only one main task with a series of subtasks, progress
-        # seems to be reported as the average of all the subtasks' progress
-        # task_desc = QgsApplication.taskManager().task(taskid).description()
-        # num_tasks_remaining = QgsApplication.taskManager().countActiveTasks()
-        # try:
-        #     self.progress_msg.setText(f"{task_desc} - {num_tasks_remaining} tasks remaining")
-        #     self.progress_bar.setValue(int(progress))
-        # except:  # noqa: E722
-        #     pass
-
-        self.progress_bar.setValue(int(progress))
+        # self.progress_bar.setValue(int(progress))
+        remaining_tasks = QgsApplication.taskManager().count()
+        completed_tasks = self.total_tasks - remaining_tasks
+        if self.completed_tasks == completed_tasks:
+            return
+        self.completed_tasks = completed_tasks
+        progress_percentage = (completed_tasks / self.total_tasks) * 100
+        self.progress_bar.setValue(int(progress_percentage))
 
     def on_tasks_completed(self):
-        self.file_logger.info(f"{"#"*15} Data exported successfully.")
-        self.iface.messageBar().clearWidgets()
-        # load log file
-        log_text = self.log_file_path.read_text(encoding="utf-8")
-        self.iface.messageBar().pushMessage(
-            "MzS Tools",
-            self.tr("Data exported successfully"),
-            log_text if log_text else "...",
-            level=Qgis.Success,
-            duration=0,
-        )
-        # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
-        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
+        # adding on the 'allTasksFinished' weirdness, QgsApplication.taskManager().countActiveTasks()
+        # will return 0 as soon as the *first* task is finished, so we need to use count() instead,
+        # count() is weird too, it returns 1 when the last task is finished instead of 0
+        # self.log(f"active: {QgsApplication.taskManager().countActiveTasks()}")
+        # self.log(f"count: {QgsApplication.taskManager().count()}")
+        if QgsApplication.taskManager().count() == 1:
+            self.file_logger.info(f"{"#"*15} Data exported successfully.")
+            self.iface.messageBar().clearWidgets()
+            # load log file
+            log_text = self.log_file_path.read_text(encoding="utf-8")
+            self.iface.messageBar().pushMessage(
+                "MzS Tools",
+                self.tr("Data exported successfully"),
+                log_text if log_text else "...",
+                level=Qgis.Success,
+                duration=0,
+            )
+            # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.on_tasks_completed)
+            QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+            QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
 
-        # self.iface.mapCanvas().refreshAllLayers()
-
-        self.file_logger.removeHandler(self.file_handler)
+            self.file_logger.removeHandler(self.file_handler)
 
     def cancel_tasks(self):
-        self.file_logger.warning(f"{"#"*15} Data import cancelled. Terminating all tasks")
+        self.file_logger.warning(f"{"#"*15} Data export cancelled. Terminating all tasks")
         QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
         QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
         # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data import cancelled!"), level=Qgis.Warning)
+        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data export cancelled!"), level=Qgis.Warning)
 
         self.iface.mapCanvas().refreshAllLayers()
 
@@ -299,12 +330,39 @@ class DlgExportData(QDialog, FORM_CLASS):
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)
 
-    def cambia_nome(self, list_attr, selected_layer):
-        selected_layer.startEditing()
-        for field in selected_layer.fields():
-            if field.name() in list_attr[1]:
-                selected_layer.renameAttribute(
-                    selected_layer.fields().lookupField(field.name()),
-                    field.name().upper(),
-                )
-        selected_layer.commitChanges()
+    def rename_field(self, layer: QgsVectorLayer, field_name: str, new_name: str):
+        for field in layer.fields():
+            if field.name() == field_name:
+                self.file_logger.debug(f"Renaming {field.name()} to {new_name}")
+                with edit(layer):
+                    layer.renameAttribute(layer.fields().lookupField(field_name), new_name)
+                break
+
+    def change_field_type(self, layer, field_name, field_type):
+        # TODO: there should be a quicker/proper way to do this
+        # TODO: DeprecationWarning: QgsField constructor is deprecated
+        self.file_logger.debug(f"Changing field type for field '{field_name}'")
+        layer.startEditing()
+        layer.dataProvider().addAttributes([QgsField("new_col", field_type)])
+        layer.commitChanges()
+
+        layer.startEditing()
+        for feature in layer.getFeatures():
+            feature.setAttribute(feature.fields().lookupField("new_col"), feature[field_name])
+            layer.updateFeature(feature)
+        layer.commitChanges()
+
+        layer.startEditing()
+        layer.dataProvider().deleteAttributes([layer.fields().lookupField(field_name)])
+        layer.dataProvider().addAttributes([QgsField(field_name, field_type)])
+        layer.commitChanges()
+
+        layer.startEditing()
+        for feature in layer.getFeatures():
+            feature.setAttribute(feature.fields().lookupField(field_name), feature["new_col"])
+            layer.updateFeature(feature)
+        layer.commitChanges()
+
+        layer.startEditing()
+        layer.dataProvider().deleteAttributes([layer.fields().lookupField("new_col")])
+        layer.commitChanges()

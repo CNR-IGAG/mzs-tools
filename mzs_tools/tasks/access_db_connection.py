@@ -270,6 +270,32 @@ class AccessDbConnection:
             for row in data
         }
 
+    def insert_siti_puntuali(self, data):
+        """Insert a new 'sito_puntuale' record into the database."""
+        for row in data:
+            self.cursor.execute(
+                """
+                INSERT INTO [Sito_Puntuale] ([pkey_spu], ID_SPU, [ubicazione_prov], [ubicazione_com], [indirizzo],
+                [coord_X], [coord_Y], [mod_identcoord], [desc_modcoord], [quota_slm], [modo_quota], [data_sito],
+                [note_sito]) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    row[0],
+                    row[1],
+                    row[2],
+                    row[3],
+                    row[4],
+                    row[5],
+                    row[6],
+                    row[7],
+                    row[8],
+                    row[9],
+                    row[10],
+                    row[11] if row[11] else None,  # data_sito - no empty strings
+                    row[12],
+                ),
+            )
+
 
 class MdbAuthError(Exception):
     pass

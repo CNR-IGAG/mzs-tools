@@ -35,20 +35,45 @@ class ExportSitiPuntualiTask(QgsTask):
         self.exported_project_path = exported_project_path
         self.mdb_path = self.exported_project_path / "Indagini" / "CdI_Tabelle.mdb"
 
-        self.siti_puntuali_shapefile = None
-        self.num_siti = 0
-
         self.debug = debug
 
     def run(self):
         self.logger.info(f"{'#'*15} Starting task {self.description()}")
-        if self.debug:
-            self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#'*50}")
 
         self.iterations = 0
 
         try:
-            pass
+            # prepare data
+            self.sito_puntuale_data = self.get_sito_puntuale_data()
+            self.iterations += 1
+            # self.indagini_puntuali_data = self.prj_manager.get_indagini_puntuali_data()
+            # self.parametri_puntuali_data = self.prj_manager.get_parametri_puntuali_data()
+            # self.curve_data = self.prj_manager.get_curve_data()
+
+            if self.data_source == "mdb":
+                # setup mdb connection
+                try:
+                    connected, self.mdb_connection = setup_mdb_connection(self.mdb_path)
+                except Exception as e:
+                    self.exception = e
+                    return False
+
+                if not connected:
+                    return False
+
+                # insert data in mdb
+                self.mdb_connection.insert_siti_puntuali(self.sito_puntuale_data)
+                self.iterations += 1
+
+            elif self.data_source == "sqlite":
+                # TODO: implement sqlite export
+                pass
+
+            # close connections
+            if self.mdb_connection:
+                self.mdb_connection.close()
+            if self.spatialite_db_connection:
+                self.spatialite_db_connection.close()
 
         except Exception as e:
             self.exception = e
@@ -69,3 +94,19 @@ class ExportSitiPuntualiTask(QgsTask):
     def cancel(self):
         self.logger.warning(f"Task {self.description()} was canceled")
         super().cancel()
+
+    def get_spatialite_db_connection(self):
+        if not self.spatialite_db_connection:
+            self.spatialite_db_connection = spatialite_connect(str(self.prj_manager.db_path))
+        return self.spatialite_db_connection
+
+    def get_sito_puntuale_data(self):
+        with self.get_spatialite_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT pkuid, id_spu, ubicazione_prov, ubicazione_com, indirizzo, coord_x, coord_y, mod_identcoord,
+                    desc_modcoord, quota_slm, modo_quota, data_sito, note_sito FROM sito_puntuale"""
+            )
+            data = cursor.fetchall()
+            cursor.close()
+        return data
