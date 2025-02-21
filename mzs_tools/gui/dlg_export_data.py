@@ -7,6 +7,7 @@ from qgis.core import (
     Qgis,
     QgsApplication,
     QgsField,
+    QgsTask,
     QgsVectorLayer,
     QgsVectorLayerExporterTask,
     edit,
@@ -26,6 +27,8 @@ from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __version__
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.logging import MzSToolsLogger
 from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError
+from mzs_tools.tasks.export_project_files_task import ExportProjectFilesTask
+from mzs_tools.tasks.export_siti_lineari_task import ExportSitiLineariTask
 from mzs_tools.tasks.export_siti_puntuali_task import ExportSitiPuntualiTask
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
@@ -211,33 +214,31 @@ class DlgExportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
         # QgsApplication.taskManager().countActiveTasksChanged.connect(self.on_tasks_completed)
 
-        # weird behavior: the signal is not emitted when the last task is finished, but
-        # when *every* task is finished
         QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
 
         # table - shapefile mapping
         shapefile_mapping = {
-            "comuni": "BasiDati/comuni_istat.shp",
-            "comune_progetto": "BasiDati/comune_progetto.shp",
-            "elineari": "GeoTec/Elineari.shp",
-            "epuntuali": "GeoTec/Epuntuali.shp",
-            "forme": "GeoTec/Forme.shp",
-            "geoidr": "GeoTec/Geoidr.shp",
-            "geotec": "GeoTec/Geotec.shp",
-            "instab_geotec": "GeoTec/Instab_geotec.shp",
-            "sito_puntuale": "Indagini/Ind_pu.shp",
-            "sito_lineare": "Indagini/Ind_ln.shp",
-            "instab_l1": "MS1/Instab.shp",
-            "isosub_l1": "MS1/Isosub.shp",
-            "stab_l1": "MS1/Stab.shp",
-            "instab_l23": "MS23/Instab.shp",
-            "isosub_l23": "MS23/Isosub.shp",
-            "stab_l23": "MS23/Stab.shp",
+            "comuni": ("BasiDati/comuni_istat.shp", "base"),
+            "comune_progetto": ("BasiDati/comune_progetto.shp", "base"),
+            "elineari": ("GeoTec/Elineari.shp", "editing"),
+            "epuntuali": ("GeoTec/Epuntuali.shp", "editing"),
+            "forme": ("GeoTec/Forme.shp", "editing"),
+            "geoidr": ("GeoTec/Geoidr.shp", "editing"),
+            "geotec": ("GeoTec/Geotec.shp", "editing"),
+            "instab_geotec": ("GeoTec/Instab_geotec.shp", "editing"),
+            "sito_puntuale": ("Indagini/Ind_pu.shp", "editing"),
+            "sito_lineare": ("Indagini/Ind_ln.shp", "editing"),
+            "instab_l1": ("MS1/Instab.shp", "editing"),
+            "isosub_l1": ("MS1/Isosub.shp", "editing"),
+            "stab_l1": ("MS1/Stab.shp", "editing"),
+            "instab_l23": ("MS23/Instab.shp", "editing"),
+            "isosub_l23": ("MS23/Isosub.shp", "editing"),
+            "stab_l23": ("MS23/Stab.shp", "editing"),
         }
 
         # create tasks to export shapefiles
-        for table_name, shapefile_name in shapefile_mapping.items():
-            layer_id = self.prj_manager.find_layer_by_table_name_role(table_name, "editing")
+        for table_name, (shapefile_name, role) in shapefile_mapping.items():
+            layer_id = self.prj_manager.find_layer_by_table_name_role(table_name, role)
             if layer_id:
                 layer = self.prj_manager.current_project.mapLayer(layer_id)
                 path = exported_project_path / shapefile_name
@@ -249,18 +250,28 @@ class DlgExportData(QDialog, FORM_CLASS):
                     options={"driverName": "ESRI Shapefile"},
                 )
                 task.exportComplete.connect(partial(self.on_shapefile_export_complete, table_name, path))
-                task.errorOccurred.connect(
-                    partial(self.file_logger.error, f"Error exporting {table_name} to {shapefile_name}")
-                )
+                task.errorOccurred.connect(self.on_shapefile_export_error)
+
                 self.file_logger.info(f"Starting task to export {table_name} to {shapefile_name}")
                 QgsApplication.taskManager().addTask(task)
-                # task.hold()
-                # QTimer.singleShot(count * 1000, lambda: task.unhold())
 
+        # export indagini puntuali data in mdb or sqlite
         self.export_siti_puntuali_task = ExportSitiPuntualiTask(
             exported_project_path, self.indagini_output_format, self.debug_mode
         )
+
+        # export indagini lineari data in mdb or sqlite
+        # adding this as a subtask of indagini puntuali task to avoid concurrent db writes
+        self.export_siti_lineari_task = ExportSitiLineariTask(
+            exported_project_path, self.indagini_output_format, self.debug_mode
+        )
+        # QgsApplication.taskManager().addTask(self.export_siti_lineari_task)
+        self.export_siti_puntuali_task.addSubTask(self.export_siti_lineari_task, [], QgsTask.ParentDependsOnSubTask)
         QgsApplication.taskManager().addTask(self.export_siti_puntuali_task)
+
+        # export project files (attachments, plots, etc.)
+        self.export_project_files_task = ExportProjectFilesTask(exported_project_path, self.debug_mode)
+        QgsApplication.taskManager().addTask(self.export_project_files_task)
 
         self.total_tasks = QgsApplication.taskManager().count()
 
@@ -279,6 +290,9 @@ class DlgExportData(QDialog, FORM_CLASS):
             # for some absurd reason, the field "LIVELLO" must be a double
             self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QVariant.Double)
 
+    def on_shapefile_export_error(self, result, msg):
+        self.file_logger.error(f"Error during export: {msg} - {result}")
+
     def on_tasks_progress(self, taskid, progress):
         # self.progress_bar.setValue(int(progress))
         remaining_tasks = QgsApplication.taskManager().count()
@@ -290,12 +304,10 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.progress_bar.setValue(int(progress_percentage))
 
     def on_tasks_completed(self):
-        # adding on the 'allTasksFinished' weirdness, QgsApplication.taskManager().countActiveTasks()
-        # will return 0 as soon as the *first* task is finished, so we need to use count() instead,
-        # count() is weird too, it returns 1 when the last task is finished instead of 0
         # self.log(f"active: {QgsApplication.taskManager().countActiveTasks()}")
         # self.log(f"count: {QgsApplication.taskManager().count()}")
-        if QgsApplication.taskManager().count() == 1:
+        # if QgsApplication.taskManager().count() == 1:
+        if QgsApplication.taskManager().countActiveTasks() == 0:
             self.file_logger.info(f"{"#"*15} Data exported successfully.")
             self.iface.messageBar().clearWidgets()
             # load log file

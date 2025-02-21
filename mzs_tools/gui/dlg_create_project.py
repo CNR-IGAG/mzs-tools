@@ -20,7 +20,7 @@ class DlgCreateProject(QDialog, FORM_CLASS):
         super().__init__(parent)
         self.setupUi(self)
 
-        self.project_template_path = os.path.join(DIR_PLUGIN_ROOT, "data", "progetto_MS.zip")
+        self.database_template_path = DIR_PLUGIN_ROOT / "data" / "indagini.sqlite.zip"
 
         self.help_button = self.button_box.button(QDialogButtonBox.Help)
         self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
@@ -49,8 +49,8 @@ class DlgCreateProject(QDialog, FORM_CLASS):
     def load_comuni_data(self):
         # Load comuni data from the project template
         with tempfile.TemporaryDirectory() as temp_dir:
-            with zipfile.ZipFile(self.project_template_path, "r") as zip_ref:
-                temp_db_path = zip_ref.extract("progetto_MS/db/indagini.sqlite", temp_dir)
+            with zipfile.ZipFile(str(self.database_template_path), "r") as zip_ref:
+                temp_db_path = zip_ref.extract("indagini.sqlite", temp_dir)
 
             # Load comuni data from temp db
             with sqlite3.connect(temp_db_path) as conn:
