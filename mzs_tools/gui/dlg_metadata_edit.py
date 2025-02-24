@@ -131,7 +131,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
     def parse_date(self, date_str):
         if date_str and date_str != "NULL":
             try:
-                return datetime.strptime(date_str, "%d/%m/%Y")
+                return datetime.strptime(date_str, "%Y-%m-%d")
             except ValueError:
                 pass
         return None

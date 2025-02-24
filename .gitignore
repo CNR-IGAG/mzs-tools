@@ -4,7 +4,7 @@
 /*.zip
 
 # shpinx build
-help/build
+help/_build
 help/source/_build
 
 # Byte-compiled / optimized / DLL files

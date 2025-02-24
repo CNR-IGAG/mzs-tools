@@ -13,31 +13,31 @@ All'attivazione del plugin MzS Tools viene visualizzata nell'interfaccia di QGIS
 
 Gli strumenti richiamabili tramite la toolbar sono:
 
-.. |ico1| image:: ../../../img/ico_nuovo_progetto.png
+.. |ico1| image:: ../../../mzs_tools/resources/icons/ico_nuovo_progetto.png
   :height: 25
 
-.. |ico2| image:: ../../../img/ico_importa.png
+.. |ico2| image:: ../../../mzs_tools/resources/icons/ico_importa.png
   :height: 25
 
-.. |ico3| image:: ../../../img/ico_esporta.png
+.. |ico3| image:: ../../../mzs_tools/resources/icons/ico_esporta.png
   :height: 25
 
-.. |ico4| image:: ../../../img/ico_edita.png
+.. |ico4| image:: ../../../mzs_tools/resources/icons/ico_edita.png
   :height: 25
 
-.. |ico5| image:: ../../../img/ico_salva_edita.png
+.. |ico5| image:: ../../../mzs_tools/resources/icons/ico_salva_edita.png
   :height: 25
 
-.. |ico6| image:: ../../../img/ico_xypoint.png
+.. |ico6| image:: ../../../mzs_tools/resources/icons/ico_xypoint.png
   :height: 25
 
-.. |ico7| image:: ../../../img/mActionOptions.png
+.. |ico7| image:: ../../../mzs_tools/resources/icons/mActionOptions.png
   :height: 25
 
-.. |ico8| image:: ../../../img/ico_info.png
+.. |ico8| image:: ../../../mzs_tools/resources/icons/ico_info.png
   :height: 25
 
-.. |ico9| image:: ../../../img/mActionAddHtml.png
+.. |ico9| image:: ../../../mzs_tools/resources/icons/mActionAddHtml.png
   :height: 25
 
 |ico1| **Nuovo progetto** → :ref:`nuovo-progetto`

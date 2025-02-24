@@ -28,6 +28,9 @@ trans-update:
 trans-compile:
     uv run lrelease ./mzs_tools/i18n/MzSTools_it.ts
 
+build-docs-html:
+    uv run sphinx-build -b html -j auto -d help/_build/cache -q help/source help/_build/html
+
 # Update project template package data/progetto_MS.zip
 update-project-template:
     #!/bin/bash

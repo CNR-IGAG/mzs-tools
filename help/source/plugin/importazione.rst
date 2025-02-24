@@ -3,10 +3,10 @@
 Importazione dati da un progetto standard
 -----------------------------------------
 
-.. |ico1| image:: ../../../img/ico_nuovo_progetto.png
+.. |ico1| image:: ../../../mzs_tools/resources/icons/ico_nuovo_progetto.png
   :height: 25
 
-.. |ico2| image:: ../../../img/ico_importa.png
+.. |ico2| image:: ../../../mzs_tools/resources/icons/ico_importa.png
   :height: 25
 
 Nel caso in cui il nuovo studio di MS costituisca il proseguimento o approfondimento di uno studio già esistente - ad

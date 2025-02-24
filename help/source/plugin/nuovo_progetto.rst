@@ -3,7 +3,7 @@
 Creazione di un nuovo progetto
 ------------------------------
 
-.. |ico1| image:: ../../../img/ico_nuovo_progetto.png
+.. |ico1| image:: ../../../mzs_tools/resources/icons/ico_nuovo_progetto.png
   :height: 25
 
 Il primo strumento, **Nuovo progetto**, permette di generare un progetto QGIS ed uno spazio di archiviazione adatti ad un **comune** oggetto di studio. 

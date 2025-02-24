@@ -936,9 +936,19 @@ class MzSProjectManager:
 
         # search the lookup tables
         for table_name in MzSProjectManager.DEFAULT_TABLE_LAYERS_NAMES:
-            layer_id = self.find_layer_by_table_name_role(table_name, "editing")
-            if layer_id:
-                table_layer_map[table_name] = layer_id
+            # layer_id = self.find_layer_by_table_name_role(table_name, "editing")
+            layers = self.find_layers_by_table_name(table_name)
+            valid_layers = [
+                layer for layer in layers if layer and layer.customProperty("mzs_tools/layer_role") == "editing"
+            ]
+            if not valid_layers:
+                msg = f"No 'editing' layers found for lookup table '{table_name}'"
+                self._add_project_issue("layers", msg)
+            elif len(valid_layers) > 1:
+                msg = f"Multiple 'editing' layers found for lookup table '{table_name}'"
+                self._add_project_issue("layers", msg)
+            else:
+                table_layer_map[table_name] = valid_layers[0].id()
 
         # search the base layers (comuni, comune_progetto)
         for table_name, layer_data in MzSProjectManager.DEFAULT_BASE_LAYERS.items():
@@ -1283,6 +1293,34 @@ class MzSProjectManager:
         # for layer_tree_layer in root_layer_group.findLayers():
         #     for prop_name, prop_value in custom_properties.items():
         #         self.set_layer_custom_property(layer_tree_layer.layer(), prop_name, prop_value)
+
+    def load_ogc_services(self, regional_wms=True, webms_wms=True, webms_wfs=True, geo_ispra=True):
+        root_layer_group = self.current_project.layerTreeRoot().findGroup("Cartografia di base")
+        if not root_layer_group:
+            # add new OGC services groups
+            root_layer_group = QgsLayerTreeGroup("SERVIZI OGC")
+            root_layer_group.setItemVisibilityChecked(False)
+            self.current_project.layerTreeRoot().addChildNode(root_layer_group)
+
+        if regional_wms:
+            self.add_layer_from_qlr(
+                root_layer_group, DIR_PLUGIN_ROOT / "data" / "layer_defs" / "ogc_services" / "ctr_regioni.qlr"
+            )
+        if webms_wms:
+            self.add_layer_from_qlr(
+                root_layer_group, DIR_PLUGIN_ROOT / "data" / "layer_defs" / "ogc_services" / "ms_cle_wms.qlr"
+            )
+        if webms_wfs:
+            self.add_layer_from_qlr(
+                root_layer_group, DIR_PLUGIN_ROOT / "data" / "layer_defs" / "ogc_services" / "ms_cle_wfs.qlr"
+            )
+        if geo_ispra:
+            self.add_layer_from_qlr(
+                root_layer_group,
+                DIR_PLUGIN_ROOT / "data" / "layer_defs" / "ogc_services" / "servizio_geologico_25k.qlr",
+            )
+
+        return root_layer_group.name()
 
     def add_layer_from_qlr(self, layer_group: QgsLayerTreeGroup, qlr_full_path: Path):
         # copy .qlr file in project folder
@@ -1633,7 +1671,7 @@ class MzSProjectManager:
 
     def update_project(self):
         """Update the project without loading the project template.
-        It's assumed that the database structure is already updated.
+        The database structure should be already updated.
         """
         if not self.project_updateable:
             self.log("Requested project update for non-updateable project!", log_level=1)
@@ -1798,8 +1836,8 @@ class MzSProjectManager:
         crs = QgsCoordinateReferenceSystem("EPSG:32633")
         self.current_project.setCrs(crs)
 
-        logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", self.comune_data.cod_regio + ".png")
-        logo_regio_out = os.path.join(self.project_path, "progetto", "loghi", "logo_regio.png")
+        logo_regio_in = DIR_PLUGIN_ROOT / "resources" / "logo_regioni" / self.comune_data.cod_regio + ".png"
+        logo_regio_out = self.project_path / "progetto" / "loghi" / "logo_regio.png"
         shutil.copyfile(logo_regio_in, logo_regio_out)
 
         # TODO: define a resource list for a project
@@ -2103,6 +2141,15 @@ class MzSProjectManager:
         shutil.copy(self.db_path, db_backup_path)
 
         return db_backup_path
+
+    def backup_qgis_project(self):
+        project_file_name = f"{self.current_project.baseName()}_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d-%H_%M')}.qgz"
+        project_backup_path = self.project_path / project_file_name
+
+        self.log(f"Backing up QGIS project to {project_backup_path}...")
+        shutil.copy(self.current_project.absoluteFilePath(), project_backup_path)
+
+        return project_backup_path
 
     # TODO: function to check, copy and fix all file attachments
     # indagini puntuali (doc_ind, tab_curve), indagini lineari (doc_ind), stab + instab lv.3 (spettri)

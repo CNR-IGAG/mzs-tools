@@ -226,7 +226,7 @@ Credits
 
 |logo_igag| |logo_cnr|
 
-.. |logo_igag| image:: ../../img/IGAG-CMYK.png
+.. |logo_igag| image:: ../../mzs_tools/resources/img/logo_IGAG.png
     :width: 14%
     :target: https://www.igag.cnr.it
 

@@ -4,6 +4,8 @@ import shutil
 import traceback
 from pathlib import Path
 
+from mzs_tools.gui.dlg_fix_layers import DlgFixLayers
+from mzs_tools.gui.dlg_load_ogc_services import DlgLoadOgcLayers
 from qgis.core import (
     QgsApplication,
     QgsProject,
@@ -130,10 +132,10 @@ class MzSTools:
         self.options_factory = PlgOptionsFactory()
         self.iface.registerOptionsWidgetFactory(self.options_factory)
 
-        ico_nuovo_progetto = DIR_PLUGIN_ROOT / "img" / "ico_nuovo_progetto.png"
-        ico_info = DIR_PLUGIN_ROOT / "img" / "ico_info.png"
-        ico_importa = DIR_PLUGIN_ROOT / "img" / "ico_importa.png"
-        ico_esporta = DIR_PLUGIN_ROOT / "img" / "ico_esporta.png"
+        ico_nuovo_progetto = DIR_PLUGIN_ROOT / "resources" / "icons" / "ico_nuovo_progetto.png"
+        ico_info = DIR_PLUGIN_ROOT / "resources" / "icons" / "ico_info.png"
+        ico_importa = DIR_PLUGIN_ROOT / "resources" / "icons" / "ico_importa.png"
+        ico_esporta = DIR_PLUGIN_ROOT / "resources" / "icons" / "ico_esporta.png"
         # icon_path10 = DIR_PLUGIN_ROOT / "img" / "ico_xypoint.png"
 
         enabled_flag = (self.prj_manager and self.prj_manager.is_mzs_project) or False
@@ -162,8 +164,8 @@ class MzSTools:
         self.action_check_project = self.add_action(
             QgsApplication.getThemeIcon("mIconQgsProjectFile.svg"),
             enabled_flag=enabled_flag,
-            text=self.tr("Check the integrity of the current MzS Tools QQGIS project"),
-            status_tip=self.tr("Check the current MzS Tools QQGIS project for common issues"),
+            text=self.tr("Check the integrity of the current MzS Tools QGIS project"),
+            status_tip=self.tr("Check the current MzS Tools QGIS project for common issues"),
             callback=self.check_project_issues,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
@@ -173,17 +175,23 @@ class MzSTools:
             QgsApplication.getThemeIcon("mActionAddLayer.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Replace/repair default MzS Tools project layers"),
-            status_tip=self.tr("Replace or repair the default MzS Tools project layers"),
-            callback=self.test_add_layers,
+            status_tip=self.tr("Replace or repair the default MzS Tools project layers to fix common issues"),
+            callback=self.open_dlg_fix_layers,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
         menu_layers.addAction(self.action_add_default_layers)
+
+        menu_layers.addSeparator()
+
         self.action_add_ogc_services = self.add_action(
             QgsApplication.getThemeIcon("mActionAddWmsLayer.svg"),
             enabled_flag=enabled_flag,
-            text=self.tr("Add regional WMS services"),
-            callback=lambda: self.log("Add regional WMS services"),
+            text=self.tr("Load WMS/WFS services"),
+            status_tip=self.tr(
+                "Load useful OGC services (such as regional CTR and MS services) in the current project"
+            ),
+            callback=self.open_dlg_load_ogc_services,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
@@ -217,13 +225,6 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
-        # self.add_action(
-        #     str(icon_path10),
-        #     text=self.tr('Add "Sito puntuale" using XY coordinates'),
-        #     callback=self.add_site,
-        #     parent=self.iface.mainWindow(),
-        # )
-
         self.toolbar.addSeparator()
 
         self.add_action(
@@ -242,8 +243,17 @@ class MzSTools:
         # add the help action to the QGIS plugin help menu
         self.iface.pluginHelpMenu().addAction(self.help_action)
 
-    def test_add_layers(self):
-        self.prj_manager.add_default_layers(add_base_layers=True, add_editing_layers=True, add_layout_groups=True)
+    def open_dlg_load_ogc_services(self):
+        self.dlg_load_ogc_layers = DlgLoadOgcLayers(self.iface.mainWindow())
+        self.dlg_load_ogc_layers.exec()
+
+    def open_dlg_fix_layers(self):
+        if not self.prj_manager.is_mzs_project:
+            self.log(self.tr("The tool must be used within an opened MS project!"), log_level=1)
+            return
+
+        self.dlg_fix_layers = DlgFixLayers(self.iface.mainWindow())
+        self.dlg_fix_layers.exec()
 
     def open_dlg_import_data(self):
         if self.dlg_import_data is None:
@@ -263,7 +273,7 @@ class MzSTools:
         if prj_contains_indagini_data:
             title = self.tr("Warning!")
             message = self.tr(
-                "The project already contains 'Indagini' data and/or related data (siti, indagini, parametri, curve)."
+                "The project already contains 'Indagini' data (siti, indagini, parametri, curve)."
                 "\n\nThe imported data numeric IDs (and composite ID such as 'ID_SPU', 'ID_INDPU', etc.), will be different from the original data."
                 "\n\nTo preserve the original IDs, use a new, empy project, or delete all punctual and linear sites before running the import tool."
             )
@@ -275,8 +285,8 @@ class MzSTools:
         self.dlg_import_data.exec()
 
     def open_dlg_export_data(self):
-        # if self.dlg_export_data is None:
-        self.dlg_export_data = DlgExportData(self.iface.mainWindow())
+        if self.dlg_export_data is None:
+            self.dlg_export_data = DlgExportData(self.iface.mainWindow())
 
         self.dlg_export_data.exec()
 
@@ -509,8 +519,8 @@ class MzSTools:
         msg_box.setWindowTitle(self.tr("MzS Tools - Project Issues"))
         msg_box.setText(
             self.tr(
-                "The current project seems to be a MzS Tools project, but some issues have been found.\n\n"
-                "It is suggested to use the 'Fix project' menu in the MzS Tools toolbar to try to solve the issues."
+                "Some issues have been found in the current MzS Tools project.\n\n"
+                "It is suggested to use the 'Replace/repair layers' function in the MzS Tools toolbar to try to solve the issues."
             )
         )
         # msg_box.setInformativeText(self.tr("Do you want to proceed?"))
