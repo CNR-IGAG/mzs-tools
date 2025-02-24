@@ -9,12 +9,7 @@ from mzs_tools.tasks.common_functions import setup_mdb_connection
 
 
 class ExportSitiLineariTask(QgsTask):
-    def __init__(
-        self,
-        exported_project_path: Path,
-        data_source: str,
-        debug: bool = False,
-    ):
+    def __init__(self, exported_project_path: Path, data_source: str):
         super().__init__("Export siti lineari (siti, indagini, parametri)", QgsTask.CanCancel)
 
         self.iterations = 0
@@ -32,7 +27,7 @@ class ExportSitiLineariTask(QgsTask):
         self.exported_project_path = exported_project_path
         self.mdb_path = self.exported_project_path / "Indagini" / "CdI_Tabelle.mdb"
 
-        self.debug = debug
+        self.tot_steps = 6
 
     def run(self):
         self.logger.info(f"{'#'*15} Starting task {self.description()}")
@@ -43,13 +38,16 @@ class ExportSitiLineariTask(QgsTask):
             # prepare data
             self.logger.debug("Getting sito_lineare data...")
             self.sito_lineare_data = self.get_sito_lineare_data()
-            self.iterations += 1
+            self._advance_progress()
             self.logger.debug("Getting indagini_lineari data...")
             self.indagini_lineari_data = self.get_indagini_lineari_data()
-            self.iterations += 1
+            self._advance_progress()
             self.logger.debug("Getting parametri_lineari data...")
             self.parametri_lineari_data = self.get_parametri_lineari_data()
-            self.iterations += 1
+            self._advance_progress()
+
+            if self.isCanceled():
+                return False
 
             if self.data_source == "mdb":
                 # setup mdb connection
@@ -70,26 +68,39 @@ class ExportSitiLineariTask(QgsTask):
                     self.logger.warning(
                         f"Errors occurred during siti_lineari data insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
+
                 self.logger.debug("Inserting indagini_lineari data in mdb...")
                 insert_errors = self.mdb_connection.insert_indagini_lineari(self.indagini_lineari_data)
                 if insert_errors:
                     self.logger.warning(
                         f"Errors occurred during indagini_lineari data insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
+
                 self.logger.debug("Inserting parametri_lineari data in mdb...")
                 insert_errors = self.mdb_connection.insert_parametri_lineari(self.parametri_lineari_data)
                 if insert_errors:
                     self.logger.warning(
                         f"Errors occurred during parametri_lineari data insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
 
             elif self.data_source == "sqlite":
                 # TODO: implement sqlite export
                 pass
 
+        except Exception as e:
+            self.exception = e
+            return False
+
+        finally:
             # close connections
             if self.mdb_connection:
                 self.logger.debug("Closing mdb connection...")
@@ -97,10 +108,6 @@ class ExportSitiLineariTask(QgsTask):
             if self.spatialite_db_connection:
                 self.logger.debug("Closing spatialite connection...")
                 self.spatialite_db_connection.close()
-
-        except Exception as e:
-            self.exception = e
-            return False
 
         return True
 
@@ -117,6 +124,10 @@ class ExportSitiLineariTask(QgsTask):
     def cancel(self):
         self.logger.warning(f"Task {self.description()} was canceled")
         super().cancel()
+
+    def _advance_progress(self):
+        self.iterations += 1
+        self.setProgress(self.iterations * 100 / self.tot_steps)
 
     def get_spatialite_db_connection(self):
         if not self.spatialite_db_connection:

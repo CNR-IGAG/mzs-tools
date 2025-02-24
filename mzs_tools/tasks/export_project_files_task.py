@@ -8,11 +8,7 @@ from mzs_tools.core.mzs_project_manager import MzSProjectManager
 
 
 class ExportProjectFilesTask(QgsTask):
-    def __init__(
-        self,
-        exported_project_path: Path,
-        debug: bool = False,
-    ):
+    def __init__(self, exported_project_path: Path):
         super().__init__("Export project files (attachments, plots, etc.)", QgsTask.CanCancel)
 
         self.iterations = 0
@@ -23,8 +19,6 @@ class ExportProjectFilesTask(QgsTask):
 
         self.prj_manager = MzSProjectManager.instance()
         self.exported_project_path = exported_project_path
-
-        self.debug = debug
 
     def run(self):
         self.logger.info(f"{'#'*15} Starting task {self.description()}")
@@ -38,6 +32,8 @@ class ExportProjectFilesTask(QgsTask):
             dest_path = self.exported_project_path / "Indagini" / "Documenti"
             shutil.copytree(orig_path, dest_path, dirs_exist_ok=True)
             self.iterations += 1
+            if self.isCanceled():
+                return False
 
             # copy plots
             self.logger.debug("Copying plots (Indagini/Plots)...")
@@ -45,6 +41,8 @@ class ExportProjectFilesTask(QgsTask):
             dest_path = self.exported_project_path / "Plot"
             shutil.copytree(orig_path, dest_path, dirs_exist_ok=True)
             self.iterations += 1
+            if self.isCanceled():
+                return False
 
             # copy spettri
             self.logger.debug("Copying spettri (Indagini/Spettri)...")
@@ -52,6 +50,8 @@ class ExportProjectFilesTask(QgsTask):
             dest_path = self.exported_project_path / "MS23" / "Spettri"
             shutil.copytree(orig_path, dest_path, dirs_exist_ok=True)
             self.iterations += 1
+            if self.isCanceled():
+                return False
 
         except Exception as e:
             self.exception = e

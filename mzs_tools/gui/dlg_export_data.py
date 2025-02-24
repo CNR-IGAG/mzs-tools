@@ -43,11 +43,6 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.log = MzSToolsLogger.log
 
-        # DEBUG MODE: all existent data will be deleted before importing new data!
-        ########################
-        self.debug_mode = True
-        ########################
-
         # setup proper python logger to be used in tasks with file-based logging
         self.file_logger: logging.Logger = logging.getLogger("mzs_tools.tasks.export_data")
         if not self.file_logger.hasHandlers():
@@ -77,11 +72,7 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.indagini_output_format = None
 
-        # test mdb connection
-        cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
-        connected = self.check_mdb_connection(cdi_tabelle_path)
-        if connected:
-            self.radio_button_mdb.setEnabled(True)
+        self.mdb_checked = False
 
         self.total_tasks = 0
         self.completed_tasks = 0
@@ -89,6 +80,14 @@ class DlgExportData(QDialog, FORM_CLASS):
     def showEvent(self, e):
         super().showEvent(e)
         self.output_dir_widget.lineEdit().setText("")
+
+        if not self.mdb_checked:
+            # test mdb connection
+            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
+            connected = self.check_mdb_connection(cdi_tabelle_path)
+            if connected:
+                self.radio_button_mdb.setEnabled(True)
+                self.mdb_checked = True
 
     def validate_input(self):
         if not self.validate_output_dir():
@@ -256,21 +255,17 @@ class DlgExportData(QDialog, FORM_CLASS):
                 QgsApplication.taskManager().addTask(task)
 
         # export indagini puntuali data in mdb or sqlite
-        self.export_siti_puntuali_task = ExportSitiPuntualiTask(
-            exported_project_path, self.indagini_output_format, self.debug_mode
-        )
+        self.export_siti_puntuali_task = ExportSitiPuntualiTask(exported_project_path, self.indagini_output_format)
 
         # export indagini lineari data in mdb or sqlite
         # adding this as a subtask of indagini puntuali task to avoid concurrent db writes
-        self.export_siti_lineari_task = ExportSitiLineariTask(
-            exported_project_path, self.indagini_output_format, self.debug_mode
-        )
+        self.export_siti_lineari_task = ExportSitiLineariTask(exported_project_path, self.indagini_output_format)
         # QgsApplication.taskManager().addTask(self.export_siti_lineari_task)
         self.export_siti_puntuali_task.addSubTask(self.export_siti_lineari_task, [], QgsTask.ParentDependsOnSubTask)
         QgsApplication.taskManager().addTask(self.export_siti_puntuali_task)
 
         # export project files (attachments, plots, etc.)
-        self.export_project_files_task = ExportProjectFilesTask(exported_project_path, self.debug_mode)
+        self.export_project_files_task = ExportProjectFilesTask(exported_project_path)
         QgsApplication.taskManager().addTask(self.export_project_files_task)
 
         self.total_tasks = QgsApplication.taskManager().count()

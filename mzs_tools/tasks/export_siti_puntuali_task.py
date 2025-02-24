@@ -9,12 +9,7 @@ from mzs_tools.tasks.common_functions import setup_mdb_connection
 
 
 class ExportSitiPuntualiTask(QgsTask):
-    def __init__(
-        self,
-        exported_project_path: Path,
-        data_source: str,
-        debug: bool = False,
-    ):
+    def __init__(self, exported_project_path: Path, data_source: str):
         super().__init__("Export siti puntuali (siti, indagini, parametri, curve)", QgsTask.CanCancel)
 
         self.iterations = 0
@@ -32,7 +27,7 @@ class ExportSitiPuntualiTask(QgsTask):
         self.exported_project_path = exported_project_path
         self.mdb_path = self.exported_project_path / "Indagini" / "CdI_Tabelle.mdb"
 
-        self.debug = debug
+        self.tot_steps = 10
 
     def run(self):
         self.logger.info(f"{'#'*15} Starting task {self.description()}")
@@ -43,19 +38,22 @@ class ExportSitiPuntualiTask(QgsTask):
             # prepare data
             self.logger.debug("Getting metadata data...")
             self.metadata_data = self.get_metadata_data()
-            self.iterations += 1
+            self._advance_progress()
             self.logger.debug("Getting sito_puntuale data...")
             self.sito_puntuale_data = self.get_sito_puntuale_data()
-            self.iterations += 1
+            self._advance_progress()
             self.logger.debug("Getting indagini_puntuali data...")
             self.indagini_puntuali_data = self.get_indagini_puntuali_data()
-            self.iterations += 1
+            self._advance_progress()
             self.logger.debug("Getting parametri_puntuali data...")
             self.parametri_puntuali_data = self.get_parametri_puntuali_data()
-            self.iterations += 1
+            self._advance_progress()
             self.logger.debug("Getting curve data...")
             self.curve_data = self.get_curve_data()
-            self.iterations += 1
+            self._advance_progress()
+
+            if self.isCanceled():
+                return False
 
             if self.data_source == "mdb":
                 # setup mdb connection
@@ -78,7 +76,9 @@ class ExportSitiPuntualiTask(QgsTask):
                     self.logger.warning(
                         f"Errors occurred during metadata insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
 
                 # insert siti, parametri, indagini, curve
                 self.logger.debug("Inserting siti_puntuali data in mdb...")
@@ -87,33 +87,49 @@ class ExportSitiPuntualiTask(QgsTask):
                     self.logger.warning(
                         f"Errors occurred during siti_puntuali data insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
+
                 self.logger.debug("Inserting indagini_puntuali data in mdb...")
                 insert_errors = self.mdb_connection.insert_indagini_puntuali(self.indagini_puntuali_data)
                 if insert_errors:
                     self.logger.warning(
                         f"Errors occurred during indagini_puntuali data insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
+
                 self.logger.debug("Inserting parametri_puntuali data in mdb...")
                 insert_errors = self.mdb_connection.insert_parametri_puntuali(self.parametri_puntuali_data)
                 if insert_errors:
                     self.logger.warning(
                         f"Errors occurred during parametri_puntuali data insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
+
                 self.logger.debug("Inserting curve data in mdb...")
                 insert_errors = self.mdb_connection.insert_curve(self.curve_data)
                 if insert_errors:
                     self.logger.warning(
                         f"Errors occurred during curve data insertion, the following records have been discarded: {insert_errors}"
                     )
-                self.iterations += 1
+                self._advance_progress()
+                if self.isCanceled():
+                    return False
 
             elif self.data_source == "sqlite":
                 # TODO: implement sqlite export
                 pass
 
+        except Exception as e:
+            self.exception = e
+            return False
+
+        finally:
             # close connections
             if self.mdb_connection:
                 self.logger.debug("Closing mdb connection...")
@@ -121,10 +137,6 @@ class ExportSitiPuntualiTask(QgsTask):
             if self.spatialite_db_connection:
                 self.logger.debug("Closing spatialite connection...")
                 self.spatialite_db_connection.close()
-
-        except Exception as e:
-            self.exception = e
-            return False
 
         return True
 
@@ -141,6 +153,10 @@ class ExportSitiPuntualiTask(QgsTask):
     def cancel(self):
         self.logger.warning(f"Task {self.description()} was canceled")
         super().cancel()
+
+    def _advance_progress(self):
+        self.iterations += 1
+        self.setProgress(self.iterations * 100 / self.tot_steps)
 
     def get_spatialite_db_connection(self):
         if not self.spatialite_db_connection:

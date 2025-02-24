@@ -6,6 +6,7 @@ from pathlib import Path
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
 
+from mzs_tools.__about__ import DEBUG_MODE
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 from mzs_tools.plugin_utils.misc import retry_on_lock
 from mzs_tools.tasks.common_functions import setup_mdb_connection
@@ -18,7 +19,6 @@ class ImportSitiLineariTask(QgsTask):
         data_source: str,
         mdb_password: str = None,
         adapt_counters: bool = True,
-        debug: bool = False,
     ):
         super().__init__("Import siti lineari (siti, indagini, parametri)", QgsTask.CanCancel)
 
@@ -44,11 +44,9 @@ class ImportSitiLineariTask(QgsTask):
         # option to adapt the primary keys of the imported data to avoid conflicts with existing data
         self.adapt_counters = adapt_counters
 
-        self.debug = debug
-
     def run(self):
         self.logger.info(f"{'#'*15} Starting task {self.description()}")
-        if self.debug:
+        if DEBUG_MODE:
             self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#'*50}")
 
         self.iterations = 0
@@ -79,7 +77,7 @@ class ImportSitiLineariTask(QgsTask):
                 # TODO: get data from csv
                 pass
 
-            if self.debug:
+            if DEBUG_MODE:
                 self.logger.warning(f"{'#'*15} Deleting all siti_lineari!")
                 self.delete_all_siti_lineari()
 

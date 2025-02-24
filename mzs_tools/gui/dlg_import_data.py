@@ -38,11 +38,6 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.log = MzSToolsLogger.log
 
-        # DEBUG MODE: all existent data will be deleted before importing new data!
-        ########################
-        self.debug_mode = True
-        ########################
-
         # setup proper python logger to be used in tasks with file-based logging
         self.file_logger: logging.Logger = logging.getLogger("mzs_tools.tasks.import_data")
         if not self.file_logger.hasHandlers():
@@ -337,7 +332,6 @@ class DlgImportData(QDialog, FORM_CLASS):
                 self.standard_proj_paths,
                 data_source=indagini_data_source,
                 mdb_password=self.mdb_password,
-                debug=self.debug_mode,
             )
             # self.import_spu_task.log_msg.connect(self.log_task_msg)
             tasks.append(self.import_spu_task)
@@ -346,7 +340,6 @@ class DlgImportData(QDialog, FORM_CLASS):
                 self.standard_proj_paths,
                 data_source=indagini_data_source,
                 mdb_password=self.mdb_password,
-                debug=self.debug_mode,
             )
             tasks.append(self.import_sln_task)
         self.import_shapefile_tasks = {}
@@ -359,11 +352,7 @@ class DlgImportData(QDialog, FORM_CLASS):
                 and data["checkbox"].isChecked()
             ):
                 task_name = f"import_shapefile_task_{name}"
-                self.import_shapefile_tasks[task_name] = ImportShapefileTask(
-                    self.standard_proj_paths,
-                    name,
-                    debug=self.debug_mode,
-                )
+                self.import_shapefile_tasks[task_name] = ImportShapefileTask(self.standard_proj_paths, name)
                 tasks.append(self.import_shapefile_tasks[task_name])
 
         if not tasks:
