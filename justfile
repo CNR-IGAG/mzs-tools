@@ -31,6 +31,14 @@ trans-compile:
 build-docs-html:
     uv run sphinx-build -b html -j auto -d help/_build/cache -q help/source help/_build/html
 
+build-docs-pdf:
+    #!/bin/bash
+    set -e
+    uv run sphinx-build -b latex -j auto -d help/_build/cache -q help/source help/_build/latex
+    pushd help/_build/latex
+    latexmk -pdf -dvi- -ps- -interaction=nonstopmode -halt-on-error MzSTools.tex
+    popd
+
 # Update project template package data/progetto_MS.zip
 update-project-template:
     #!/bin/bash
