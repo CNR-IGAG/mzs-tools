@@ -23,6 +23,12 @@ on:
 
   workflow_dispatch:
 
+  workflow_run:
+    workflows:
+      - "📦 Build & 🚀 Release"
+    types:
+      - completed
+
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
@@ -35,7 +41,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PYTHON_VERSION: 3.9
+  PROJECT_FOLDER: "mzs-tools"
+  PYTHON_VERSION: 3.12
 
 jobs:
   build:
@@ -55,7 +62,7 @@ jobs:
     - name: Cache Sphinx cache
       uses: actions/cache@v4
       with:
-        path: docs/_build/cache
+        path: help/_build/cache
         key: ${{ runner.os }}-sphinx-${{ hashFiles('help/**/*') }}
         restore-keys: |
           ${{ runner.os }}-sphinx-
@@ -65,19 +72,38 @@ jobs:
         python -m pip install -U pip setuptools wheel
         python -m pip install -U -r help/requirements.txt
         sudo apt update
-        sudo apt install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-lang-italian
+        sudo apt install -y texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended texlive-lang-italian latexmk
 
     - name: Build doc using Sphinx
-      run: sphinx-build -b html -j auto -d help/_build/cache -q help/source help/_build/html
+      run: |
+        sphinx-build -b html -j auto -d help/_build/cache -q help/source help/_build/html
+        sphinx-build -b latex -j auto -d help/_build/cache -q help/source help/_build/latex
+        cd help/_build/latex
+        latexmk -pdf -dvi- -ps- MzSTools.tex
 
     - name: Save build doc as artifact
       uses: actions/upload-artifact@v4
       with:
         name: documentation
-        path: help/_build/html/*
+        path: |
+          help/_build/html/*
+          help/_build/latex/MzSTools.pdf
         if-no-files-found: error
         retention-days: 30
 
+    - name: Download artifact from build workflow
+      if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master')
+      uses: dawidd6/action-download-artifact@v7
+      with:
+        allow_forks: false
+        branch: main
+        event: push
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        if_no_artifact_found: warn
+        name: ${{ env.PROJECT_FOLDER }}-latest
+        path: help/_build/html/
+        # run_id: ${{ github.event.workflow_run.id }}
+        workflow: build_release.yml
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
@@ -88,7 +114,9 @@ jobs:
       if: ${{ github.event_name == 'push' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
       with:
         # Upload entire repository
-        path: help/_build/html/
+        path: |
+          help/_build/html/
+          help/_build/latex/MzSTools.pdf
         
     - name: Deploy to GitHub Pages
       id: deployment
