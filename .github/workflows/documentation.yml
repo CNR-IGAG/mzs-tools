@@ -97,7 +97,7 @@ jobs:
       uses: dawidd6/action-download-artifact@v7
       with:
         allow_forks: false
-        branch: main
+        branch: master
         event: push
         github_token: ${{ secrets.GITHUB_TOKEN }}
         if_no_artifact_found: warn
