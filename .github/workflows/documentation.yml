@@ -80,6 +80,7 @@ jobs:
         sphinx-build -b latex -j auto -d help/_build/cache -q help/source help/_build/latex
         cd help/_build/latex
         latexmk -pdf -dvi- -ps- MzSTools.tex
+        cp MzSTools.pdf ../html/
 
     - name: Save build doc as artifact
       uses: actions/upload-artifact@v4
@@ -114,9 +115,7 @@ jobs:
       if: ${{ github.event_name == 'push' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
       with:
         # Upload entire repository
-        path: |
-          help/_build/html/
-          help/_build/latex/MzSTools.pdf
+        path: help/_build/html/
         
     - name: Deploy to GitHub Pages
       id: deployment
