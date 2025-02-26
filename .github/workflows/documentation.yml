@@ -1,25 +1,25 @@
 name: "📚 Documentation"
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/documentation.yml'
-      - 'help/**/*'
-      - "mzs_tools/**/*.py"
-      - "mzs_tools/metadata.txt"
-      - help/requirements.txt
-    tags: 
-      - "*"
+  # push:
+  #   branches:
+  #     - master
+  #   paths:
+  #     - '.github/workflows/documentation.yml'
+  #     - 'help/**/*'
+  #     - "mzs_tools/**/*.py"
+  #     - "mzs_tools/metadata.txt"
+  #     - help/requirements.txt
+  #   tags: 
+  #     - "*"
 
-  pull_request:
-    branches:
-      - master
-    paths:
-      - ".github/workflows/documentation.yml"
-      - help/**/*
-      - help/requirements.txt
+  # pull_request:
+  #   branches:
+  #     - master
+  #   paths:
+  #     - ".github/workflows/documentation.yml"
+  #     - help/**/*
+  #     - help/requirements.txt
 
   workflow_dispatch:
 
@@ -93,7 +93,7 @@ jobs:
         retention-days: 30
 
     - name: Download artifact from build workflow
-      if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master')
+      if: github.event_name == 'workflow_run' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master')
       uses: dawidd6/action-download-artifact@v7
       with:
         allow_forks: false
@@ -108,17 +108,17 @@ jobs:
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
-      if: ${{ github.event_name == 'push' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
+      if: ${{ github.event_name == 'workflow_run' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
-      if: ${{ github.event_name == 'push' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
+      if: ${{ github.event_name == 'workflow_run' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
       with:
         # Upload entire repository
         path: help/_build/html/
         
     - name: Deploy to GitHub Pages
       id: deployment
-      if: ${{ github.event_name == 'push' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
+      if: ${{ github.event_name == 'workflow_run' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
       uses: actions/deploy-pages@v4
 
