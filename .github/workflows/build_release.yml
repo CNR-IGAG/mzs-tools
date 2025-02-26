@@ -123,7 +123,7 @@ jobs:
           cd ..
           rm -rf temp
           mv "$(find . -name 'mzs_tools.*.zip')" "$(find . -name 'mzs_tools.*.zip' | sed 's/mzs_tools/MzSTools/')"
-          sed -i 's/mzs_tools/MzSTools/g' test.xml
+          sed -i 's/mzs_tools/MzSTools/g' plugins.xml
         # ln -sf LICENSE mzs_tools/LICENSE
         # ln -sf CREDITS.md mzs_tools/CREDITS.md
         # ln -sf CHANGELOG.md mzs_tools/CHANGELOG.md
