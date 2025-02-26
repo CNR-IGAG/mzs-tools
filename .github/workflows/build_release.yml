@@ -134,7 +134,7 @@ jobs:
           name: ${{ env.PROJECT_FOLDER }}-latest
           path: |
             plugins.xml
-            mzs_tools.*.zip
+            MzSTools.*.zip
           if-no-files-found: error
 
   # -- ONLY TAGS ----------------------------------------------------------------------
