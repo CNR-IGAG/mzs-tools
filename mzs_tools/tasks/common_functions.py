@@ -1,4 +1,4 @@
-from mzs_tools.tasks.access_db_connection import AccessDbConnection
+from ..tasks.access_db_connection import AccessDbConnection
 
 
 def setup_mdb_connection(mdb_path, password=None):

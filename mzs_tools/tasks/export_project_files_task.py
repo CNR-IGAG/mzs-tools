@@ -4,7 +4,7 @@ from pathlib import Path
 
 from qgis.core import QgsTask
 
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
+from ..core.mzs_project_manager import MzSProjectManager
 
 
 class ExportProjectFilesTask(QgsTask):
@@ -21,7 +21,7 @@ class ExportProjectFilesTask(QgsTask):
         self.exported_project_path = exported_project_path
 
     def run(self):
-        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        self.logger.info(f"{'#' * 15} Starting task {self.description()}")
 
         self.iterations = 0
 

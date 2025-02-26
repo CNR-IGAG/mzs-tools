@@ -5,8 +5,8 @@ from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QMessageBox
 from qgis.utils import iface
 
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from ..core.mzs_project_manager import MzSProjectManager
+from ..plugin_utils.logging import MzSToolsLogger
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -57,7 +57,7 @@ class DlgFixLayers(QDialog, FORM_CLASS):
         msg_box.setIcon(QMessageBox.Question)
         msg_box.setWindowTitle(self.tr("MzS Tools - Fix/Replace Layers"))
         msg_box.setText(
-            self.tr(f"The layer in the following groups will be replaced:\n\n{"\n".join(selected_groups)}\n")
+            self.tr(f"The layer in the following groups will be replaced:\n\n{'\n'.join(selected_groups)}\n")
         )
         msg_box.setInformativeText(self.tr("Do you want to proceed?"))
         msg_box.setDetailedText(

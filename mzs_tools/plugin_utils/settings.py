@@ -7,8 +7,8 @@ from dataclasses import asdict, dataclass, fields
 
 from qgis.core import QgsSettings
 
-from mzs_tools.__about__ import __title__, __version__
-from mzs_tools.plugin_utils import logging
+from ..__about__ import __title__, __version__
+from ..plugin_utils import logging
 
 
 @dataclass

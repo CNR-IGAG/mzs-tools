@@ -23,13 +23,13 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.utils import iface
 
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __version__
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError
-from mzs_tools.tasks.export_project_files_task import ExportProjectFilesTask
-from mzs_tools.tasks.export_siti_lineari_task import ExportSitiLineariTask
-from mzs_tools.tasks.export_siti_puntuali_task import ExportSitiPuntualiTask
+from ..__about__ import DIR_PLUGIN_ROOT, __version__
+from ..core.mzs_project_manager import MzSProjectManager
+from ..plugin_utils.logging import MzSToolsLogger
+from ..tasks.access_db_connection import AccessDbConnection, JVMError
+from ..tasks.export_project_files_task import ExportProjectFilesTask
+from ..tasks.export_siti_lineari_task import ExportSitiLineariTask
+from ..tasks.export_siti_puntuali_task import ExportSitiPuntualiTask
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -303,7 +303,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         # self.log(f"count: {QgsApplication.taskManager().count()}")
         # if QgsApplication.taskManager().count() == 1:
         if QgsApplication.taskManager().countActiveTasks() == 0:
-            self.file_logger.info(f"{"#"*15} Data exported successfully.")
+            self.file_logger.info(f"{'#' * 15} Data exported successfully.")
             self.iface.messageBar().clearWidgets()
             # load log file
             log_text = self.log_file_path.read_text(encoding="utf-8")
@@ -321,7 +321,7 @@ class DlgExportData(QDialog, FORM_CLASS):
             self.file_logger.removeHandler(self.file_handler)
 
     def cancel_tasks(self):
-        self.file_logger.warning(f"{"#"*15} Data export cancelled. Terminating all tasks")
+        self.file_logger.warning(f"{'#' * 15} Data export cancelled. Terminating all tasks")
         QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
         QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
         # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)

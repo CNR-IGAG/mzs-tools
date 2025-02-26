@@ -12,9 +12,9 @@ from qgis.PyQt.QtGui import QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.utils import iface
 
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __email__, __summary__, __summary_it__, __version__
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.plugin_utils.misc import skip_file_not_found
+from ..__about__ import DIR_PLUGIN_ROOT, __email__, __summary__, __summary_it__, __version__
+from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.misc import skip_file_not_found
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 

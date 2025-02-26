@@ -6,10 +6,10 @@ from pathlib import Path
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
 
-from mzs_tools.__about__ import DEBUG_MODE
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.misc import retry_on_lock
-from mzs_tools.tasks.common_functions import setup_mdb_connection
+from ..__about__ import DEBUG_MODE
+from ..core.mzs_project_manager import MzSProjectManager
+from ..plugin_utils.misc import retry_on_lock
+from ..tasks.common_functions import setup_mdb_connection
 
 
 class ImportSitiLineariTask(QgsTask):
@@ -45,9 +45,9 @@ class ImportSitiLineariTask(QgsTask):
         self.adapt_counters = adapt_counters
 
     def run(self):
-        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        self.logger.info(f"{'#' * 15} Starting task {self.description()}")
         if DEBUG_MODE:
-            self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#'*50}")
+            self.logger.warning(f"\n{'#' * 50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#' * 50}")
 
         self.iterations = 0
 
@@ -78,7 +78,7 @@ class ImportSitiLineariTask(QgsTask):
                 pass
 
             if DEBUG_MODE:
-                self.logger.warning(f"{'#'*15} Deleting all siti_lineari!")
+                self.logger.warning(f"{'#' * 15} Deleting all siti_lineari!")
                 self.delete_all_siti_lineari()
 
             for feature in features:
@@ -126,7 +126,7 @@ class ImportSitiLineariTask(QgsTask):
                 sito_lineare_source_pkey = sito_lineare["pkey_sln"]
                 if self.adapt_counters and self.sito_lineare_seq > 0:
                     new_pkey_sln = int(sito_lineare["pkey_sln"]) + self.sito_lineare_seq
-                    self.logger.debug(f"pkey_sln: {sito_lineare["pkey_sln"]} -> {new_pkey_sln}")
+                    self.logger.debug(f"pkey_sln: {sito_lineare['pkey_sln']} -> {new_pkey_sln}")
                     sito_lineare["pkey_sln"] = new_pkey_sln
                     sito_lineare["ID_SLN"] = (
                         sito_lineare["ubicazione_prov"]
@@ -137,7 +137,7 @@ class ImportSitiLineariTask(QgsTask):
 
                 # add import note
                 sito_lineare["note_sito"] = (
-                    f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da {self.data_source} in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_lineare["note_sito"]}"
+                    f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da {self.data_source} in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_lineare['note_sito']}"
                 )
 
                 try:
@@ -364,6 +364,6 @@ class ImportSitiLineariTask(QgsTask):
             shutil.copy(file_path, dest_path)
 
         self.logger.debug(
-            f"Attachment {attachment_file_name} copied to project folder {"as " + new_file_name if new_file_name else ""}"
+            f"Attachment {attachment_file_name} copied to project folder {'as ' + new_file_name if new_file_name else ''}"
         )
         return new_file_name or attachment_file_name

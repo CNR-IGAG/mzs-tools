@@ -9,8 +9,8 @@ from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QMessageBox, QTextEdit
 from qgis.utils import iface
 
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from ..core.mzs_project_manager import MzSProjectManager
+from ..plugin_utils.logging import MzSToolsLogger
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 

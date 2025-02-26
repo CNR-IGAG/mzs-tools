@@ -5,9 +5,9 @@ from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtWidgets import QWidget
 
-from mzs_tools.__about__ import __title__
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.plugin_utils.settings import PlgOptionsManager
+from ..__about__ import __title__
+from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.settings import PlgOptionsManager
 
 
 # def test_log_message(qgis_iface):

@@ -9,7 +9,7 @@ from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QCompleter, QDialog, QDialogButtonBox
 
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT
+from ..__about__ import DIR_PLUGIN_ROOT
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 

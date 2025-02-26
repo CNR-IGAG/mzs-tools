@@ -4,8 +4,8 @@ from pathlib import Path
 from qgis.core import QgsTask
 from qgis.utils import spatialite_connect
 
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.tasks.common_functions import setup_mdb_connection
+from ..core.mzs_project_manager import MzSProjectManager
+from ..tasks.common_functions import setup_mdb_connection
 
 
 class ExportSitiLineariTask(QgsTask):
@@ -30,7 +30,7 @@ class ExportSitiLineariTask(QgsTask):
         self.tot_steps = 6
 
     def run(self):
-        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        self.logger.info(f"{'#' * 15} Starting task {self.description()}")
 
         self.iterations = 0
 

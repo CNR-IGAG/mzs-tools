@@ -7,9 +7,8 @@ from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtWidgets import QPushButton, QWidget
 from qgis.utils import iface
 
-import mzs_tools.plugin_utils.settings as plg_prefs_hdlr
-from mzs_tools.__about__ import __title__
-
+from ..__about__ import __title__
+from . import settings as plg_prefs_hdlr
 
 # map python logging levels to QGIS message levels
 QGIS_LEVELS = {

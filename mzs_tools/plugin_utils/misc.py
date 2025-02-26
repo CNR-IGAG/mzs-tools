@@ -14,7 +14,7 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QRectF, QSize
 
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.logging import MzSToolsLogger
 
 
 def skip_file_not_found(func):

@@ -36,9 +36,9 @@ permissions:
   id-token: write
 
 # Allow one concurrent deployment per branch/pr
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+#   cancel-in-progress: true
 
 env:
   PROJECT_FOLDER: "mzs-tools"

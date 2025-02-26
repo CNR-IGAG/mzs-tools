@@ -1,5 +1,5 @@
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from ..__about__ import DIR_PLUGIN_ROOT
+from ..plugin_utils.logging import MzSToolsLogger
 
 EXT_LIBS_LOADED = True
 

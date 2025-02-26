@@ -4,8 +4,6 @@ import shutil
 import traceback
 from pathlib import Path
 
-from mzs_tools.gui.dlg_fix_layers import DlgFixLayers
-from mzs_tools.gui.dlg_load_ogc_services import DlgLoadOgcLayers
 from qgis.core import (
     QgsApplication,
     QgsProject,
@@ -22,16 +20,17 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
 )
 
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.gui.dlg_export_data import DlgExportData
-from mzs_tools.gui.dlg_settings import PlgOptionsFactory
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
-
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
+from .core.mzs_project_manager import MzSProjectManager
 from .gui.dlg_create_project import DlgCreateProject
+from .gui.dlg_export_data import DlgExportData
+from .gui.dlg_fix_layers import DlgFixLayers
 from .gui.dlg_import_data import DlgImportData
 from .gui.dlg_info import PluginInfo
+from .gui.dlg_load_ogc_services import DlgLoadOgcLayers
 from .gui.dlg_metadata_edit import DlgMetadataEdit
+from .gui.dlg_settings import PlgOptionsFactory
+from .plugin_utils.logging import MzSToolsLogger
 
 
 class MzSTools:

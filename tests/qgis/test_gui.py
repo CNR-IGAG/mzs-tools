@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QCompleter, QDialog
 
-from mzs_tools.__about__ import __version__
-from mzs_tools.gui.dlg_info import PluginInfo
-from mzs_tools.gui.dlg_create_project import DlgCreateProject
+from ..__about__ import __version__
+from ..gui.dlg_info import PluginInfo
+from ..gui.dlg_create_project import DlgCreateProject
 
 
 def test_tb_info(qgis_app):

@@ -17,14 +17,14 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.utils import iface
 
-from mzs_tools.__about__ import __version__
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.plugin_utils.misc import get_path_for_name
-from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
-from mzs_tools.tasks.import_shapefile_task import ImportShapefileTask
-from mzs_tools.tasks.import_siti_lineari_task import ImportSitiLineariTask
-from mzs_tools.tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
+from ..__about__ import __version__
+from ..core.mzs_project_manager import MzSProjectManager
+from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.misc import get_path_for_name
+from ..tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
+from ..tasks.import_shapefile_task import ImportShapefileTask
+from ..tasks.import_siti_lineari_task import ImportSitiLineariTask
+from ..tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -272,7 +272,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         finally:
             if connected:
                 mdb_conn.close()
-                self.label_mdb_msg.setText(self.tr(f"[Connection {"with password" if password else ""} established]"))
+                self.label_mdb_msg.setText(self.tr(f"[Connection {'with password' if password else ''} established]"))
                 self.mdb_password = password
 
         return connected
@@ -424,7 +424,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.progress_bar.setValue(int(progress))
 
     def on_tasks_completed(self):
-        self.file_logger.info(f"{"#"*15} Data imported successfully.")
+        self.file_logger.info(f"{'#' * 15} Data imported successfully.")
         self.iface.messageBar().clearWidgets()
         # load log file
         log_text = self.log_file_path.read_text(encoding="utf-8")
@@ -444,7 +444,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.file_logger.removeHandler(self.file_handler)
 
     def cancel_tasks(self):
-        self.file_logger.warning(f"{"#"*15} Data import cancelled. Terminating all tasks")
+        self.file_logger.warning(f"{'#' * 15} Data import cancelled. Terminating all tasks")
         QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
         QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
         # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)

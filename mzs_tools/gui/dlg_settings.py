@@ -14,15 +14,15 @@ from qgis.PyQt import uic
 from qgis.PyQt.Qt import QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QIcon
 
-from mzs_tools.__about__ import (
+from ..__about__ import (
     __icon_path__,
     __title__,
     __uri_homepage__,
     __uri_tracker__,
     __version__,
 )
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.plugin_utils.settings import PlgOptionsManager, PlgSettingsStructure
+from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.settings import PlgOptionsManager, PlgSettingsStructure
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / "{}.ui".format(Path(__file__).stem))
 

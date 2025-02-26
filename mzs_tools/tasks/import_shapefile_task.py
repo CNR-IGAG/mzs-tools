@@ -3,8 +3,8 @@ import shutil
 
 from qgis.core import QgsProject, QgsTask, QgsVectorLayer, edit
 
-from mzs_tools.__about__ import DEBUG_MODE
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
+from ..__about__ import DEBUG_MODE
+from ..core.mzs_project_manager import MzSProjectManager
 
 
 class ImportShapefileTask(QgsTask):
@@ -27,9 +27,9 @@ class ImportShapefileTask(QgsTask):
         self.shapefile_name = shapefile_name
 
     def run(self):
-        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        self.logger.info(f"{'#' * 15} Starting task {self.description()}")
         if DEBUG_MODE:
-            self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#'*50}")
+            self.logger.warning(f"\n{'#' * 50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#' * 50}")
 
         self.iterations = 0
 
@@ -146,7 +146,7 @@ class ImportShapefileTask(QgsTask):
             dest_layer.commitChanges()
 
         if DEBUG_MODE:
-            self.logger.warning(f"{'#'*15} Truncating layer {dest_layer.name()}!")
+            self.logger.warning(f"{'#' * 15} Truncating layer {dest_layer.name()}!")
             # TODO: causes random QGIS crashes
             dest_layer.dataProvider().truncate()
 

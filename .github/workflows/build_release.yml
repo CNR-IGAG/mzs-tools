@@ -114,10 +114,17 @@ jobs:
           qgis-plugin-ci package latest \
             --allow-uncommitted-changes \
             --plugin-repo-url $(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.html_url')
-          ln -sf LICENSE mzs_tools/LICENSE
-          ln -sf CREDITS.md mzs_tools/CREDITS.md
-          ln -sf CHANGELOG.md mzs_tools/CHANGELOG.md
-          git add .
+          mkdir temp
+          unzip mzs_tools.*.zip -d temp
+          mv temp/mzs_tools temp/MzSTools
+          cd temp
+          zip -r $(cd ../ && ls -1 mzs_tools.*.zip) MzSTools
+          cp *.zip ../
+          rm -rf temp
+        # ln -sf LICENSE mzs_tools/LICENSE
+        # ln -sf CREDITS.md mzs_tools/CREDITS.md
+        # ln -sf CHANGELOG.md mzs_tools/CHANGELOG.md
+        # git add .
 
       - uses: actions/upload-artifact@v4
         with:

@@ -27,10 +27,10 @@ from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.utils import iface, spatialite_connect
 
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
-from mzs_tools.plugin_utils.logging import MzSToolsLogger
-from mzs_tools.plugin_utils.misc import save_map_image
-from mzs_tools.plugin_utils.settings import PlgOptionsManager
+from ..__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
+from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.misc import save_map_image
+from ..plugin_utils.settings import PlgOptionsManager
 
 
 @dataclass

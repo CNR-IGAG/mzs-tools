@@ -6,10 +6,10 @@ from pathlib import Path
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
 
-from mzs_tools.__about__ import DEBUG_MODE
-from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.plugin_utils.misc import retry_on_lock
-from mzs_tools.tasks.common_functions import setup_mdb_connection
+from ..__about__ import DEBUG_MODE
+from ..core.mzs_project_manager import MzSProjectManager
+from ..plugin_utils.misc import retry_on_lock
+from ..tasks.common_functions import setup_mdb_connection
 
 
 class ImportSitiPuntualiTask(QgsTask):
@@ -45,9 +45,9 @@ class ImportSitiPuntualiTask(QgsTask):
         self.adapt_counters = adapt_counters
 
     def run(self):
-        self.logger.info(f"{'#'*15} Starting task {self.description()}")
+        self.logger.info(f"{'#' * 15} Starting task {self.description()}")
         if DEBUG_MODE:
-            self.logger.warning(f"\n{'#'*50}\n# Running in DEBUG MODE! Data will be DESTROYED! #\n{'#'*50}")
+            self.logger.warning(f"\n{'#' * 50}\n# Running in DEBUG MODE! Data will be DESTROYED! #\n{'#' * 50}")
 
         self.iterations = 0
 
@@ -86,7 +86,7 @@ class ImportSitiPuntualiTask(QgsTask):
                 pass
 
             if DEBUG_MODE:
-                self.logger.warning(f"{'#'*15} Deleting all siti_puntuali!")
+                self.logger.warning(f"{'#' * 15} Deleting all siti_puntuali!")
                 self.delete_all_siti_puntuali()
 
             for feature in features:
@@ -127,7 +127,7 @@ class ImportSitiPuntualiTask(QgsTask):
                 sito_puntuale_source_pkey = sito_puntuale["pkey_spu"]
                 if self.adapt_counters and self.sito_puntuale_seq > 0:
                     new_pkey_spu = int(sito_puntuale["pkey_spu"]) + self.sito_puntuale_seq
-                    self.logger.debug(f"pkey_spu: {sito_puntuale["pkey_spu"]} -> {new_pkey_spu}")
+                    self.logger.debug(f"pkey_spu: {sito_puntuale['pkey_spu']} -> {new_pkey_spu}")
                     sito_puntuale["pkey_spu"] = new_pkey_spu
                     sito_puntuale["ID_SPU"] = (
                         sito_puntuale["ubicazione_prov"]
@@ -138,7 +138,7 @@ class ImportSitiPuntualiTask(QgsTask):
 
                 # add import note
                 sito_puntuale["note_sito"] = (
-                    f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da {self.data_source} in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_puntuale["note_sito"]}"
+                    f"[MzS Tools] Dati del sito, indagini e parametri correlati importati da {self.data_source} in data {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{sito_puntuale['note_sito']}"
                 )
 
                 try:
@@ -439,6 +439,6 @@ class ImportSitiPuntualiTask(QgsTask):
             shutil.copy(file_path, dest_path)
 
         self.logger.debug(
-            f"Attachment {attachment_file_name} copied to project folder {"as " + new_file_name if new_file_name else ""}"
+            f"Attachment {attachment_file_name} copied to project folder {'as ' + new_file_name if new_file_name else ''}"
         )
         return new_file_name or attachment_file_name
