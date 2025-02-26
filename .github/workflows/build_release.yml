@@ -2,7 +2,7 @@ name: "📦 Build & 🚀 Release"
 
 env:
   PROJECT_FOLDER: mzs-tools
-  PYTHON_VERSION: 3.10
+  PYTHON_VERSION: '3.10'
 
 on:
   push:
@@ -120,7 +120,10 @@ jobs:
           cd temp
           zip -r $(cd ../ && ls -1 mzs_tools.*.zip) MzSTools
           cp *.zip ../
+          cd ..
           rm -rf temp
+          mv "$(find . -name 'mzs_tools.*.zip')" "$(find . -name 'mzs_tools.*.zip' | sed 's/mzs_tools/MzSTools/')"
+          sed -i 's/mzs_tools/MzSTools/g' test.xml
         # ln -sf LICENSE mzs_tools/LICENSE
         # ln -sf CREDITS.md mzs_tools/CREDITS.md
         # ln -sf CHANGELOG.md mzs_tools/CHANGELOG.md
