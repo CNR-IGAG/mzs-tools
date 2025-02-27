@@ -4,7 +4,7 @@
 
 - Major plugin rewrite
 - Better project and database management
-- Direct, cross-platform data import/export from/to Microsoft Access MS standard database "CdI_Tabelle.mdb" (requires Java JVM and external libraries managed with "Qpip" QGIS plugin)
+- Direct, cross-platform data import/export from/to Microsoft Access MS standard database "CdI_Tabelle.mdb" (requires Java JVM 64 bit and external libraries managed with "Qpip" QGIS plugin)
 
 ## [1.9.4] - 2024-11-21
 

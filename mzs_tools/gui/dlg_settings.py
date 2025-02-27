@@ -17,6 +17,7 @@ from qgis.PyQt.QtGui import QDesktopServices, QIcon
 from ..__about__ import (
     __icon_path__,
     __title__,
+    __uri_docs__,
     __uri_homepage__,
     __uri_tracker__,
     __version__,
@@ -52,7 +53,7 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
 
         # customization
         self.btn_help.setIcon(QIcon(QgsApplication.iconPath("mActionHelpContents.svg")))
-        self.btn_help.pressed.connect(partial(QDesktopServices.openUrl, QUrl(__uri_homepage__)))
+        self.btn_help.pressed.connect(partial(QDesktopServices.openUrl, QUrl(__uri_docs__)))
 
         self.btn_report.setIcon(QIcon(QgsApplication.iconPath("console/iconSyntaxErrorConsole.svg")))
 

@@ -88,7 +88,9 @@ class DlgImportData(QDialog, FORM_CLASS):
         if not self.radio_button_mdb.isChecked() and not self.radio_button_csv.isChecked():
             self.log("No data source selected", log_level=1)
             self.chk_siti_puntuali.setEnabled(False)
+            self.chk_siti_puntuali.setChecked(False)
             self.chk_siti_lineari.setEnabled(False)
+            self.chk_siti_lineari.setChecked(False)
         else:
             self.validate_input_dir()
 
@@ -97,7 +99,9 @@ class DlgImportData(QDialog, FORM_CLASS):
                 self.log("CSV directory is not valid", log_level=1)
                 self.ok_button.setEnabled(False)
                 self.chk_siti_puntuali.setEnabled(False)
+                self.chk_siti_puntuali.setChecked(False)
                 self.chk_siti_lineari.setEnabled(False)
+                self.chk_siti_lineari.setChecked(False)
                 return False
 
         self.ok_button.setEnabled(True)

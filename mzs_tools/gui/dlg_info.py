@@ -1,5 +1,5 @@
 import re
-import webbrowser
+from functools import partial
 from pathlib import Path
 from typing import Dict
 
@@ -7,12 +7,21 @@ import pyplugin_installer
 from packaging.version import parse
 from qgis.core import QgsApplication
 from qgis.PyQt import uic
+from qgis.PyQt.Qt import QUrl
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt
-from qgis.PyQt.QtGui import QIcon, QPixmap
+from qgis.PyQt.QtGui import QDesktopServices, QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.utils import iface
 
-from ..__about__ import DIR_PLUGIN_ROOT, __email__, __summary__, __summary_it__, __version__
+from ..__about__ import (
+    DIR_PLUGIN_ROOT,
+    __email__,
+    __summary__,
+    __summary_it__,
+    __uri_docs__,
+    __uri_repository__,
+    __version__,
+)
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import skip_file_not_found
 
@@ -27,11 +36,11 @@ class PluginInfo(QDialog, FORM_CLASS):
         self.setupUi(self)
 
         self.button_manual.setIcon(QIcon(QgsApplication.getThemeIcon("/mActionHelpContents.svg")))
-        self.button_manual.clicked.connect(lambda: webbrowser.open("https://mzs-tools.readthedocs.io"))
+        self.button_manual.clicked.connect(partial(QDesktopServices.openUrl, QUrl(f"{__uri_docs__}")))
 
         github_icon = QPixmap(str(DIR_PLUGIN_ROOT / "resources" / "img" / "github-mark.png"))
         self.button_github.setIcon(QIcon(github_icon))
-        self.button_github.clicked.connect(lambda: webbrowser.open("https://github.com/CNR-IGAG/mzs-tools/"))
+        self.button_github.clicked.connect(partial(QDesktopServices.openUrl, QUrl(f"{__uri_repository__}")))
 
         try:
             locale = QSettings().value("locale/userLocale", "en", type=str)[0:2]

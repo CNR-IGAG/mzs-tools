@@ -86,6 +86,14 @@ Riferimenti
 Changelog
 ---------
 
+v2.0.0
+    - Rinnovo generale del plugin
+    - Miglioramento della gestione dei progetti e dei database
+    - Accesso diretto e cross-platform ai database Microsoft Access ("CdI_Tabelle.mdb") per l'importazione ed
+      esportazione dei dati (richiede l'installazione di Java JVM 64 bit e di librerie esterne gestite tramite il plugin
+      per QGIS "QPIP")
+    
+
 v1.9.4
     - Sistemati i layer per i layout di stampa
 

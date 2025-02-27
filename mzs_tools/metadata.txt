@@ -24,13 +24,13 @@ about[it]=Gestione dati e rappresentazioni cartografiche degli studi di microzon
 changelog=
  Complete changelog <a href="https://github.com/CNR-IGAG/mzs-tools/blob/master/CHANGELOG.md">here</a>.
 
-tracker=https://github.com/CNR-IGAG/mzs-tools/issues
-repository=https://github.com/CNR-IGAG/mzs-tools
+tracker=https://github.com/CNR-IGAG/mzs-tools/issues/
+repository=https://github.com/CNR-IGAG/mzs-tools/
 
 tags=Italy, Seismic hazard, seismic microzonation
 tags[it]=microzonazione sismica, pericolosità geologica, geologia
 
-homepage=https://github.com/CNR-IGAG/mzs-tools
+homepage=https://github.com/CNR-IGAG/mzs-tools/
 category=Database
 icon=icon.png
 experimental=False

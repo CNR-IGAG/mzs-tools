@@ -49,6 +49,7 @@ __title__: str = __plugin_md__.get("general").get("name")
 __title_clean__: str = "".join(e for e in __title__ if e.isalnum())
 
 __uri_homepage__: str = __plugin_md__.get("general").get("homepage")
+__uri_docs__: str = "https://cnr-igag.github.io/mzs-tools/"
 __uri_repository__: str = __plugin_md__.get("general").get("repository")
 __uri_tracker__: str = __plugin_md__.get("general").get("tracker")
 __uri__: str = __uri_repository__

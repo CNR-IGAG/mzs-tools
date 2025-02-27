@@ -49,35 +49,18 @@ class MzSTools:
             self.translator.load(str(locale_path))
             QCoreApplication.installTranslator(self.translator)
 
-        # install or update svg symbols in current QGIS profile
-        # self.check_svg_cache()
-
         self.dlg_create_project = None
         self.dlg_metadata_edit = None
         self.info_dlg = PluginInfo(self.iface.mainWindow())
-        # self.import_shp_dlg = importa_shp()
-
         self.dlg_import_data = None
         self.dlg_export_data = None
-
-        # self.export_shp_dlg = esporta_shp()
-        # self.edit_win_dlg = edit_win()
 
         self.actions = []
         self.menu = self.tr("&MzS Tools")
         self.toolbar = self.iface.addToolBar("MzSTools")
         self.toolbar.setObjectName("MzSTools")
 
-        # self.import_shp_dlg.dir_input.clear()
-        # self.import_shp_dlg.pushButton_in.clicked.connect(self.select_input_fld_4)
-
-        # self.import_shp_dlg.tab_input.clear()
-        # self.import_shp_dlg.pushButton_tab.clicked.connect(self.select_tab_fld_4)
-
-        # self.export_shp_dlg.dir_output.clear()
-        # self.export_shp_dlg.pushButton_out.clicked.connect(self.select_output_fld_5)
-
-        QgsSettings().setValue("qgis/enableMacros", 3)
+        # QgsSettings().setValue("qgis/enableMacros", 3)
 
         # create the project manager instance
         self.prj_manager = MzSProjectManager.instance()
@@ -135,32 +118,55 @@ class MzSTools:
         ico_info = DIR_PLUGIN_ROOT / "resources" / "icons" / "ico_info.png"
         ico_importa = DIR_PLUGIN_ROOT / "resources" / "icons" / "ico_importa.png"
         ico_esporta = DIR_PLUGIN_ROOT / "resources" / "icons" / "ico_esporta.png"
-        # icon_path10 = DIR_PLUGIN_ROOT / "img" / "ico_xypoint.png"
 
         enabled_flag = (self.prj_manager and self.prj_manager.is_mzs_project) or False
 
         project_menu_button = QToolButton()
         project_menu_button.setIcon(QIcon(str(ico_nuovo_progetto)))
         project_menu_button.setPopupMode(QToolButton.InstantPopup)
+        project_menu_button.setToolTip(self.tr("Tools for managing MzS Tools project and database"))
         menu_project = QMenu()
         self.toolbar.addWidget(project_menu_button)
-        new_project_action = self.add_action(
+        self.new_project_action = self.add_action(
             str(ico_nuovo_progetto),
             text=self.tr("New project"),
             callback=self.open_dlg_create_project,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(new_project_action)
+        menu_project.addAction(self.new_project_action)
+
+        menu_project.addSeparator()
+
+        self.backup_db_action = self.add_action(
+            QgsApplication.getThemeIcon("mActionNewFileGeodatabase.svg"),
+            text=self.tr("Backup database"),
+            status_tip=self.tr("Backup the current MzS Tools project database"),
+            callback=self.on_backup_db_action,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_project.addAction(self.backup_db_action)
+
+        self.backup_project_action = self.add_action(
+            QgsApplication.getThemeIcon("mIconAuxiliaryStorage.svg"),
+            text=self.tr("Backup project"),
+            status_tip=self.tr("Backup the entire MzS Tools project"),
+            callback=self.on_backup_project_action,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_project.addAction(self.backup_project_action)
+
         project_menu_button.setMenu(menu_project)
 
         layers_menu_button = QToolButton()
         layers_menu_button.setIcon(QgsApplication.getThemeIcon("mIconLayerTree.svg"))
         layers_menu_button.setPopupMode(QToolButton.InstantPopup)
-        layers_menu_button.setToolTip(self.tr("Tools for managing MzS Tools project layers"))
+        layers_menu_button.setToolTip(self.tr("Tools for managing MzS Tools QGIS layers"))
         menu_layers = QMenu()
         self.toolbar.addWidget(layers_menu_button)
-        self.action_check_project = self.add_action(
+        self.check_project_action = self.add_action(
             QgsApplication.getThemeIcon("mIconQgsProjectFile.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Check the integrity of the current MzS Tools QGIS project"),
@@ -169,8 +175,8 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.action_check_project)
-        self.action_add_default_layers = self.add_action(
+        menu_layers.addAction(self.check_project_action)
+        self.add_default_layers_action = self.add_action(
             QgsApplication.getThemeIcon("mActionAddLayer.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Replace/repair default MzS Tools project layers"),
@@ -179,11 +185,11 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.action_add_default_layers)
+        menu_layers.addAction(self.add_default_layers_action)
 
         menu_layers.addSeparator()
 
-        self.action_add_ogc_services = self.add_action(
+        self.add_ogc_services_action = self.add_action(
             QgsApplication.getThemeIcon("mActionAddWmsLayer.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Load WMS/WFS services"),
@@ -194,10 +200,10 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.action_add_ogc_services)
+        menu_layers.addAction(self.add_ogc_services_action)
         layers_menu_button.setMenu(menu_layers)
 
-        self.action_edit_metadata = self.add_action(
+        self.edit_metadata_action = self.add_action(
             QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Edit project metadata"),
@@ -207,7 +213,7 @@ class MzSTools:
 
         self.toolbar.addSeparator()
 
-        self.action_import_data = self.add_action(
+        self.import_data_action = self.add_action(
             str(ico_importa),
             enabled_flag=enabled_flag,
             text=self.tr("Import project folder from geodatabase"),
@@ -216,7 +222,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
 
-        self.action_export_data = self.add_action(
+        self.export_data_action = self.add_action(
             str(ico_esporta),
             enabled_flag=enabled_flag,
             text=self.tr("Export data to Ms standard data structure"),
@@ -226,7 +232,7 @@ class MzSTools:
 
         self.toolbar.addSeparator()
 
-        self.add_action(
+        self.settings_action = self.add_action(
             QgsApplication.getThemeIcon("/mActionOptions.svg"),
             text=self.tr("MzS Tools Settings"),
             callback=lambda: self.iface.showOptionsDialog(currentPage="mOptionsPage{}".format(__title__)),
@@ -242,6 +248,35 @@ class MzSTools:
         # add the help action to the QGIS plugin help menu
         self.iface.pluginHelpMenu().addAction(self.help_action)
 
+    def unload(self):
+        # close db connections
+        if self.prj_manager:
+            self.prj_manager.cleanup_db_connection()
+
+        # Clean up preferences panel in QGIS settings
+        self.iface.unregisterOptionsWidgetFactory(self.options_factory)
+
+        for action in self.actions:
+            self.iface.removePluginDatabaseMenu(self.tr("&MzS Tools"), action)
+            self.iface.removeToolBarIcon(action)
+        del self.toolbar
+
+        # remove the help action from the QGIS plugin help menu
+        self.iface.pluginHelpMenu().removeAction(self.help_action)
+        del self.help_action
+
+        # disconnect QgisInterface signals
+        self.iface.projectRead.disconnect(self.check_project)
+        self.iface.newProjectCreated.disconnect(self.check_project)
+
+    def enable_plugin_actions(self, enabled: bool = False):
+        always_enabled_actions = [self.new_project_action, self.settings_action, self.help_action]
+        for action in self.actions:
+            if action not in always_enabled_actions:
+                action.setEnabled(enabled)
+
+    # action callbacks --------------------------------------------------------
+
     def open_dlg_load_ogc_services(self):
         self.dlg_load_ogc_layers = DlgLoadOgcLayers(self.iface.mainWindow())
         self.dlg_load_ogc_layers.exec()
@@ -253,6 +288,17 @@ class MzSTools:
 
         self.dlg_fix_layers = DlgFixLayers(self.iface.mainWindow())
         self.dlg_fix_layers.exec()
+
+    def check_project_issues(self):
+        self.prj_manager.check_project_structure()
+        if self.prj_manager.project_issues:
+            self.report_project_issues()
+        else:
+            QMessageBox.information(
+                None,
+                self.tr("MzS Tools - Project Issues"),
+                self.tr("No issues found in the current project."),
+            )
 
     def open_dlg_import_data(self):
         if self.dlg_import_data is None:
@@ -289,29 +335,28 @@ class MzSTools:
 
         self.dlg_export_data.exec()
 
-    def unload(self):
-        # close db connections
-        if self.prj_manager:
-            self.prj_manager.cleanup_db_connection()
+    def on_backup_db_action(self):
+        backup_path = self.prj_manager.backup_database()
+        if backup_path:
+            QMessageBox.information(
+                None,
+                self.tr("Backup database"),
+                self.tr(
+                    f"Database backup:\n\n'{backup_path.name}'\n\ncreated successfully in:\n\n'{backup_path.parent}'"
+                ),
+            )
 
-        # Clean up preferences panel in QGIS settings
-        self.iface.unregisterOptionsWidgetFactory(self.options_factory)
-
-        for action in self.actions:
-            self.iface.removePluginDatabaseMenu(self.tr("&MzS Tools"), action)
-            self.iface.removeToolBarIcon(action)
-        del self.toolbar
-
-        # remove the help action from the QGIS plugin help menu
-        self.iface.pluginHelpMenu().removeAction(self.help_action)
-        del self.help_action
-
-        # disconnect QgisInterface signals
-        self.iface.projectRead.disconnect(self.check_project)
-        self.iface.newProjectCreated.disconnect(self.check_project)
-
-    # def on_new_qgis_project(self):
-    #     self.action_edit_metadata.setEnabled(False)
+    def on_backup_project_action(self):
+        # TODO: this should be a task
+        backup_path = self.prj_manager.backup_project()
+        if backup_path:
+            QMessageBox.information(
+                None,
+                self.tr("Backup project"),
+                self.tr(
+                    f"Project backup:\n\n'{backup_path.name}'\n\ncreated successfully in:\n\n'{backup_path.parent}'"
+                ),
+            )
 
     def open_dlg_create_project(self):
         # check if there is a project already open
@@ -376,67 +421,15 @@ class MzSTools:
         if result:
             self.dlg_metadata_edit.save_data()
 
-    # def import_project(self):
-    #     self.import_shp_dlg.importa_prog()
-
-    # def export_project(self):
-    #     self.export_shp_dlg.esporta_prog()
-
-    # def add_site(self):
-    #     self.edit_win_dlg.edita()
-
-    def select_input_fld_4(self):
-        in_dir = QFileDialog.getExistingDirectory(self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
-        self.import_shp_dlg.dir_input.setText(in_dir)
-
-    def select_tab_fld_4(self):
-        tab_dir = QFileDialog.getExistingDirectory(self.import_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
-        self.import_shp_dlg.tab_input.setText(tab_dir)
-
-    def select_input_fld_5(self):
-        in_dir = QFileDialog.getExistingDirectory(self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
-        self.export_shp_dlg.dir_input.setText(in_dir)
-
-    def select_output_fld_5(self):
-        out_dir = QFileDialog.getExistingDirectory(self.export_shp_dlg, "", "", QFileDialog.ShowDirsOnly)
-        self.export_shp_dlg.dir_output.setText(out_dir)
-
-    # def check_svg_cache(self):
-    #     self.log("Checking svg symbols...", log_level=4)
-    #     dir_svg_input = DIR_PLUGIN_ROOT / "img" / "svg"
-
-    #     current_qgis_profile_name = None
-    #     try:
-    #         # only in QGIS >= 3.30
-    #         current_qgis_profile_name = self.iface.userProfileManager().userProfile().name()
-    #     except Exception:
-    #         config = configparser.ConfigParser()
-    #         profiles_directory = Path(QgsApplication.qgisSettingsDirPath()).parent
-    #         config.read(f"{profiles_directory}/profiles.ini")
-    #         current_qgis_profile_name = config["core"]["defaultProfile"]
-
-    #     dir_svg_output = DIR_PLUGIN_ROOT.parent.parent.parent.parent / current_qgis_profile_name / "svg"
-
-    #     # qgs_log(f"Profile: {current_qgis_profile_name} - Output dir: {dir_svg_output} - Input dir: {dir_svg_input}")
-
-    #     if not dir_svg_output.exists():
-    #         self.log(f"Copying svg symbols in {dir_svg_output}")
-    #         shutil.copytree(dir_svg_input, dir_svg_output)
-    #     else:
-    #         # copy only new or updated files
-    #         for file in dir_svg_input.glob("*.svg"):
-    #             dest = dir_svg_output / file.name
-    #             if not dest.exists() or file.stat().st_mtime > dest.stat().st_mtime:
-    #                 self.log(f"Copying {file} to {dest}")
-    #                 shutil.copy2(file, dest)
+    # end action callbacks ----------------------------------------------------
 
     def check_project(self):
         """
         Initialize the MzSProjectManager and return immediately if the project is not a MzSTools project.
         If the project is a MzSTools project:
         - check if the project is outdated and ask the user to start the update process
-        - connect editing signals to automatically set cross-layer no-overlap rules when needed and
-          revert to the original config when editing stops
+        - report any issues in the project structure
+        - connect editing signals to automatically set cross-layer no-overlap rules
         """
         # initialize the project manager
         self.prj_manager.init_manager()
@@ -492,23 +485,6 @@ class MzSTools:
 
         self.prj_manager.connect_editing_signals()
 
-        # connect to layer nameChanged signal to warn the user when renaming required layers
-        # use layer IDs and/or the underlying database table instead
-        # for layer in QgsProject.instance().requiredLayers():
-        #     layer.nameChanged.disconnect()
-        #     layer.nameChanged.connect(self.warning_layer_renamed)
-
-        # get qgis version, warn the user if it's less than SUGGESTED_QGIS_VERSION
-        # qgis_version = Qgis.version()
-        # if qgis_version and qgis_version < SUGGESTED_QGIS_VERSION:
-        #     QMessageBox.warning(
-        #         None,
-        #         self.tr("Warning"),
-        #         self.tr(
-        #             "MzS Tools is designed to work with QGIS 3.26 or later. Please consider upgrading QGIS to the latest LTR version to avoid possible issues."
-        #         ),
-        #     )
-
     def report_project_issues(self):
         if not self.prj_manager.project_issues:
             return
@@ -528,25 +504,6 @@ class MzSTools:
         msg_box.setDefaultButton(QMessageBox.Ok)
         msg_box.exec_()
 
-    def check_project_issues(self):
-        self.prj_manager.check_project_structure()
-        if self.prj_manager.project_issues:
-            self.report_project_issues()
-        else:
-            QMessageBox.information(
-                None,
-                self.tr("MzS Tools - Project Issues"),
-                self.tr("No issues found in the current project."),
-            )
-
-    def enable_plugin_actions(self, enabled: bool = False):
-        self.action_check_project.setEnabled(enabled)
-        self.action_add_default_layers.setEnabled(enabled)
-        self.action_add_ogc_services.setEnabled(enabled)
-        self.action_edit_metadata.setEnabled(enabled)
-        self.action_import_data.setEnabled(enabled)
-        self.action_export_data.setEnabled(enabled)
-
     def update_current_project(self):
         if not self.prj_manager.is_mzs_project or not self.prj_manager.project_updateable:
             return
@@ -557,147 +514,6 @@ class MzSTools:
         # TODO: rollback if something goes wrong
         self.prj_manager.update_db()
         self.prj_manager.update_project()
-
-    # def warning_layer_renamed(self):
-    #     """Function to handle the nameChanged signal for required layers."""
-    #     QMessageBox.warning(
-    #         None,
-    #         self.tr("Warning"),
-    #         self.tr(
-    #             "It is not possible at the moment to rename a required MzS Tools layer! Please revert the name to avoid possible issues."
-    #         ),
-    #     )
-
-    # def connect_editing_signals(self):
-    #     """connect editing signals to automatically set advanced overlap config for configured layer groups"""
-    #     for layer in QgsProject.instance().mapLayers().values():
-    #         if layer.name() in list(chain.from_iterable(NO_OVERLAPS_LAYER_GROUPS)):
-    #             if layer not in self.editing_signals_connected_layers:
-    #                 layer.editingStarted.connect(partial(self.set_advanced_editing_config, layer))
-    #                 layer.editingStopped.connect(self.reset_editing_config)
-    #                 self.editing_signals_connected_layers[layer] = (
-    #                     self.set_advanced_editing_config,
-    #                     self.reset_editing_config,
-    #                 )
-    # test for setting the ui form with qgis.core.QgsEditFormConfig.setUiForm
-
-    #     for table_name, layer_id in self.prj_manager.required_layer_map.items():
-    #         layer_data = self.prj_manager.DEFAULT_EDITING_LAYERS.get(table_name)
-    #         if layer_data and "custom_editing_form" in layer_data and layer_data["custom_editing_form"]:
-    #             layer = self.prj_manager.current_project.mapLayer(layer_id)
-    #             if layer:
-    #                 layer.editingStarted.connect(partial(self.set_ui_file, layer, table_name))
-
-    # def set_ui_file(self, layer: QgsVectorLayer, table_name: str):
-    #     form_config = layer.editFormConfig()
-    #     ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
-    #     self.log(f"Setting UI form for layer {layer.name()}: {ui_path}")
-    #     form_config.setUiForm(str(ui_path))
-    #     layer.setEditFormConfig(form_config)
-
-    # def disconnect_editing_signals(self):
-    #     """Disconnect specific editing signals."""
-    #     for layer, (start_func, stop_func) in self.editing_signals_connected_layers.items():
-    #         layer.editingStarted.disconnect(start_func)
-    #         layer.editingStopped.disconnect(stop_func)
-    #     self.editing_signals_connected_layers.clear()
-
-    # def set_advanced_editing_config(self, layer):
-    #     # settings = get_settings()
-    #     # if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
-    #     #     return
-
-    #     auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
-    #         "auto_advanced_editing", default=True, exp_type=bool
-    #     )
-    #     if not auto_advanced_editing_setting:
-    #         return
-
-    #     self.log("Setting advanced editing options")
-    #     proj = QgsProject.instance()
-    #     # save the current config
-    #     self.proj_snapping_config = proj.snappingConfig()
-    #     self.proj_avoid_intersections_layers = proj.avoidIntersectionsLayers()
-    #     self.topological_editing = proj.topologicalEditing()
-    #     self.avoid_intersections_mode = proj.avoidIntersectionsMode()
-
-    #     # just fail gracefully if something goes wrong
-    #     try:
-    #         snapping_config = QgsSnappingConfig(self.proj_snapping_config)
-
-    #         # snapping_config.clearIndividualLayerSettings()
-    #         snapping_config.setEnabled(True)
-    #         snapping_config.setMode(QgsSnappingConfig.AdvancedConfiguration)
-    #         snapping_config.setIntersectionSnapping(True)
-    #         snapping_config.setTolerance(20)
-
-    #         """
-    #         TODO: deprecation warning when using IndividualLayerSettings constructor
-    #         This works in QGIS but not here:
-
-    #         proj = QgsProject.instance()
-    #         proj_snapping_config = proj.snappingConfig()
-
-    #         layer = iface.activeLayer()
-
-    #         layer_settings = proj_snapping_config.individualLayerSettings(layer)
-    #         layer_settings.setEnabled(True)
-    #         layer_settings.setType(QgsSnappingConfig.Vertex)
-    #         layer_settings.setTolerance(20)
-    #         layer_settings.setUnits(QgsTolerance.ProjectUnits)
-
-    #         proj_snapping_config.setIndividualLayerSettings(layer, layer_settings)
-    #         #proj_snapping_config.addLayers([layer])
-
-    #         proj.setSnappingConfig(proj_snapping_config)
-    #         """
-    #         layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-    #             True,
-    #             QgsSnappingConfig.VertexFlag,
-    #             20,
-    #             QgsTolerance.ProjectUnits,
-    #         )
-
-    #         # set advanced overlap config for the layer and other layers in the same group
-    #         for layer_group in NO_OVERLAPS_LAYER_GROUPS:
-    #             if layer.name() in layer_group:
-    #                 layers = [proj.mapLayersByName(layer_name)[0] for layer_name in layer_group]
-    #                 for layer in layers:
-    #                     snapping_config.setIndividualLayerSettings(layer, layer_settings)
-    #                 proj.setAvoidIntersectionsLayers(layers)
-
-    #         # actually set "follow advanced config" for overlaps
-    #         proj.setAvoidIntersectionsMode(QgsProject.AvoidIntersectionsMode.AvoidIntersectionsLayers)
-
-    #         # enable topological editing
-    #         proj.setTopologicalEditing(True)
-
-    #         # apply the new config
-    #         proj.setSnappingConfig(snapping_config)
-
-    #     except Exception as e:
-    #         self.log(f"Error setting advanced editing config: {e}", log_level=2)
-
-    # def reset_editing_config(self):
-    #     # settings = get_settings()
-    #     # if not settings.get(AUTO_ADVANCED_EDITING_KEY, True):
-    #     #     return
-    #     auto_advanced_editing_setting = PlgOptionsManager.get_value_from_key(
-    #         "auto_advanced_editing", default=True, exp_type=bool
-    #     )
-    #     if not auto_advanced_editing_setting:
-    #         return
-
-    #     self.log("Resetting advanced editing settings")
-
-    #     try:
-    #         proj = QgsProject.instance()
-    #         proj.setSnappingConfig(self.proj_snapping_config)
-    #         proj.setAvoidIntersectionsMode(self.avoid_intersections_mode)
-    #         proj.setAvoidIntersectionsLayers(self.proj_avoid_intersections_layers)
-    #         proj.setTopologicalEditing(self.topological_editing)
-    #     except Exception as e:
-    #         self.log(f"Error resetting advanced editing config: {e}", log_level=2)
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)

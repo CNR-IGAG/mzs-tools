@@ -1836,7 +1836,7 @@ class MzSProjectManager:
         crs = QgsCoordinateReferenceSystem("EPSG:32633")
         self.current_project.setCrs(crs)
 
-        logo_regio_in = DIR_PLUGIN_ROOT / "resources" / "logo_regioni" / self.comune_data.cod_regio + ".png"
+        logo_regio_in = DIR_PLUGIN_ROOT / "resources" / "logo_regioni" / f"{self.comune_data.cod_regio}.png"
         logo_regio_out = self.project_path / "progetto" / "loghi" / "logo_regio.png"
         shutil.copyfile(logo_regio_in, logo_regio_out)
 
@@ -2142,7 +2142,7 @@ class MzSProjectManager:
 
         return db_backup_path
 
-    def backup_qgis_project(self):
+    def backup_qgis_project(self) -> Path:
         project_file_name = f"{self.current_project.baseName()}_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d-%H_%M')}.qgz"
         project_backup_path = self.project_path / project_file_name
 

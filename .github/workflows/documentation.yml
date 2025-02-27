@@ -86,9 +86,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: documentation
-        path: |
-          help/_build/html/*
-          help/_build/latex/MzSTools.pdf
+        path: help/_build/html/*
         if-no-files-found: error
         retention-days: 30
 

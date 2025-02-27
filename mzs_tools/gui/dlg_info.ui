@@ -123,31 +123,6 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QLabel" name="label_cnr_logo">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>100</width>
-             <height>65</height>
-            </size>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="pixmap">
-            <pixmap>../resources/img/logo_CNR_compatto.png</pixmap>
-           </property>
-           <property name="scaledContents">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
       </layout>
@@ -276,8 +251,8 @@ QScrollBar{ background-color: none }</string>
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>546</width>
-              <height>181</height>
+              <width>98</width>
+              <height>33</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_8">
@@ -337,8 +312,8 @@ QScrollBar{ background-color: none }</string>
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>546</width>
-              <height>181</height>
+              <width>98</width>
+              <height>33</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_11">
@@ -398,8 +373,8 @@ QScrollBar{ background-color: none }</string>
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>546</width>
-              <height>181</height>
+              <width>98</width>
+              <height>33</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
