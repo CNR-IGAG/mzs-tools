@@ -75,6 +75,8 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.accepted.connect(self.start_import_tasks)
 
+        self.failed_tasks = []
+
     def showEvent(self, e):
         super().showEvent(e)
         self.input_dir_widget.lineEdit().setText("")
@@ -384,7 +386,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.iface.messageBar().pushWidget(self.progress_msg, Qgis.Info)
 
         QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
-        # QgsApplication.taskManager().countActiveTasksChanged.connect(self.set_progress_msg)
+        QgsApplication.taskManager().statusChanged.connect(self.on_task_status_changed)
         QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
 
         if len(tasks) == 1:
@@ -427,31 +429,45 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.iface.mapCanvas().refreshAllLayers()
         self.progress_bar.setValue(int(progress))
 
+    def on_task_status_changed(self, taskid, status):
+        if status == QgsTask.Terminated:
+            self.failed_tasks.append(QgsApplication.taskManager().task(taskid).description())
+
     def on_tasks_completed(self):
-        self.file_logger.info(f"{'#' * 15} Data imported successfully.")
+        if QgsApplication.taskManager().countActiveTasks() > 0:
+            return
+
+        if len(self.failed_tasks) == 0:
+            msg = self.tr("Data imported successfully")
+            level = Qgis.Success
+        else:
+            msg = self.tr("Data import completed with errors. Check the log for details.")
+            level = Qgis.Warning
+
+        self.file_logger.info(f"{'#' * 15} {msg}")
         self.iface.messageBar().clearWidgets()
         # load log file
         log_text = self.log_file_path.read_text(encoding="utf-8")
         self.iface.messageBar().pushMessage(
             "MzS Tools",
-            self.tr("Data imported successfully"),
+            msg,
             log_text if log_text else "...",
-            level=Qgis.Success,
+            level=level,
             duration=0,
         )
-        # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
-        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
 
-        self.iface.mapCanvas().refreshAllLayers()
+        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
+        QgsApplication.taskManager().statusChanged.disconnect(self.on_task_status_changed)
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
 
         self.file_logger.removeHandler(self.file_handler)
 
     def cancel_tasks(self):
         self.file_logger.warning(f"{'#' * 15} Data import cancelled. Terminating all tasks")
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
         QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
-        # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
+        QgsApplication.taskManager().statusChanged.disconnect(self.on_task_status_changed)
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()

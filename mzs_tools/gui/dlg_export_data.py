@@ -76,6 +76,7 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.total_tasks = 0
         self.completed_tasks = 0
+        self.failed_tasks = []
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -211,8 +212,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.iface.messageBar().pushWidget(self.progress_msg, Qgis.Info)
 
         QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
-        # QgsApplication.taskManager().countActiveTasksChanged.connect(self.on_tasks_completed)
-
+        QgsApplication.taskManager().statusChanged.connect(self.on_task_status_changed)
         QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
 
         # table - shapefile mapping
@@ -298,39 +298,49 @@ class DlgExportData(QDialog, FORM_CLASS):
         progress_percentage = (completed_tasks / self.total_tasks) * 100
         self.progress_bar.setValue(int(progress_percentage))
 
-    def on_tasks_completed(self):
-        # self.log(f"active: {QgsApplication.taskManager().countActiveTasks()}")
-        # self.log(f"count: {QgsApplication.taskManager().count()}")
-        # if QgsApplication.taskManager().count() == 1:
-        if QgsApplication.taskManager().countActiveTasks() == 0:
-            self.file_logger.info(f"{'#' * 15} Data exported successfully.")
-            self.iface.messageBar().clearWidgets()
-            # load log file
-            log_text = self.log_file_path.read_text(encoding="utf-8")
-            self.iface.messageBar().pushMessage(
-                "MzS Tools",
-                self.tr("Data exported successfully"),
-                log_text if log_text else "...",
-                level=Qgis.Success,
-                duration=0,
-            )
-            # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.on_tasks_completed)
-            QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
-            QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
+    def on_task_status_changed(self, taskid, status):
+        if status == QgsTask.Terminated:
+            self.failed_tasks.append(QgsApplication.taskManager().task(taskid).description())
 
-            self.file_logger.removeHandler(self.file_handler)
+    def on_tasks_completed(self):
+        if QgsApplication.taskManager().countActiveTasks() > 0:
+            return
+
+        if len(self.failed_tasks) == 0:
+            msg = self.tr("Data exported successfully")
+            level = Qgis.Success
+        else:
+            msg = self.tr("Data export completed with errors. Check the log for details.")
+            level = Qgis.Warning
+
+        self.file_logger.info(f"{'#' * 15} {msg}")
+        self.iface.messageBar().clearWidgets()
+        # load log file
+        log_text = self.log_file_path.read_text(encoding="utf-8")
+        self.iface.messageBar().pushMessage(
+            "MzS Tools",
+            msg,
+            log_text if log_text else "...",
+            level=level,
+            duration=0,
+        )
+
+        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
+        QgsApplication.taskManager().statusChanged.disconnect(self.on_task_status_changed)
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+
+        self.file_logger.removeHandler(self.file_handler)
 
     def cancel_tasks(self):
         self.file_logger.warning(f"{'#' * 15} Data export cancelled. Terminating all tasks")
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
         QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
-        # QgsApplication.taskManager().countActiveTasksChanged.disconnect(self.set_progress_msg)
+        QgsApplication.taskManager().statusChanged.disconnect(self.on_task_status_changed)
+        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
+
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
         self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data export cancelled!"), level=Qgis.Warning)
-
-        self.iface.mapCanvas().refreshAllLayers()
 
         self.file_logger.removeHandler(self.file_handler)
 

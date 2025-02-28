@@ -226,15 +226,18 @@ class ImportSitiLineariTask(QgsTask):
                 if self.isCanceled():
                     return False
 
-            # close connections
-            if self.mdb_connection:
-                self.mdb_connection.close()
-            if self.spatialite_db_connection:
-                self.spatialite_db_connection.close()
-
         except Exception as e:
             self.exception = e
             return False
+
+        finally:
+            # close connections
+            if self.mdb_connection:
+                self.logger.debug("Closing mdb connection...")
+                self.mdb_connection.close()
+            if self.spatialite_db_connection:
+                self.logger.debug("Closing spatialite connection...")
+                self.spatialite_db_connection.close()
 
         return True
 

@@ -7,18 +7,18 @@ from pathlib import Path
 from qgis.core import (
     QgsApplication,
     QgsProject,
-    QgsSettings,
 )
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QAction,
-    QFileDialog,
     QMenu,
     QMessageBox,
     QToolButton,
 )
+
+from mzs_tools.tasks.attachments_task_manager import AttachmentsTaskManager
 
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .core.mzs_project_manager import MzSProjectManager
@@ -157,6 +157,16 @@ class MzSTools:
             add_to_toolbar=False,
         )
         menu_project.addAction(self.backup_project_action)
+
+        self.check_attachments_action = self.add_action(
+            QgsApplication.getThemeIcon("mIconAuxiliaryStorage.svg"),
+            text=self.tr("Check file attachments"),
+            status_tip=self.tr("Check, collect and consolidate file attachments"),
+            callback=self.on_check_attachments_action,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_project.addAction(self.check_attachments_action)
 
         project_menu_button.setMenu(menu_project)
 
@@ -357,6 +367,18 @@ class MzSTools:
                     f"Project backup:\n\n'{backup_path.name}'\n\ncreated successfully in:\n\n'{backup_path.parent}'"
                 ),
             )
+
+    def on_check_attachments_action(self):
+        button = QMessageBox.question(
+            self.iface.mainWindow(),
+            self.tr("Check attachments"),
+            self.tr(
+                "This tool will gather all file attachments, copy them to the 'Allegati' folder, and rename them if necessary."
+            ),
+        )
+        if button == QMessageBox.Yes:
+            self.manager = AttachmentsTaskManager()
+            self.manager.start_manage_attachments_task()
 
     def open_dlg_create_project(self):
         # check if there is a project already open
