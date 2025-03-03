@@ -14,7 +14,7 @@ class AttachmentsTask(QgsTask):
         self.iterations = 0
         self.exception = None
 
-        # the logger is configured in the import data dialog module
+        # the logger is configured in attachment_task_manager
         self.logger = logging.getLogger("mzs_tools.tasks.attachment_manager")
 
         self.prj_manager = MzSProjectManager.instance()
@@ -33,7 +33,7 @@ class AttachmentsTask(QgsTask):
                 "dest_folder": "Documenti",
             },
             "parametri_puntuali": {
-                "query": """SELECT pkuid, id_parpu, tab_curve FROM parametri_puntuali 
+                "query": """SELECT pkuid, id_indpu, id_parpu, tab_curve FROM parametri_puntuali 
                           WHERE tab_curve IS NOT NULL AND tab_curve != ''""",
                 "id_field": "id_parpu",
                 "check_field": "id_parpu",
@@ -90,20 +90,20 @@ class AttachmentsTask(QgsTask):
                 self.logger.debug(f"Checking {table_name} attachments...")
 
                 # Unpack configuration
-                id_field = config["id_field"]
+                # id_field = config["id_field"]
                 check_field = config["check_field"]
                 file_field = config["file_field"]
                 dest_folder = config["dest_folder"]
 
                 # Get field indexes from the query results
-                id_index = 1 if id_field == "id_parpu" else 2  # Handle parametri_puntuali special case
+                # id_index = 1 if id_field == "id_parpu" else 2  # Handle parametri_puntuali special case
                 check_index = 1 if check_field else None
-                file_index = 2 if file_field == "tab_curve" or file_field == "SPETTRI" else 3
+                file_index = 2 if file_field == "SPETTRI" else 3
 
                 # Process all attachments for this type
                 for row in attachment_data[table_name]:
                     pkuid = row[0]
-                    id_value = row[id_index]
+                    id_value = row[1] if file_field == "SPETTRI" else row[2]
                     check_value = row[check_index] if check_index is not None else None
                     file_path = row[file_index]
 
@@ -175,7 +175,7 @@ class AttachmentsTask(QgsTask):
             shutil.move(dest_path, backup_folder)
 
         shutil.copy(file_full_path, dest_path)
-        self.logger.debug(f"Attachment {file_path} moved to {dest_path}")
+        self.logger.debug(f"Attachment {file_path} copied to {dest_path}")
 
         # Update the database
         relative_path = dest_path.relative_to(self.prj_manager.project_path)
