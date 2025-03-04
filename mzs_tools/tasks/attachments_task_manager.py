@@ -10,11 +10,11 @@ from qgis.PyQt.QtWidgets import (
 )
 from qgis.utils import iface
 
-from mzs_tools.tasks.attachments_task import AttachmentsTask
-
 from ..__about__ import __version__
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.settings import PlgOptionsManager
+from .attachments_task import AttachmentsTask
 
 
 class AttachmentsTaskManager:
@@ -34,6 +34,8 @@ class AttachmentsTaskManager:
 
         self.task_failed = False
 
+        self.debug = PlgOptionsManager.get_plg_settings().debug_mode
+
     def start_manage_attachments_task(self):
         # setup file-based logging
         timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
@@ -43,7 +45,7 @@ class AttachmentsTaskManager:
         self.file_logger.addHandler(self.file_handler)
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         self.file_handler.setFormatter(formatter)
-        self.file_logger.setLevel(logging.DEBUG)
+        self.file_logger.setLevel(logging.DEBUG if self.debug else logging.INFO)
         self.file_logger.info(f"MzS Tools version {__version__} - Attachment management log")
         self.file_logger.info(f"Log file: {self.log_file_path}")
         self.file_logger.info("############### Attachments check started")
@@ -86,7 +88,7 @@ class AttachmentsTaskManager:
             self.task_failed = True
 
     def _on_task_completed(self):
-        msg = self.tr("Attachment check completed successfully.")
+        msg = self.tr("Attachment check completed successfully. Check the log for missing files or other problems.")
         self.file_logger.info(f"{'#' * 15} {msg}")
 
         self.iface.messageBar().clearWidgets()

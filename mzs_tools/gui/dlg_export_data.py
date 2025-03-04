@@ -279,11 +279,14 @@ class DlgExportData(QDialog, FORM_CLASS):
         elif table_name == "sito_lineare":
             self.rename_field(QgsVectorLayer(str(path), str(path.stem), "ogr"), "id_sln", "ID_SLN")
         elif table_name in ["isosub_l1", "isosub_l23"]:
-            # for some absurd reason, the field "Quota" must be a string
+            # "Quota" from float to int
             self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "Quota", QVariant.Int)
         elif table_name in ["stab_l1", "stab_l23", "instab_l1", "instab_l23"]:
-            # for some absurd reason, the field "LIVELLO" must be a double
+            # for some absurd reason, the field "LIVELLO" must be a float
             self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QVariant.Double)
+            if table_name in ["stab_l23", "instab_l23"]:
+                # extract file name from path "SPETTRI"
+                self.extract_file_name_from_path(QgsVectorLayer(str(path), str(path.stem), "ogr"), "SPETTRI")
 
     def on_shapefile_export_error(self, result, msg):
         self.file_logger.error(f"Error during export: {msg} - {result}")
@@ -356,30 +359,119 @@ class DlgExportData(QDialog, FORM_CLASS):
                 break
 
     def change_field_type(self, layer, field_name, field_type):
-        # TODO: there should be a quicker/proper way to do this
-        # TODO: DeprecationWarning: QgsField constructor is deprecated
+        """
+        Change the data type of a field in a vector layer.
+
+        Args:
+            layer (QgsVectorLayer): The layer containing the field to modify
+            field_name (str): Name of the field to change
+            field_type (QVariant.Type): New data type for the field
+        """
         self.file_logger.debug(f"Changing field type for field '{field_name}'")
-        layer.startEditing()
-        layer.dataProvider().addAttributes([QgsField("new_col", field_type)])
-        layer.commitChanges()
 
+        # Check if the field exists
+        field_idx = layer.fields().lookupField(field_name)
+        if field_idx == -1:
+            self.file_logger.error(f"Field '{field_name}' not found in layer")
+            return False
+
+        # Get original field configuration
+        # original_field = layer.fields().at(field_idx)
+        temp_field_name = "temp"
+
+        # Create new QgsField objects without using deprecated constructor
+        temp_field = QgsField()
+        temp_field.setName(temp_field_name)
+        # TODO: Deprecated since version 3.38: Use the method with a QMetaType.Type argument instead.
+        temp_field.setType(field_type)
+
+        new_field = QgsField()
+        new_field.setName(field_name)
+        # TODO: Deprecated since version 3.38: Use the method with a QMetaType.Type argument instead.
+        new_field.setType(field_type)
+
+        # Use edit context manager to handle editing sessions
+        with edit(layer):
+            # Create a temporary field with desired type
+            layer.addAttribute(temp_field)
+            layer.updateFields()
+
+            temp_field_idx = layer.fields().lookupField(temp_field_name)
+
+            # Copy values to the temporary field
+            for feature in layer.getFeatures():
+                layer.changeAttributeValue(feature.id(), temp_field_idx, feature[field_name])
+
+        # Remove original field and add new field with same name but new type
+        with edit(layer):
+            # Remove the original field
+            layer.deleteAttribute(field_idx)
+            layer.updateFields()
+
+            # Add new field with original name but new type
+            layer.addAttribute(new_field)
+            layer.updateFields()
+
+            new_field_idx = layer.fields().lookupField(field_name)
+            temp_field_idx = layer.fields().lookupField(temp_field_name)
+
+            # Copy values from temporary field to new field
+            for feature in layer.getFeatures():
+                layer.changeAttributeValue(feature.id(), new_field_idx, feature[temp_field_name])
+
+            # Remove temporary field
+            layer.deleteAttribute(temp_field_idx)
+
+        self.file_logger.debug(f"Successfully changed field type for '{field_name}'")
+        return True
+
+    def extract_file_name_from_path(self, layer, field_name):
+        """
+        Extract file names from path strings stored in a specified field and
+        replace the full paths with just the file names.
+
+        Args:
+            layer (QgsVectorLayer): The vector layer to process
+            field_name (str): The name of the field containing file paths
+        """
+
+        self.file_logger.debug(f"Extracting file name from field '{field_name}'")
+
+        # Get field index to check if it exists
+        field_idx = layer.fields().lookupField(field_name)
+        if field_idx == -1:
+            self.file_logger.error(f"Field '{field_name}' not found in layer")
+            return
+
+        # Start editing the layer
         layer.startEditing()
+
+        # Process each feature
+        features_updated = 0
         for feature in layer.getFeatures():
-            feature.setAttribute(feature.fields().lookupField("new_col"), feature[field_name])
-            layer.updateFeature(feature)
-        layer.commitChanges()
+            path_value = feature[field_name]
 
-        layer.startEditing()
-        layer.dataProvider().deleteAttributes([layer.fields().lookupField(field_name)])
-        layer.dataProvider().addAttributes([QgsField(field_name, field_type)])
-        layer.commitChanges()
+            # Skip empty values
+            if not path_value:
+                continue
 
-        layer.startEditing()
-        for feature in layer.getFeatures():
-            feature.setAttribute(feature.fields().lookupField(field_name), feature["new_col"])
-            layer.updateFeature(feature)
-        layer.commitChanges()
+            # Extract filename from path
+            try:
+                # Use Path to extract the filename from the path
+                file_name = Path(path_value).name
 
-        layer.startEditing()
-        layer.dataProvider().deleteAttributes([layer.fields().lookupField("new_col")])
-        layer.commitChanges()
+                # Update the feature with just the filename
+                feature.setAttribute(field_idx, file_name)
+                layer.updateFeature(feature)
+                features_updated += 1
+            except Exception as e:
+                self.file_logger.error(f"Error extracting filename from '{path_value}': {str(e)}")
+
+        # Commit changes
+        success = layer.commitChanges()
+
+        if success:
+            self.file_logger.info(f"Successfully updated {features_updated} features in field '{field_name}'")
+        else:
+            self.file_logger.error(f"Failed to commit changes to layer: {layer.commitErrors()}")
+            layer.rollBack()

@@ -150,7 +150,7 @@ class ExportSitiLineariTask(QgsTask):
             cursor = conn.cursor()
             cursor.execute(
                 """SELECT sl.pkuid, il.pkuid, classe_ind, tipo_ind, id_indln, id_indlnex, arch_ex, note_indln,
-                data_ind, doc_pag, substr(doc_ind, instr(doc_ind, id_indln), length(doc_ind) +1) AS doc_ind
+                data_ind, doc_pag, substr(doc_ind, instr(doc_ind, sl.id_sln), length(doc_ind) +1) AS doc_ind, sl.id_sln
                 FROM indagini_lineari il JOIN sito_lineare sl ON il.id_sln = sl.id_sln"""
             )
             data = cursor.fetchall()

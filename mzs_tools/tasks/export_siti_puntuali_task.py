@@ -180,7 +180,7 @@ class ExportSitiPuntualiTask(QgsTask):
             cursor.execute(
                 """SELECT sp.pkuid, ip.pkuid, classe_ind, tipo_ind, id_indpu, id_indpuex, arch_ex, note_ind, prof_top,
                 prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, substr(doc_ind, instr(doc_ind,
-                id_indpu), length(doc_ind) +1) AS doc_ind FROM indagini_puntuali ip JOIN sito_puntuale sp ON
+                sp.id_spu), length(doc_ind) +1) AS doc_ind, sp.id_spu FROM indagini_puntuali ip JOIN sito_puntuale sp ON
                 ip.id_spu = sp.id_spu"""
             )
             data = cursor.fetchall()
@@ -192,8 +192,8 @@ class ExportSitiPuntualiTask(QgsTask):
             cursor = conn.cursor()
             cursor.execute(
                 """SELECT ip.pkuid, pp.pkuid, tipo_parpu, id_parpu, pp.prof_top, pp.prof_bot, pp.spessore,
-                pp.quota_slm_top, pp.quota_slm_bot, valore, attend_mis, substr(tab_curve, instr(tab_curve, id_parpu),
-                length(tab_curve) +1) AS tab_curve, note_par, data_par FROM parametri_puntuali pp JOIN
+                pp.quota_slm_top, pp.quota_slm_bot, valore, attend_mis, substr(tab_curve, instr(tab_curve, ip.id_indpu),
+                length(tab_curve) +1) AS tab_curve, note_par, data_par, ip.id_indpu FROM parametri_puntuali pp JOIN
                 indagini_puntuali ip ON pp.id_indpu = ip.id_indpu"""
             )
             data = cursor.fetchall()

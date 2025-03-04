@@ -18,8 +18,6 @@ from qgis.PyQt.QtWidgets import (
     QToolButton,
 )
 
-from mzs_tools.tasks.attachments_task_manager import AttachmentsTaskManager
-
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
 from .core.mzs_project_manager import MzSProjectManager
 from .gui.dlg_create_project import DlgCreateProject
@@ -31,6 +29,7 @@ from .gui.dlg_load_ogc_services import DlgLoadOgcLayers
 from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_settings import PlgOptionsFactory
 from .plugin_utils.logging import MzSToolsLogger
+from .tasks.attachments_task_manager import AttachmentsTaskManager
 
 
 class MzSTools:
@@ -159,7 +158,7 @@ class MzSTools:
         menu_project.addAction(self.backup_project_action)
 
         self.check_attachments_action = self.add_action(
-            QgsApplication.getThemeIcon("mIconAuxiliaryStorage.svg"),
+            QgsApplication.getThemeIcon("mActionFolder.svg"),
             text=self.tr("Check file attachments"),
             status_tip=self.tr("Check, collect and consolidate file attachments"),
             callback=self.on_check_attachments_action,
@@ -373,7 +372,10 @@ class MzSTools:
             self.iface.mainWindow(),
             self.tr("Check attachments"),
             self.tr(
-                "This tool will gather all file attachments, copy them to the 'Allegati' folder, and rename them if necessary."
+                "This tool will perform the following operations:\n\n- gather all file attachments and copy them to the 'Allegati' folder if necessary"
+                "\n- rename the attachments by prepending the feature ID when necessary"
+                "\n- update the database with the new attachment paths"
+                "\n- report if any file attachment is missing\n\nDo you want to proceed?"
             ),
         )
         if button == QMessageBox.Yes:

@@ -2011,7 +2011,7 @@ class MzSProjectManager:
 
     def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
         """Create a basic metadata record for an MzS Tools project."""
-        date_now = datetime.datetime.now().strftime(r"%d/%m/%Y")
+        date_now = datetime.datetime.now().strftime(r"%Y-%m-%d")
         layer_comune_id = self.find_layer_by_table_name_role("comune_progetto", "base")
         extent = self.current_project.layerTreeRoot().findLayer(layer_comune_id).layer().extent()
         values = {

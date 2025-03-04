@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>515</width>
-    <height>329</height>
+    <width>472</width>
+    <height>367</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -104,6 +104,16 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Attention: it is recommended to perform a file attachments check with the dedicated tool before executing the data export.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
    <item>
