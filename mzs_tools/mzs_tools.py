@@ -373,7 +373,7 @@ class MzSTools:
             self.tr("Check attachments"),
             self.tr(
                 "This tool will perform the following operations:\n\n- gather all file attachments and copy them to the 'Allegati' folder if necessary"
-                "\n- rename the attachments by prepending the feature ID when necessary"
+                "\n- rename the attachment files by prepending the feature ID when necessary"
                 "\n- update the database with the new attachment paths"
                 "\n- report if any file attachment is missing\n\nDo you want to proceed?"
             ),

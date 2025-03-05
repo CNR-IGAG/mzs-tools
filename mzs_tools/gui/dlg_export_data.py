@@ -58,9 +58,11 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.ok_button.setText(self.tr("Start export"))
         self.ok_button.setEnabled(False)
         self.radio_button_mdb.setEnabled(False)
+        self.radio_button_sqlite.setEnabled(True)
 
         self.output_dir_widget.lineEdit().textChanged.connect(self.validate_input)
         self.radio_button_mdb.toggled.connect(self.validate_input)
+        self.radio_button_sqlite.toggled.connect(self.validate_input)
 
         self.label_mdb_msg.setText("")
         self.label_mdb_msg.setVisible(True)
@@ -192,9 +194,18 @@ class DlgExportData(QDialog, FORM_CLASS):
             ms_path = exported_project_path / ms_path
             ms_path.mkdir(parents=True)
 
-        # copy the mdb file to the output directory
-        cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
-        shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.mdb")
+        # copy the db file to the output directory
+        if self.indagini_output_format == "mdb":
+            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
+            shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.mdb")
+        elif self.indagini_output_format == "sqlite":
+            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite"
+            shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.sqlite")
+            # cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite.zip"
+            # cdi_tabelle_path_dest = exported_project_path / "Indagini" / "CdI_Tabelle.sqlite.zip"
+            # shutil.copy(cdi_tabelle_path, cdi_tabelle_path_dest)
+            # shutil.unpack_archive(cdi_tabelle_path_dest, exported_project_path / "Indagini")
+            # cdi_tabelle_path_dest.unlink()
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
