@@ -54,6 +54,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.ok_button.setEnabled(False)
         self.radio_button_mdb.setEnabled(False)
         self.radio_button_csv.setEnabled(False)
+        self.radio_button_sqlite.setEnabled(False)
         self.csv_dir_widget.setEnabled(False)
 
         self.input_dir_widget.lineEdit().textChanged.connect(self.validate_input)
@@ -62,8 +63,11 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.radio_button_mdb.toggled.connect(self.validate_input)
         self.radio_button_csv.toggled.connect(self.enable_csv_selection)
         self.radio_button_csv.toggled.connect(self.validate_input)
+        self.radio_button_sqlite.toggled.connect(self.enable_csv_selection)
+        self.radio_button_sqlite.toggled.connect(self.validate_input)
 
         self.csv_dir_widget.lineEdit().textChanged.connect(self.validate_input)
+        self.csv_files_found = None
 
         self.group_box_content.setVisible(False)
         self.label_mdb_msg.setText("")
@@ -87,7 +91,11 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.ok_button.setEnabled(False)
             return False
 
-        if not self.radio_button_mdb.isChecked() and not self.radio_button_csv.isChecked():
+        if (
+            not self.radio_button_mdb.isChecked()
+            and not self.radio_button_csv.isChecked()
+            and not self.radio_button_sqlite.isChecked()
+        ):
             self.log("No data source selected", log_level=1)
             self.chk_siti_puntuali.setEnabled(False)
             self.chk_siti_puntuali.setChecked(False)
@@ -121,6 +129,12 @@ class DlgImportData(QDialog, FORM_CLASS):
 
             self.radio_button_mdb.setEnabled(False)
 
+            self.radio_button_sqlite.setAutoExclusive(False)
+            self.radio_button_sqlite.setChecked(False)
+            self.radio_button_sqlite.setAutoExclusive(True)
+
+            self.radio_button_sqlite.setEnabled(False)
+
             self.radio_button_csv.setAutoExclusive(False)
             self.radio_button_csv.setChecked(False)
             self.radio_button_csv.setAutoExclusive(True)
@@ -149,9 +163,91 @@ class DlgImportData(QDialog, FORM_CLASS):
         if not csv_dir or not Path(csv_dir).exists():
             return False
 
-        # TODO: check if the CSV directory contains the required files
+        # Check if the CSV directory contains the required files
+        csv_dir_path = Path(csv_dir)
 
-        return True
+        # Get all CSV and TXT files in the directory
+        all_files = []
+        all_file_paths = {}
+        for ext in ["*.csv", "*.txt"]:
+            for file_path in csv_dir_path.glob(ext):
+                lowercase_name = file_path.name.lower()
+                all_files.append(lowercase_name)
+                all_file_paths[lowercase_name] = file_path
+
+        self.log(f"Files found in CSV directory: {all_files}", log_level=4)
+
+        # Define the two series of files to check (in order of dependency)
+        puntuale_series = ["sito_puntuale", "indagini_puntuali", "parametri_puntuali", "curve"]
+        lineare_series = ["sito_lineare", "indagini_lineari", "parametri_lineari"]
+
+        # Check for the required files
+        found_files = {"puntuali": {}, "lineari": {}}
+
+        # Check for puntuale files
+        has_sito_puntuale = False
+        sito_puntuale_file = next((f for f in all_files if f.startswith("sito_puntuale")), None)
+        if sito_puntuale_file:
+            has_sito_puntuale = True
+            found_files["puntuali"]["sito_puntuale"] = all_file_paths[sito_puntuale_file]
+
+            # Check for dependent files in order
+            for file_prefix in puntuale_series[1:]:
+                found_file = next((f for f in all_files if f.startswith(file_prefix)), None)
+                if found_file:
+                    found_files["puntuali"][file_prefix] = all_file_paths[found_file]
+                else:
+                    self.log(f"Missing file: {file_prefix}", log_level=1)
+                    break  # Stop when a file in the dependency chain is missing
+
+        # Check for lineare files
+        has_sito_lineare = False
+        sito_lineare_file = next((f for f in all_files if f.startswith("sito_lineare")), None)
+        if sito_lineare_file:
+            has_sito_lineare = True
+            found_files["lineari"]["sito_lineare"] = all_file_paths[sito_lineare_file]
+
+            # Check for dependent files in order
+            for file_prefix in lineare_series[1:]:
+                found_file = next((f for f in all_files if f.startswith(file_prefix)), None)
+                if found_file:
+                    found_files["lineari"][file_prefix] = all_file_paths[found_file]
+                else:
+                    break  # Stop when a file in the dependency chain is missing
+
+        # Store the found files information for later use
+        self.csv_files_found = found_files
+
+        # Enable/disable checkboxes based on what was found
+        if has_sito_puntuale:
+            self.chk_siti_puntuali.setEnabled(True)
+            self.chk_siti_puntuali.setChecked(True)
+        else:
+            self.chk_siti_puntuali.setEnabled(False)
+            self.chk_siti_puntuali.setChecked(False)
+
+        if has_sito_lineare:
+            self.chk_siti_lineari.setEnabled(True)
+            self.chk_siti_lineari.setChecked(True)
+        else:
+            self.chk_siti_lineari.setEnabled(False)
+            self.chk_siti_lineari.setChecked(False)
+
+        # At least one of sito_puntuale or sito_lineare must be present
+        has_required_files = has_sito_puntuale or has_sito_lineare
+
+        if has_required_files:
+            status_msg = []
+            if "sito_puntuale" in found_files["puntuali"]:
+                status_msg.append(f"Found {len(found_files['puntuali'])}/{len(puntuale_series)} puntuali files")
+            if "sito_lineare" in found_files["lineari"]:
+                status_msg.append(f"Found {len(found_files['lineari'])}/{len(lineare_series)} lineari files")
+
+            self.log(f"CSV validation: {', '.join(status_msg)}", log_level=4)
+        else:
+            self.log("CSV validation failed: missing required files (sito_puntuale or sito_lineare)", log_level=1)
+
+        return has_required_files
 
     def check_project_dir(self, input_dir):
         if not Path(input_dir).exists():
@@ -175,6 +271,7 @@ class DlgImportData(QDialog, FORM_CLASS):
             "Indagini": {"parent": None, "path": None, "checkbox": None},
             "Documenti": {"parent": "Indagini", "path": None, "checkbox": None},
             "CdI_Tabelle.mdb": {"parent": "Indagini", "path": None, "checkbox": None},
+            "CdI_Tabelle.sqlite": {"parent": "Indagini", "path": None, "checkbox": None},
             "Ind_pu.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_puntuali},
             "Ind_ln.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_lineari},
             "MS1": {"parent": None, "path": None, "checkbox": None},
@@ -214,13 +311,19 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.log(self.tr("Project folder does not contain 'Indagini' subfolder"), log_level=1)
             return False
 
-        cdi_tabelle_path = self.standard_proj_paths["CdI_Tabelle.mdb"]["path"]
-        if not cdi_tabelle_path:
+        cdi_tabelle_mdb_path = self.standard_proj_paths["CdI_Tabelle.mdb"]["path"]
+        if not cdi_tabelle_mdb_path:
             self.label_mdb_msg.setText(self.tr("[File not found]"))
             self.radio_button_mdb.setEnabled(False)
         else:
-            connected = self.check_mdb_connection(cdi_tabelle_path)
+            connected = self.check_mdb_connection(cdi_tabelle_mdb_path)
             self.radio_button_mdb.setEnabled(connected)
+
+        cdi_tabelle_sqlite_path = self.standard_proj_paths["CdI_Tabelle.sqlite"]["path"]
+        if not cdi_tabelle_sqlite_path:
+            self.radio_button_sqlite.setEnabled(False)
+        else:
+            self.radio_button_sqlite.setEnabled(True)
 
         return True
 
@@ -317,6 +420,8 @@ class DlgImportData(QDialog, FORM_CLASS):
         indagini_data_source = None
         if self.radio_button_mdb.isChecked():
             indagini_data_source = "mdb"
+        elif self.radio_button_sqlite.isChecked():
+            indagini_data_source = "sqlite"
         elif self.radio_button_csv.isChecked():
             indagini_data_source = "csv"
         else:
@@ -338,6 +443,7 @@ class DlgImportData(QDialog, FORM_CLASS):
                 self.standard_proj_paths,
                 data_source=indagini_data_source,
                 mdb_password=self.mdb_password,
+                csv_files=self.csv_files_found,
             )
             # self.import_spu_task.log_msg.connect(self.log_task_msg)
             tasks.append(self.import_spu_task)
@@ -346,6 +452,7 @@ class DlgImportData(QDialog, FORM_CLASS):
                 self.standard_proj_paths,
                 data_source=indagini_data_source,
                 mdb_password=self.mdb_password,
+                csv_files=self.csv_files_found,
             )
             tasks.append(self.import_sln_task)
         self.import_shapefile_tasks = {}

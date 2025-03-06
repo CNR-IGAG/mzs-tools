@@ -1,5 +1,6 @@
 import logging
 import shutil
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 
@@ -18,6 +19,7 @@ class ImportSitiLineariTask(QgsTask):
         proj_paths: dict,
         data_source: str,
         mdb_password: str = None,
+        csv_files: dict = None,
         adapt_counters: bool = True,
     ):
         super().__init__("Import siti lineari (siti, indagini, parametri)", QgsTask.CanCancel)
@@ -30,13 +32,16 @@ class ImportSitiLineariTask(QgsTask):
 
         self.data_source = data_source
         self.mdb_password = mdb_password
+        self.csv_files = csv_files
 
         self.prj_manager = MzSProjectManager.instance()
         self.spatialite_db_connection = None
+        self.sqlite_db_connection = None
         self.mdb_connection = None
 
         self.proj_paths = proj_paths
         self.mdb_path = self.proj_paths["CdI_Tabelle.mdb"]["path"]
+        self.sqlite_path = self.proj_paths["CdI_Tabelle.sqlite"]["path"]
 
         self.siti_lineari_shapefile = QgsVectorLayer(str(self.proj_paths["Ind_ln.shp"]["path"]), "Ind_ln", "ogr")
         self.num_siti = self.siti_lineari_shapefile.featureCount()
@@ -50,6 +55,12 @@ class ImportSitiLineariTask(QgsTask):
             self.logger.warning(f"\n{'#' * 50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#' * 50}")
 
         self.iterations = 0
+
+        self.logger.info(f"{self.num_siti} siti lineari detected in 'Ind_ln.shp'")
+
+        if self.num_siti == 0:
+            self.logger.warning("Shapefile is empty, nothing to do.")
+            return True
 
         try:
             # get features from the shapefile
@@ -73,9 +84,94 @@ class ImportSitiLineariTask(QgsTask):
                     self.parametri_lineari_data = self.mdb_connection.get_parametri_lineari_data()
                     self.parametri_lineari_seq = self.get_parametri_lineari_seq()
 
-            else:
-                # TODO: get data from csv
-                pass
+            elif self.data_source == "sqlite":
+                self.logger.info("Importing data from SQLite database")
+
+                # Setup SQLite connection
+                try:
+                    self.sqlite_db_connection = sqlite3.connect(str(self.sqlite_path))
+                    self.sqlite_db_connection.row_factory = sqlite3.Row  # This allows accessing columns by name
+                except Exception as e:
+                    self.logger.error(f"Error connecting to SQLite database: {e}")
+                    self.exception = e
+                    return False
+
+                # Get data from SQLite tables
+                try:
+                    # Get sito_lineare data
+                    self.logger.debug("Reading sito_lineare data from SQLite")
+                    self.sito_lineare_data = self.get_sqlite_sito_lineare_data()
+                    self.sito_lineare_seq = self.get_sito_lineare_seq()
+
+                    # Get indagini_lineari data
+                    self.logger.debug("Reading indagini_lineari data from SQLite")
+                    self.indagini_lineari_data = self.get_sqlite_indagini_lineari_data()
+                    self.indagini_lineari_seq = self.get_indagini_lineari_seq()
+
+                    # Get parametri_lineari data
+                    self.logger.debug("Reading parametri_lineari data from SQLite")
+                    self.parametri_lineari_data = self.get_sqlite_parametri_lineari_data()
+                    self.parametri_lineari_seq = self.get_parametri_lineari_seq()
+                except Exception as e:
+                    self.logger.error(f"Error reading data from SQLite database: {e}")
+                    self.exception = e
+                    return False
+
+            elif self.data_source == "csv":
+                if not self.csv_files:
+                    self.logger.error("No CSV files provided!")
+                    return False
+
+                # Get data from CSV files
+                self.logger.info("Reading data from CSV files")
+
+                # Get sito_lineare data from CSV
+                self.sito_lineare_data = {}
+                if "sito_lineare" in self.csv_files["lineari"]:
+                    try:
+                        self.logger.debug(
+                            f"Reading sito_lineare data from {self.csv_files['lineari']['sito_lineare']}"
+                        )
+                        self.sito_lineare_data = self.read_csv_data(
+                            "sito_lineare", self.csv_files["lineari"]["sito_lineare"]
+                        )
+                        self.sito_lineare_seq = self.get_sito_lineare_seq()
+                    except Exception as e:
+                        self.logger.error(f"Error reading sito_lineare data: {e}")
+                        self.exception = e
+                        return False
+
+                # Get indagini_lineari data from CSV
+                self.indagini_lineari_data = {}
+                if "indagini_lineari" in self.csv_files["lineari"]:
+                    try:
+                        self.logger.debug(
+                            f"Reading indagini_lineari data from {self.csv_files['lineari']['indagini_lineari']}"
+                        )
+                        self.indagini_lineari_data = self.read_csv_data(
+                            "indagini_lineari", self.csv_files["lineari"]["indagini_lineari"]
+                        )
+                        self.indagini_lineari_seq = self.get_indagini_lineari_seq()
+                    except Exception as e:
+                        self.logger.error(f"Error reading indagini_lineari data: {e}")
+                        self.exception = e
+                        return False
+
+                # Get parametri_lineari data from CSV
+                self.parametri_lineari_data = {}
+                if "parametri_lineari" in self.csv_files["lineari"]:
+                    try:
+                        self.logger.debug(
+                            f"Reading parametri_lineari data from {self.csv_files['lineari']['parametri_lineari']}"
+                        )
+                        self.parametri_lineari_data = self.read_csv_data(
+                            "parametri_lineari", self.csv_files["lineari"]["parametri_lineari"]
+                        )
+                        self.parametri_lineari_seq = self.get_parametri_lineari_seq()
+                    except Exception as e:
+                        self.logger.error(f"Error reading parametri_lineari data: {e}")
+                        self.exception = e
+                        return False
 
             if DEBUG_MODE:
                 self.logger.warning(f"{'#' * 15} Deleting all siti_lineari!")
@@ -238,6 +334,9 @@ class ImportSitiLineariTask(QgsTask):
             if self.spatialite_db_connection:
                 self.logger.debug("Closing spatialite connection...")
                 self.spatialite_db_connection.close()
+            if self.sqlite_db_connection:
+                self.logger.debug("Closing sqlite connection...")
+                self.sqlite_db_connection.close()
 
         return True
 
@@ -370,3 +469,275 @@ class ImportSitiLineariTask(QgsTask):
             f"Attachment {attachment_file_name} copied to project folder {'as ' + new_file_name if new_file_name else ''}"
         )
         return new_file_name or attachment_file_name
+
+    def get_sqlite_sito_lineare_data(self):
+        """Get sito_lineare data from SQLite database"""
+        data = {}
+        cursor = self.sqlite_db_connection.cursor()
+        cursor.execute("""
+            SELECT pkey_sln, ID_SLN, ubicazione_prov, ubicazione_com, Acoord_X, Acoord_Y, 
+                Bcoord_X, Bcoord_Y, mod_identcoord, desc_modcoord, Aquota, Bquota, 
+                data_sito, note_sito
+            FROM sito_lineare
+        """)
+
+        rows = cursor.fetchall()
+        for row in rows:
+            row_dict = {
+                "pkey_sln": str(row["pkey_sln"]),
+                "ID_SLN": row["ID_SLN"],
+                "ubicazione_prov": row["ubicazione_prov"] or "",
+                "ubicazione_com": row["ubicazione_com"] or "",
+                "Acoord_X": str(row["Acoord_X"]) if row["Acoord_X"] is not None else "",
+                "Acoord_Y": str(row["Acoord_Y"]) if row["Acoord_Y"] is not None else "",
+                "Bcoord_X": str(row["Bcoord_X"]) if row["Bcoord_X"] is not None else "",
+                "Bcoord_Y": str(row["Bcoord_Y"]) if row["Bcoord_Y"] is not None else "",
+                "mod_identcoord": row["mod_identcoord"] or "",
+                "desc_modcoord": row["desc_modcoord"] or "",
+                "Aquota": str(row["Aquota"]) if row["Aquota"] is not None else "",
+                "Bquota": str(row["Bquota"]) if row["Bquota"] is not None else "",
+                "data_sito": row["data_sito"] or "",
+                "note_sito": row["note_sito"] or "",
+            }
+            data[row["ID_SLN"]] = row_dict
+
+        self.logger.info(f"Read {len(data)} records from sito_lineare in SQLite")
+        return data
+
+    def get_sqlite_indagini_lineari_data(self):
+        """Get indagini_lineari data from SQLite database"""
+        data = {}
+        cursor = self.sqlite_db_connection.cursor()
+        cursor.execute("""
+            SELECT pkey_sln, pkey_indln, classe_ind, tipo_ind, ID_INDLN, id_indlnex,
+                arch_ex, note_indln, data_ind, doc_pag, doc_ind, id_sln
+            FROM indagini_lineari
+        """)
+
+        rows = cursor.fetchall()
+        for row in rows:
+            row_dict = {
+                "pkey_sln": str(row["pkey_sln"]),
+                "pkey_indln": str(row["pkey_indln"]),
+                "classe_ind": row["classe_ind"] or "",
+                "tipo_ind": row["tipo_ind"] or "",
+                "ID_INDLN": row["ID_INDLN"],
+                "id_indlnex": row["id_indlnex"] or "",
+                "arch_ex": row["arch_ex"] or "",
+                "note_indln": row["note_indln"] or "",
+                "data_ind": row["data_ind"] or "",
+                "doc_pag": row["doc_pag"] or "",
+                "doc_ind": row["doc_ind"] or "",
+                "id_sln": row["id_sln"] or "",
+            }
+            data[(str(row["pkey_sln"]), row["ID_INDLN"])] = row_dict
+
+        self.logger.info(f"Read {len(data)} records from indagini_lineari in SQLite")
+        return data
+
+    def get_sqlite_parametri_lineari_data(self):
+        """Get parametri_lineari data from SQLite database"""
+        data = {}
+        cursor = self.sqlite_db_connection.cursor()
+        cursor.execute("""
+            SELECT pkey_indln, pkey_parln, tipo_parln, ID_PARLN, prof_top, prof_bot,
+                spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, 
+                note_par, data_par, id_indln
+            FROM parametri_lineari
+        """)
+
+        rows = cursor.fetchall()
+        for row in rows:
+            row_dict = {
+                "pkey_indln": str(row["pkey_indln"]),
+                "pkey_parln": str(row["pkey_parln"]),
+                "tipo_parln": row["tipo_parln"] or "",
+                "ID_PARLN": row["ID_PARLN"],
+                "prof_top": str(row["prof_top"]) if row["prof_top"] is not None else "",
+                "prof_bot": str(row["prof_bot"]) if row["prof_bot"] is not None else "",
+                "spessore": str(row["spessore"]) if row["spessore"] is not None else "",
+                "quota_slm_top": str(row["quota_slm_top"]) if row["quota_slm_top"] is not None else "",
+                "quota_slm_bot": str(row["quota_slm_bot"]) if row["quota_slm_bot"] is not None else "",
+                "valore": row["valore"] or "",
+                "attend_mis": row["attend_mis"] or "",
+                "note_par": row["note_par"] or "",
+                "data_par": row["data_par"] or "",
+                "id_indln": row["id_indln"] or "",
+            }
+            data[(str(row["pkey_indln"]), row["ID_PARLN"])] = row_dict
+
+        self.logger.info(f"Read {len(data)} records from parametri_lineari in SQLite")
+        return data
+
+    def read_csv_data(self, table_type, file_path):
+        """
+        Read data from CSV file and convert it to the same format as get_* methods in AccessDbConnection
+
+        Args:
+            table_type: Type of table ('sito_lineare', 'indagini_lineari', 'parametri_lineari')
+            file_path: Path to the CSV file
+
+        Returns:
+            Dictionary with data from CSV file in the same format as get_* methods in AccessDbConnection
+        """
+        import csv
+
+        # Expected field names for each table type (case insensitive)
+        expected_fields = {
+            "sito_lineare": {
+                "pkuid": "pkey_sln",
+                "pkey_sln": "pkey_sln",
+                "id_sln": "ID_SLN",
+                "ubicazione_prov": "ubicazione_prov",
+                "ubicazione_com": "ubicazione_com",
+                "acoord_x": "Acoord_X",
+                "acoord_y": "Acoord_Y",
+                "bcoord_x": "Bcoord_X",
+                "bcoord_y": "Bcoord_Y",
+                "mod_identcoord": "mod_identcoord",
+                "desc_modcoord": "desc_modcoord",
+                "aquota": "Aquota",
+                "bquota": "Bquota",
+                "data_sito": "data_sito",
+                "note_sito": "note_sito",
+            },
+            "indagini_lineari": {
+                "pkey_sln": "pkey_sln",
+                "pkey_indln": "pkey_indln",
+                "classe_ind": "classe_ind",
+                "tipo_ind": "tipo_ind",
+                "id_indln": "ID_INDLN",
+                "id_indlnex": "id_indlnex",
+                "arch_ex": "arch_ex",
+                "note_indln": "note_indln",
+                "data_ind": "data_ind",
+                "doc_pag": "doc_pag",
+                "doc_ind": "doc_ind",
+            },
+            "parametri_lineari": {
+                "pkey_indln": "pkey_indln",
+                "pkey_parln": "pkey_parln",
+                "tipo_parln": "tipo_parln",
+                "id_parln": "ID_PARLN",
+                "prof_top": "prof_top",
+                "prof_bot": "prof_bot",
+                "spessore": "spessore",
+                "quota_slm_top": "quota_slm_top",
+                "quota_slm_bot": "quota_slm_bot",
+                "valore": "valore",
+                "attend_mis": "attend_mis",
+                "note_par": "note_par",
+                "data_par": "data_par",
+            },
+        }
+
+        # Required fields for each table type (to create key)
+        required_fields = {
+            "sito_lineare": ["ID_SLN"],
+            "indagini_lineari": ["pkey_sln", "ID_INDLN"],
+            "parametri_lineari": ["pkey_indln", "ID_PARLN"],
+        }
+
+        # Numeric fields that should be converted
+        numeric_fields = [
+            "pkey_sln",
+            "pkey_indln",
+            "pkey_parln",
+            "prof_top",
+            "prof_bot",
+            "spessore",
+            "Aquota",
+            "Bquota",
+            "quota_slm_top",
+            "quota_slm_bot",
+        ]
+
+        # Result container
+        data = {}
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as csvfile:
+                # Try to auto-detect the delimiter
+                sample = csvfile.read(1024)
+                csvfile.seek(0)
+                delimiter = "," if sample.count(",") > sample.count(";") else ";"
+
+                reader = csv.reader(csvfile, delimiter=delimiter)
+
+                # Read header row and map column indices
+                header_row = next(reader)
+                header_map = {}
+
+                # Create case-insensitive mapping from header names to column indices
+                for idx, field in enumerate(header_row):
+                    field_lower = field.lower().strip()
+                    if field_lower in expected_fields[table_type]:
+                        header_map[expected_fields[table_type][field_lower]] = idx
+
+                # Log found and missing fields
+                found_fields = list(header_map.keys())
+                missing_fields = [f for f in required_fields[table_type] if f not in header_map]
+
+                self.logger.debug(f"CSV field mapping: {header_map}")
+
+                if missing_fields:
+                    self.logger.warning(f"Missing required fields in {table_type} CSV: {missing_fields}")
+                    if any(f for f in required_fields[table_type] if f not in found_fields):
+                        raise ValueError(f"CSV file is missing required fields: {missing_fields}")
+
+                # Process the data rows
+                for row in reader:
+                    if not row or all(cell == "" for cell in row):
+                        continue  # Skip empty rows
+
+                    # Create a dictionary for this row
+                    row_dict = {}
+
+                    # Map CSV columns to dict keys using header_map
+                    for field, idx in header_map.items():
+                        if idx < len(row):
+                            # Convert empty strings to empty strings (not None) to match AccessDbConnection output
+                            value = row[idx].strip() if row[idx] else ""
+                            row_dict[field] = value
+                        else:
+                            row_dict[field] = ""
+
+                    # Convert numeric values for internal use (but keep them as strings for output)
+                    numeric_values = {}
+                    for field in numeric_fields:
+                        if field in row_dict and row_dict[field]:
+                            try:
+                                # Replace comma with dot for decimal numbers
+                                value = str(row_dict[field]).replace(",", ".")
+                                numeric_values[field] = float(value)
+                                # Convert to int if it's an integer
+                                if numeric_values[field].is_integer():
+                                    numeric_values[field] = int(numeric_values[field])
+                            except (ValueError, AttributeError) as e:
+                                self.logger.debug(
+                                    f"Could not convert field {field} value '{row_dict[field]}' to number: {e}"
+                                )
+
+                    # Create key for dictionary based on table type
+                    try:
+                        if table_type == "sito_lineare":
+                            key = row_dict["ID_SLN"]
+                            data[key] = row_dict
+                        elif table_type == "indagini_lineari":
+                            # Use the same key format as AccessDbConnection (pkey_sln, ID_INDLN)
+                            key = (row_dict["pkey_sln"], row_dict["ID_INDLN"])
+                            data[key] = row_dict
+                        elif table_type == "parametri_lineari":
+                            # Use the same key format as AccessDbConnection (pkey_indln, ID_PARLN)
+                            key = (row_dict["pkey_indln"], row_dict["ID_PARLN"])
+                            data[key] = row_dict
+                    except KeyError as e:
+                        self.logger.warning(f"Skipping row due to missing required key field: {e}")
+                        continue
+
+                self.logger.info(f"Read {len(data)} records from {table_type} CSV file")
+                return data
+
+        except Exception as e:
+            self.logger.error(f"Error reading CSV file {file_path}: {e}")
+            raise e
