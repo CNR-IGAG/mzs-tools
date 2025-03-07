@@ -1,7 +1,7 @@
 import logging
 import shutil
 
-from qgis.core import QgsProject, QgsTask, QgsVectorLayer, edit
+from qgis.core import QgsProject, QgsTask, QgsVectorLayer, QgsWkbTypes, edit
 
 from ..__about__ import DEBUG_MODE
 from ..core.mzs_project_manager import MzSProjectManager
@@ -123,12 +123,45 @@ class ImportShapefileTask(QgsTask):
         features_are_3d = False
         for feature in source_features:
             geometry = feature.geometry()
+
+            # Discard polygons with area < 1
+            if geometry.type() == QgsWkbTypes.PolygonGeometry:
+                if geometry.area() < 1:
+                    self.logger.warning(
+                        f"Polygon with area < 1 detected in feature ID {feature.id()}, skipping feature."
+                    )
+                    continue
+
+            # Drop Z values if present
             if geometry.get().is3D():
                 if not features_are_3d:
                     features_are_3d = True
                     self.logger.warning(f"3D features detected in {self.shapefile_name}! Z values will be dropped.")
                 geometry.get().dropZValue()
                 feature.setGeometry(geometry)
+
+            # Check if geometry is valid
+            if not geometry.isGeosValid():
+                validation_errors = geometry.validateGeometry()
+                # Try to repair the geometry
+                self.logger.warning(
+                    f"Invalid geometry detected in feature ID {feature.id()} - {validation_errors}, attempting to repair..."
+                )
+                fixed_geometry = geometry.makeValid()
+
+                # Check if the repair was successful
+                if not fixed_geometry.isGeosValid():
+                    self.logger.error(f"Could not repair geometry for feature ID {feature.id()}, skipping feature.")
+                    continue
+
+                # Replace with the fixed geometry
+                if geometry.type() != fixed_geometry.type():
+                    self.logger.warning(
+                        f"Geometry type changed from {geometry.type()} to {fixed_geometry.type()} for feature ID {feature.id()}, skipping feature."
+                    )
+                    continue
+                self.logger.info(f"Successfully repaired geometry for feature ID {feature.id()}")
+                feature.setGeometry(fixed_geometry)
 
             # set spettri field with relative path
             try:
