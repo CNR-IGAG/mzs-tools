@@ -93,34 +93,48 @@ class DlgExportData(QDialog, FORM_CLASS):
                 self.mdb_checked = True
 
     def validate_input(self):
+        """Validate user input and enable/disable the OK button accordingly."""
+        # Check output directory
         if not self.validate_output_dir():
             self.log("Output path is not valid", log_level=1)
             self.ok_button.setEnabled(False)
             return False
 
-        if not self.radio_button_mdb.isChecked() and not self.radio_button_sqlite.isChecked():
+        # Check if a data source is selected
+        if not (self.radio_button_mdb.isChecked() or self.radio_button_sqlite.isChecked()):
             self.log("No data source selected", log_level=1)
+            self.ok_button.setEnabled(False)
             return False
 
+        # All validations passed
         self.ok_button.setEnabled(True)
-
-    def validate_output_dir(self):
-        output_dir = self.output_dir_widget.lineEdit().text()
-
-        if not output_dir or not Path(output_dir).exists():
-            return False
-
-        self.output_path = Path(output_dir)
         return True
 
+    def validate_output_dir(self):
+        """Validate that the output directory exists."""
+        output_dir = self.output_dir_widget.lineEdit().text()
+
+        is_valid = output_dir and Path(output_dir).exists()
+        if is_valid:
+            self.output_path = Path(output_dir)
+
+        return is_valid
+
     def check_mdb_connection(self, mdb_path):
+        """Test connection to an Access database."""
         connected = False
         mdb_conn = None
+
         try:
             mdb_conn = AccessDbConnection(mdb_path)
             connected = mdb_conn.open()
+            if connected:
+                self.label_mdb_msg.setText(self.tr("[Connection established]"))
+                self.radio_button_mdb.setToolTip("")
+
         except ImportError as e:
-            self.log(f"{e}. Use 'qpip' QGIS plugin to install dependencies.", log_level=2)
+            error_msg = f"{e}. Use 'qpip' QGIS plugin to install dependencies."
+            self.log(error_msg, log_level=2)
             self.label_mdb_msg.setText(f"[{e}]")
             self.radio_button_mdb.setToolTip(
                 self.tr("Use 'qpip' QGIS plugin to install dependencies and restart QGIS")
@@ -132,35 +146,46 @@ class DlgExportData(QDialog, FORM_CLASS):
             self.log(f"{e}", log_level=2)
             self.label_mdb_msg.setText(self.tr("[Connection failed]"))
         finally:
-            if connected:
+            if mdb_conn and connected:
                 mdb_conn.close()
-                self.label_mdb_msg.setText(self.tr("[Connection established]"))
-                self.radio_button_mdb.setToolTip("")
 
         return connected
 
-    def start_export_tasks(self):
-        # setup file-based logging
+    def setup_logging(self):
+        """Setup file-based logging for the export tasks."""
         timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
         filename = f"data_export_{timestamp}.log"
-        self.log_file_path = self.prj_manager.project_path / "Allegati" / "log" / filename
+        log_dir = self.prj_manager.project_path / "Allegati" / "log"
+        log_dir.mkdir(exist_ok=True, parents=True)  # Ensure log directory exists
+
+        self.log_file_path = log_dir / filename
         self.file_handler = logging.FileHandler(self.log_file_path, encoding="utf-8")
         self.file_logger.addHandler(self.file_handler)
+
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         self.file_handler.setFormatter(formatter)
-        self.file_logger.setLevel(logging.DEBUG if self.chk_debug_logging.isChecked() else logging.INFO)
+
+        debug_mode = self.chk_debug_logging.isChecked()
+        self.file_logger.setLevel(logging.DEBUG if debug_mode else logging.INFO)
+
         self.file_logger.info(f"MzS Tools version {__version__} - Data export log")
         self.file_logger.info(f"Log file: {self.log_file_path}")
         self.file_logger.info("############### Data export started")
 
+    def start_export_tasks(self):
+        # Setup file-based logging
+        self.setup_logging()
+
+        # Determine output format
         if self.radio_button_mdb.isChecked():
             self.indagini_output_format = "mdb"
         elif self.radio_button_sqlite.isChecked():
             self.indagini_output_format = "sqlite"
         else:
-            self.log("No import source selected", log_level=1)
+            self.log("No output format selected", log_level=1)
+            return
 
-        # create output directory
+        # Create output directory if it doesn't exist
         self.file_logger.info(f"Output directory: {self.output_path}")
         if not self.output_path.exists():
             self.output_path.mkdir(parents=True)
@@ -201,11 +226,6 @@ class DlgExportData(QDialog, FORM_CLASS):
         elif self.indagini_output_format == "sqlite":
             cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite"
             shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.sqlite")
-            # cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite.zip"
-            # cdi_tabelle_path_dest = exported_project_path / "Indagini" / "CdI_Tabelle.sqlite.zip"
-            # shutil.copy(cdi_tabelle_path, cdi_tabelle_path_dest)
-            # shutil.unpack_archive(cdi_tabelle_path_dest, exported_project_path / "Indagini")
-            # cdi_tabelle_path_dest.unlink()
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
