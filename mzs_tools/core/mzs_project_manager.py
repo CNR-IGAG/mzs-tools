@@ -922,7 +922,7 @@ class MzSProjectManager:
 
         self.add_default_layers()
 
-        self.customize_project(cod_istat)
+        self.customize_project()
 
         self.create_basic_project_metadata(cod_istat, study_author, author_email)
 
@@ -1014,10 +1014,14 @@ class MzSProjectManager:
             # version is too old, clear the project and start from scratch
             if self.db_connection:
                 self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
+
+            # backup print layouts
+            self.backup_print_layouts(backup_label=f"backup_v.{old_version}", backup_models=True)
+
             self.current_project.clear()  # db connection is automatically closed!
 
             self.add_default_layers()
-            self.customize_project(self.comune_data.cod_istat)
+            self.customize_project()
             self.refresh_project_layouts()
 
             # write the version file
@@ -1143,7 +1147,7 @@ class MzSProjectManager:
         project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
         self.current_project.setTitle(project_title)
 
-    def customize_project(self, cod_istat):
+    def customize_project(self):
         """Customize the project with the selected comune data."""
 
         crs = QgsCoordinateReferenceSystem("EPSG:32633")
@@ -1158,6 +1162,8 @@ class MzSProjectManager:
         shutil.copy(logo_regioni_path, self.project_path / "progetto" / "loghi")
         logo_dpc_path = DIR_PLUGIN_ROOT / "resources" / "img" / "logo_dpc.jpg"
         shutil.copy(logo_dpc_path, self.project_path / "progetto" / "loghi")
+        legenda_hvsr_path = DIR_PLUGIN_ROOT / "resources" / "img" / "Legenda_valori_HVSR_rev01.svg"
+        shutil.copy(legenda_hvsr_path, self.project_path / "progetto" / "loghi")
 
         mainPath = QgsProject.instance().homePath()
         canvas = iface.mapCanvas()
@@ -1184,46 +1190,93 @@ class MzSProjectManager:
 
         self.load_print_layouts()
 
-        layout_manager = QgsProject.instance().layoutManager()
-        layouts = layout_manager.printLayouts()
+        # layout_manager = QgsProject.instance().layoutManager()
+        # layouts = layout_manager.printLayouts()
 
-        for layout in layouts:
-            map_item = layout.itemById("mappa_0")
-            map_item.zoomToExtent(canvas.extent())
-            map_item_2 = layout.itemById("regio_title")
-            map_item_2.setText("Regione " + self.comune_data.regione)
-            map_item_3 = layout.itemById("com_title")
-            map_item_3.setText("Comune di " + self.comune_data.comune)
-            map_item_4 = layout.itemById("logo")
-            map_item_4.refreshPicture()
-            map_item_5 = layout.itemById("mappa_1")
-            map_item_5.refreshPicture()
+        # for layout in layouts:
+        #     map_item = layout.itemById("mappa_0")
+        #     map_item.zoomToExtent(canvas.extent())
+        #     map_item_2 = layout.itemById("regio_title")
+        #     map_item_2.setText("Regione " + self.comune_data.regione)
+        #     map_item_3 = layout.itemById("com_title")
+        #     map_item_3.setText("Comune di " + self.comune_data.comune)
+        #     map_item_4 = layout.itemById("logo")
+        #     map_item_4.refreshPicture()
+        #     map_item_5 = layout.itemById("mappa_1")
+        #     map_item_5.refreshPicture()
 
         # set project title
         project_title = f"MzS Tools - Comune di {self.comune_data.comune} ({self.comune_data.provincia}, {self.comune_data.regione}) - Studio di Microzonazione Sismica"
         self.current_project.setTitle(project_title)
 
     def load_print_layouts(self):
-        for model_file_name in PRINT_LAYOUT_MODELS:
+        for layout_name, model_file_name in PRINT_LAYOUT_MODELS.items():
             self.load_print_layout_model(model_file_name)
 
     def load_print_layout_model(self, model_file_name: str):
+        self.log(f"Loading print layout model: {model_file_name}", log_level=4)
         layout_manager = self.current_project.layoutManager()
-
         layout = QgsPrintLayout(self.current_project)
-
         # load the layout model
         layout_model_path = DIR_PLUGIN_ROOT / "data" / "print_layouts" / model_file_name
-
         with layout_model_path.open("r") as f:
             layout_model = f.read()
-
         doc = QDomDocument()
         doc.setContent(layout_model)
-
         layout.loadFromTemplate(doc, QgsReadWriteContext())
 
+        # set layout elements for the current project
+        canvas = iface.mapCanvas()
+        map_item = layout.itemById("mappa_0")
+        # TODO: get extent from comune_progetto table
+        map_item.zoomToExtent(canvas.extent())
+        map_item_2 = layout.itemById("regio_title")
+        map_item_2.setText("Regione " + self.comune_data.regione)
+        map_item_3 = layout.itemById("com_title")
+        map_item_3.setText("Comune di " + self.comune_data.comune)
+        map_item_4 = layout.itemById("logo")
+        map_item_4.refreshPicture()
+        map_item_5 = layout.itemById("mappa_1")
+        map_item_5.refreshPicture()
+
         layout_manager.addLayout(layout)
+
+    def backup_print_layouts(
+        self,
+        backup_label: str = None,
+        backup_timestamp: bool = False,
+        backup_models: bool = False,
+        backup_all: bool = False,
+    ):
+        layout_manager = self.current_project.layoutManager()
+        layouts = layout_manager.printLayouts()
+        if backup_label:
+            backup_label = f"{backup_label}"
+        if backup_timestamp:
+            backup_label = f"{backup_label}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        for layout in layouts:
+            if layout.name() not in PRINT_LAYOUT_MODELS.keys() and not backup_all:
+                continue
+            else:
+                self.backup_print_layout(layout, backup_label, backup_models)
+
+    def backup_print_layout(self, layout: QgsPrintLayout, backup_label: str = None, backup_model_file: bool = False):
+        self.log(f"Backing up layout: {layout.name()}", log_level=4)
+        layout_name = layout.name()
+        layout_clone = layout.clone()
+        layout_clone.setName(f"[{backup_label or 'backup'}]_{layout_name}")
+        if backup_model_file:
+            self.save_print_layout(layout_clone)
+        layout_manager = self.current_project.layoutManager()
+        layout_manager.addLayout(layout_clone)
+
+    def save_print_layout(self, layout: QgsPrintLayout):
+        layout_name = layout.name()
+        layout_models_path = self.project_path / "progetto" / "layout"
+        layout_models_path.mkdir(parents=True, exist_ok=True)
+        layout_path = layout_models_path / f"{layout_name}.qpt"
+        self.log(f"Backing up layout: {layout_name} to {layout_path}", log_level=4)
+        layout.saveAsTemplate(str(layout_path), QgsReadWriteContext())
 
     def refresh_project_layouts(self):
         layout_manager = self.current_project.layoutManager()

@@ -167,6 +167,18 @@ class MzSTools:
         )
         menu_project.addAction(self.check_attachments_action)
 
+        menu_project.addSeparator()
+
+        self.edit_metadata_action = self.add_action(
+            QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
+            enabled_flag=enabled_flag,
+            text=self.tr("Edit project metadata"),
+            callback=self.open_dlg_metadata_edit,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_project.addAction(self.edit_metadata_action)
+
         project_menu_button.setMenu(menu_project)
 
         layers_menu_button = QToolButton()
@@ -196,6 +208,17 @@ class MzSTools:
         )
         menu_layers.addAction(self.add_default_layers_action)
 
+        self.load_default_print_layouts_action = self.add_action(
+            QgsApplication.getThemeIcon("mIconLayout.svg"),
+            enabled_flag=enabled_flag,
+            text=self.tr("Load default MzS Tools print layouts"),
+            status_tip=self.tr("Load the default MzS Tools print layouts, existing layouts will be preserved"),
+            callback=self.on_load_default_print_layouts,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_layers.addAction(self.load_default_print_layouts_action)
+
         menu_layers.addSeparator()
 
         self.add_ogc_services_action = self.add_action(
@@ -211,14 +234,6 @@ class MzSTools:
         )
         menu_layers.addAction(self.add_ogc_services_action)
         layers_menu_button.setMenu(menu_layers)
-
-        self.edit_metadata_action = self.add_action(
-            QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
-            enabled_flag=enabled_flag,
-            text=self.tr("Edit project metadata"),
-            callback=self.open_dlg_metadata_edit,
-            parent=self.iface.mainWindow(),
-        )
 
         self.toolbar.addSeparator()
 
@@ -308,6 +323,19 @@ class MzSTools:
                 self.tr("MzS Tools - Project Issues"),
                 self.tr("No issues found in the current project."),
             )
+
+    def on_load_default_print_layouts(self):
+        button = QMessageBox.question(
+            self.iface.mainWindow(),
+            self.tr("MzS Tools - Load default print layouts"),
+            self.tr(
+                "Load the default MzS Tools print layouts. The existing layouts will be preserved.\n\nDo you want to proceed?"
+            ),
+        )
+        if button == QMessageBox.Yes:
+            self.prj_manager.backup_print_layouts(backup_label="backup", backup_timestamp=True)
+            self.prj_manager.load_print_layouts()
+            self.log(self.tr("Print layouts loaded."), log_level=3, push=True, duration=0)
 
     def open_dlg_import_data(self):
         if self.dlg_import_data is None:

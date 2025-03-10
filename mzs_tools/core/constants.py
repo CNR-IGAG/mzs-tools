@@ -546,16 +546,16 @@ DEFAULT_RELATIONS = {
     },
 }
 
-PRINT_LAYOUT_MODELS = [
-    "carta_delle_indagini.qpt",
-    "carta_delle_mops.qpt",
-    "carta_frequenze_f0.qpt",
-    "carta_frequenze_fr.qpt",
-    "carta_geologico_tecnica.qpt",
-    "carta_ms_fa_01_05.qpt",
-    "carta_ms_fa_04_08.qpt",
-    "carta_ms_fa_07_11.qpt",
-]
+PRINT_LAYOUT_MODELS = {
+    "01 - CdI carta delle indagini": "carta_delle_indagini.qpt",
+    "02 - CGT carta geologico tecnica": "carta_geologico_tecnica.qpt",
+    "03 - MOPS carta di microzonazione sismica liv1": "carta_delle_mops.qpt",
+    "04 - MS23 carta di microzonazione sismica liv3 FA 01-05s": "carta_ms_fa_01_05.qpt",
+    "05 - MS23 carta di microzonazione sismica liv3 FA 04-08s": "carta_ms_fa_04_08.qpt",
+    "06 - MS23 carta di microzonazione sismica liv3 FA 07-11s": "carta_ms_fa_07_11.qpt",
+    "07 - Carta delle frequenze naturali dei terreni f0": "carta_frequenze_f0.qpt",
+    "08 - Carta delle frequenze naturali dei terreni fr": "carta_frequenze_fr.qpt",
+}
 
 NO_OVERLAPS_LAYER_GROUPS = [
     ["instab_l1", "stab_l1"],

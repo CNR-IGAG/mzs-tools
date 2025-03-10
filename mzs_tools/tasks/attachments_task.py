@@ -175,12 +175,12 @@ class AttachmentsTask(QgsTask):
             shutil.move(dest_path, backup_folder)
 
         shutil.copy(file_full_path, dest_path)
-        self.logger.debug(f"Attachment {file_path} copied to {dest_path}")
+        self.logger.info(f"Attachment {file_path} copied to {dest_path}")
 
         # Update the database
         relative_path = dest_path.relative_to(self.prj_manager.project_path)
         self.update_attachment_path(table_name, pkuid, relative_path)
-        self.logger.debug(f"Attachment path updated in the database to {relative_path}")
+        self.logger.info(f"Attachment path updated in the database to {relative_path}")
 
     def finished(self, result):
         if result:

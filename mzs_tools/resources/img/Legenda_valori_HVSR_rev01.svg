@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 21.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Livello_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 164.4 834.1" style="enable-background:new 0 0 164.4 834.1;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#662D91;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st1{fill:#2B3990;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st2{fill:#1B75BC;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st3{fill:#27AAE1;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st4{fill:#006838;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st5{fill:#8DC63F;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st6{fill:#F9ED32;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st7{fill:#F7941D;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st8{fill:#EF4136;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st9{fill:#FFFFFF;stroke:#000000;stroke-width:0.7087;stroke-miterlimit:10;}
+	.st10{font-family:'ArialMT';}
+	.st11{font-size:14px;}
+	.st12{font-family:'Arial-BoldMT';}
+	.st13{font-size:18px;}
+	.st14{font-size:18.0546px;}
+	.st15{fill:none;stroke:#000000;stroke-width:0.7087;stroke-miterlimit:10;}
+	.st16{font-size:14.0425px;}
+	.st17{fill:#991C20;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+	.st18{fill:#927BB8;stroke:#000000;stroke-width:0.2835;stroke-miterlimit:10;}
+</style>
+<rect x="25.2" y="107.1" class="st0" width="25.5" height="25.5"/>
+<rect x="25.2" y="137.9" class="st1" width="25.5" height="25.5"/>
+<rect x="25.2" y="168.8" class="st2" width="25.5" height="25.5"/>
+<rect x="25.2" y="199.6" class="st3" width="25.5" height="25.5"/>
+<rect x="25.2" y="230.5" class="st4" width="25.5" height="25.5"/>
+<rect x="25.2" y="261.3" class="st5" width="25.5" height="25.5"/>
+<rect x="25.2" y="292.2" class="st6" width="25.5" height="25.5"/>
+<rect x="25.2" y="323" class="st7" width="25.5" height="25.5"/>
+<rect x="25.2" y="353.9" class="st8" width="25.5" height="25.5"/>
+<rect x="25.2" y="44.1" class="st9" width="25.5" height="25.5"/>
+<text transform="matrix(1 0 0 1 69.8726 56.851)" class="st10 st11">No peak</text>
+<text transform="matrix(1 0 0 1 69.8726 158.7021)" class="st10 st11">0.9 - 1.5</text>
+<text transform="matrix(1 0 0 1 14.7106 29.1915)" class="st12 st13">Frequenza f (Hz)</text>
+<text transform="matrix(1 0 0 1 69.8726 189.5531)" class="st10 st11">1.5 - 2</text>
+<text transform="matrix(1 0 0 1 69.8724 312.9576)" class="st10 st11">5 - 6</text>
+<text transform="matrix(1 0 0 1 69.8726 227.7127)" class="st10 st11">2 - 3</text>
+<text transform="matrix(1 0 0 1 69.8726 253.6916)" class="st10 st11">3 - 4</text>
+<text transform="matrix(1 0 0 1 69.8726 284.5426)" class="st10 st11">4 - 5</text>
+<text transform="matrix(1 0 0 1 69.8722 347.2909)" class="st10 st11">6 - 8</text>
+<text transform="matrix(1 0 0 1 69.8724 374.6595)" class="st10 st11">8 - 10</text>
+<text transform="matrix(1 0 0 1 69.872 405.5109)" class="st10 st11">10 - 20</text>
+<text transform="matrix(0.997 0 0 1 14.7105 478.1543)" class="st12 st14">Ampiezza</text>
+<ellipse class="st15" cx="49.6" cy="524.6" rx="7" ry="7"/>
+<ellipse class="st15" cx="49.6" cy="552.4" rx="9.4" ry="9.5"/>
+<ellipse class="st15" cx="49.6" cy="627.5" rx="15.6" ry="15.6"/>
+<ellipse class="st15" cx="49.6" cy="587.3" rx="12.7" ry="12.8"/>
+<ellipse class="st15" cx="49.6" cy="675.1" rx="18.9" ry="19"/>
+<ellipse class="st15" cx="49.6" cy="730.2" rx="23" ry="23.1"/>
+<text transform="matrix(0.997 0 0 1 94.4365 531.6387)" class="st10 st16">&lt; 2</text>
+<text transform="matrix(0.997 0 0 1 94.436 683.9111)" class="st10 st16">5 - 6</text>
+<text transform="matrix(0.997 0 0 1 94.436 562.6797)" class="st10 st16">2 - 3</text>
+<text transform="matrix(0.997 0 0 1 94.4355 594.3105)" class="st10 st16">3 - 4</text>
+<text transform="matrix(0.997 0 0 1 94.436 634.4971)" class="st10 st16">4 - 5</text>
+<text transform="matrix(0.997 0 0 1 94.436 743.1436)" class="st10 st16">6 - 8</text>
+<ellipse class="st15" cx="49.6" cy="790.8" rx="27.6" ry="27.7"/>
+<text transform="matrix(0.997 0 0 1 94.4365 802.0381)" class="st10 st16">8 - 10</text>
+<text transform="matrix(0.997 0 0 1 40.1255 510.252)" class="st12 st14"> A</text>
+<rect x="25.2" y="384.7" class="st17" width="25.5" height="25.5"/>
+<rect x="25.2" y="76.2" class="st18" width="25.5" height="25.5"/>
+<text transform="matrix(1 0 0 1 69.8726 127.6977)" class="st10 st11">0.5 - 0.9</text>
+<text transform="matrix(1 0 0 1 69.872 95.0812)" class="st10 st11">0.1 - 0.5</text>
+</svg>

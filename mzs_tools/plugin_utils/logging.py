@@ -12,6 +12,7 @@ from . import settings as plg_prefs_hdlr
 
 # map python logging levels to QGIS message levels
 QGIS_LEVELS = {
+    logging.NOTSET: 4,
     logging.DEBUG: 4,
     logging.INFO: 0,
     logging.WARNING: 1,
@@ -96,9 +97,9 @@ class MzSToolsLogger(logging.Handler):
             )
             log(message="Plugin loaded - TEST", log_level=4, push=0)
         """
-        # if not debug mode and not push, let's ignore INFO, SUCCESS and TEST
+        # if not debug mode and not push, let's ignore SUCCESS and TEST
         debug_mode = plg_prefs_hdlr.PlgOptionsManager.get_plg_settings().debug_mode
-        if not debug_mode and not push and (log_level < 1 or log_level > 2):
+        if not debug_mode and not push and log_level > 2:
             return
 
         # ensure message is a string
