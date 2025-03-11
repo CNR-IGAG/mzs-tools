@@ -1,9 +1,9 @@
-import datetime
 import os
 import shutil
 import traceback
 import zipfile
 from dataclasses import dataclass
+from datetime import datetime
 from functools import partial
 from pathlib import Path
 from sqlite3 import Connection
@@ -892,6 +892,11 @@ class MzSProjectManager:
         """
         comune_name = self.sanitize_comune_name(comune_name)
         new_project_path = Path(dir_out) / f"{cod_istat}_{comune_name}"
+
+        if new_project_path.exists():
+            self.log(f"Project directory '{new_project_path}' already exists!", log_level=1)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            new_project_path = Path(dir_out) / f"{cod_istat}_{comune_name}_{timestamp}"
         # create the project directory
         new_project_path.mkdir(parents=True, exist_ok=False)
 
@@ -1209,6 +1214,24 @@ class MzSProjectManager:
         project_title = f"MzS Tools - Comune di {self.comune_data.comune} ({self.comune_data.provincia}, {self.comune_data.regione}) - Studio di Microzonazione Sismica"
         self.current_project.setTitle(project_title)
 
+        # enable map decorations
+        # https://github.com/qgis/QGIS/issues/53095
+        # design in QGIS and then read the settings with:
+        # QgsProject.instance().readEntry("TitleLabel", "Font")
+        # QgsProject.instance().readEntry("TitleLabel", "BackgroundColor")
+        # QgsProject.instance().readEntry("TitleLabel", "Placement")
+        # QgsProject.instance().readEntry("TitleLabel", "MarginH")
+        # QgsProject.instance().readEntry("TitleLabel", "MarginV")
+        font_style = '<text-style allowHtml="0" fontFamily="Noto Sans" fontSizeUnit="Point" textColor="17,98,152,255,rgb:0.06666666666666667,0.3843137254901961,0.59607843137254901,1" tabStopDistanceUnit="Point" namedStyle="Bold" fontKerning="1" tabStopDistanceMapUnitScale="3x:0,0,0,0,0,0" fontLetterSpacing="0" tabStopDistance="80" capitalization="0" forcedItalic="0" previewBkgrdColor="255,255,255,255,rgb:1,1,1,1" fontWeight="75" fontStrikeout="0" multilineHeightUnit="Percentage" forcedBold="0" textOpacity="1" fontItalic="0" multilineHeight="1" fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontWordSpacing="0" fontSize="10" textOrientation="horizontal" fontUnderline="0" blendMode="0">\n <families/>\n <text-buffer bufferBlendMode="0" bufferDraw="0" bufferSize="1" bufferColor="255,255,255,255,rgb:1,1,1,1" bufferOpacity="1" bufferNoFill="1" bufferJoinStyle="128" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferSizeUnits="MM"/>\n <text-mask maskedSymbolLayers="" maskJoinStyle="128" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskSize="1.5" maskEnabled="0" maskSize2="1.5" maskType="0" maskSizeUnits="MM" maskOpacity="1"/>\n <background shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRotationType="0" shapeBlendMode="0" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeSizeX="0" shapeRadiiUnit="MM" shapeOffsetX="0" shapeRadiiX="0" shapeFillColor="255,255,255,255,rgb:1,1,1,1" shapeOpacity="1" shapeRadiiY="0" shapeBorderColor="128,128,128,255,rgb:0.50196078431372548,0.50196078431372548,0.50196078431372548,1" shapeOffsetY="0" shapeSizeUnit="MM" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeSizeType="0" shapeRotation="0" shapeDraw="0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetUnit="MM" shapeType="0" shapeBorderWidth="0" shapeSizeY="0" shapeJoinStyle="64" shapeSVGFile="" shapeBorderWidthUnit="MM">\n  <symbol alpha="1" force_rhr="0" type="marker" name="markerSymbol" clip_to_extent="1" is_animated="0" frame_rate="10">\n   <data_defined_properties>\n    <Option type="Map">\n     <Option type="QString" name="name" value=""/>\n     <Option name="properties"/>\n     <Option type="QString" name="type" value="collection"/>\n    </Option>\n   </data_defined_properties>\n   <layer locked="0" class="SimpleMarker" enabled="1" pass="0" id="">\n    <Option type="Map">\n     <Option type="QString" name="angle" value="0"/>\n     <Option type="QString" name="cap_style" value="square"/>\n     <Option type="QString" name="color" value="229,182,54,255,rgb:0.89803921568627454,0.71372549019607845,0.21176470588235294,1"/>\n     <Option type="QString" name="horizontal_anchor_point" value="1"/>\n     <Option type="QString" name="joinstyle" value="bevel"/>\n     <Option type="QString" name="name" value="circle"/>\n     <Option type="QString" name="offset" value="0,0"/>\n     <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="offset_unit" value="MM"/>\n     <Option type="QString" name="outline_color" value="35,35,35,255,rgb:0.13725490196078433,0.13725490196078433,0.13725490196078433,1"/>\n     <Option type="QString" name="outline_style" value="solid"/>\n     <Option type="QString" name="outline_width" value="0"/>\n     <Option type="QString" name="outline_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="outline_width_unit" value="MM"/>\n     <Option type="QString" name="scale_method" value="diameter"/>\n     <Option type="QString" name="size" value="2"/>\n     <Option type="QString" name="size_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="size_unit" value="MM"/>\n     <Option type="QString" name="vertical_anchor_point" value="1"/>\n    </Option>\n    <data_defined_properties>\n     <Option type="Map">\n      <Option type="QString" name="name" value=""/>\n      <Option name="properties"/>\n      <Option type="QString" name="type" value="collection"/>\n     </Option>\n    </data_defined_properties>\n   </layer>\n  </symbol>\n  <symbol alpha="1" force_rhr="0" type="fill" name="fillSymbol" clip_to_extent="1" is_animated="0" frame_rate="10">\n   <data_defined_properties>\n    <Option type="Map">\n     <Option type="QString" name="name" value=""/>\n     <Option name="properties"/>\n     <Option type="QString" name="type" value="collection"/>\n    </Option>\n   </data_defined_properties>\n   <layer locked="0" class="SimpleFill" enabled="1" pass="0" id="">\n    <Option type="Map">\n     <Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="color" value="255,255,255,255,rgb:1,1,1,1"/>\n     <Option type="QString" name="joinstyle" value="bevel"/>\n     <Option type="QString" name="offset" value="0,0"/>\n     <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="offset_unit" value="MM"/>\n     <Option type="QString" name="outline_color" value="128,128,128,255,rgb:0.50196078431372548,0.50196078431372548,0.50196078431372548,1"/>\n     <Option type="QString" name="outline_style" value="no"/>\n     <Option type="QString" name="outline_width" value="0"/>\n     <Option type="QString" name="outline_width_unit" value="MM"/>\n     <Option type="QString" name="style" value="solid"/>\n    </Option>\n    <data_defined_properties>\n     <Option type="Map">\n      <Option type="QString" name="name" value=""/>\n      <Option name="properties"/>\n      <Option type="QString" name="type" value="collection"/>\n     </Option>\n    </data_defined_properties>\n   </layer>\n  </symbol>\n </background>\n <shadow shadowBlendMode="6" shadowDraw="0" shadowRadius="1.5" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowRadiusUnit="MM" shadowScale="100" shadowUnder="0" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetAngle="135" shadowRadiusAlphaOnly="0" shadowOpacity="0.69999999999999996" shadowColor="0,0,0,255,rgb:0,0,0,1" shadowOffsetUnit="MM" shadowOffsetGlobal="1" shadowOffsetDist="1"/>\n <dd_properties>\n  <Option type="Map">\n   <Option type="QString" name="name" value=""/>\n   <Option name="properties"/>\n   <Option type="QString" name="type" value="collection"/>\n  </Option>\n </dd_properties>\n</text-style>\n'
+        self.current_project.writeEntry("TitleLabel", "/Font", font_style)
+        self.current_project.writeEntry("TitleLabel", "/Label", "[%@project_title%]")
+        self.current_project.writeEntry(
+            "TitleLabel",
+            "/BackgroundColor",
+            "133,133,133,73,rgb:0.52156862745098043,0.52156862745098043,0.52156862745098043,0.28627450980392155",
+        )
+        self.current_project.writeEntry("TitleLabel", "/Enabled", True)
+
     def load_print_layouts(self):
         for layout_name, model_file_name in PRINT_LAYOUT_MODELS.items():
             self.load_print_layout_model(model_file_name)
@@ -1253,7 +1276,7 @@ class MzSProjectManager:
         if backup_label:
             backup_label = f"{backup_label}"
         if backup_timestamp:
-            backup_label = f"{backup_label}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            backup_label = f"{backup_label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         for layout in layouts:
             if layout.name() not in PRINT_LAYOUT_MODELS.keys() and not backup_all:
                 continue
@@ -1428,7 +1451,7 @@ class MzSProjectManager:
 
     def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
         """Create a basic metadata record for an MzS Tools project."""
-        date_now = datetime.datetime.now().strftime(r"%Y-%m-%d")
+        date_now = datetime.now().strftime(r"%Y-%m-%d")
         layer_comune_id = self.find_layer_by_table_name_role("comune_progetto", "base")
         extent = self.current_project.layerTreeRoot().findLayer(layer_comune_id).layer().extent()
         values = {
@@ -1539,8 +1562,7 @@ class MzSProjectManager:
             out_dir = self.project_path / "db"
 
         db_backup_path = (
-            out_dir
-            / f"indagini_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}.sqlite"
+            out_dir / f"indagini_backup_v{self.project_version}_{datetime.now().strftime('%Y_%m_%d_%H_%M')}.sqlite"
         )
 
         self.log(f"Backing up database in {db_backup_path}...")
@@ -1553,7 +1575,9 @@ class MzSProjectManager:
             out_dir = self.project_path.parent
 
         project_folder_name = Path(self.project_path).name
-        backup_dir_name = f"{project_folder_name}_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d_%H_%M')}"
+        backup_dir_name = (
+            f"{project_folder_name}_backup_v{self.project_version}_{datetime.now().strftime('%Y_%m_%d_%H_%M')}"
+        )
         backup_path = out_dir / backup_dir_name
 
         self.log(f"Backing up project in {backup_path}...")
@@ -1562,7 +1586,7 @@ class MzSProjectManager:
         return backup_path
 
     def backup_qgis_project(self) -> Path:
-        project_file_name = f"{self.current_project.baseName()}_backup_v{self.project_version}_{datetime.datetime.now().strftime('%Y_%m_%d-%H_%M')}.qgz"
+        project_file_name = f"{self.current_project.baseName()}_backup_v{self.project_version}_{datetime.now().strftime('%Y_%m_%d-%H_%M')}.qgz"
         project_backup_path = self.project_path / project_file_name
 
         self.log(f"Backing up QGIS project to {project_backup_path}...")

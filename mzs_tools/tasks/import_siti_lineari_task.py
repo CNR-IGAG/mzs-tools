@@ -460,6 +460,10 @@ class ImportSitiLineariTask(QgsTask):
         if old_id != new_id:
             new_file_name = f"{new_id}_[{file_path.stem}]{file_path.suffix}"
 
+        if (new_file_name and (dest_path / new_file_name).exists()) or (dest_path / attachment_file_name).exists():
+            self.logger.debug(f"Attachment {attachment_file_name} already exists in {dest_path}, skipping")
+            return new_file_name or attachment_file_name
+
         if new_file_name:
             shutil.copy(file_path, dest_path / new_file_name)
         else:

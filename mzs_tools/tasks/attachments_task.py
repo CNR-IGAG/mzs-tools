@@ -8,8 +8,10 @@ from ..core.mzs_project_manager import MzSProjectManager
 
 
 class AttachmentsTask(QgsTask):
-    def __init__(self):
+    def __init__(self, prepend_ids: bool = True):
         super().__init__("Check, collect, consolidate indagini attachments", QgsTask.CanCancel)
+
+        self.prepend_ids = prepend_ids
 
         self.iterations = 0
         self.exception = None
@@ -113,7 +115,7 @@ class AttachmentsTask(QgsTask):
                             table_name=table_name,
                             pkuid=pkuid,
                             id_value=id_value,
-                            check_value=check_value,
+                            check_value=check_value if self.prepend_ids else None,
                             file_path=file_path,
                             dest_folder=dest_folder,
                         )

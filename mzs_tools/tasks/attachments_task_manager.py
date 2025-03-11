@@ -18,8 +18,10 @@ from .attachments_task import AttachmentsTask
 
 
 class AttachmentsTaskManager:
-    def __init__(self):
+    def __init__(self, prepend_ids: bool = True):
         self.iface = iface
+
+        self.prepend_ids = prepend_ids
 
         self.log = MzSToolsLogger.log
 
@@ -68,7 +70,7 @@ class AttachmentsTaskManager:
         # QgsApplication.taskManager().progressChanged.connect(self._on_manage_attachments_task_progress)
         # QgsApplication.taskManager().allTasksFinished.connect(self._on_manage_attachments_task_completed)
 
-        self.manage_attachments_task = AttachmentsTask()
+        self.manage_attachments_task = AttachmentsTask(prepend_ids=self.prepend_ids)
         self.manage_attachments_task.progressChanged.connect(self._on_manage_attachments_task_progress)
         # self.manage_attachments_task.statusChanged.connect(self._on_manage_attachments_task_status_changed)
         self.manage_attachments_task.taskCompleted.connect(self._on_task_completed)

@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import traceback
+from functools import partial
 from pathlib import Path
 
 from qgis.core import (
@@ -26,10 +27,10 @@ from .gui.dlg_fix_layers import DlgFixLayers
 from .gui.dlg_import_data import DlgImportData
 from .gui.dlg_info import PluginInfo
 from .gui.dlg_load_ogc_services import DlgLoadOgcLayers
+from .gui.dlg_manage_attachments import DlgManageAttachments
 from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_settings import PlgOptionsFactory
 from .plugin_utils.logging import MzSToolsLogger
-from .tasks.attachments_task_manager import AttachmentsTaskManager
 
 
 class MzSTools:
@@ -126,14 +127,28 @@ class MzSTools:
         project_menu_button.setToolTip(self.tr("Tools for managing MzS Tools project and database"))
         menu_project = QMenu()
         self.toolbar.addWidget(project_menu_button)
+
         self.new_project_action = self.add_action(
             str(ico_nuovo_progetto),
             text=self.tr("New project"),
+            status_tip=self.tr("Create a new MzS Tools project for the provided municipality"),
             callback=self.open_dlg_create_project,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
         menu_project.addAction(self.new_project_action)
+
+        self.open_standard_project_action = self.add_action(
+            QgsApplication.getThemeIcon("mIconDataDefine.svg"),
+            text=self.tr("Open a 'Standard MS' project"),
+            status_tip=self.tr(
+                "Open an existing 'Standard MS' project and import the data in a new MzS Tools project"
+            ),
+            callback=partial(self.open_dlg_create_project, import_data=True),
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        menu_project.addAction(self.open_standard_project_action)
 
         menu_project.addSeparator()
 
@@ -294,12 +309,85 @@ class MzSTools:
         self.iface.newProjectCreated.disconnect(self.check_project)
 
     def enable_plugin_actions(self, enabled: bool = False):
-        always_enabled_actions = [self.new_project_action, self.settings_action, self.help_action]
+        always_enabled_actions = [
+            self.new_project_action,
+            self.open_standard_project_action,
+            self.settings_action,
+            self.help_action,
+        ]
         for action in self.actions:
             if action not in always_enabled_actions:
                 action.setEnabled(enabled)
 
     # action callbacks --------------------------------------------------------
+
+    def open_dlg_create_project(self, import_data=False):
+        # check if there is a project already open
+        if QgsProject.instance().fileName():
+            QMessageBox.warning(
+                self.iface.mainWindow(),
+                self.tr("MzS Tools"),
+                self.tr("Close the current project before creating a new one."),
+            )
+            return
+
+        if import_data:
+            QMessageBox.information(
+                self.iface.mainWindow(),
+                self.tr("MzS Tools"),
+                self.tr(
+                    "This tool allows to open an existing Seismic Microzonation project based on italian 'Standard MS' "
+                    "by creating a new MzS Tools project for the provided municipality and then importing the data from the 'Standard MS' project.\n\n"
+                    "The original project data format must be: \n\n"
+                    "- Microsoft Access database, SQLite database or CSV files ('CdI_Tabelle')\n"
+                    "- Shapefiles (vector layers such as 'Instab', 'Geotec', etc.)"
+                ),
+            )
+
+        if self.dlg_create_project is None:
+            self.dlg_create_project = DlgCreateProject(self.iface.mainWindow())
+
+        result = self.dlg_create_project.exec()
+
+        if result:
+            dir_out = self.dlg_create_project.output_dir_widget.lineEdit().text()
+            comune_name = self.dlg_create_project.comune_line_edit.text().split(" (")[0]
+            cod_istat = self.dlg_create_project.cod_istat_line_edit.text()
+            study_author = self.dlg_create_project.study_author_line_edit.text()
+            author_email = self.dlg_create_project.author_email_line_edit.text()
+            self.log(
+                f"Creating new MzS Tools project in {dir_out} for {comune_name} ({cod_istat}). Author: {study_author} ({author_email})"
+            )
+            project_path = None
+            try:
+                # new_project = self.create_project(dir_out)
+                # reload the project
+                # self.iface.addProject(new_project)
+                # project_path = self.prj_manager.create_project_from_template(
+                #     comune_name, cod_istat, study_author, author_email, dir_out
+                # )
+                project_path = self.prj_manager.create_project(
+                    comune_name, cod_istat, study_author, author_email, dir_out
+                )
+            except Exception as e:
+                err_msg = self.tr("Error during project creation")
+                self.log(f"{err_msg}: {e} ", log_level=2)
+                self.log(traceback.format_exc(), log_level=2)
+                QMessageBox.critical(None, "MzS Tools error", f'{err_msg}:\n"{str(e)}"')
+                # cleanup
+                QgsProject.instance().clear()
+                prj_path = Path(dir_out) / f"{cod_istat}_{self.prj_manager.sanitize_comune_name(comune_name)}"
+                if prj_path.exists():
+                    self.log(f"Removing incomplete project in {prj_path}")
+                    shutil.rmtree(prj_path)
+                return
+
+            if import_data:
+                self.open_dlg_import_data()
+
+            elif project_path:
+                self.log(self.tr(f"Project created successfully in {project_path}"), push=True, duration=0)
+                # QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
 
     def open_dlg_load_ogc_services(self):
         self.dlg_load_ogc_layers = DlgLoadOgcLayers(self.iface.mainWindow())
@@ -396,67 +484,21 @@ class MzSTools:
             )
 
     def on_check_attachments_action(self):
-        button = QMessageBox.question(
-            self.iface.mainWindow(),
-            self.tr("Check attachments"),
-            self.tr(
-                "This tool will perform the following operations:\n\n- gather all file attachments and copy them to the 'Allegati' folder if necessary"
-                "\n- rename the attachment files by prepending the feature ID when necessary"
-                "\n- update the database with the new attachment paths"
-                "\n- report if any file attachment is missing\n\nDo you want to proceed?"
-            ),
-        )
-        if button == QMessageBox.Yes:
-            self.manager = AttachmentsTaskManager()
-            self.manager.start_manage_attachments_task()
-
-    def open_dlg_create_project(self):
-        # check if there is a project already open
-        if QgsProject.instance().fileName():
-            QMessageBox.warning(
-                self.iface.mainWindow(),
-                self.tr("MzS Tools"),
-                self.tr("Close the current project before creating a new one."),
-            )
-            return
-        if self.dlg_create_project is None:
-            self.dlg_create_project = DlgCreateProject(self.iface.mainWindow())
-        result = self.dlg_create_project.exec()
-        if result:
-            dir_out = self.dlg_create_project.output_dir_widget.lineEdit().text()
-            comune_name = self.dlg_create_project.comune_line_edit.text().split(" (")[0]
-            cod_istat = self.dlg_create_project.cod_istat_line_edit.text()
-            study_author = self.dlg_create_project.study_author_line_edit.text()
-            author_email = self.dlg_create_project.author_email_line_edit.text()
-            self.log(
-                f"Creating new MzS Tools project in {dir_out} for {comune_name} ({cod_istat}). Author: {study_author} ({author_email})"
-            )
-            project_path = None
-            try:
-                # new_project = self.create_project(dir_out)
-                # reload the project
-                # self.iface.addProject(new_project)
-                # project_path = self.prj_manager.create_project_from_template(
-                #     comune_name, cod_istat, study_author, author_email, dir_out
-                # )
-                project_path = self.prj_manager.create_project(
-                    comune_name, cod_istat, study_author, author_email, dir_out
-                )
-            except Exception as e:
-                err_msg = self.tr("Error during project creation")
-                self.log(f"{err_msg}: {e} ", log_level=2)
-                self.log(traceback.format_exc(), log_level=2)
-                QMessageBox.critical(None, "MzS Tools error", f'{err_msg}:\n"{str(e)}"')
-                # cleanup
-                QgsProject.instance().clear()
-                prj_path = Path(dir_out) / f"{cod_istat}_{self.prj_manager.sanitize_comune_name(comune_name)}"
-                if prj_path.exists():
-                    self.log(f"Removing incomplete project in {prj_path}")
-                    shutil.rmtree(prj_path)
-
-            if project_path:
-                self.log(self.tr(f"Project created successfully in {project_path}"), push=True, duration=0)
-                # QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
+        # button = QMessageBox.question(
+        #     self.iface.mainWindow(),
+        #     self.tr("Check attachments"),
+        #     self.tr(
+        #         "This tool will perform the following operations:\n\n- gather all file attachments and copy them to the 'Allegati' folder if necessary"
+        #         "\n- rename the attachment files by prepending the feature ID when necessary"
+        #         "\n- update the database with the new attachment paths"
+        #         "\n- report if any file attachment is missing\n\nDo you want to proceed?"
+        #     ),
+        # )
+        # if button == QMessageBox.Yes:
+        #     self.manager = AttachmentsTaskManager()
+        #     self.manager.start_manage_attachments_task()
+        self.dlg_manage_attachments = DlgManageAttachments(self.iface.mainWindow())
+        self.dlg_manage_attachments.exec()
 
     def open_dlg_metadata_edit(self):
         # self.edit_metadata_dlg.run_edit_metadata_dialog()
