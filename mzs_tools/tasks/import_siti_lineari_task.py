@@ -450,8 +450,21 @@ class ImportSitiLineariTask(QgsTask):
         # check file exists
         file_path = self.proj_paths["Documenti"]["path"] / attachment_file_name
         if not Path(file_path).exists():
-            self.logger.warning(f"Attachment {file_path} not found, skipping")
-            return None
+            # recursively scan in subfolders
+            parent_dir = self.proj_paths["Documenti"]["path"]
+            attachment_filename = Path(attachment_file_name).name
+            found = False
+
+            for path in parent_dir.glob("**/*"):
+                if path.is_file() and path.name == attachment_filename:
+                    self.logger.info(f"Found attachment {attachment_filename} in {path}")
+                    file_path = path
+                    found = True
+                    break
+
+            if not found:
+                self.logger.warning(f"Attachment {file_path} not found, skipping")
+                return None
         # copy in the project folder
         dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"
 

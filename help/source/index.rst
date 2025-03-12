@@ -6,6 +6,8 @@
 Benvenuto nella documentazione di MzsTools
 ==========================================
 
+Il manuale è disponibile in formato PDF `cliccando su questo link <https://cnr-igag.github.io/mzs-tools/MzSTools.pdf>`_.
+
 .. toctree::
    :maxdepth: 4
 

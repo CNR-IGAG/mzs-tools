@@ -287,6 +287,8 @@ class MzSTools:
         # add the help action to the QGIS plugin help menu
         self.iface.pluginHelpMenu().addAction(self.help_action)
 
+        self.check_project()
+
     def unload(self):
         # close db connections
         if self.prj_manager:

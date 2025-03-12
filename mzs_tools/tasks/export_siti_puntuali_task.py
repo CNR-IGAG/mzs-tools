@@ -243,13 +243,17 @@ class ExportSitiPuntualiTask(QgsTask):
         return insert_errors
 
     def get_indagini_puntuali_data(self):
+        # doc_ind: to strip the path from the document name:
+        # - find the position of the id_spu in the string
+        # - get the substring from that position to the end of the string
+        # - if id_spu was not added to the file name, try to remove the './Allegati/Documenti/' part
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """SELECT sp.pkuid, ip.pkuid, classe_ind, tipo_ind, id_indpu, id_indpuex, arch_ex, note_ind, prof_top,
-                prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, substr(doc_ind, instr(doc_ind,
-                sp.id_spu), length(doc_ind) +1) AS doc_ind, sp.id_spu FROM indagini_puntuali ip JOIN sito_puntuale sp ON
-                ip.id_spu = sp.id_spu"""
+                prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, replace(substr(doc_ind, instr(doc_ind,
+                sp.id_spu), length(doc_ind) +1), './Allegati/Documenti/', '') AS doc_ind, sp.id_spu FROM
+                indagini_puntuali ip JOIN sito_puntuale sp ON ip.id_spu = sp.id_spu"""
             )
             data = cursor.fetchall()
             cursor.close()
@@ -292,13 +296,17 @@ class ExportSitiPuntualiTask(QgsTask):
         return insert_errors
 
     def get_parametri_puntuali_data(self):
+        # tab_curve: to strip the path from the document name:
+        # - find the position of the id_indpu in the string
+        # - get the substring from that position to the end of the string
+        # - if id_indpu was not added to the file name, try to remove the './Allegati/Documenti/' part
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """SELECT ip.pkuid, pp.pkuid, tipo_parpu, id_parpu, pp.prof_top, pp.prof_bot, pp.spessore,
-                pp.quota_slm_top, pp.quota_slm_bot, valore, attend_mis, substr(tab_curve, instr(tab_curve, ip.id_indpu),
-                length(tab_curve) +1) AS tab_curve, note_par, data_par, ip.id_indpu FROM parametri_puntuali pp JOIN
-                indagini_puntuali ip ON pp.id_indpu = ip.id_indpu"""
+                pp.quota_slm_top, pp.quota_slm_bot, valore, attend_mis, replace(substr(tab_curve, instr(tab_curve, ip.id_indpu),
+                length(tab_curve) +1), './Allegati/Documenti/', '') AS tab_curve, note_par, data_par, ip.id_indpu FROM
+                parametri_puntuali pp JOIN indagini_puntuali ip ON pp.id_indpu = ip.id_indpu"""
             )
             data = cursor.fetchall()
             cursor.close()

@@ -209,12 +209,17 @@ class ExportSitiLineariTask(QgsTask):
         return insert_errors
 
     def get_indagini_lineari_data(self):
+        # doc_ind: to strip the path from the document name:
+        # - find the position of the id_sln in the string
+        # - get the substring from that position to the end of the string
+        # - if id_sln was not added to the file name, try to remove the './Allegati/Documenti/' part
         with self.get_spatialite_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
                 """SELECT sl.pkuid, il.pkuid, classe_ind, tipo_ind, id_indln, id_indlnex, arch_ex, note_indln,
-                data_ind, doc_pag, substr(doc_ind, instr(doc_ind, sl.id_sln), length(doc_ind) +1) AS doc_ind, sl.id_sln
-                FROM indagini_lineari il JOIN sito_lineare sl ON il.id_sln = sl.id_sln"""
+                data_ind, doc_pag, replace(substr(doc_ind, instr(doc_ind, sl.id_sln), length(doc_ind) +1),
+                './Allegati/Documenti/', '') AS doc_ind, sl.id_sln FROM indagini_lineari il JOIN sito_lineare sl ON
+                il.id_sln = sl.id_sln"""
             )
             data = cursor.fetchall()
             cursor.close()
@@ -256,8 +261,8 @@ class ExportSitiLineariTask(QgsTask):
             cursor = conn.cursor()
             cursor.execute(
                 """SELECT il.pkuid, pl.pkuid, tipo_parln, id_parln, prof_top, prof_bot, spessore, quota_slm_top,
-                quota_slm_bot, valore, attend_mis, note_par, data_par, il.id_indln FROM parametri_lineari pl JOIN indagini_lineari
-                il ON pl.id_indln = il.id_indln"""
+                quota_slm_bot, valore, attend_mis, note_par, data_par, il.id_indln FROM parametri_lineari pl JOIN
+                indagini_lineari il ON pl.id_indln = il.id_indln"""
             )
             data = cursor.fetchall()
             cursor.close()

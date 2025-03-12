@@ -61,3 +61,22 @@ Al riavvio, QPIP chiederà automaticamente di installare le librerie Python rich
   :align: center
 
 |
+
+Installazione versione di sviluppo
+""""""""""""""""""""""""""""""""""
+
+E\' possibile installare l'ultima versione di sviluppo di MzS Tools utilizzando il repository definito all'indirizzo:
+
+.. code-block::
+
+  https://cnr-igag.github.io/mzs-tools/plugins.xml
+
+Nel gestore dei plugin di QGIS:
+
+* selezionare la voce **"Impostazioni"**;
+* abilitare la voce **"Mostra anche Plugin Sperimentali"**;
+* cliccare sul pulsante **"Aggiungi…"**;
+* inserire un nome per il repository (ad es. "MzS Tools dev"), la URL indicata sopra e premere **"OK"**.
+
+.. Attention:: La versione di sviluppo potrebbe contenere funzionalità non ancora completamente testate e potenzialmente
+  instabili. Si consiglia di utilizzare la versione di sviluppo solo per test.
