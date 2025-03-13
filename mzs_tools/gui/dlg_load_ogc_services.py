@@ -11,7 +11,7 @@ from ..plugin_utils.logging import MzSToolsLogger
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
 
-class DlgLoadOgcLayers(QDialog, FORM_CLASS):
+class DlgLoadOgcServices(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -59,7 +59,7 @@ class DlgLoadOgcLayers(QDialog, FORM_CLASS):
             regional_wms=regional_wms, webms_wms=webms_wms, webms_wfs=webms_wfs, geo_ispra=geo_ispra
         )
 
-        self.log(self.tr(f"OGC services added to '{root_layer_group}' group"), log_level=3, push=True)
+        self.log(f"OGC services added to '{root_layer_group}' group", log_level=3, push=True)
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)

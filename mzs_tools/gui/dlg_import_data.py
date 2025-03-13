@@ -381,7 +381,9 @@ class DlgImportData(QDialog, FORM_CLASS):
         finally:
             if connected:
                 mdb_conn.close()
-                self.label_mdb_msg.setText(self.tr(f"[Connection {'with password' if password else ''} established]"))
+                msg_connected = self.tr("Connection established")
+                msg_pwd = self.tr(" with password")
+                self.label_mdb_msg.setText(f"[{msg_connected}{msg_pwd if password else ''}]")
                 self.mdb_password = password
 
         return connected

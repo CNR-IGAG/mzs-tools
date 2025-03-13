@@ -26,7 +26,7 @@ from .gui.dlg_export_data import DlgExportData
 from .gui.dlg_fix_layers import DlgFixLayers
 from .gui.dlg_import_data import DlgImportData
 from .gui.dlg_info import PluginInfo
-from .gui.dlg_load_ogc_services import DlgLoadOgcLayers
+from .gui.dlg_load_ogc_services import DlgLoadOgcServices
 from .gui.dlg_manage_attachments import DlgManageAttachments
 from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_settings import PlgOptionsFactory
@@ -392,7 +392,7 @@ class MzSTools:
                 # QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
 
     def open_dlg_load_ogc_services(self):
-        self.dlg_load_ogc_layers = DlgLoadOgcLayers(self.iface.mainWindow())
+        self.dlg_load_ogc_layers = DlgLoadOgcServices(self.iface.mainWindow())
         self.dlg_load_ogc_layers.exec()
 
     def open_dlg_fix_layers(self):
@@ -539,11 +539,9 @@ class MzSTools:
             msg_box = QMessageBox()
             msg_box.setIcon(QMessageBox.Question)
             msg_box.setWindowTitle(self.tr("MzS Tools - Project Update"))
-            msg_box.setText(
-                self.tr(
-                    f"The project will be updated from version {self.prj_manager.project_version} to version {__version__}."
-                )
-            )
+            msg_upd1 = self.tr("The project will be updated from version")
+            msg_upd2 = self.tr("to version")
+            msg_box.setText(f"{msg_upd1} {self.prj_manager.project_version} {msg_upd2} {__version__}.")
             msg_box.setInformativeText(self.tr("Do you want to proceed?"))
             msg_box.setDetailedText(
                 self.tr(

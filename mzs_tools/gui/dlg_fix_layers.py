@@ -56,9 +56,8 @@ class DlgFixLayers(QDialog, FORM_CLASS):
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Question)
         msg_box.setWindowTitle(self.tr("MzS Tools - Fix/Replace Layers"))
-        msg_box.setText(
-            self.tr(f"The layer in the following groups will be replaced:\n\n{'\n'.join(selected_groups)}\n")
-        )
+        msg = self.tr("The layers in the following groups will be replaced:")
+        msg_box.setText(f"{msg}\n\n{'\n'.join(selected_groups)}\n")
         msg_box.setInformativeText(self.tr("Do you want to proceed?"))
         msg_box.setDetailedText(
             self.tr(
