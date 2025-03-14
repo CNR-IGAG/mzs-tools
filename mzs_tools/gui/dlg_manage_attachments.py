@@ -1,9 +1,9 @@
 from pathlib import Path
 
-from mzs_tools.tasks.attachments_task_manager import AttachmentsTaskManager
 from qgis.PyQt import uic
 from qgis.PyQt.QtWidgets import QDialog
 
+from ..tasks.attachments_task_manager import AttachmentsTaskManager
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
