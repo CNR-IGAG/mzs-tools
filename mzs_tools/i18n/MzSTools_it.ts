@@ -30,6 +30,19 @@
     </message>
 </context>
 <context>
+    <name>DlgCreateProject</name>
+    <message>
+        <location filename="../gui/dlg_create_project.py" line="86"/>
+        <source>The selected directory seems to contain an MzS Tools project. Select a different directory.</source>
+        <translation>La cartella selezionata sembra contenere un progetto di MzS Tools. Seleziona una cartella differente.</translation>
+    </message>
+    <message>
+        <location filename="../gui/dlg_create_project.py" line="89"/>
+        <source>Warning</source>
+        <translation>Attenzione</translation>
+    </message>
+</context>
+<context>
     <name>DlgExportData</name>
     <message>
         <location filename="../gui/dlg_export_data.py" line="58"/>
@@ -199,7 +212,7 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
     <message>
         <location filename="../gui/dlg_fix_layers.py" line="59"/>
         <source>The layers in the following groups will be replaced:</source>
-        <translation type="unfinished">I layer nei seguenti gruppi saranno ripristinati:</translation>
+        <translation>I layer nei seguenti gruppi saranno ripristinati:</translation>
     </message>
 </context>
 <context>
@@ -451,29 +464,29 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>DlgManageAttachments</name>
     <message>
-        <location filename="../gui/dlg_manage_attachments.ui" line="14"/>
+        <location filename="../gui/dlg_manage_attachments.ui" line="20"/>
         <source>MzS Tools - Manage file attachments</source>
         <translation>MzS Tools - Gestione dei file allegati</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_manage_attachments.ui" line="20"/>
+        <location filename="../gui/dlg_manage_attachments.ui" line="26"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This tool will perform the following operations:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;gather all file attachments and copy them to the &apos;Allegati&apos; folder if necessary&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;rename the attachment files by prepending the feature ID when necessary&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;update the database with the new attachment paths&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;report if any file attachment is missing&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Questo strumento effettuerà le seguenti operazioni:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;raccogliere tutti i file allegati e copiarli nella cartella &apos;Allegati&apos; se necessario&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;rinominare i file allegati aggiungendo l&apos;ID della feature associata se richiesto&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;aggiornare i percorsi dei file allegati nel database&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;evidenziare eventuali file mancanti nel rapporto finale.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_manage_attachments.ui" line="30"/>
+        <location filename="../gui/dlg_manage_attachments.ui" line="36"/>
         <source>Options</source>
         <translation>Opzioni</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_manage_attachments.ui" line="36"/>
+        <location filename="../gui/dlg_manage_attachments.ui" line="42"/>
         <source>Prepend Indagine ID to file names</source>
         <translation>Aggiungi ai nomi dei file gli ID dei record associati</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_manage_attachments.ui" line="46"/>
+        <location filename="../gui/dlg_manage_attachments.ui" line="52"/>
         <source>This option is generally recommended, except when there are many cases where the same file is associated with many different investigations. In this case the same file would be replicated for each investigation it is associated with.</source>
-        <translation>E&apos; generalmente raccomandato attivare questa opzione, tranne quando vi siano molti casi nei quali uno stesso file risulta associato a diverse indagini o parametri. In questi casi, attivando l&apos;opzione, questi file verrebbero replicati per ogni record con sui sono associati.</translation>
+        <translation>E&apos; generalmente raccomandato attivare questa opzione, tranne quando vi siano molti casi nei quali uno stesso file risulta associato a diverse indagini o parametri. In questi casi, attivando l&apos;opzione, questi file verrebbero replicati per ogni record con cui sono associati.</translation>
     </message>
 </context>
 <context>
@@ -931,40 +944,40 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>MzSProjectManager</name>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1064"/>
-        <source>Project upgrades completed! Project upgraded to version {__base_version__}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../core/mzs_project_manager.py" line="1318"/>
+        <location filename="../core/mzs_project_manager.py" line="1315"/>
         <source>The database file is corrupted! {self.db_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1333"/>
+        <location filename="../core/mzs_project_manager.py" line="1330"/>
         <source>Error connecting to db! {self.db_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1405"/>
-        <source>Database upgrades completed! Database upgraded to version {__base_version__}</source>
-        <translation type="unfinished"></translation>
+        <location filename="../core/mzs_project_manager.py" line="1064"/>
+        <source>Project upgrades completed! Project upgraded to version</source>
+        <translation>Aggiornamento del progetto effettuato! Progetto aggiornato alla versione</translation>
+    </message>
+    <message>
+        <location filename="../core/mzs_project_manager.py" line="1402"/>
+        <source>Database upgrades completed! Database upgraded to version</source>
+        <translation>Aggiornamento del database effettuato! Database aggiornato alla versione</translation>
     </message>
 </context>
 <context>
     <name>MzSTools</name>
     <message>
-        <location filename="../mzs_tools.py" line="301"/>
+        <location filename="../mzs_tools.py" line="302"/>
         <source>&amp;MzS Tools</source>
         <translation>&amp;MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="131"/>
+        <location filename="../mzs_tools.py" line="132"/>
         <source>New project</source>
         <translation>Nuovo progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="255"/>
+        <location filename="../mzs_tools.py" line="256"/>
         <source>Import project folder from geodatabase</source>
         <translation>Importa dati da un progetto esistente</translation>
     </message>
@@ -999,19 +1012,19 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Aiuto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="187"/>
+        <location filename="../mzs_tools.py" line="188"/>
         <source>Edit project metadata</source>
         <translation>Modifica i metadati del progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="274"/>
+        <location filename="../mzs_tools.py" line="275"/>
         <source>MzS Tools Settings</source>
         <translation>Impostazioni di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="410"/>
+        <location filename="../mzs_tools.py" line="495"/>
         <source>Warning</source>
-        <translation type="obsolete">Attenzione</translation>
+        <translation>Attenzione</translation>
     </message>
     <message>
         <location filename="../mzs_tools.py" line="400"/>
@@ -1024,7 +1037,7 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Non è al momento possibile rinominare un layer richiesto dal plugin MzS Tools! Si prega di ritornare al nome precedente per evitare possibili problemi.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="281"/>
+        <location filename="../mzs_tools.py" line="282"/>
         <source>MzS Tools Help</source>
         <translation>Aiuto di MzS Tools</translation>
     </message>
@@ -1034,12 +1047,12 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">ATTENZIONE!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="329"/>
+        <location filename="../mzs_tools.py" line="330"/>
         <source>Close the current project before creating a new one.</source>
         <translation>Chiudi il progetto corrente prima di crearne uno nuovo.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="375"/>
+        <location filename="../mzs_tools.py" line="370"/>
         <source>Error during project creation</source>
         <translation>Errore durante la creazione del progetto</translation>
     </message>
@@ -1054,27 +1067,27 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Il progetto è stato creato correttamente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="541"/>
+        <location filename="../mzs_tools.py" line="551"/>
         <source>MzS Tools - Project Update</source>
         <translation>MzS Tools - Aggiornamento del progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="337"/>
+        <location filename="../mzs_tools.py" line="338"/>
         <source>MzS Tools</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="508"/>
+        <location filename="../mzs_tools.py" line="518"/>
         <source>The tool must be used within an opened MS project!</source>
         <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="545"/>
+        <location filename="../mzs_tools.py" line="555"/>
         <source>Do you want to proceed?</source>
         <translation>Vuoi proseguire?</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="546"/>
+        <location filename="../mzs_tools.py" line="556"/>
         <source>It is possible to cancel the update process and continue using the current project version, but it is highly recommended to proceed with the update to avoid possible issues.
 The QGIS project content (layers, styles, symbols, print layout) will be updated to the latest plugin version.
 The database will be updated if necessary but all data will be preserved.
@@ -1085,107 +1098,107 @@ Il database sarà aggiornato se necessario, ma tutti i dati verranno conservati.
 Il progetto corrente verrà salvato in una cartella di backup prima dell&apos;aggiornamento.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="127"/>
+        <location filename="../mzs_tools.py" line="128"/>
         <source>Tools for managing MzS Tools project and database</source>
         <translation>Strumenti per la gestione del progetto e del database di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="131"/>
+        <location filename="../mzs_tools.py" line="132"/>
         <source>Create a new MzS Tools project for the provided municipality</source>
         <translation>Crea un nuovo progetto MzS Tools per il comune selezionato</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="141"/>
+        <location filename="../mzs_tools.py" line="142"/>
         <source>Open a &apos;Standard MS&apos; project</source>
         <translation>Apri un progetto basato su &apos;Standard MS&apos;</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="141"/>
+        <location filename="../mzs_tools.py" line="142"/>
         <source>Open an existing &apos;Standard MS&apos; project and import the data in a new MzS Tools project</source>
         <translation>Apre un progetto esistente basato sugli &apos;Standard MS&apos; ed importa i dati in un nuovo progetto MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="468"/>
+        <location filename="../mzs_tools.py" line="156"/>
         <source>Backup database</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="155"/>
+        <location filename="../mzs_tools.py" line="156"/>
         <source>Backup the current MzS Tools project database</source>
         <translation>Effettua un backup del database per il progetto corrente di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="480"/>
+        <location filename="../mzs_tools.py" line="166"/>
         <source>Backup project</source>
         <translation>Backup progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="165"/>
+        <location filename="../mzs_tools.py" line="166"/>
         <source>Backup the entire MzS Tools project</source>
         <translation>Effettua un backup dell&apos;intero progetto di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="175"/>
+        <location filename="../mzs_tools.py" line="176"/>
         <source>Check file attachments</source>
         <translation>Controllo dei file allegati</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="175"/>
+        <location filename="../mzs_tools.py" line="176"/>
         <source>Check, collect and consolidate file attachments</source>
         <translation>Controlla, raccogli e sistema i file allegati</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="202"/>
+        <location filename="../mzs_tools.py" line="203"/>
         <source>Tools for managing MzS Tools QGIS layers</source>
         <translation>Strumenti per la gestione dei layer QGIS di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="205"/>
+        <location filename="../mzs_tools.py" line="206"/>
         <source>Check the integrity of the current MzS Tools QGIS project</source>
         <translation>Controlla l&apos;integrità del progetto QGIS corrente di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="205"/>
+        <location filename="../mzs_tools.py" line="206"/>
         <source>Check the current MzS Tools QGIS project for common issues</source>
         <translation>Effettua un controllo del progetto QGIS corrente per individuare errori comuni</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="215"/>
+        <location filename="../mzs_tools.py" line="216"/>
         <source>Replace/repair default MzS Tools project layers</source>
         <translation>Ripristina/sostituisci i layer di default del progetto MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="215"/>
+        <location filename="../mzs_tools.py" line="216"/>
         <source>Replace or repair the default MzS Tools project layers to fix common issues</source>
         <translation>Ripristina o sostituisci i layer di default del progetto MzS Tools per risolvere problemi comuni</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="226"/>
+        <location filename="../mzs_tools.py" line="227"/>
         <source>Load default MzS Tools print layouts</source>
         <translation>Carica i layout di stampa di default di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="226"/>
+        <location filename="../mzs_tools.py" line="227"/>
         <source>Load the default MzS Tools print layouts, existing layouts will be preserved</source>
         <translation>Carica i layout di stampa di default di MzS Tools, i layout esistenti verranno conservati</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="239"/>
+        <location filename="../mzs_tools.py" line="240"/>
         <source>Load WMS/WFS services</source>
         <translation>Carica servizi WMS/WFS</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="239"/>
+        <location filename="../mzs_tools.py" line="240"/>
         <source>Load useful OGC services (such as regional CTR and MS services) in the current project</source>
         <translation>Carica servizi OGC utili (quali CTR regionali e servizi MS) nel progetto corrente</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="264"/>
+        <location filename="../mzs_tools.py" line="265"/>
         <source>Export data to Ms standard data structure</source>
         <translation>Esporta i dati in una struttura conforme agli Standard MS</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="337"/>
+        <location filename="../mzs_tools.py" line="338"/>
         <source>This tool allows to open an existing Seismic Microzonation project based on italian &apos;Standard MS&apos; by creating a new MzS Tools project for the provided municipality and then importing the data from the &apos;Standard MS&apos; project.
 
 The original project data format must be: 
@@ -1200,27 +1213,22 @@ Il formato dei dati del progetto originale deve essere:
 - Shapefiles (layer vettoriali quali &apos;Instab&apos;, &apos;Geotec&apos;, ecc.)</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="391"/>
-        <source>Project created successfully in {project_path}</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mzs_tools.py" line="588"/>
+        <location filename="../mzs_tools.py" line="598"/>
         <source>MzS Tools - Project Issues</source>
         <translation>MzS Tools Problemi nel progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="411"/>
+        <location filename="../mzs_tools.py" line="406"/>
         <source>No issues found in the current project.</source>
         <translation>Nessun problema rilevato nel progetto corrente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="418"/>
+        <location filename="../mzs_tools.py" line="413"/>
         <source>MzS Tools - Load default print layouts</source>
         <translation>MzS Tools - Carica i layout di stampa di default</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="418"/>
+        <location filename="../mzs_tools.py" line="413"/>
         <source>Load the default MzS Tools print layouts. The existing layouts will be preserved.
 
 Do you want to proceed?</source>
@@ -1229,17 +1237,17 @@ Do you want to proceed?</source>
 Vuoi procedere?</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="428"/>
+        <location filename="../mzs_tools.py" line="423"/>
         <source>Print layouts loaded.</source>
         <translation>Layout di stampa caricati.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="446"/>
+        <location filename="../mzs_tools.py" line="441"/>
         <source>Warning!</source>
         <translation>Attenzione!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="447"/>
+        <location filename="../mzs_tools.py" line="442"/>
         <source>The project already contains &apos;Indagini&apos; data (siti, indagini, parametri, curve).
 
 The imported data numeric IDs (and composite ID such as &apos;ID_SPU&apos;, &apos;ID_INDPU&apos;, etc.), will be different from the original data.
@@ -1252,39 +1260,17 @@ Gli ID numerici dei dati importati (e gli ID composti quali &apos;ID_SPU&apos;, 
 Per conservare gli ID originali è necessario utilizzare un progetto vuoto, oppure eliminare tutti i dati delle indagini puntuali e lineari prima di procedere all&apos;importazione.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="468"/>
-        <source>Database backup:
-
-&apos;{backup_path.name}&apos;
-
-created successfully in:
-
-&apos;{backup_path.parent}&apos;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mzs_tools.py" line="480"/>
-        <source>Project backup:
-
-&apos;{backup_path.name}&apos;
-
-created successfully in:
-
-&apos;{backup_path.parent}&apos;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../mzs_tools.py" line="563"/>
+        <location filename="../mzs_tools.py" line="573"/>
         <source>Project update cancelled! Most of the plugin functionality will be disabled until the project is updated. It is highly recommended to update the project to avoid possible issues.</source>
         <translation>Aggiornamento del progetto annullato! La maggior parte delle funzionalità del plugin verranno disabilitate. E&apos; fortemente consigliato procedere all&apos;aggiornamento per evitare possibili problemi.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="567"/>
+        <location filename="../mzs_tools.py" line="577"/>
         <source>Update project</source>
         <translation>Aggiorna progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="589"/>
+        <location filename="../mzs_tools.py" line="599"/>
         <source>Some issues have been found in the current MzS Tools project.
 
 It is suggested to use the &apos;Replace/repair layers&apos; function in the MzS Tools toolbar to try to solve the issues.</source>
@@ -1293,14 +1279,59 @@ It is suggested to use the &apos;Replace/repair layers&apos; function in the MzS
 Utilizzare gli strumenti per la gestione dei layer nella toolbar di MzS Tools per provare a risolverli.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="542"/>
+        <location filename="../mzs_tools.py" line="552"/>
         <source>The project will be updated from version</source>
         <translation>Il progetto verrà aggiornato dalla versione</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="543"/>
+        <location filename="../mzs_tools.py" line="553"/>
         <source>to version</source>
         <translation>alla versione</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="475"/>
+        <source>Select backup directory</source>
+        <translation>Seleziona la cartella in cui effettuare il backup</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="508"/>
+        <source>Project backup created in:</source>
+        <translation>Backup del progetto creato in:</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="464"/>
+        <source>Error during database backup:</source>
+        <translation>Errore durante il backup del database:</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="504"/>
+        <source>MzS Tools error</source>
+        <translation>Errore di MzS Tools</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="471"/>
+        <source>Database backup created in:</source>
+        <translation>Backup del database creato in:</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="486"/>
+        <source>The backup directory cannot be the same as the project directory. Select a different directory.</source>
+        <translation>Il percorso del backup non può essere lo stesso di quello del progetto. Seleziona una cartella differente.</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="492"/>
+        <source>The selected directory seems to contain an MzS Tools project. Select a different directory.</source>
+        <translation>La cartella selezionata sembra contenere un progetto di MzS Tools. Seleziona una cartella differente.</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="501"/>
+        <source>Error during project backup:</source>
+        <translation>Errore durante il backup del progetto:</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="386"/>
+        <source>Project created successfully in:</source>
+        <translation>Progetto creato correttamente in:</translation>
     </message>
 </context>
 <context>
@@ -1364,7 +1395,7 @@ Utilizzare gli strumenti per la gestione dei layer nella toolbar di MzS Tools pe
     <message>
         <location filename="../gui/dlg_info.py" line="112"/>
         <source>(Local or development version)</source>
-        <translation type="unfinished">(Versione locale o di sviluppo)</translation>
+        <translation>(Versione locale o di sviluppo)</translation>
     </message>
 </context>
 <context>

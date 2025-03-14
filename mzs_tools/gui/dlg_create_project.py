@@ -8,7 +8,7 @@ from pathlib import Path
 
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtWidgets import QCompleter, QDialog, QDialogButtonBox
+from qgis.PyQt.QtWidgets import QCompleter, QDialog, QDialogButtonBox, QMessageBox
 
 from ..__about__ import DIR_PLUGIN_ROOT
 
@@ -82,6 +82,13 @@ class DlgCreateProject(QDialog, FORM_CLASS):
             and self.output_dir_widget.lineEdit().text()
             and os.path.isdir(self.output_dir_widget.lineEdit().text())
         ):
+            if (Path(self.output_dir_widget.lineEdit().text()) / "db" / "indagini.sqlite").exists():
+                msg = self.tr(
+                    "The selected directory seems to contain an MzS Tools project. Select a different directory."
+                )
+                QMessageBox.warning(None, self.tr("Warning"), msg)
+                self.output_dir_widget.lineEdit().clear()
+                return
             self.ok_button.setEnabled(True)
         else:
             self.ok_button.setEnabled(False)

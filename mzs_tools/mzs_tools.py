@@ -14,6 +14,7 @@ from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QAction,
+    QFileDialog,
     QMenu,
     QMessageBox,
     QToolButton,
@@ -362,12 +363,6 @@ class MzSTools:
             )
             project_path = None
             try:
-                # new_project = self.create_project(dir_out)
-                # reload the project
-                # self.iface.addProject(new_project)
-                # project_path = self.prj_manager.create_project_from_template(
-                #     comune_name, cod_istat, study_author, author_email, dir_out
-                # )
                 project_path = self.prj_manager.create_project(
                     comune_name, cod_istat, study_author, author_email, dir_out
                 )
@@ -388,8 +383,8 @@ class MzSTools:
                 self.open_dlg_import_data()
 
             elif project_path:
-                self.log(self.tr(f"Project created successfully in {project_path}"), push=True, duration=0)
-                # QMessageBox.information(None, self.tr("Notice"), self.tr("The project has been created successfully."))
+                msg = self.tr("Project created successfully in:")
+                self.log(f"{msg} {project_path}", push=True, duration=0)
 
     def open_dlg_load_ogc_services(self):
         self.dlg_load_ogc_layers = DlgLoadOgcServices(self.iface.mainWindow())
@@ -463,42 +458,57 @@ class MzSTools:
         self.dlg_export_data.exec()
 
     def on_backup_db_action(self):
-        backup_path = self.prj_manager.backup_database()
+        try:
+            backup_path = self.prj_manager.backup_database()
+        except Exception as e:
+            err_msg = self.tr("Error during database backup:")
+            self.log(f"{err_msg} {e}", log_level=2)
+            self.log(traceback.format_exc(), log_level=2)
+            QMessageBox.critical(None, self.tr("MzS Tools error"), f"{err_msg}\n{str(e)}")
+            return
+
         if backup_path:
-            QMessageBox.information(
-                None,
-                self.tr("Backup database"),
-                self.tr(
-                    f"Database backup:\n\n'{backup_path.name}'\n\ncreated successfully in:\n\n'{backup_path.parent}'"
-                ),
-            )
+            msg = self.tr("Database backup created in:")
+            self.log(f"{msg} {backup_path}", log_level=3, push=True, duration=10)
 
     def on_backup_project_action(self):
-        # TODO: this should be a task
-        backup_path = self.prj_manager.backup_project()
-        if backup_path:
-            QMessageBox.information(
-                None,
-                self.tr("Backup project"),
-                self.tr(
-                    f"Project backup:\n\n'{backup_path.name}'\n\ncreated successfully in:\n\n'{backup_path.parent}'"
-                ),
+        backup_dir = QFileDialog.getExistingDirectory(
+            self.iface.mainWindow(),
+            self.tr("Select backup directory"),
+            str(self.prj_manager.project_path.parent),
+            QFileDialog.ShowDirsOnly,
+        )
+        if not backup_dir:
+            return
+
+        msg = None
+        if backup_dir == str(self.prj_manager.project_path):
+            msg = self.tr(
+                "The backup directory cannot be the same as the project directory. Select a different directory."
             )
+            QMessageBox.warning(None, self.tr("Warning"), msg)
+            return
+        if (Path(backup_dir) / "db" / "indagini.sqlite").exists():
+            msg = self.tr(
+                "The selected directory seems to contain an MzS Tools project. Select a different directory."
+            )
+            QMessageBox.warning(None, self.tr("Warning"), msg)
+            return
+
+        try:
+            backup_path = self.prj_manager.backup_project(Path(backup_dir))
+        except Exception as e:
+            err_msg = self.tr("Error during project backup:")
+            self.log(f"{err_msg} {e}", log_level=2)
+            self.log(traceback.format_exc(), log_level=2)
+            QMessageBox.critical(None, self.tr("MzS Tools error"), f"{err_msg}\n{str(e)}")
+            return
+
+        if backup_path:
+            msg = self.tr("Project backup created in:")
+            self.log(f"{msg} {backup_path}", log_level=3, push=True, duration=10)
 
     def on_check_attachments_action(self):
-        # button = QMessageBox.question(
-        #     self.iface.mainWindow(),
-        #     self.tr("Check attachments"),
-        #     self.tr(
-        #         "This tool will perform the following operations:\n\n- gather all file attachments and copy them to the 'Allegati' folder if necessary"
-        #         "\n- rename the attachment files by prepending the feature ID when necessary"
-        #         "\n- update the database with the new attachment paths"
-        #         "\n- report if any file attachment is missing\n\nDo you want to proceed?"
-        #     ),
-        # )
-        # if button == QMessageBox.Yes:
-        #     self.manager = AttachmentsTaskManager()
-        #     self.manager.start_manage_attachments_task()
         self.dlg_manage_attachments = DlgManageAttachments(self.iface.mainWindow())
         self.dlg_manage_attachments.exec()
 

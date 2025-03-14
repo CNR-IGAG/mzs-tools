@@ -1061,11 +1061,8 @@ class MzSProjectManager:
         if self.db_connection:
             self.update_history_table("project", old_version, __version__, "project updated successfully")
 
-        self.log(
-            self.tr(f"Project upgrades completed! Project upgraded to version {__base_version__}"),
-            push=True,
-            duration=0,
-        )
+        msg = self.tr("Project upgrades completed! Project upgraded to version")
+        self.log(f"{msg} {__base_version__}", push=True, duration=0)
 
     def customize_project_template(self, cod_istat, insert_comune_progetto=True):
         """pre-2.0.0 method to customize the project with the selected comune data."""
@@ -1402,11 +1399,8 @@ class MzSProjectManager:
         # update mzs_tools_version table
         self.update_db_version_info()
 
-        self.log(
-            self.tr(f"Database upgrades completed! Database upgraded to version {__base_version__}"),
-            push=True,
-            duration=0,
-        )
+        msg = self.tr("Database upgrades completed! Database upgraded to version")
+        self.log(f"{msg} {__base_version__}", push=True, duration=0)
 
     def _exec_db_upgrade_script(self, script_name):
         with self.db_connection as conn:
