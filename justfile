@@ -82,6 +82,29 @@ test:
     just dev-link
     git add .
 
+@release-test VERSION:
+    #!/bin/bash
+    uv sync --group ci
+    cp --remove-destination LICENSE mzs_tools/
+    cp --remove-destination CHANGELOG.md mzs_tools/
+    cp --remove-destination CREDITS.md mzs_tools/
+    # enforce DEBUG_MODE to False
+    sed -i 's/DEBUG_MODE: bool = True/DEBUG_MODE: bool = False/g' mzs_tools/__about__.py
+    # change main plugin directory name to MzSTools for compatibility with older versions of the plugin
+    mv mzs_tools MzSTools
+    # change plugin_path in pyproject.toml
+    sed -i 's/plugin_path = "mzs_tools"/plugin_path = "MzSTools"/g' pyproject.toml
+    git add .
+
+    # run qgis-plugin-ci release without github token and osgeo auth
+    uv run qgis-plugin-ci release -c {{ VERSION }}
+
+    # revert changes
+    mv MzSTools mzs_tools
+    sed -i 's/plugin_path = "MzSTools"/plugin_path = "mzs_tools"/g' pyproject.toml
+    just dev-link
+    git add .
+
 qgis-ltr-pull:
     docker pull qgis/qgis:ltr
 
