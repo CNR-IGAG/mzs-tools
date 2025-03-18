@@ -42,9 +42,10 @@ class ImportShapefileTask(QgsTask):
             if self.shapefile_name in ["MS23-Stab.shp", "MS23-Instab.shp"]:
                 # copy spettri files to the project folder
                 spettri_path = self.proj_paths["Spettri"]["path"]
-                shutil.copytree(
-                    spettri_path, self.prj_manager.project_path / "Allegati" / "Spettri", dirs_exist_ok=True
-                )
+                if spettri_path and spettri_path.exists():
+                    shutil.copytree(
+                        spettri_path, self.prj_manager.project_path / "Allegati" / "Spettri", dirs_exist_ok=True
+                    )
 
             source_layer = QgsVectorLayer(str(shapefile_path), self.shapefile_name, "ogr")
             common_fields = self.attribute_adaptor(dest_layer, source_layer)
@@ -123,6 +124,11 @@ class ImportShapefileTask(QgsTask):
         features_are_3d = False
         for feature in source_features:
             geometry = feature.geometry()
+
+            # Skip features with no geometry
+            if geometry.isNull():
+                self.logger.warning(f"Feature ID {feature.id()} has no geometry, skipping feature.")
+                continue
 
             # Discard polygons with area < 1
             if geometry.type() == QgsWkbTypes.PolygonGeometry:

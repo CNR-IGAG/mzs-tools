@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0-beta1] - 2025-02-25 [Unreleased]
+## [2.0.0-beta2] - 2025-03-18 [Unreleased]
 
 - Major plugin rewrite
 - Better project and database management

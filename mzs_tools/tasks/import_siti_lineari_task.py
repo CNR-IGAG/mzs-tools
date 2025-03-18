@@ -188,29 +188,25 @@ class ImportSitiLineariTask(QgsTask):
                     self.logger.warning(f"ID_SLN {feature['ID_SLN']} not found in {self.data_source}, skipping")
                     continue
 
-                sito_lineare["geom"] = feature.geometry().asWkt()
                 geometry = feature.geometry()
-                # Convert to single part
+                # Skip features with no geometry
+                if geometry.isNull():
+                    self.logger.warning(f"Feature {feature['ID_SLN']} has no geometry, skipping feature.")
+                    continue
+                # Drop Z values
+                if geometry.get().is3D():
+                    self.logger.warning(f"Feature {feature['ID_SLN']} is 3D. Z value will be dropped.")
+                    geometry.get().dropZValue()
+                    feature.setGeometry(geometry)
+                # Convert multilinestring to linestring, warn if multiple parts are present
                 if geometry.isMultipart():
                     parts = geometry.asGeometryCollection()
+                    if len(parts) > 1:
+                        self.logger.warning(f"Feature {feature['ID_SLN']} is multipart, taking first part only.")
                     geometry = parts[0]
-                    # if len(parts) > 1:
-                    #     self.set_log_message.emit(
-                    #         "Geometry from layer %s is multipart with more than one part: taking first part only"
-                    #         % (vector_layer.name())
-                    #     )
-                    sito_lineare["geom"] = geometry.asWkt()
-                # geom = geometry.asWkt()
-                # if not geometry.isGeosValid():
-                #     self.set_log_message.emit(
-                #         "Wrong geometry from layer %s, expression: %s: %s"
-                #         % (vector_layer.name(), exp, geom)
-                #     )
-                # if geometry.isNull():
-                #     self.set_log_message.emit(
-                #         "Null geometry from layer %s, expression: %s: %s"
-                #         % (vector_layer.name(), exp, geom)
-                #     )
+                    feature.setGeometry(geometry)
+
+                sito_lineare["geom"] = feature.geometry().asWkt()
 
                 # avoid CHECK constraint errors
                 if not sito_lineare["Aquota"]:
@@ -270,11 +266,15 @@ class ImportSitiLineariTask(QgsTask):
                     try:
                         if value["doc_ind"]:
                             # self.log(f"Copying attachment {value['doc_ind']}")
-                            new_file_name = self.copy_attachment(
-                                value["doc_ind"], indagine_lineare_source_id_indln, value["ID_INDLN"]
-                            )
-                            if new_file_name:
-                                value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
+                            if (
+                                self.proj_paths["Documenti"]["path"]
+                                and Path(self.proj_paths["Documenti"]["path"]).exists()
+                            ):
+                                new_file_name = self.copy_attachment(
+                                    value["doc_ind"], indagine_lineare_source_id_indln, value["ID_INDLN"]
+                                )
+                                if new_file_name:
+                                    value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
                     except Exception as e:
                         self.logger.warning(f"Error copying indagine lineare attachment {value['doc_ind']}: {e}")
 
@@ -305,6 +305,24 @@ class ImportSitiLineariTask(QgsTask):
                         for k in value.keys():
                             if value[k] == "":
                                 value[k] = None
+
+                        # amend spessore < 0
+                        try:
+                            if (
+                                value["prof_top"]
+                                and value["prof_bot"]
+                                and (float(value["prof_top"]) > float(value["prof_bot"]))
+                            ):
+                                self.logger.warning(f"prof_top > prof_bot in {value['ID_PARLN']}, check prof values!")
+                                # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
+                                value["prof_bot"] = None
+                            if value["spessore"] and float(value["spessore"]) < 0:
+                                self.logger.warning(f"Negative spessore in {value['ID_PARLN']}, check prof values!")
+                                value["spessore"] = None
+                                # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
+                                value["prof_bot"] = None
+                        except Exception as e:
+                            self.logger.warning(f"Error checking spessore in {value['ID_PARLN']}: {e}")
 
                         # change counters when data is already present
                         # parametro_lineare_source_pkey = value["pkey_parpu"]
@@ -505,14 +523,14 @@ class ImportSitiLineariTask(QgsTask):
                 "ID_SLN": row["ID_SLN"],
                 "ubicazione_prov": row["ubicazione_prov"] or "",
                 "ubicazione_com": row["ubicazione_com"] or "",
-                "Acoord_X": str(row["Acoord_X"]) if row["Acoord_X"] is not None else "",
-                "Acoord_Y": str(row["Acoord_Y"]) if row["Acoord_Y"] is not None else "",
-                "Bcoord_X": str(row["Bcoord_X"]) if row["Bcoord_X"] is not None else "",
-                "Bcoord_Y": str(row["Bcoord_Y"]) if row["Bcoord_Y"] is not None else "",
+                "Acoord_X": row["Acoord_X"],
+                "Acoord_Y": row["Acoord_Y"],
+                "Bcoord_X": row["Bcoord_X"],
+                "Bcoord_Y": row["Bcoord_Y"],
                 "mod_identcoord": row["mod_identcoord"] or "",
                 "desc_modcoord": row["desc_modcoord"] or "",
-                "Aquota": str(row["Aquota"]) if row["Aquota"] is not None else "",
-                "Bquota": str(row["Bquota"]) if row["Bquota"] is not None else "",
+                "Aquota": row["Aquota"],
+                "Bquota": row["Bquota"],
                 "data_sito": row["data_sito"] or "",
                 "note_sito": row["note_sito"] or "",
             }
@@ -570,12 +588,12 @@ class ImportSitiLineariTask(QgsTask):
                 "pkey_parln": str(row["pkey_parln"]),
                 "tipo_parln": row["tipo_parln"] or "",
                 "ID_PARLN": row["ID_PARLN"],
-                "prof_top": str(row["prof_top"]) if row["prof_top"] is not None else "",
-                "prof_bot": str(row["prof_bot"]) if row["prof_bot"] is not None else "",
-                "spessore": str(row["spessore"]) if row["spessore"] is not None else "",
-                "quota_slm_top": str(row["quota_slm_top"]) if row["quota_slm_top"] is not None else "",
-                "quota_slm_bot": str(row["quota_slm_bot"]) if row["quota_slm_bot"] is not None else "",
-                "valore": row["valore"] or "",
+                "prof_top": row["prof_top"],
+                "prof_bot": row["prof_bot"],
+                "spessore": row["spessore"],
+                "quota_slm_top": row["quota_slm_top"],
+                "quota_slm_bot": row["quota_slm_bot"],
+                "valore": row["valore"],
                 "attend_mis": row["attend_mis"] or "",
                 "note_par": row["note_par"] or "",
                 "data_par": row["data_par"] or "",

@@ -207,6 +207,16 @@ class ImportSitiPuntualiTask(QgsTask):
                     self.logger.warning(f"ID_SPU {feature['ID_SPU']} not found in {self.data_source}, skipping")
                     continue
 
+                geometry = feature.geometry()
+                # Skip features with no geometry
+                if geometry.isNull():
+                    self.logger.warning(f"Feature {feature['ID_SPU']} has no geometry, skipping feature.")
+                    continue
+                if geometry.get().is3D():
+                    self.logger.warning(f"Feature {feature['ID_SPU']} is 3D. Z value will be dropped.")
+                    geometry.get().dropZValue()
+                    feature.setGeometry(geometry)
+
                 sito_puntuale["geom"] = feature.geometry().asWkt()
                 # geometry = feature.geometry()
                 # # Convert to single part
@@ -229,6 +239,10 @@ class ImportSitiPuntualiTask(QgsTask):
                 #         "Null geometry from layer %s, expression: %s: %s"
                 #         % (vector_layer.name(), exp, geom)
                 #     )
+
+                # turn empty strings into None to avoid CHECK constraint errors
+                if sito_puntuale["quota_slm"] == "":
+                    sito_puntuale["quota_slm"] = None
 
                 # adapt counters when data is already present
                 sito_puntuale_source_pkey = sito_puntuale["pkey_spu"]
@@ -271,6 +285,25 @@ class ImportSitiPuntualiTask(QgsTask):
                     for k in value.keys():
                         if value[k] == "":
                             value[k] = None
+
+                    # amend spessore < 0
+                    try:
+                        if (
+                            value["prof_top"]
+                            and value["prof_bot"]
+                            and (float(value["prof_top"]) > float(value["prof_bot"]))
+                        ):
+                            self.logger.warning(f"prof_top > prof_bot in {value['ID_INDPU']}, check prof values!")
+                            # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
+                            value["prof_bot"] = None
+                        if value["spessore"] and float(value["spessore"]) < 0:
+                            self.logger.warning(f"Negative spessore in {value['ID_INDPU']}, check prof values!")
+                            value["spessore"] = None
+                            # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
+                            value["prof_bot"] = None
+                    except Exception as e:
+                        self.logger.warning(f"Error checking spessore in {value['ID_INDPU']}: {e}")
+
                     # change counters when data is already present
                     indagine_puntuale_source_pkey = value["pkey_indpu"]
                     indagine_puntuale_source_id_indpu = value["ID_INDPU"]
@@ -282,11 +315,15 @@ class ImportSitiPuntualiTask(QgsTask):
                     try:
                         if value["doc_ind"]:
                             # self.log(f"Copying attachment {value['doc_ind']}")
-                            new_file_name = self.copy_attachment(
-                                value["doc_ind"], indagine_puntuale_source_id_indpu, value["ID_INDPU"]
-                            )
-                            if new_file_name:
-                                value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
+                            if (
+                                self.proj_paths["Documenti"]["path"]
+                                and Path(self.proj_paths["Documenti"]["path"]).exists()
+                            ):
+                                new_file_name = self.copy_attachment(
+                                    value["doc_ind"], indagine_puntuale_source_id_indpu, value["ID_INDPU"]
+                                )
+                                if new_file_name:
+                                    value["doc_ind"] = "./Allegati/Documenti/" + new_file_name
                     except Exception as e:
                         self.logger.warning(f"Error copying indagine puntuale attachment {value['doc_ind']}: {e}")
 
@@ -326,6 +363,24 @@ class ImportSitiPuntualiTask(QgsTask):
                             if value[k] == "":
                                 value[k] = None
 
+                        # amend spessore < 0
+                        try:
+                            if (
+                                value["prof_top"]
+                                and value["prof_bot"]
+                                and (float(value["prof_top"]) > float(value["prof_bot"]))
+                            ):
+                                self.logger.warning(f"prof_top > prof_bot in {value['ID_PARPU']}, check prof values!")
+                                # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
+                                value["prof_bot"] = None
+                            if value["spessore"] and float(value["spessore"]) < 0:
+                                self.logger.warning(f"Negative spessore in {value['ID_PARPU']}, check prof values!")
+                                value["spessore"] = None
+                                # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
+                                value["prof_bot"] = None
+                        except Exception as e:
+                            self.logger.warning(f"Error checking spessore in {value['ID_PARPU']}: {e}")
+
                         # change counters when data is already present
                         parametro_puntuale_source_pkey = value["pkey_parpu"]
                         parametro_puntuale_source_id_parpu = value["ID_PARPU"]
@@ -337,11 +392,15 @@ class ImportSitiPuntualiTask(QgsTask):
                         try:
                             if value["tab_curve"]:
                                 # self.log(f"Copying tab_curve {value['tab_curve']}")
-                                new_file_name = self.copy_attachment(
-                                    value["tab_curve"], parametro_puntuale_source_id_parpu, value["ID_PARPU"]
-                                )
-                                if new_file_name:
-                                    value["tab_curve"] = "./Allegati/Documenti/" + new_file_name
+                                if (
+                                    self.proj_paths["Documenti"]["path"]
+                                    and Path(self.proj_paths["Documenti"]["path"]).exists()
+                                ):
+                                    new_file_name = self.copy_attachment(
+                                        value["tab_curve"], parametro_puntuale_source_id_parpu, value["ID_PARPU"]
+                                    )
+                                    if new_file_name:
+                                        value["tab_curve"] = "./Allegati/Documenti/" + new_file_name
                         except Exception as e:
                             self.logger.warning(f"Error copying parametro attachment {value['tab_curve']}: {e}")
 
@@ -592,11 +651,11 @@ class ImportSitiPuntualiTask(QgsTask):
                 "ubicazione_prov": row["ubicazione_prov"],
                 "ubicazione_com": row["ubicazione_com"],
                 "indirizzo": row["indirizzo"] or "",
-                "coord_X": str(row["coord_X"]) if row["coord_X"] is not None else "",
-                "coord_Y": str(row["coord_Y"]) if row["coord_Y"] is not None else "",
+                "coord_X": row["coord_X"],
+                "coord_Y": row["coord_Y"],
                 "mod_identcoord": row["mod_identcoord"] or "",
                 "desc_modcoord": row["desc_modcoord"] or "",
-                "quota_slm": str(row["quota_slm"]) if row["quota_slm"] is not None else "",
+                "quota_slm": row["quota_slm"],
                 "modo_quota": row["modo_quota"] or "",
                 "data_sito": row["data_sito"] or "",
                 "note_sito": row["note_sito"] or "",
@@ -628,11 +687,11 @@ class ImportSitiPuntualiTask(QgsTask):
                 "id_indpuex": row["id_indpuex"] or "",
                 "arch_ex": row["arch_ex"] or "",
                 "note_ind": row["note_ind"] or "",
-                "prof_top": str(row["prof_top"]) if row["prof_top"] is not None else "",
-                "prof_bot": str(row["prof_bot"]) if row["prof_bot"] is not None else "",
-                "spessore": str(row["spessore"]) if row["spessore"] is not None else "",
-                "quota_slm_top": str(row["quota_slm_top"]) if row["quota_slm_top"] is not None else "",
-                "quota_slm_bot": str(row["quota_slm_bot"]) if row["quota_slm_bot"] is not None else "",
+                "prof_top": row["prof_top"],
+                "prof_bot": row["prof_bot"],
+                "spessore": row["spessore"],
+                "quota_slm_top": row["quota_slm_top"],
+                "quota_slm_bot": row["quota_slm_bot"],
                 "data_ind": row["data_ind"] or "",
                 "doc_pag": row["doc_pag"] or "",
                 "doc_ind": row["doc_ind"] or "",
@@ -661,11 +720,11 @@ class ImportSitiPuntualiTask(QgsTask):
                 "pkey_parpu": str(row["pkey_parpu"]),
                 "tipo_parpu": row["tipo_parpu"] or "",
                 "ID_PARPU": row["ID_PARPU"],
-                "prof_top": str(row["prof_top"]) if row["prof_top"] is not None else "",
-                "prof_bot": str(row["prof_bot"]) if row["prof_bot"] is not None else "",
-                "spessore": str(row["spessore"]) if row["spessore"] is not None else "",
-                "quota_slm_top": str(row["quota_slm_top"]) if row["quota_slm_top"] is not None else "",
-                "quota_slm_bot": str(row["quota_slm_bot"]) if row["quota_slm_bot"] is not None else "",
+                "prof_top": row["prof_top"],
+                "prof_bot": row["prof_bot"],
+                "spessore": row["spessore"],
+                "quota_slm_top": row["quota_slm_top"],
+                "quota_slm_bot": row["quota_slm_bot"],
                 "valore": row["valore"] or "",
                 "attend_mis": row["attend_mis"] or "",
                 "tab_curve": row["tab_curve"] or "",
@@ -692,10 +751,10 @@ class ImportSitiPuntualiTask(QgsTask):
             row_dict = {
                 "pkey_parpu": str(row["pkey_parpu"]),
                 "pkey_curve": str(row["pkey_curve"]),
-                "cond_curve": row["cond_curve"] or "",
-                "varx": str(row["varx"]) if row["varx"] is not None else "",
-                "vary": str(row["vary"]) if row["vary"] is not None else "",
-                "id_parpu": row["id_parpu"] or "",
+                "cond_curve": row["cond_curve"],
+                "varx": row["varx"],
+                "vary": row["vary"],
+                "id_parpu": row["id_parpu"],
             }
             data[(str(row["pkey_parpu"]), str(row["pkey_curve"]))] = row_dict
 

@@ -77,6 +77,8 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.reset_sequences = False
         self.standard_proj_paths = None
 
+        self.mdb_password = None
+
         self.accepted.connect(self.start_import_tasks)
 
         self.failed_tasks = []
