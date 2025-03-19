@@ -199,6 +199,7 @@ jobs:
 
       - name: Deploy plugin
         run: |
+          rm RELEASE-CHANGELOG.txt
           cp --remove-destination LICENSE mzs_tools/
           cp --remove-destination CHANGELOG.md mzs_tools/
           cp --remove-destination CREDITS.md mzs_tools/
