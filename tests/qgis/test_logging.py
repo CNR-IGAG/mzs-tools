@@ -5,9 +5,9 @@ from qgis.core import QgsMessageLog
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtWidgets import QWidget
 
-from ..__about__ import __title__
-from ..plugin_utils.logging import MzSToolsLogger
-from ..plugin_utils.settings import PlgOptionsManager
+from mzs_tools.__about__ import __title__
+from mzs_tools.plugin_utils.logging import MzSToolsLogger
+from mzs_tools.plugin_utils.settings import PlgOptionsManager
 
 
 # def test_log_message(qgis_iface):
@@ -61,8 +61,8 @@ def test_debug_mode(mock_qgis):
     with patch("mzs_tools.plugin_utils.settings.PlgOptionsManager.get_plg_settings") as mock_settings:
         mock_settings.return_value.debug_mode = False
 
-        # Info message should not be logged in non-debug mode
-        MzSToolsLogger.log(message="Info message", log_level=0)
+        # Debug message should not be logged in non-debug mode
+        MzSToolsLogger.log(message="Info message", log_level=4)
         mock_qgis["message_log"].logMessage.assert_not_called()
 
         # Warning should be logged regardless of debug mode

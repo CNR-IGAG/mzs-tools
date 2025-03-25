@@ -1,8 +1,8 @@
 import pytest
 from qgis.core import QgsSettings
 
-from ..__about__ import __title__, __version__
-from ..plugin_utils.settings import PlgOptionsManager, PlgSettingsStructure
+from mzs_tools.__about__ import __title__, __version__
+from mzs_tools.plugin_utils.settings import PlgOptionsManager, PlgSettingsStructure
 
 
 @pytest.fixture

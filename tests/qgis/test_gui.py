@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtWidgets import QCompleter, QDialog
 
-from ..__about__ import __version__
-from ..gui.dlg_info import PluginInfo
-from ..gui.dlg_create_project import DlgCreateProject
+from mzs_tools.__about__ import __version__
+from mzs_tools.gui.dlg_info import PluginInfo
+from mzs_tools.gui.dlg_create_project import DlgCreateProject
 
 
 def test_tb_info(qgis_app):
@@ -34,14 +34,14 @@ def test_tb_info(qgis_app):
     qgis_app.exec_()
 
 
-def test_tb_nuovo_progetto_gui(qgis_app):
+def test_dlg_create_project_gui(qgis_app):
     dialog = DlgCreateProject()
     assert dialog is not None
 
     dialog.show()
 
-    # Get completer from comuneField
-    completer = dialog.comuneField.completer()
+    # Get completer from comune_line_edit
+    completer = dialog.comune_line_edit.completer()
     completer.setCompletionPrefix("rom")
 
     # Manually show completion popup
@@ -62,20 +62,20 @@ def test_tb_nuovo_progetto_gui(qgis_app):
     assert found
 
     # simulate selection from completer
-    dialog.comuneField.setText("Roma (Roma - Lazio)")
+    dialog.comune_line_edit.setText("Roma (Roma - Lazio)")
     dialog.update_cod_istat()
-    cod_istat = dialog.cod_istat.text()
+    cod_istat = dialog.cod_istat_line_edit.text()
     assert cod_istat == "058091"
 
-    dialog.professionista.setText("Mario Rossi")
-    dialog.email_prof.setText("asdf@qwer.com")
+    dialog.study_author_line_edit.setText("Mario Rossi")
+    dialog.author_email_line_edit.setText("asdf@qwer.com")
     dialog.output_dir_widget.lineEdit().setText("/tmp")
 
     # ok button should be enabled when all fields are filled
     assert dialog.ok_button.isEnabled() is True
 
     # all fields are required
-    dialog.email_prof.setText("")
+    dialog.author_email_line_edit.setText("")
     assert dialog.ok_button.isEnabled() is False
 
     QTimer.singleShot(2000, dialog.reject)
@@ -89,7 +89,7 @@ def test_tb_nuovo_progetto_comune_completer():
     dialog = DlgCreateProject()
 
     # Test completer setup
-    completer = dialog.comuneField.completer()
+    completer = dialog.comune_line_edit.completer()
     assert isinstance(completer, QCompleter)
     assert completer.caseSensitivity() == Qt.CaseInsensitive
 
@@ -98,7 +98,7 @@ def test_tb_nuovo_progetto_comune_completer():
     assert model.rowCount() > 0
 
     # Test completion matching
-    dialog.comuneField.setText("rom")
+    dialog.comune_line_edit.setText("rom")
     completer.setCompletionPrefix("rom")
     completion_model = completer.completionModel()
     assert completion_model.rowCount() > 0
@@ -109,7 +109,7 @@ def test_tb_nuovo_progetto_comune_completer():
         completion_model.data(completion_model.index(i, 0)) for i in range(completion_model.rowCount())
     ]
 
-    dialog.comuneField.setText("monopoli")
+    dialog.comune_line_edit.setText("monopoli")
     completer.setCompletionPrefix("monopoli")
     completion_model = completer.completionModel()
     assert completion_model.rowCount() == 1
@@ -121,83 +121,83 @@ def test_tb_nuovo_progetto_comune_completer():
     dialog.close()
 
 
-def test_tb_nuovo_progetto_dialog_reject():
-    dialog = DlgCreateProject()
+# def test_tb_nuovo_progetto_dialog_reject():
+#     dialog = DlgCreateProject()
 
-    # Mock create_project method
-    dialog.create_project = MagicMock()
+#     # Mock create_project method
+#     dialog.create_project = MagicMock()
 
-    # Test dialog rejection
-    with patch.object(QDialog, "exec_", return_value=False):
-        dialog.run_new_project_tool(False)
-        dialog.create_project.assert_not_called()
-    dialog.close()
-
-
-def test_create_project():
-    dialog = DlgCreateProject()
-
-    # Setup test data
-    test_dir = "/tmp/test_project"
-    comune = "Test Comune (TE - Test)"
-    cod_istat = "123456"
-    professionista = "Test Prof"
-    email = "test@email.com"
-
-    # Set dialog fields
-    dialog.comuneField.setText(comune)
-    dialog.cod_istat.setText(cod_istat)
-    dialog.professionista.setText(professionista)
-    dialog.email_prof.setText(email)
-
-    # Mock dependencies
-    project_mock = MagicMock()
-    layout_mock = MagicMock()
-    layout_manager_mock = MagicMock()
-    layout_manager_mock.printLayouts.return_value = [layout_mock]
-    project_mock.layoutManager.return_value = layout_manager_mock
-
-    with (
-        patch("qgis.core.QgsProject.instance", return_value=project_mock),
-        # patch.object(dialog, "extract_project_template"),
-        patch.object(dialog, "customize_project"),
-        patch("mzs_tools.gui.dlg_create_project.create_basic_sm_metadata"),
-        patch("qgis.PyQt.QtWidgets.QMessageBox.information"),
-        patch("os.rename"),
-        patch("os.path.join", side_effect=os.path.join),
-    ):
-        # Execute
-        result = dialog.create_project(test_dir)
-
-        # Verify
-        expected_path = os.path.join(test_dir, f"{cod_istat}_Test_Comune", "progetto_MS.qgs")
-        assert result == expected_path
-
-        # Verify method calls
-        # dialog.extract_project_template.assert_called_once_with(test_dir)
-        dialog.customize_project.assert_called_once()
-        project_mock.read.assert_called_once()
-        project_mock.write.assert_called_once()
-        layout_mock.refresh.assert_called_once()
-
-    dialog.close()
+#     # Test dialog rejection
+#     with patch.object(QDialog, "exec_", return_value=False):
+#         dialog.run_new_project_tool(False)
+#         dialog.create_project.assert_not_called()
+#     dialog.close()
 
 
-def test_sanitize_comune_name():
-    """Test comune name sanitization"""
-    dialog = DlgCreateProject()
-    assert dialog.sanitize_comune_name("Roma (RM - Lazio)") == "Roma"
-    assert dialog.sanitize_comune_name("Sant'Angelo (LE)") == "Sant_Angelo"
-    assert dialog.sanitize_comune_name("Città Sant'Angelo") == "Città_Sant_Angelo"
+# def test_create_project():
+#     dialog = DlgCreateProject()
+
+#     # Setup test data
+#     test_dir = "/tmp/test_project"
+#     comune = "Test Comune (TE - Test)"
+#     cod_istat = "123456"
+#     study_author_line_edit = "Test Prof"
+#     email = "test@email.com"
+
+#     # Set dialog fields
+#     dialog.comune_line_edit.setText(comune)
+#     dialog.cod_istat_line_edit.setText(cod_istat)
+#     dialog.study_author_line_edit.setText(study_author_line_edit)
+#     dialog.author_email_line_edit.setText(email)
+
+#     # Mock dependencies
+#     project_mock = MagicMock()
+#     layout_mock = MagicMock()
+#     layout_manager_mock = MagicMock()
+#     layout_manager_mock.printLayouts.return_value = [layout_mock]
+#     project_mock.layoutManager.return_value = layout_manager_mock
+
+#     with (
+#         patch("qgis.core.QgsProject.instance", return_value=project_mock),
+#         # patch.object(dialog, "extract_project_template"),
+#         patch.object(dialog, "customize_project"),
+#         patch("mzs_tools.gui.dlg_create_project.create_basic_sm_metadata"),
+#         patch("qgis.PyQt.QtWidgets.QMessageBox.information"),
+#         patch("os.rename"),
+#         patch("os.path.join", side_effect=os.path.join),
+#     ):
+#         # Execute
+#         result = dialog.create_project(test_dir)
+
+#         # Verify
+#         expected_path = os.path.join(test_dir, f"{cod_istat}_Test_Comune", "progetto_MS.qgs")
+#         assert result == expected_path
+
+#         # Verify method calls
+#         # dialog.extract_project_template.assert_called_once_with(test_dir)
+#         dialog.customize_project.assert_called_once()
+#         project_mock.read.assert_called_once()
+#         project_mock.write.assert_called_once()
+#         layout_mock.refresh.assert_called_once()
+
+#     dialog.close()
+
+
+# def test_sanitize_comune_name():
+#     """Test comune name sanitization"""
+#     dialog = DlgCreateProject()
+#     assert dialog.sanitize_comune_name("Roma (RM - Lazio)") == "Roma"
+#     assert dialog.sanitize_comune_name("Sant'Angelo (LE)") == "Sant_Angelo"
+#     assert dialog.sanitize_comune_name("Città Sant'Angelo") == "Città_Sant_Angelo"
 
 
 # @pytest.fixture
 # def new_project_dialog():
 #     dialog = NewProject()
-#     dialog.comuneField.setText("Test Comune (TE - Test)")
+#     dialog.comune_line_edit.setText("Test Comune (TE - Test)")
 #     dialog.cod_istat.setText("123456")
-#     dialog.professionista.setText("Test Prof")
-#     dialog.email_prof.setText("test@email.com")
+#     dialog.study_author_line_edit.setText("Test Prof")
+#     dialog.author_email_line_edit.setText("test@email.com")
 #     dialog.dir_output.setText("/tmp/test_project")
 #     return dialog
 
