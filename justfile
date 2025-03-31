@@ -109,7 +109,7 @@ qgis-ltr-pull:
     docker pull qgis/qgis:ltr
 
 # start latest QGIS LTR version with docker on Linux
-qgis-ltr QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
+qgis-docker VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
     #!/bin/bash
     # Allow local X server connections
     xhost +local:
@@ -157,7 +157,12 @@ qgis-ltr QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
         -e SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
         -e PYTHONHOME= \
         --user ${USER_ID}:${GROUP_ID} \
-        qgis/qgis:ltr qgis
+        qgis/qgis:{{ VERSION }} qgis
     
     # Clean up temporary directory
     rm -rf ${TEMP_DIR}
+
+# run pyqt6 migration script: https://github.com/qgis/QGIS/wiki/Plugin-migration-to-be-compatible-with-Qt5-and-Qt6
+pyqt5-to-pyqt6:
+    #!/bin/bash
+    docker run --rm -v "$(pwd):/home/pyqgisdev/" registry.gitlab.com/oslandia/qgis/pyqgis-4-checker/pyqgis-qt-checker:latest pyqt5_to_pyqt6.py --logfile /home/pyqgisdev/pyqt6_checker.log .

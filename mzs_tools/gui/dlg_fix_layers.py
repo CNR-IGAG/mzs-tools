@@ -21,8 +21,8 @@ class DlgFixLayers(QDialog, FORM_CLASS):
         self.log = MzSToolsLogger.log
         self.prj_manager = MzSProjectManager.instance()
 
-        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
-        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
 
         self.ok_button.setEnabled(False)
 
@@ -54,7 +54,7 @@ class DlgFixLayers(QDialog, FORM_CLASS):
         self.log("Request to replace layers in groups: " + ", ".join(selected_groups))
 
         msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setIcon(QMessageBox.Icon.Question)
         msg_box.setWindowTitle(self.tr("MzS Tools - Fix/Replace Layers"))
         msg = self.tr("The layers in the following groups will be replaced:")
         grp_list_txt = "\n".join(selected_groups)
@@ -68,11 +68,11 @@ class DlgFixLayers(QDialog, FORM_CLASS):
                 "only the selected QGIS layer groups will be replaced and all data will be preserved."
             )
         )
-        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        msg_box.setDefaultButton(QMessageBox.Yes)
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
 
-        response = msg_box.exec_()
-        if response == QMessageBox.Yes:
+        response = msg_box.exec()
+        if response == QMessageBox.StandardButton.Yes:
             self.prj_manager.add_default_layers(
                 add_base_layers=self.chk_base_layers.isChecked(),
                 add_editing_layers=self.chk_editing_layers.isChecked(),

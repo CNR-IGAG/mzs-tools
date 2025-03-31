@@ -9,7 +9,7 @@ from ..core.mzs_project_manager import MzSProjectManager
 
 class AttachmentsTask(QgsTask):
     def __init__(self, prepend_ids: bool = True):
-        super().__init__("Check, collect, consolidate indagini attachments", QgsTask.CanCancel)
+        super().__init__("Check, collect, consolidate indagini attachments", QgsTask.Flag.CanCancel)
 
         self.prepend_ids = prepend_ids
 

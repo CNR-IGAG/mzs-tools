@@ -9,7 +9,7 @@ from ..core.mzs_project_manager import MzSProjectManager
 
 class ExportProjectFilesTask(QgsTask):
     def __init__(self, exported_project_path: Path):
-        super().__init__("Export project files (attachments, plots, etc.)", QgsTask.CanCancel)
+        super().__init__("Export project files (attachments, plots, etc.)", QgsTask.Flag.CanCancel)
 
         self.iterations = 0
         self.exception = None

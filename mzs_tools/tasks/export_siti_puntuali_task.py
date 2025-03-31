@@ -11,7 +11,7 @@ from ..tasks.common_functions import setup_mdb_connection
 
 class ExportSitiPuntualiTask(QgsTask):
     def __init__(self, exported_project_path: Path, data_source: str):
-        super().__init__("Export siti puntuali (siti, indagini, parametri, curve)", QgsTask.CanCancel)
+        super().__init__("Export siti puntuali (siti, indagini, parametri, curve)", QgsTask.Flag.CanCancel)
 
         self.iterations = 0
         self.exception = None

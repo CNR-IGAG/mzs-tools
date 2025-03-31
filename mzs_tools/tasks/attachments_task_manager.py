@@ -54,7 +54,7 @@ class AttachmentsTaskManager:
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
             "MzS Tools", self.tr("Attachments check in progress...")
         )
@@ -65,7 +65,7 @@ class AttachmentsTaskManager:
         cancel_button.clicked.connect(self.cancel_tasks)
         progress_msg.layout().addWidget(cancel_button)
 
-        self.iface.messageBar().pushWidget(progress_msg, Qgis.Info)
+        self.iface.messageBar().pushWidget(progress_msg, Qgis.MessageLevel.Info)
 
         # QgsApplication.taskManager().progressChanged.connect(self._on_manage_attachments_task_progress)
         # QgsApplication.taskManager().allTasksFinished.connect(self._on_manage_attachments_task_completed)
@@ -86,7 +86,7 @@ class AttachmentsTaskManager:
 
     def _on_manage_attachments_task_status_changed(self, status):
         self.log(f"Task status changed: {status}")
-        if status == QgsTask.Terminated:
+        if status == QgsTask.TaskStatus.Terminated:
             self.task_failed = True
 
     def _on_task_completed(self):
@@ -100,7 +100,7 @@ class AttachmentsTaskManager:
             "MzS Tools",
             msg,
             log_text if log_text else "...",
-            level=Qgis.Success,
+            level=Qgis.MessageLevel.Success,
             duration=0,
         )
         self.file_logger.removeHandler(self.file_handler)
@@ -116,7 +116,7 @@ class AttachmentsTaskManager:
             "MzS Tools",
             msg,
             log_text if log_text else "...",
-            level=Qgis.Critical,
+            level=Qgis.MessageLevel.Critical,
             duration=0,
         )
         self.file_logger.removeHandler(self.file_handler)
@@ -126,7 +126,7 @@ class AttachmentsTaskManager:
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Attachment check cancelled!"), level=Qgis.Warning)
+        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Attachment check cancelled!"), level=Qgis.MessageLevel.Warning)
 
         self.file_logger.removeHandler(self.file_handler)
 

@@ -1,10 +1,11 @@
 # Changelog
 
-## [2.0.0-beta3] - 2025-03-25 [Unreleased]
+## [2.0.0-beta4] - 2025-03-31 [Unreleased]
 
 - Major plugin rewrite
 - Better project and database management
 - Direct, cross-platform data import/export from/to Microsoft Access MS standard database "CdI_Tabelle.mdb" (requires Java JVM 64 bit and external libraries managed with "Qpip" QGIS plugin)
+- Initial PyQt6 compatibility
 
 ## [1.9.4] - 2024-11-21
 

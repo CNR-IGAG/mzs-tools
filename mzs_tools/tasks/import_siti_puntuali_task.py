@@ -22,7 +22,7 @@ class ImportSitiPuntualiTask(QgsTask):
         csv_files: dict = None,
         adapt_counters: bool = True,
     ):
-        super().__init__("Import siti puntuali (siti, indagini, parametri, curve)", QgsTask.CanCancel)
+        super().__init__("Import siti puntuali (siti, indagini, parametri, curve)", QgsTask.Flag.CanCancel)
 
         self.iterations = 0
         self.exception = None

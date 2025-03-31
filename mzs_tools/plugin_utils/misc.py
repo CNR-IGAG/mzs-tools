@@ -69,7 +69,7 @@ def save_map_image(image_path, zoom_to_layer, canvas):
     p = QgsProject.instance()
     layout = QgsLayout(p)
     page = QgsLayoutItemPage(layout)
-    page.setPageSize(QgsLayoutSize(1200, 700, QgsUnitTypes.LayoutMillimeters))
+    page.setPageSize(QgsLayoutSize(1200, 700, QgsUnitTypes.LayoutUnit.LayoutMillimeters))
     collection = layout.pageCollection()
     collection.addPage(page)
 

@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from packaging.version import parse
-from PyQt5.QtCore import QT_VERSION_STR
+from qgis.PyQt.QtCore import QT_VERSION_STR
 from qgis.core import QgsProject, QgsVectorLayer
 from qgis.PyQt.QtCore import QT_VERSION_STR as QGIS_QT_VERSION_STR
 

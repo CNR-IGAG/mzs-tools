@@ -13,7 +13,7 @@ class ImportShapefileTask(QgsTask):
         proj_paths: dict,
         shapefile_name: str,
     ):
-        super().__init__(f"Import shapefile {shapefile_name}", QgsTask.CanCancel)
+        super().__init__(f"Import shapefile {shapefile_name}", QgsTask.Flag.CanCancel)
 
         self.iterations = 0
         self.exception = None
@@ -131,7 +131,7 @@ class ImportShapefileTask(QgsTask):
                 continue
 
             # Discard polygons with area < 1
-            if geometry.type() == QgsWkbTypes.PolygonGeometry:
+            if geometry.type() == QgsWkbTypes.GeometryType.PolygonGeometry:
                 if geometry.area() < 1:
                     self.logger.warning(
                         f"Polygon with area < 1 detected in feature ID {feature.id()}, skipping feature."

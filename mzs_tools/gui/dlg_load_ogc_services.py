@@ -21,8 +21,8 @@ class DlgLoadOgcServices(QDialog, FORM_CLASS):
         self.log = MzSToolsLogger.log
         self.prj_manager = MzSProjectManager.instance()
 
-        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
-        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
 
         self.ok_button.setEnabled(False)
 

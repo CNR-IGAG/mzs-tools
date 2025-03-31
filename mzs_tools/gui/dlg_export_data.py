@@ -14,7 +14,9 @@ from qgis.core import (
 )
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
+from qgis.PyQt.Qt import QUrl
 from qgis.PyQt.QtCore import QCoreApplication, Qt, QVariant
+from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -51,9 +53,9 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.prj_manager = MzSProjectManager.instance()
 
-        self.help_button = self.button_box.button(QDialogButtonBox.Help)
-        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
-        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
+        self.help_button = self.button_box.button(QDialogButtonBox.StandardButton.Help)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
 
         self.ok_button.setText(self.tr("Start export"))
         self.ok_button.setEnabled(False)
@@ -66,6 +68,10 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.label_mdb_msg.setText("")
         self.label_mdb_msg.setVisible(True)
+
+        self.help_button.pressed.connect(
+            partial(QDesktopServices.openUrl, QUrl("https://cnr-igag.github.io/mzs-tools/plugin/esportazione.html"))
+        )
 
         self.output_path = None
         self.standard_proj_paths = None
@@ -229,7 +235,7 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
             "MzS Tools", self.tr("Data export in progress...")
         )
@@ -240,7 +246,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         cancel_button.clicked.connect(self.cancel_tasks)
         self.progress_msg.layout().addWidget(cancel_button)
 
-        self.iface.messageBar().pushWidget(self.progress_msg, Qgis.Info)
+        self.iface.messageBar().pushWidget(self.progress_msg, Qgis.MessageLevel.Info)
 
         QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
         QgsApplication.taskManager().statusChanged.connect(self.on_task_status_changed)
@@ -292,7 +298,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         # adding this as a subtask of indagini puntuali task to avoid concurrent db writes
         self.export_siti_lineari_task = ExportSitiLineariTask(exported_project_path, self.indagini_output_format)
         # QgsApplication.taskManager().addTask(self.export_siti_lineari_task)
-        self.export_siti_puntuali_task.addSubTask(self.export_siti_lineari_task, [], QgsTask.ParentDependsOnSubTask)
+        self.export_siti_puntuali_task.addSubTask(self.export_siti_lineari_task, [], QgsTask.SubTaskDependency.ParentDependsOnSubTask)
         QgsApplication.taskManager().addTask(self.export_siti_puntuali_task)
 
         # export project files (attachments, plots, etc.)
@@ -333,7 +339,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.progress_bar.setValue(int(progress_percentage))
 
     def on_task_status_changed(self, taskid, status):
-        if status == QgsTask.Terminated:
+        if status == QgsTask.TaskStatus.Terminated:
             self.failed_tasks.append(QgsApplication.taskManager().task(taskid).description())
 
     def on_tasks_completed(self):
@@ -342,10 +348,10 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         if len(self.failed_tasks) == 0:
             msg = self.tr("Data exported successfully")
-            level = Qgis.Success
+            level = Qgis.MessageLevel.Success
         else:
             msg = self.tr("Data export completed with errors. Check the log for details.")
-            level = Qgis.Warning
+            level = Qgis.MessageLevel.Warning
 
         self.file_logger.info(f"{'#' * 15} {msg}")
         self.iface.messageBar().clearWidgets()
@@ -374,7 +380,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data export cancelled!"), level=Qgis.Warning)
+        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data export cancelled!"), level=Qgis.MessageLevel.Warning)
 
         self.file_logger.removeHandler(self.file_handler)
 

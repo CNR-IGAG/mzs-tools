@@ -23,9 +23,9 @@ class DlgCreateProject(QDialog, FORM_CLASS):
 
         self.database_template_path = DIR_PLUGIN_ROOT / "data" / "indagini.sqlite.zip"
 
-        self.help_button = self.button_box.button(QDialogButtonBox.Help)
-        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
-        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
+        self.help_button = self.button_box.button(QDialogButtonBox.StandardButton.Help)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
 
         # Load comuni data for autocomplete
         self.load_comuni_data()

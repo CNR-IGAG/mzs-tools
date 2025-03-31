@@ -124,7 +124,7 @@ class MzSTools:
 
         project_menu_button = QToolButton()
         project_menu_button.setIcon(QIcon(str(ico_nuovo_progetto)))
-        project_menu_button.setPopupMode(QToolButton.InstantPopup)
+        project_menu_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         project_menu_button.setToolTip(self.tr("Tools for managing MzS Tools project and database"))
         menu_project = QMenu()
         self.toolbar.addWidget(project_menu_button)
@@ -199,7 +199,7 @@ class MzSTools:
 
         layers_menu_button = QToolButton()
         layers_menu_button.setIcon(QgsApplication.getThemeIcon("mIconLayerTree.svg"))
-        layers_menu_button.setPopupMode(QToolButton.InstantPopup)
+        layers_menu_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         layers_menu_button.setToolTip(self.tr("Tools for managing MzS Tools QGIS layers"))
         menu_layers = QMenu()
         self.toolbar.addWidget(layers_menu_button)
@@ -417,7 +417,7 @@ class MzSTools:
                 "Load the default MzS Tools print layouts. The existing layouts will be preserved.\n\nDo you want to proceed?"
             ),
         )
-        if button == QMessageBox.Yes:
+        if button == QMessageBox.StandardButton.Yes:
             self.prj_manager.backup_print_layouts(backup_label="backup", backup_timestamp=True)
             self.prj_manager.load_print_layouts()
             self.log(self.tr("Print layouts loaded."), log_level=3, push=True, duration=0)
@@ -476,7 +476,7 @@ class MzSTools:
             self.iface.mainWindow(),
             self.tr("Select backup directory"),
             str(self.prj_manager.project_path.parent),
-            QFileDialog.ShowDirsOnly,
+            QFileDialog.Option.ShowDirsOnly,
         )
         if not backup_dir:
             return
@@ -547,7 +547,7 @@ class MzSTools:
 
         if self.prj_manager.project_updateable:
             msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Question)
+            msg_box.setIcon(QMessageBox.Icon.Question)
             msg_box.setWindowTitle(self.tr("MzS Tools - Project Update"))
             msg_upd1 = self.tr("The project will be updated from version")
             msg_upd2 = self.tr("to version")
@@ -562,11 +562,11 @@ class MzSTools:
                     "The current project will be saved in a backup directory before the update."
                 )
             )
-            msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            msg_box.setDefaultButton(QMessageBox.Yes)
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
 
-            response = msg_box.exec_()
-            if response == QMessageBox.Yes:
+            response = msg_box.exec()
+            if response == QMessageBox.StandardButton.Yes:
                 self.update_current_project()
                 return
             else:
@@ -594,7 +594,7 @@ class MzSTools:
             return
         formatted_issues = json.dumps(self.prj_manager.project_issues, indent=4)
         msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Warning)
+        msg_box.setIcon(QMessageBox.Icon.Warning)
         msg_box.setWindowTitle(self.tr("MzS Tools - Project Issues"))
         msg_box.setText(
             self.tr(
@@ -604,9 +604,9 @@ class MzSTools:
         )
         # msg_box.setInformativeText(self.tr("Do you want to proceed?"))
         msg_box.setDetailedText(formatted_issues)
-        msg_box.setStandardButtons(QMessageBox.Ok)
-        msg_box.setDefaultButton(QMessageBox.Ok)
-        msg_box.exec_()
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg_box.setDefaultButton(QMessageBox.StandardButton.Ok)
+        msg_box.exec()
 
     def update_current_project(self):
         if not self.prj_manager.is_mzs_project or not self.prj_manager.project_updateable:

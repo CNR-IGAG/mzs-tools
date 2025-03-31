@@ -35,9 +35,9 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
         self.log = MzSToolsLogger().log
         self.setupUi(self)
 
-        self.help_button = self.button_box.button(QDialogButtonBox.Help)
-        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
-        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
+        self.help_button = self.button_box.button(QDialogButtonBox.StandardButton.Help)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
 
         self.required_fields = (
             self.id_metadato,

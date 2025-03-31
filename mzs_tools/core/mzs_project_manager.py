@@ -238,7 +238,7 @@ class MzSProjectManager:
 
             # snapping_config.clearIndividualLayerSettings()
             snapping_config.setEnabled(True)
-            snapping_config.setMode(QgsSnappingConfig.AdvancedConfiguration)
+            snapping_config.setMode(QgsSnappingConfig.SnappingMode.AdvancedConfiguration)
             snapping_config.setIntersectionSnapping(True)
             snapping_config.setTolerance(20)
 
@@ -264,9 +264,9 @@ class MzSProjectManager:
             """
             layer_settings = QgsSnappingConfig.IndividualLayerSettings(
                 True,
-                QgsSnappingConfig.VertexFlag,
+                QgsSnappingConfig.SnappingTypes.VertexFlag,
                 20,
-                QgsTolerance.ProjectUnits,
+                QgsTolerance.UnitType.ProjectUnits,
             )
 
             for ly in editing_group_layers:
@@ -388,13 +388,13 @@ class MzSProjectManager:
         # https://gis.stackexchange.com/questions/318506/setting-layer-identifiable-seachable-and-removable-with-python-in-qgis-3
         flags = 0
         if identifiable:
-            flags += QgsMapLayer.Identifiable
+            flags += QgsMapLayer.LayerFlag.Identifiable
         if searchable:
-            flags += QgsMapLayer.Searchable
+            flags += QgsMapLayer.LayerFlag.Searchable
         if not required:
-            flags += QgsMapLayer.Removable
+            flags += QgsMapLayer.LayerFlag.Removable
         if private:
-            flags += QgsMapLayer.Private
+            flags += QgsMapLayer.LayerFlag.Private
 
         layer.setFlags(QgsMapLayer.LayerFlag(flags))
 
@@ -1021,12 +1021,20 @@ class MzSProjectManager:
                 self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
 
             # backup print layouts
-            self.backup_print_layouts(backup_label=f"backup_v.{old_version}", backup_models=True)
+            layout_file_paths = self.backup_print_layouts(
+                backup_label=f"backup_v.{old_version}", backup_all=True, backup_models=True
+            )
 
             self.current_project.clear()  # db connection is automatically closed!
 
             self.add_default_layers()
             self.customize_project()
+
+            # load the print layouts from the backup
+            for layout_file_path in layout_file_paths:
+                if layout_file_path.exists():
+                    self.load_print_layout_model(layout_file_path)
+
             self.refresh_project_layouts()
 
             # write the version file
@@ -1238,7 +1246,10 @@ class MzSProjectManager:
         layout_manager = self.current_project.layoutManager()
         layout = QgsPrintLayout(self.current_project)
         # load the layout model
-        layout_model_path = DIR_PLUGIN_ROOT / "data" / "print_layouts" / model_file_name
+        if model_file_name in PRINT_LAYOUT_MODELS.values():
+            layout_model_path = DIR_PLUGIN_ROOT / "data" / "print_layouts" / model_file_name
+        else:
+            layout_model_path = Path(model_file_name)
         with layout_model_path.open("r") as f:
             layout_model = f.read()
         doc = QDomDocument()
@@ -1274,21 +1285,27 @@ class MzSProjectManager:
             backup_label = f"{backup_label}"
         if backup_timestamp:
             backup_label = f"{backup_label}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        layout_file_paths = []
         for layout in layouts:
-            if layout.name() not in PRINT_LAYOUT_MODELS.keys() and not backup_all:
+            if "backup" in layout.name() and not backup_all:
                 continue
             else:
-                self.backup_print_layout(layout, backup_label, backup_models)
+                layout_file_path = self.backup_print_layout(layout, backup_label, backup_models)
+                if layout_file_path:
+                    layout_file_paths.append(layout_file_path)
+        return layout_file_paths
 
     def backup_print_layout(self, layout: QgsPrintLayout, backup_label: str = None, backup_model_file: bool = False):
         self.log(f"Backing up layout: {layout.name()}", log_level=4)
         layout_name = layout.name()
         layout_clone = layout.clone()
         layout_clone.setName(f"[{backup_label or 'backup'}]_{layout_name}")
+        layout_file_path = None
         if backup_model_file:
-            self.save_print_layout(layout_clone)
+            layout_file_path = self.save_print_layout(layout_clone)
         layout_manager = self.current_project.layoutManager()
         layout_manager.addLayout(layout_clone)
+        return layout_file_path
 
     def save_print_layout(self, layout: QgsPrintLayout):
         layout_name = layout.name()
@@ -1297,6 +1314,7 @@ class MzSProjectManager:
         layout_path = layout_models_path / f"{layout_name}.qpt"
         self.log(f"Backing up layout: {layout_name} to {layout_path}", log_level=4)
         layout.saveAsTemplate(str(layout_path), QgsReadWriteContext())
+        return layout_path
 
     def refresh_project_layouts(self):
         layout_manager = self.current_project.layoutManager()

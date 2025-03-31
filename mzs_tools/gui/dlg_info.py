@@ -46,7 +46,7 @@ class PluginInfo(QDialog, FORM_CLASS):
             locale = QSettings().value("locale/userLocale", "en", type=str)[0:2]
         except Exception:
             locale = "en"
-        self.label_info.setTextFormat(Qt.RichText)
+        self.label_info.setTextFormat(Qt.TextFormat.RichText)
         self.label_info.setText(
             self.label_info.text()
             .replace(
@@ -59,8 +59,8 @@ class PluginInfo(QDialog, FORM_CLASS):
         # https://doc.qt.io/qt-6/qt.html#TextFormat-enum
         self.markdown_available = hasattr(Qt, "MarkdownText")  # "MarkdownText" in dir(Qt)
         if self.markdown_available:
-            self.label_credits.setTextFormat(Qt.MarkdownText)
-            self.label_changelog.setTextFormat(Qt.MarkdownText)
+            self.label_credits.setTextFormat(Qt.TextFormat.MarkdownText)
+            self.label_changelog.setTextFormat(Qt.TextFormat.MarkdownText)
 
         self.load_and_set_text("LICENSE", self.label_license)
         self.load_and_set_text("CREDITS.md", self.label_credits)

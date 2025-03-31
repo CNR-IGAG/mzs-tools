@@ -1,10 +1,13 @@
 import logging
+from functools import partial
 from pathlib import Path
 
 from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig, QgsTask
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
+from qgis.PyQt.Qt import QUrl
 from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -46,9 +49,9 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.prj_manager = MzSProjectManager.instance()
 
-        self.help_button = self.button_box.button(QDialogButtonBox.Help)
-        self.cancel_button = self.button_box.button(QDialogButtonBox.Cancel)
-        self.ok_button = self.button_box.button(QDialogButtonBox.Ok)
+        self.help_button = self.button_box.button(QDialogButtonBox.StandardButton.Help)
+        self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
+        self.ok_button = self.button_box.button(QDialogButtonBox.StandardButton.Ok)
 
         self.ok_button.setText(self.tr("Start import"))
         self.ok_button.setEnabled(False)
@@ -72,6 +75,10 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.group_box_content.setVisible(False)
         self.label_mdb_msg.setText("")
         self.label_mdb_msg.setVisible(False)
+
+        self.help_button.pressed.connect(
+            partial(QDesktopServices.openUrl, QUrl("https://cnr-igag.github.io/mzs-tools/plugin/importazione.html"))
+        )
 
         self.input_path = None
         self.reset_sequences = False
@@ -362,8 +369,8 @@ class DlgImportData(QDialog, FORM_CLASS):
                     self.log(f"Removed invalid auth config with id: {stored_config_id}", log_level=4)
 
             dialog = DlgMdbPassword(self)
-            dialog.exec_()
-            if dialog.result() == QDialog.Accepted:
+            dialog.exec()
+            if dialog.result() == QDialog.DialogCode.Accepted:
                 # self.log(f"Password: {dialog.input.text()}", log_level=4)
                 if dialog.input.text():
                     if dialog.save_password:
@@ -483,7 +490,7 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
             "MzS Tools", self.tr("Data import in progress...")
         )
@@ -494,7 +501,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         cancel_button.clicked.connect(self.cancel_tasks)
         self.progress_msg.layout().addWidget(cancel_button)
 
-        self.iface.messageBar().pushWidget(self.progress_msg, Qgis.Info)
+        self.iface.messageBar().pushWidget(self.progress_msg, Qgis.MessageLevel.Info)
 
         QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
         QgsApplication.taskManager().statusChanged.connect(self.on_task_status_changed)
@@ -519,7 +526,7 @@ class DlgImportData(QDialog, FORM_CLASS):
             if task_count == 1:
                 first_task = previous_task = task
             else:
-                previous_task.addSubTask(task, [], QgsTask.ParentDependsOnSubTask)
+                previous_task.addSubTask(task, [], QgsTask.SubTaskDependency.ParentDependsOnSubTask)
                 previous_task = task
 
         QgsApplication.taskManager().addTask(first_task)
@@ -541,7 +548,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.progress_bar.setValue(int(progress))
 
     def on_task_status_changed(self, taskid, status):
-        if status == QgsTask.Terminated:
+        if status == QgsTask.TaskStatus.Terminated:
             self.failed_tasks.append(QgsApplication.taskManager().task(taskid).description())
 
     def on_tasks_completed(self):
@@ -550,10 +557,10 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         if len(self.failed_tasks) == 0:
             msg = self.tr("Data imported successfully")
-            level = Qgis.Success
+            level = Qgis.MessageLevel.Success
         else:
             msg = self.tr("Data import completed with errors. Check the log for details.")
-            level = Qgis.Warning
+            level = Qgis.MessageLevel.Warning
 
         self.file_logger.info(f"{'#' * 15} {msg}")
         self.iface.messageBar().clearWidgets()
@@ -582,7 +589,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data import cancelled!"), level=Qgis.Warning)
+        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data import cancelled!"), level=Qgis.MessageLevel.Warning)
 
         self.iface.mapCanvas().refreshAllLayers()
 
@@ -631,15 +638,15 @@ class DlgMdbPassword(QDialog):
         self.layout.addWidget(self.label)
 
         self.input = QLineEdit()
-        self.input.setEchoMode(QLineEdit.Password)
+        self.input.setEchoMode(QLineEdit.EchoMode.Password)
         self.layout.addWidget(self.input)
 
         self.chkbox_save = QCheckBox(self.tr("Save password in QGIS auth manager"))
-        self.chkbox_save.setCheckState(Qt.Checked)
+        self.chkbox_save.setCheckState(Qt.CheckState.Checked)
         self.chkbox_save.stateChanged.connect(self.on_chkbox_save_state_changed)
         self.layout.addWidget(self.chkbox_save)
 
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         self.layout.addWidget(self.button_box)
@@ -650,7 +657,7 @@ class DlgMdbPassword(QDialog):
         self.password = None
 
     def on_chkbox_save_state_changed(self, state):
-        self.save_password = state == Qt.Checked
+        self.save_password = state == Qt.CheckState.Checked
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)

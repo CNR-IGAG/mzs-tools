@@ -31,7 +31,7 @@ def test_tb_info(qgis_app):
     assert dialog.label_version.text() == f"Version {__version__}"
 
     QTimer.singleShot(2000, qgis_app.closeAllWindows)
-    qgis_app.exec_()
+    qgis_app.exec()
 
 
 def test_dlg_create_project_gui(qgis_app):
@@ -80,7 +80,7 @@ def test_dlg_create_project_gui(qgis_app):
 
     QTimer.singleShot(2000, dialog.reject)
 
-    qgis_app.exec_()
+    qgis_app.exec()
 
     qgis_app.closeAllWindows()
 
@@ -91,7 +91,7 @@ def test_tb_nuovo_progetto_comune_completer():
     # Test completer setup
     completer = dialog.comune_line_edit.completer()
     assert isinstance(completer, QCompleter)
-    assert completer.caseSensitivity() == Qt.CaseInsensitive
+    assert completer.caseSensitivity() == Qt.CaseSensitivity.CaseInsensitive
 
     # Test completion model
     model = completer.model()

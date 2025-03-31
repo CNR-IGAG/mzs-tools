@@ -80,10 +80,7 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
         self.plg_settings.save_from_object(settings)
 
         if __debug__:
-            self.log(
-                message="DEBUG - Settings successfully saved.",
-                log_level=4,
-            )
+            self.log(message="DEBUG - Settings successfully saved.", log_level=4)
 
     def load_settings(self):
         """Load options from QgsSettings into UI form."""
