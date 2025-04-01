@@ -1031,9 +1031,12 @@ class MzSProjectManager:
             self.customize_project()
 
             # load the print layouts from the backup
-            for layout_file_path in layout_file_paths:
-                if layout_file_path.exists():
-                    self.load_print_layout_model(layout_file_path)
+            try:
+                for layout_file_path in layout_file_paths:
+                    if layout_file_path.exists():
+                        self.load_print_layout_model(layout_file_path)
+            except Exception as e:
+                self.log(f"Error loading print layout model backups: {e}", log_level=1)
 
             self.refresh_project_layouts()
 
@@ -1243,10 +1246,14 @@ class MzSProjectManager:
 
     def load_print_layout_model(self, model_file_name: str):
         self.log(f"Loading print layout model: {model_file_name}", log_level=4)
+
+        # check if the layout requested is one of the default models
+        is_default_model = model_file_name in PRINT_LAYOUT_MODELS.values()
+
         layout_manager = self.current_project.layoutManager()
         layout = QgsPrintLayout(self.current_project)
         # load the layout model
-        if model_file_name in PRINT_LAYOUT_MODELS.values():
+        if is_default_model:
             layout_model_path = DIR_PLUGIN_ROOT / "data" / "print_layouts" / model_file_name
         else:
             layout_model_path = Path(model_file_name)
@@ -1256,19 +1263,20 @@ class MzSProjectManager:
         doc.setContent(layout_model)
         layout.loadFromTemplate(doc, QgsReadWriteContext())
 
-        # set layout elements for the current project
-        canvas = iface.mapCanvas()
-        map_item = layout.itemById("mappa_0")
-        # TODO: get extent from comune_progetto table
-        map_item.zoomToExtent(canvas.extent())
-        map_item_2 = layout.itemById("regio_title")
-        map_item_2.setText("Regione " + self.comune_data.regione)
-        map_item_3 = layout.itemById("com_title")
-        map_item_3.setText("Comune di " + self.comune_data.comune)
-        map_item_4 = layout.itemById("logo")
-        map_item_4.refreshPicture()
-        map_item_5 = layout.itemById("mappa_1")
-        map_item_5.refreshPicture()
+        # set layout elements for the current project if it's a default model
+        if is_default_model:
+            canvas = iface.mapCanvas()
+            map_item = layout.itemById("mappa_0")
+            # TODO: get extent from comune_progetto table
+            map_item.zoomToExtent(canvas.extent())
+            map_item_2 = layout.itemById("regio_title")
+            map_item_2.setText("Regione " + self.comune_data.regione)
+            map_item_3 = layout.itemById("com_title")
+            map_item_3.setText("Comune di " + self.comune_data.comune)
+            map_item_4 = layout.itemById("logo")
+            map_item_4.refreshPicture()
+            map_item_5 = layout.itemById("mappa_1")
+            map_item_5.refreshPicture()
 
         layout_manager.addLayout(layout)
 
