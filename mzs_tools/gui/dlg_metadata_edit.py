@@ -107,10 +107,12 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
         comune_info = f"{comune} ({provincia}, {regione})"
 
         # check if "metadati" table contains a single record with expected id
-        with self.prj_manager.db_connection as conn:
-            cursor = conn.cursor()
+        conn = self.prj_manager.db_connection
+        cursor = conn.cursor()
+        try:
             cursor.execute("SELECT COUNT(*) FROM metadati WHERE id_metadato = ?", (expected_id,))
             count = cursor.fetchone()[0]
+        finally:
             cursor.close()
 
         if count == 0:
@@ -138,10 +140,12 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
 
     def load_data(self, record_id, comune_info):
         """Load data from the SQLite table and populate the form fields."""
-        with self.prj_manager.db_connection as conn:
-            cursor = conn.cursor()
+        conn = self.prj_manager.db_connection
+        cursor = conn.cursor()
+        try:
             cursor.execute("SELECT * FROM metadati WHERE id_metadato = ?", (record_id,))
             record = cursor.fetchone()
+        finally:
             cursor.close()
 
         if record:
@@ -223,8 +227,9 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
     def save_data(self):
         """Save the edited data back to the SQLite table."""
         self.log("Updating metadata record...")
-        with self.prj_manager.db_connection as conn:
-            cursor = conn.cursor()
+        conn = self.prj_manager.db_connection
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """
                 UPDATE metadati SET
@@ -280,6 +285,8 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
                     self.id_metadato.text(),
                 ),
             )
+            conn.commit()
+        finally:
             cursor.close()
 
         success_msg = self.tr("Metadata updated successfully.")

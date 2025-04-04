@@ -199,15 +199,17 @@ class ExportSitiPuntualiTask(QgsTask):
         return self.sqlite_db_connection
 
     def get_sito_puntuale_data(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT pkuid, id_spu, ubicazione_prov, ubicazione_com, indirizzo, coord_x, coord_y, mod_identcoord,
                     desc_modcoord, quota_slm, modo_quota, data_sito, note_sito FROM sito_puntuale"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_siti_puntuali(self, data):
         """Export 'sito_puntuale' data in sqlite db."""
@@ -247,8 +249,9 @@ class ExportSitiPuntualiTask(QgsTask):
         # - find the position of the id_spu in the string
         # - get the substring from that position to the end of the string
         # - if id_spu was not added to the file name, try to remove the './Allegati/Documenti/' part
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT sp.pkuid, ip.pkuid, classe_ind, tipo_ind, id_indpu, id_indpuex, arch_ex, note_ind, prof_top,
                 prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, replace(substr(doc_ind, instr(doc_ind,
@@ -256,8 +259,9 @@ class ExportSitiPuntualiTask(QgsTask):
                 indagini_puntuali ip JOIN sito_puntuale sp ON ip.id_spu = sp.id_spu"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_indagini_puntuali(self, data):
         """Export 'indagini_puntuali' data in sqlite db."""
@@ -300,8 +304,9 @@ class ExportSitiPuntualiTask(QgsTask):
         # - find the position of the id_indpu in the string
         # - get the substring from that position to the end of the string
         # - if id_indpu was not added to the file name, try to remove the './Allegati/Documenti/' part
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT ip.pkuid, pp.pkuid, tipo_parpu, id_parpu, pp.prof_top, pp.prof_bot, pp.spessore,
                 pp.quota_slm_top, pp.quota_slm_bot, valore, attend_mis, replace(substr(tab_curve, instr(tab_curve, ip.id_indpu),
@@ -309,8 +314,9 @@ class ExportSitiPuntualiTask(QgsTask):
                 parametri_puntuali pp JOIN indagini_puntuali ip ON pp.id_indpu = ip.id_indpu"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_parametri_puntuali(self, data):
         """Export 'parametri_puntuali' data in sqlite db."""
@@ -347,15 +353,17 @@ class ExportSitiPuntualiTask(QgsTask):
         return insert_errors
 
     def get_curve_data(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT pp.pkuid, c.pkuid, cond_curve, varx, vary, pp.id_parpu FROM curve c JOIN parametri_puntuali pp ON
                 c.id_parpu = pp.id_parpu"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_curve(self, data):
         """Export 'curve' data in sqlite db."""
@@ -382,8 +390,9 @@ class ExportSitiPuntualiTask(QgsTask):
         return insert_errors
 
     def get_metadata_data(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT id_metadato, liv_gerarchico, resp_metadato_nome,
                     resp_metadato_email, resp_metadato_sito, data_metadato, srs_dati, proprieta_dato_nome, proprieta_dato_email, proprieta_dato_sito, data_dato, ruolo, desc_dato,
@@ -393,8 +402,9 @@ class ExportSitiPuntualiTask(QgsTask):
                 FROM metadati"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_metadata(self, data):
         """Export 'metadata' data in sqlite db."""

@@ -164,15 +164,17 @@ class ExportSitiLineariTask(QgsTask):
         return self.sqlite_db_connection
 
     def get_sito_lineare_data(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT pkuid, id_sln, ubicazione_prov, ubicazione_com, acoord_x, acoord_y, bcoord_x, bcoord_y,
                 mod_identcoord, desc_modcoord, aquota, bquota, data_sito, note_sito FROM sito_lineare"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_siti_lineari(self, data):
         """Insert 'sito_lineare' data into the database."""
@@ -213,8 +215,9 @@ class ExportSitiLineariTask(QgsTask):
         # - find the position of the id_sln in the string
         # - get the substring from that position to the end of the string
         # - if id_sln was not added to the file name, try to remove the './Allegati/Documenti/' part
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT sl.pkuid, il.pkuid, classe_ind, tipo_ind, id_indln, id_indlnex, arch_ex, note_indln,
                 data_ind, doc_pag, replace(substr(doc_ind, instr(doc_ind, sl.id_sln), length(doc_ind) +1),
@@ -222,8 +225,9 @@ class ExportSitiLineariTask(QgsTask):
                 il.id_sln = sl.id_sln"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_indagini_lineari(self, data):
         """Insert 'indagini_lineari' data into the database."""
@@ -257,16 +261,18 @@ class ExportSitiLineariTask(QgsTask):
         return insert_errors
 
     def get_parametri_lineari_data(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """SELECT il.pkuid, pl.pkuid, tipo_parln, id_parln, prof_top, prof_bot, spessore, quota_slm_top,
                 quota_slm_bot, valore, attend_mis, note_par, data_par, il.id_indln FROM parametri_lineari pl JOIN
                 indagini_lineari il ON pl.id_indln = il.id_indln"""
             )
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data
 
     def insert_parametri_lineari(self, data):
         """Insert 'parametri_lineari' data into the database."""

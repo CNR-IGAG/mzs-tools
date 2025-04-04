@@ -486,7 +486,7 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
     <message>
         <location filename="../gui/dlg_manage_attachments.ui" line="52"/>
         <source>This option is generally recommended, except when there are many cases where the same file is associated with many different investigations. In this case the same file would be replicated for each investigation it is associated with.</source>
-        <translation>E&apos; generalmente raccomandato attivare questa opzione, tranne quando vi siano molti casi nei quali uno stesso file risulta associato a diverse indagini o parametri. In questi casi, attivando l&apos;opzione, questi file verrebbero replicati per ogni record con cui sono associati.</translation>
+        <translation type="unfinished">E&apos; generalmente raccomandato attivare questa opzione, tranne quando vi siano molti casi nei quali uno stesso file risulti associato a diverse indagini o parametri. In questi casi, attivando l&apos;opzione, questi file verrebbero replicati per ogni record con cui sono associati.</translation>
     </message>
 </context>
 <context>

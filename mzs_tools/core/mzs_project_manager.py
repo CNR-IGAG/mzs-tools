@@ -1082,40 +1082,40 @@ class MzSProjectManager:
 
         comune_data = None
         if insert_comune_progetto:
-            with self.db_connection as conn:
-                cursor = conn.cursor()
-                try:
-                    cursor.execute(
-                        """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
-                        SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
-                        (cod_istat,),
-                    )
-                    conn.commit()
+            conn = self.db_connection
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
+                    SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
+                    (cod_istat,),
+                )
+                conn.commit()
 
-                    last_inserted_id = cursor.lastrowid
+                last_inserted_id = cursor.lastrowid
 
-                    cursor.execute(
-                        """SELECT cod_regio, comune, provincia, regione
-                        FROM comune_progetto WHERE rowid = ?""",
-                        (last_inserted_id,),
-                    )
-                    comune_data = cursor.fetchone()
-                except Exception as e:
-                    conn.rollback()
-                    self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
-                finally:
-                    cursor.close()
+                cursor.execute(
+                    """SELECT cod_regio, comune, provincia, regione
+                    FROM comune_progetto WHERE rowid = ?""",
+                    (last_inserted_id,),
+                )
+                comune_data = cursor.fetchone()
+            except Exception as e:
+                conn.rollback()
+                self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
+            finally:
+                cursor.close()
         else:
-            with self.db_connection as conn:
-                try:
-                    cursor = conn.cursor()
-                    # assuming there is only one record in comune_progetto
-                    cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
-                    comune_data = cursor.fetchone()
-                except Exception as e:
-                    self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
-                finally:
-                    cursor.close()
+            conn = self.db_connection
+            cursor = conn.cursor()
+            try:
+                # assuming there is only one record in comune_progetto
+                cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
+                comune_data = cursor.fetchone()
+            except Exception as e:
+                self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
+            finally:
+                cursor.close()
 
         codice_regio = comune_data[0]
         comune = comune_data[1]
@@ -1362,40 +1362,40 @@ class MzSProjectManager:
 
     def get_project_comune_data(self) -> Optional[ComuneData]:
         data = None
-        with self.db_connection as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute("SELECT * FROM comune_progetto LIMIT 1")
-                row = cursor.fetchone()
-                if row:
-                    data = ComuneData(
-                        cod_regio=row[1],
-                        cod_prov=row[2],
-                        cod_com=row[3],
-                        comune=row[4],
-                        provincia=row[7],
-                        regione=row[8],
-                        cod_istat=row[6],
-                    )
-            finally:
-                cursor.close()
+        conn = self.db_connection
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT * FROM comune_progetto LIMIT 1")
+            row = cursor.fetchone()
+            if row:
+                data = ComuneData(
+                    cod_regio=row[1],
+                    cod_prov=row[2],
+                    cod_com=row[3],
+                    comune=row[4],
+                    provincia=row[7],
+                    regione=row[8],
+                    cod_istat=row[6],
+                )
+        finally:
+            cursor.close()
         return data
 
     def _insert_comune_progetto(self, cod_istat):
-        with self.db_connection as conn:
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
-                        SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
-                    (cod_istat,),
-                )
-                conn.commit()
-            except Exception as e:
-                conn.rollback()
-                self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
-            finally:
-                cursor.close()
+        conn = self.db_connection
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
+                    SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
+                (cod_istat,),
+            )
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
+        finally:
+            cursor.close()
 
     def update_db(self):
         sql_scripts = []
@@ -1429,41 +1429,44 @@ class MzSProjectManager:
         self.log(f"{msg} {__base_version__}", push=True, duration=0)
 
     def _exec_db_upgrade_script(self, script_name):
-        with self.db_connection as conn:
-            cursor = conn.cursor()
+        conn = self.db_connection
+        cursor = conn.cursor()
+        try:
             script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name
             with script_path.open("r") as f:
                 cursor.executescript(f.read())
+            conn.commit()
+        finally:
             cursor.close()
 
     def update_history_table(self, component: str, from_version: str, to_version: str, notes: str = None):
+        conn = self.db_connection
+        cursor = conn.cursor()
         try:
-            with self.db_connection as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mzs_tools_update_history'")
-                if cursor.fetchone():
-                    cursor.execute(
-                        "INSERT INTO mzs_tools_update_history (updated_component, from_version, to_version, notes) VALUES (?, ? ,?, ?)",
-                        (component, from_version, to_version, notes),
-                    )
-                    conn.commit()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mzs_tools_update_history'")
+            if cursor.fetchone():
+                cursor.execute(
+                    "INSERT INTO mzs_tools_update_history (updated_component, from_version, to_version, notes) VALUES (?, ? ,?, ?)",
+                    (component, from_version, to_version, notes),
+                )
+                conn.commit()
         except Exception as e:
             self.log(f"Failed to update history table: {e}", log_level=2)
         finally:
             cursor.close()
 
     def update_db_version_info(self):
+        conn = self.db_connection
+        cursor = conn.cursor()
         try:
-            with self.db_connection as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    "INSERT OR REPLACE INTO mzs_tools_version (id, db_version) VALUES (?, ?)",
-                    (
-                        1,
-                        __base_version__,
-                    ),
-                )
-                conn.commit()
+            cursor.execute(
+                "INSERT OR REPLACE INTO mzs_tools_version (id, db_version) VALUES (?, ?)",
+                (
+                    1,
+                    __base_version__,
+                ),
+            )
+            conn.commit()
         except Exception as e:
             self.log(f"Failed to update version info: {e}", log_level=2)
         finally:
@@ -1496,8 +1499,10 @@ class MzSProjectManager:
             "estensione_sud": str(extent.yMinimum()),
             "estensione_nord": str(extent.yMaximum()),
         }
-        with self.db_connection as conn:
-            conn.execute(
+        conn = self.db_connection
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
                 """
                 INSERT INTO metadati (
                     id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, data_metadato, srs_dati, 
@@ -1511,6 +1516,9 @@ class MzSProjectManager:
                 """,
                 values,
             )
+            conn.commit()
+        finally:
+            cursor.close()
 
     def count_indagini_data(self):
         result = {
@@ -1522,8 +1530,9 @@ class MzSProjectManager:
             "indagini_lineari": [],
             "parametri_lineari": [],
         }
-        with self.db_connection as conn:
-            cursor = conn.cursor()
+        conn = self.db_connection
+        cursor = conn.cursor()
+        try:
             cursor.execute("SELECT COUNT(*) FROM sito_puntuale")
             result["sito_puntuale"].append(cursor.fetchone()[0])
             res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="sito_puntuale"').fetchone()
@@ -1558,13 +1567,14 @@ class MzSProjectManager:
             result["parametri_lineari"].append(cursor.fetchone()[0])
             res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="parametri_lineari"').fetchone()
             result["parametri_lineari"].append(res[0] if res else 0)
-
+        finally:
             cursor.close()
         return result
 
     def reset_indagini_sequences(self):
-        with self.db_connection as conn:
-            cursor = conn.cursor()
+        conn = self.db_connection
+        cursor = conn.cursor()
+        try:
             cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="sito_puntuale"')
             cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="indagini_puntuali"')
             cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="parametri_puntuali"')
@@ -1573,6 +1583,7 @@ class MzSProjectManager:
             cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="indagini_lineari"')
             cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="parametri_lineari"')
             conn.commit()
+        finally:
             cursor.close()
 
     # backup methods -------------------------------------------------------------------------------------------------

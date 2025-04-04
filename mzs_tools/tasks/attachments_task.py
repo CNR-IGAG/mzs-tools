@@ -204,9 +204,9 @@ class AttachmentsTask(QgsTask):
         return self.spatialite_db_connection
 
     def update_attachment_path(self, table_name, pkuid, new_path):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
-
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             # Determine which field to update based on the table
             field_name = "doc_ind"  # Default for most tables
             if table_name == "parametri_puntuali":
@@ -216,13 +216,16 @@ class AttachmentsTask(QgsTask):
 
             cursor.execute(f"""UPDATE {table_name} SET {field_name} = '{new_path}' WHERE pkuid = {pkuid}""")
             conn.commit()
+        finally:
             cursor.close()
 
     def get_attachments_data(self, table_name, query):
         """Get attachment data from database using the provided query"""
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(query)
             data = cursor.fetchall()
+            return data
+        finally:
             cursor.close()
-        return data

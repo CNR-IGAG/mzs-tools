@@ -375,8 +375,9 @@ class ImportSitiLineariTask(QgsTask):
     @retry_on_lock()
     def insert_sito_lineare(self, data: dict):
         """Insert a new 'sito_lineare' record into the database."""
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """INSERT INTO sito_lineare (pkuid, id_sln, mod_identcoord, desc_modcoord, aquota, bquota, data_sito,
                 note_sito, geom) 
@@ -385,56 +386,58 @@ class ImportSitiLineariTask(QgsTask):
                 data,
             )
             conn.commit()
+        finally:
             cursor.close()
-
-    # def delete_sito_puntuale(self, pkuid: int):
-    #     """Delete a 'sito_puntuale' record from the database."""
-    #     with self.get_spatialite_db_connection() as conn:
-    #         cursor = conn.cursor()
-    #         cursor.execute("DELETE FROM sito_puntuale WHERE pkuid = :pkuid;", {"pkuid": pkuid})
-    #         conn.commit()
-    #         cursor.close()
 
     @retry_on_lock()
     def delete_all_siti_lineari(self):
         """Delete all 'sito_lineare' records from the database."""
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute("DELETE FROM sito_lineare;")
             conn.commit()
+        finally:
             cursor.close()
 
     @retry_on_lock()
     def get_sito_lineare_seq(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="sito_lineare"''')
             data = cursor.fetchall()
+            return data[0][0] if data else 0
+        finally:
             cursor.close()
-        return data[0][0] if data else 0
 
     @retry_on_lock()
     def get_indagini_lineari_seq(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="indagini_lineari"''')
             data = cursor.fetchall()
+            return data[0][0] if data else 0
+        finally:
             cursor.close()
-        return data[0][0] if data else 0
 
     @retry_on_lock()
     def get_parametri_lineari_seq(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="parametri_lineari"''')
             data = cursor.fetchall()
+            return data[0][0] if data else 0
+        finally:
             cursor.close()
-        return data[0][0] if data else 0
 
     @retry_on_lock()
     def insert_indagine_lineare(self, data: dict):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """INSERT INTO indagini_lineari (pkuid, id_sln, classe_ind, tipo_ind, id_indln, id_indlnex, arch_ex,
                 note_indln, data_ind, doc_pag, doc_ind)
@@ -443,12 +446,14 @@ class ImportSitiLineariTask(QgsTask):
                 data,
             )
             conn.commit()
+        finally:
             cursor.close()
 
     @retry_on_lock()
     def insert_parametro_lineare(self, data: dict):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """INSERT INTO parametri_lineari (pkuid, id_indln, tipo_parln, id_parln, prof_top, prof_bot, spessore,
                 quota_slm_top, quota_slm_bot, valore, attend_mis, note_par, data_par)
@@ -457,6 +462,7 @@ class ImportSitiLineariTask(QgsTask):
                 data,
             )
             conn.commit()
+        finally:
             cursor.close()
 
     def get_spatialite_db_connection(self):
@@ -509,100 +515,109 @@ class ImportSitiLineariTask(QgsTask):
         """Get sito_lineare data from SQLite database"""
         data = {}
         cursor = self.sqlite_db_connection.cursor()
-        cursor.execute("""
-            SELECT pkey_sln, ID_SLN, ubicazione_prov, ubicazione_com, Acoord_X, Acoord_Y, 
-                Bcoord_X, Bcoord_Y, mod_identcoord, desc_modcoord, Aquota, Bquota, 
-                data_sito, note_sito
-            FROM sito_lineare
-        """)
+        try:
+            cursor.execute("""
+                SELECT pkey_sln, ID_SLN, ubicazione_prov, ubicazione_com, Acoord_X, Acoord_Y, 
+                    Bcoord_X, Bcoord_Y, mod_identcoord, desc_modcoord, Aquota, Bquota, 
+                    data_sito, note_sito
+                FROM sito_lineare
+            """)
 
-        rows = cursor.fetchall()
-        for row in rows:
-            row_dict = {
-                "pkey_sln": str(row["pkey_sln"]),
-                "ID_SLN": row["ID_SLN"],
-                "ubicazione_prov": row["ubicazione_prov"] or "",
-                "ubicazione_com": row["ubicazione_com"] or "",
-                "Acoord_X": row["Acoord_X"],
-                "Acoord_Y": row["Acoord_Y"],
-                "Bcoord_X": row["Bcoord_X"],
-                "Bcoord_Y": row["Bcoord_Y"],
-                "mod_identcoord": row["mod_identcoord"] or "",
-                "desc_modcoord": row["desc_modcoord"] or "",
-                "Aquota": row["Aquota"],
-                "Bquota": row["Bquota"],
-                "data_sito": row["data_sito"] or "",
-                "note_sito": row["note_sito"] or "",
-            }
-            data[row["ID_SLN"]] = row_dict
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = {
+                    "pkey_sln": str(row["pkey_sln"]),
+                    "ID_SLN": row["ID_SLN"],
+                    "ubicazione_prov": row["ubicazione_prov"] or "",
+                    "ubicazione_com": row["ubicazione_com"] or "",
+                    "Acoord_X": row["Acoord_X"],
+                    "Acoord_Y": row["Acoord_Y"],
+                    "Bcoord_X": row["Bcoord_X"],
+                    "Bcoord_Y": row["Bcoord_Y"],
+                    "mod_identcoord": row["mod_identcoord"] or "",
+                    "desc_modcoord": row["desc_modcoord"] or "",
+                    "Aquota": row["Aquota"],
+                    "Bquota": row["Bquota"],
+                    "data_sito": row["data_sito"] or "",
+                    "note_sito": row["note_sito"] or "",
+                }
+                data[row["ID_SLN"]] = row_dict
 
-        self.logger.info(f"Read {len(data)} records from sito_lineare in SQLite")
-        return data
+            self.logger.info(f"Read {len(data)} records from sito_lineare in SQLite")
+            return data
+        finally:
+            cursor.close()
 
     def get_sqlite_indagini_lineari_data(self):
         """Get indagini_lineari data from SQLite database"""
         data = {}
         cursor = self.sqlite_db_connection.cursor()
-        cursor.execute("""
-            SELECT pkey_sln, pkey_indln, classe_ind, tipo_ind, ID_INDLN, id_indlnex,
-                arch_ex, note_indln, data_ind, doc_pag, doc_ind, id_sln
-            FROM indagini_lineari
-        """)
+        try:
+            cursor.execute("""
+                SELECT pkey_sln, pkey_indln, classe_ind, tipo_ind, ID_INDLN, id_indlnex,
+                    arch_ex, note_indln, data_ind, doc_pag, doc_ind, id_sln
+                FROM indagini_lineari
+            """)
 
-        rows = cursor.fetchall()
-        for row in rows:
-            row_dict = {
-                "pkey_sln": str(row["pkey_sln"]),
-                "pkey_indln": str(row["pkey_indln"]),
-                "classe_ind": row["classe_ind"] or "",
-                "tipo_ind": row["tipo_ind"] or "",
-                "ID_INDLN": row["ID_INDLN"],
-                "id_indlnex": row["id_indlnex"] or "",
-                "arch_ex": row["arch_ex"] or "",
-                "note_indln": row["note_indln"] or "",
-                "data_ind": row["data_ind"] or "",
-                "doc_pag": row["doc_pag"] or "",
-                "doc_ind": row["doc_ind"] or "",
-                "id_sln": row["id_sln"] or "",
-            }
-            data[(str(row["pkey_sln"]), row["ID_INDLN"])] = row_dict
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = {
+                    "pkey_sln": str(row["pkey_sln"]),
+                    "pkey_indln": str(row["pkey_indln"]),
+                    "classe_ind": row["classe_ind"] or "",
+                    "tipo_ind": row["tipo_ind"] or "",
+                    "ID_INDLN": row["ID_INDLN"],
+                    "id_indlnex": row["id_indlnex"] or "",
+                    "arch_ex": row["arch_ex"] or "",
+                    "note_indln": row["note_indln"] or "",
+                    "data_ind": row["data_ind"] or "",
+                    "doc_pag": row["doc_pag"] or "",
+                    "doc_ind": row["doc_ind"] or "",
+                    "id_sln": row["id_sln"] or "",
+                }
+                data[(str(row["pkey_sln"]), row["ID_INDLN"])] = row_dict
 
-        self.logger.info(f"Read {len(data)} records from indagini_lineari in SQLite")
-        return data
+            self.logger.info(f"Read {len(data)} records from indagini_lineari in SQLite")
+            return data
+        finally:
+            cursor.close()
 
     def get_sqlite_parametri_lineari_data(self):
         """Get parametri_lineari data from SQLite database"""
         data = {}
         cursor = self.sqlite_db_connection.cursor()
-        cursor.execute("""
-            SELECT pkey_indln, pkey_parln, tipo_parln, ID_PARLN, prof_top, prof_bot,
-                spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, 
-                note_par, data_par, id_indln
-            FROM parametri_lineari
-        """)
+        try:
+            cursor.execute("""
+                SELECT pkey_indln, pkey_parln, tipo_parln, ID_PARLN, prof_top, prof_bot,
+                    spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, 
+                    note_par, data_par, id_indln
+                FROM parametri_lineari
+            """)
 
-        rows = cursor.fetchall()
-        for row in rows:
-            row_dict = {
-                "pkey_indln": str(row["pkey_indln"]),
-                "pkey_parln": str(row["pkey_parln"]),
-                "tipo_parln": row["tipo_parln"] or "",
-                "ID_PARLN": row["ID_PARLN"],
-                "prof_top": row["prof_top"],
-                "prof_bot": row["prof_bot"],
-                "spessore": row["spessore"],
-                "quota_slm_top": row["quota_slm_top"],
-                "quota_slm_bot": row["quota_slm_bot"],
-                "valore": row["valore"],
-                "attend_mis": row["attend_mis"] or "",
-                "note_par": row["note_par"] or "",
-                "data_par": row["data_par"] or "",
-                "id_indln": row["id_indln"] or "",
-            }
-            data[(str(row["pkey_indln"]), row["ID_PARLN"])] = row_dict
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = {
+                    "pkey_indln": str(row["pkey_indln"]),
+                    "pkey_parln": str(row["pkey_parln"]),
+                    "tipo_parln": row["tipo_parln"] or "",
+                    "ID_PARLN": row["ID_PARLN"],
+                    "prof_top": row["prof_top"],
+                    "prof_bot": row["prof_bot"],
+                    "spessore": row["spessore"],
+                    "quota_slm_top": row["quota_slm_top"],
+                    "quota_slm_bot": row["quota_slm_bot"],
+                    "valore": row["valore"],
+                    "attend_mis": row["attend_mis"] or "",
+                    "note_par": row["note_par"] or "",
+                    "data_par": row["data_par"] or "",
+                    "id_indln": row["id_indln"] or "",
+                }
+                data[(str(row["pkey_indln"]), row["ID_PARLN"])] = row_dict
 
-        self.logger.info(f"Read {len(data)} records from parametri_lineari in SQLite")
-        return data
+            self.logger.info(f"Read {len(data)} records from parametri_lineari in SQLite")
+            return data
+        finally:
+            cursor.close()
 
     def read_csv_data(self, table_type, file_path):
         """

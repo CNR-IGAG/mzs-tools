@@ -476,10 +476,55 @@ class ImportSitiPuntualiTask(QgsTask):
         super().cancel()
 
     @retry_on_lock()
+    def get_sito_puntuale_seq(self):
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="sito_puntuale"''')
+            data = cursor.fetchall()
+            return data[0][0] if data else 0
+        finally:
+            cursor.close()
+
+    @retry_on_lock()
+    def get_indagini_puntuali_seq(self):
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="indagini_puntuali"''')
+            data = cursor.fetchall()
+            return data[0][0] if data else 0
+        finally:
+            cursor.close()
+
+    @retry_on_lock()
+    def get_parametri_puntuali_seq(self):
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="parametri_puntuali"''')
+            data = cursor.fetchall()
+            return data[0][0] if data else 0
+        finally:
+            cursor.close()
+
+    @retry_on_lock()
+    def get_curve_seq(self):
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="curve"''')
+            data = cursor.fetchall()
+            return data[0][0] if data else 0
+        finally:
+            cursor.close()
+
+    @retry_on_lock()
     def insert_sito_puntuale(self, data: dict):
         """Insert a new 'sito_puntuale' record into the database."""
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """INSERT INTO sito_puntuale (pkuid, id_spu, indirizzo, mod_identcoord, desc_modcoord,
                         quota_slm, modo_quota, data_sito, note_sito, geom) 
@@ -488,66 +533,36 @@ class ImportSitiPuntualiTask(QgsTask):
                 data,
             )
             conn.commit()
+        finally:
             cursor.close()
 
     @retry_on_lock()
     def delete_sito_puntuale(self, pkuid: int):
         """Delete a 'sito_puntuale' record from the database."""
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute("DELETE FROM sito_puntuale WHERE pkuid = :pkuid;", {"pkuid": pkuid})
             conn.commit()
+        finally:
             cursor.close()
 
     @retry_on_lock()
     def delete_all_siti_puntuali(self):
         """Delete all 'sito_puntuale' records from the database."""
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute("DELETE FROM sito_puntuale;")
             conn.commit()
+        finally:
             cursor.close()
-
-    @retry_on_lock()
-    def get_sito_puntuale_seq(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="sito_puntuale"''')
-            data = cursor.fetchall()
-            cursor.close()
-        return data[0][0] if data else 0
-
-    @retry_on_lock()
-    def get_indagini_puntuali_seq(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="indagini_puntuali"''')
-            data = cursor.fetchall()
-            cursor.close()
-        return data[0][0] if data else 0
-
-    @retry_on_lock()
-    def get_parametri_puntuali_seq(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="parametri_puntuali"''')
-            data = cursor.fetchall()
-            cursor.close()
-        return data[0][0] if data else 0
-
-    @retry_on_lock()
-    def get_curve_seq(self):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''SELECT seq FROM sqlite_sequence WHERE name="curve"''')
-            data = cursor.fetchall()
-            cursor.close()
-        return data[0][0] if data else 0
 
     @retry_on_lock()
     def insert_indagine_puntuale(self, data: dict):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """INSERT INTO indagini_puntuali (pkuid, id_spu, classe_ind, tipo_ind, id_indpu, id_indpuex, arch_ex,
                 note_ind, prof_top, prof_bot, spessore, quota_slm_top, quota_slm_bot, data_ind, doc_pag, doc_ind)
@@ -557,12 +572,14 @@ class ImportSitiPuntualiTask(QgsTask):
                 data,
             )
             conn.commit()
+        finally:
             cursor.close()
 
     @retry_on_lock()
     def insert_parametro_puntuale(self, data: dict):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """INSERT INTO parametri_puntuali (pkuid, id_indpu, tipo_parpu, id_parpu, prof_top, prof_bot, spessore,
                 quota_slm_top, quota_slm_bot, valore, attend_mis, tab_curve, note_par, data_par, valore_appoggio)
@@ -572,18 +589,21 @@ class ImportSitiPuntualiTask(QgsTask):
                 data,
             )
             conn.commit()
+        finally:
             cursor.close()
 
     @retry_on_lock()
     def insert_curve(self, data: dict):
-        with self.get_spatialite_db_connection() as conn:
-            cursor = conn.cursor()
+        conn = self.get_spatialite_db_connection()
+        cursor = conn.cursor()
+        try:
             cursor.execute(
                 """INSERT INTO curve (pkuid, id_parpu, cond_curve, varx, vary)
                         VALUES(:pkey_curve, :ID_PARPU, :cond_curve, :varx, :vary);""",
                 data,
             )
             conn.commit()
+        finally:
             cursor.close()
 
     def get_spatialite_db_connection(self):
@@ -636,130 +656,142 @@ class ImportSitiPuntualiTask(QgsTask):
         """Get sito_puntuale data from SQLite database"""
         data = {}
         cursor = self.sqlite_db_connection.cursor()
-        cursor.execute("""
-            SELECT pkey_spu, ID_SPU, ubicazione_prov, ubicazione_com, indirizzo, 
-                coord_X, coord_Y, mod_identcoord, desc_modcoord, quota_slm, 
-                modo_quota, data_sito, note_sito
-            FROM sito_puntuale
-        """)
+        try:
+            cursor.execute("""
+                SELECT pkey_spu, ID_SPU, ubicazione_prov, ubicazione_com, indirizzo, 
+                    coord_X, coord_Y, mod_identcoord, desc_modcoord, quota_slm, 
+                    modo_quota, data_sito, note_sito
+                FROM sito_puntuale
+            """)
 
-        rows = cursor.fetchall()
-        for row in rows:
-            row_dict = {
-                "pkey_spu": str(row["pkey_spu"]),
-                "ID_SPU": row["ID_SPU"],
-                "ubicazione_prov": row["ubicazione_prov"],
-                "ubicazione_com": row["ubicazione_com"],
-                "indirizzo": row["indirizzo"] or "",
-                "coord_X": row["coord_X"],
-                "coord_Y": row["coord_Y"],
-                "mod_identcoord": row["mod_identcoord"] or "",
-                "desc_modcoord": row["desc_modcoord"] or "",
-                "quota_slm": row["quota_slm"],
-                "modo_quota": row["modo_quota"] or "",
-                "data_sito": row["data_sito"] or "",
-                "note_sito": row["note_sito"] or "",
-            }
-            data[row["ID_SPU"]] = row_dict
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = {
+                    "pkey_spu": str(row["pkey_spu"]),
+                    "ID_SPU": row["ID_SPU"],
+                    "ubicazione_prov": row["ubicazione_prov"],
+                    "ubicazione_com": row["ubicazione_com"],
+                    "indirizzo": row["indirizzo"] or "",
+                    "coord_X": row["coord_X"],
+                    "coord_Y": row["coord_Y"],
+                    "mod_identcoord": row["mod_identcoord"] or "",
+                    "desc_modcoord": row["desc_modcoord"] or "",
+                    "quota_slm": row["quota_slm"],
+                    "modo_quota": row["modo_quota"] or "",
+                    "data_sito": row["data_sito"] or "",
+                    "note_sito": row["note_sito"] or "",
+                }
+                data[row["ID_SPU"]] = row_dict
 
-        self.logger.info(f"Read {len(data)} records from sito_puntuale in SQLite")
-        return data
+            self.logger.info(f"Read {len(data)} records from sito_puntuale in SQLite")
+            return data
+        finally:
+            cursor.close()
 
     def get_sqlite_indagini_puntuali_data(self):
         """Get indagini_puntuali data from SQLite database"""
         data = {}
         cursor = self.sqlite_db_connection.cursor()
-        cursor.execute("""
-            SELECT pkey_spu, pkey_indpu, classe_ind, tipo_ind, ID_INDPU, id_indpuex,
-                arch_ex, note_ind, prof_top, prof_bot, spessore, quota_slm_top, 
-                quota_slm_bot, data_ind, doc_pag, doc_ind, id_spu
-            FROM indagini_puntuali
-        """)
+        try:
+            cursor.execute("""
+                SELECT pkey_spu, pkey_indpu, classe_ind, tipo_ind, ID_INDPU, id_indpuex,
+                    arch_ex, note_ind, prof_top, prof_bot, spessore, quota_slm_top, 
+                    quota_slm_bot, data_ind, doc_pag, doc_ind, id_spu
+                FROM indagini_puntuali
+            """)
 
-        rows = cursor.fetchall()
-        for row in rows:
-            row_dict = {
-                "pkey_spu": str(row["pkey_spu"]),
-                "pkey_indpu": str(row["pkey_indpu"]),
-                "classe_ind": row["classe_ind"] or "",
-                "tipo_ind": row["tipo_ind"] or "",
-                "ID_INDPU": row["ID_INDPU"],
-                "id_indpuex": row["id_indpuex"] or "",
-                "arch_ex": row["arch_ex"] or "",
-                "note_ind": row["note_ind"] or "",
-                "prof_top": row["prof_top"],
-                "prof_bot": row["prof_bot"],
-                "spessore": row["spessore"],
-                "quota_slm_top": row["quota_slm_top"],
-                "quota_slm_bot": row["quota_slm_bot"],
-                "data_ind": row["data_ind"] or "",
-                "doc_pag": row["doc_pag"] or "",
-                "doc_ind": row["doc_ind"] or "",
-                "id_spu": row["id_spu"] or "",
-            }
-            data[(str(row["pkey_spu"]), row["ID_INDPU"])] = row_dict
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = {
+                    "pkey_spu": str(row["pkey_spu"]),
+                    "pkey_indpu": str(row["pkey_indpu"]),
+                    "classe_ind": row["classe_ind"] or "",
+                    "tipo_ind": row["tipo_ind"] or "",
+                    "ID_INDPU": row["ID_INDPU"],
+                    "id_indpuex": row["id_indpuex"] or "",
+                    "arch_ex": row["arch_ex"] or "",
+                    "note_ind": row["note_ind"] or "",
+                    "prof_top": row["prof_top"],
+                    "prof_bot": row["prof_bot"],
+                    "spessore": row["spessore"],
+                    "quota_slm_top": row["quota_slm_top"],
+                    "quota_slm_bot": row["quota_slm_bot"],
+                    "data_ind": row["data_ind"] or "",
+                    "doc_pag": row["doc_pag"] or "",
+                    "doc_ind": row["doc_ind"] or "",
+                    "id_spu": row["id_spu"] or "",
+                }
+                data[(str(row["pkey_spu"]), row["ID_INDPU"])] = row_dict
 
-        self.logger.info(f"Read {len(data)} records from indagini_puntuali in SQLite")
-        return data
+            self.logger.info(f"Read {len(data)} records from indagini_puntuali in SQLite")
+            return data
+        finally:
+            cursor.close()
 
     def get_sqlite_parametri_puntuali_data(self):
         """Get parametri_puntuali data from SQLite database"""
         data = {}
         cursor = self.sqlite_db_connection.cursor()
-        cursor.execute("""
-            SELECT pkey_indpu, pkey_parpu, tipo_parpu, ID_PARPU, prof_top, prof_bot,
-                spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, 
-                tab_curve, note_par, data_par, id_indpu
-            FROM parametri_puntuali
-        """)
+        try:
+            cursor.execute("""
+                SELECT pkey_indpu, pkey_parpu, tipo_parpu, ID_PARPU, prof_top, prof_bot,
+                    spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, 
+                    tab_curve, note_par, data_par, id_indpu
+                FROM parametri_puntuali
+            """)
 
-        rows = cursor.fetchall()
-        for row in rows:
-            row_dict = {
-                "pkey_indpu": str(row["pkey_indpu"]),
-                "pkey_parpu": str(row["pkey_parpu"]),
-                "tipo_parpu": row["tipo_parpu"] or "",
-                "ID_PARPU": row["ID_PARPU"],
-                "prof_top": row["prof_top"],
-                "prof_bot": row["prof_bot"],
-                "spessore": row["spessore"],
-                "quota_slm_top": row["quota_slm_top"],
-                "quota_slm_bot": row["quota_slm_bot"],
-                "valore": row["valore"] or "",
-                "attend_mis": row["attend_mis"] or "",
-                "tab_curve": row["tab_curve"] or "",
-                "note_par": row["note_par"] or "",
-                "data_par": row["data_par"] or "",
-                "id_indpu": row["id_indpu"] or "",
-            }
-            data[(str(row["pkey_indpu"]), row["ID_PARPU"])] = row_dict
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = {
+                    "pkey_indpu": str(row["pkey_indpu"]),
+                    "pkey_parpu": str(row["pkey_parpu"]),
+                    "tipo_parpu": row["tipo_parpu"] or "",
+                    "ID_PARPU": row["ID_PARPU"],
+                    "prof_top": row["prof_top"],
+                    "prof_bot": row["prof_bot"],
+                    "spessore": row["spessore"],
+                    "quota_slm_top": row["quota_slm_top"],
+                    "quota_slm_bot": row["quota_slm_bot"],
+                    "valore": row["valore"] or "",
+                    "attend_mis": row["attend_mis"] or "",
+                    "tab_curve": row["tab_curve"] or "",
+                    "note_par": row["note_par"] or "",
+                    "data_par": row["data_par"] or "",
+                    "id_indpu": row["id_indpu"] or "",
+                }
+                data[(str(row["pkey_indpu"]), row["ID_PARPU"])] = row_dict
 
-        self.logger.info(f"Read {len(data)} records from parametri_puntuali in SQLite")
-        return data
+            self.logger.info(f"Read {len(data)} records from parametri_puntuali in SQLite")
+            return data
+        finally:
+            cursor.close()
 
     def get_sqlite_curve_data(self):
         """Get curve data from SQLite database"""
         data = {}
         cursor = self.sqlite_db_connection.cursor()
-        cursor.execute("""
-            SELECT pkey_parpu, pkey_curve, cond_curve, varx, vary, id_parpu
-            FROM curve
-        """)
+        try:
+            cursor.execute("""
+                SELECT pkey_parpu, pkey_curve, cond_curve, varx, vary, id_parpu
+                FROM curve
+            """)
 
-        rows = cursor.fetchall()
-        for row in rows:
-            row_dict = {
-                "pkey_parpu": str(row["pkey_parpu"]),
-                "pkey_curve": str(row["pkey_curve"]),
-                "cond_curve": row["cond_curve"],
-                "varx": row["varx"],
-                "vary": row["vary"],
-                "id_parpu": row["id_parpu"],
-            }
-            data[(str(row["pkey_parpu"]), str(row["pkey_curve"]))] = row_dict
+            rows = cursor.fetchall()
+            for row in rows:
+                row_dict = {
+                    "pkey_parpu": str(row["pkey_parpu"]),
+                    "pkey_curve": str(row["pkey_curve"]),
+                    "cond_curve": row["cond_curve"],
+                    "varx": row["varx"],
+                    "vary": row["vary"],
+                    "id_parpu": row["id_parpu"],
+                }
+                data[(str(row["pkey_parpu"]), str(row["pkey_curve"]))] = row_dict
 
-        self.logger.info(f"Read {len(data)} records from curve in SQLite")
-        return data
+            self.logger.info(f"Read {len(data)} records from curve in SQLite")
+            return data
+        finally:
+            cursor.close()
 
     def read_csv_data(self, table_type, file_path):
         """
