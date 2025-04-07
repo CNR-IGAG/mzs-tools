@@ -7,8 +7,9 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 from sqlite3 import Connection
-from typing import Optional
+from typing import List, Optional
 
+from packaging.version import parse
 from qgis.core import (
     QgsCoordinateReferenceSystem,
     QgsEditorWidgetSetup,
@@ -41,6 +42,8 @@ from .constants import (
     PRINT_LAYOUT_MODELS,
     REMOVED_EDITING_LAYERS,
 )
+from .database_upgrader import DatabaseUpgraderRegistry
+from .project_upgrader import ProjectUpgraderRegistry
 
 
 @dataclass
@@ -160,14 +163,12 @@ class MzSProjectManager:
             # self.project_issues["general"].append("Error reading project version file")
             self._add_project_issue("project", f"Error reading project version file: {e}")
 
-        if self.project_version and self.project_version < __base_version__:
+        self.project_updateable = bool(self.project_version and self.project_version < __base_version__)
+        if self.project_updateable:
             self.log(
                 f"MzS Project is version {self.project_version} and should be updated to version {__base_version__}",
                 log_level=1,
             )
-            self.project_updateable = True
-        else:
-            self.project_updateable = False
 
         # get comune data from db
         self.comune_data = self.get_project_comune_data()
@@ -838,42 +839,42 @@ class MzSProjectManager:
             return None
         return valid_layers[0].id()
 
-    def create_project_from_template(self, comune_name, cod_istat, study_author, author_email, dir_out):
-        """pre-2.0.0 method to create a new project"""
-        # extract project template in the output directory
-        self.extract_project_template(dir_out)
+    # def create_project_from_template(self, comune_name, cod_istat, study_author, author_email, dir_out):
+    #     """pre-2.0.0 method to create a new project"""
+    #     # extract project template in the output directory
+    #     self.extract_project_template(dir_out)
 
-        comune_name = self.sanitize_comune_name(comune_name)
-        new_project_path = os.path.join(dir_out, f"{cod_istat}_{comune_name}")
-        os.rename(os.path.join(dir_out, "progetto_MS"), new_project_path)
+    #     comune_name = self.sanitize_comune_name(comune_name)
+    #     new_project_path = os.path.join(dir_out, f"{cod_istat}_{comune_name}")
+    #     os.rename(os.path.join(dir_out, "progetto_MS"), new_project_path)
 
-        self.current_project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
+    #     self.current_project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        # init new project info
-        self.current_project = QgsProject.instance()
-        self.project_path = Path(self.current_project.absolutePath())
-        self.db_path = self.project_path / "db" / "indagini.sqlite"
+    #     # init new project info
+    #     self.current_project = QgsProject.instance()
+    #     self.project_path = Path(self.current_project.absolutePath())
+    #     self.db_path = self.project_path / "db" / "indagini.sqlite"
 
-        self._setup_db_connection()
+    #     self._setup_db_connection()
 
-        self.customize_project_template(cod_istat)
+    #     self.customize_project_template(cod_istat)
 
-        self.create_basic_project_metadata(cod_istat, study_author, author_email)
+    #     self.create_basic_project_metadata(cod_istat, study_author, author_email)
 
-        # Refresh layouts
-        self.refresh_project_layouts()
+    #     # Refresh layouts
+    #     self.refresh_project_layouts()
 
-        # write the version file
-        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-            f.write(__base_version__)
+    #     # write the version file
+    #     with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+    #         f.write(__base_version__)
 
-        # Save the project
-        self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
+    #     # Save the project
+    #     self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        # completely reload the project
-        iface.addProject(os.path.join(new_project_path, "progetto_MS.qgs"))
+    #     # completely reload the project
+    #     iface.addProject(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        return new_project_path
+    #     return new_project_path
 
     def create_project(
         self, comune_name: str, cod_istat: str, study_author: str, author_email: str, dir_out: str
@@ -945,69 +946,69 @@ class MzSProjectManager:
 
         return new_project_path
 
-    def update_project_from_template(self):
-        """pre-2.0.0 method to update a project"""
-        if not self.project_updateable:
-            self.log("Requested project update for non-updateable project!", log_level=1)
-            return
+    # def update_project_from_template(self):
+    #     """pre-2.0.0 method to update a project"""
+    #     if not self.project_updateable:
+    #         self.log("Requested project update for non-updateable project!", log_level=1)
+    #         return
 
-        # extract project template in the current project directory (will be in "progetto_MS" subdir)
-        self.extract_project_template(self.project_path)
+    #     # extract project template in the current project directory (will be in "progetto_MS" subdir)
+    #     self.extract_project_template(self.project_path)
 
-        # remove old project files (maschere, script, loghi, progetto_MS.qgs)
-        shutil.rmtree(os.path.join(self.project_path, "progetto", "maschere"))
-        shutil.copytree(
-            os.path.join(self.project_path, "progetto_MS", "progetto", "maschere"),
-            os.path.join(self.project_path, "progetto", "maschere"),
-        )
+    #     # remove old project files (maschere, script, loghi, progetto_MS.qgs)
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "maschere"))
+    #     shutil.copytree(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto", "maschere"),
+    #         os.path.join(self.project_path, "progetto", "maschere"),
+    #     )
 
-        shutil.rmtree(os.path.join(self.project_path, "progetto", "script"))
-        shutil.copytree(
-            os.path.join(self.project_path, "progetto_MS", "progetto", "script"),
-            os.path.join(self.project_path, "progetto", "script"),
-        )
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "script"))
+    #     shutil.copytree(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto", "script"),
+    #         os.path.join(self.project_path, "progetto", "script"),
+    #     )
 
-        shutil.rmtree(os.path.join(self.project_path, "progetto", "loghi"))
-        shutil.copytree(
-            os.path.join(self.project_path, "progetto_MS", "progetto", "loghi"),
-            os.path.join(self.project_path, "progetto", "loghi"),
-        )
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "loghi"))
+    #     shutil.copytree(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto", "loghi"),
+    #         os.path.join(self.project_path, "progetto", "loghi"),
+    #     )
 
-        # write the new version to the version file
-        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-            f.write(__base_version__)
+    #     # write the new version to the version file
+    #     with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+    #         f.write(__base_version__)
 
-        os.remove(os.path.join(self.project_path, "progetto_MS.qgs"))
-        shutil.copyfile(
-            os.path.join(self.project_path, "progetto_MS", "progetto_MS.qgs"),
-            os.path.join(self.project_path, "progetto_MS.qgs"),
-        )
+    #     os.remove(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     shutil.copyfile(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto_MS.qgs"),
+    #         os.path.join(self.project_path, "progetto_MS.qgs"),
+    #     )
 
-        # read the new project file inside the loaded (old) project
-        self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     # read the new project file inside the loaded (old) project
+    #     self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
 
-        self._setup_db_connection()
+    #     self._setup_db_connection()
 
-        # apply project customizations without creating comune feature
-        self.customize_project_template(self.comune_data.cod_istat, insert_comune_progetto=False)
+    #     # apply project customizations without creating comune feature
+    #     self.customize_project_template(self.comune_data.cod_istat, insert_comune_progetto=False)
 
-        # cleanup the extracted project template
-        shutil.rmtree(os.path.join(self.project_path, "progetto_MS"))
+    #     # cleanup the extracted project template
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto_MS"))
 
-        # Refresh layouts
-        self.refresh_project_layouts()
+    #     # Refresh layouts
+    #     self.refresh_project_layouts()
 
-        # Save the project
-        self.current_project.write(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     # Save the project
+    #     self.current_project.write(os.path.join(self.project_path, "progetto_MS.qgs"))
 
-        # completely reload the project
-        iface.addProject(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     # completely reload the project
+    #     iface.addProject(os.path.join(self.project_path, "progetto_MS.qgs"))
 
-        return self.project_path
+    #     return self.project_path
 
     def update_project(self):
-        """Update the project without loading the project template.
-        The database structure should be already updated.
+        """Update the project structure using the Strategy Pattern with ProjectUpgrader classes.
+        The database structure should be already updated by update_db().
         """
         if not self.project_updateable:
             self.log("Requested project update for non-updateable project!", log_level=1)
@@ -1015,150 +1016,114 @@ class MzSProjectManager:
 
         old_version = self.project_version
 
-        if old_version < "2.0.0":
-            # version is too old, clear the project and start from scratch
-            if self.db_connection:
-                self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
+        # Get the appropriate upgrader for the current version
+        upgrader_registry = ProjectUpgraderRegistry()
+        applicable_upgraders = upgrader_registry.get_applicable_upgraders(old_version, __base_version__)
 
-            # backup print layouts
-            layout_file_paths = self.backup_print_layouts(
-                backup_label=f"backup_v.{old_version}", backup_all=True, backup_models=True
-            )
+        if not applicable_upgraders:
+            self.log(f"No applicable upgraders found for version {old_version}", log_level=1)
+            return
 
-            self.current_project.clear()  # db connection is automatically closed!
+        for upgrader in applicable_upgraders:
+            self.log(f"Applying project upgrade: {upgrader.get_description()}", log_level=1)
+            success = upgrader.upgrade(self)
 
-            self.add_default_layers()
-            self.customize_project()
+            if success and self.db_connection:
+                self.update_history_table(
+                    "project", old_version, upgrader.to_version, f"Applied {upgrader.get_description()}"
+                )
 
-            # load the print layouts from the backup
-            try:
-                for layout_file_path in layout_file_paths:
-                    if layout_file_path.exists():
-                        self.load_print_layout_model(layout_file_path)
-            except Exception as e:
-                self.log(f"Error loading print layout model backups: {e}", log_level=1)
+            # Update the tracked version after each successful upgrade
+            old_version = upgrader.to_version
 
-            self.refresh_project_layouts()
-
-            # write the version file
-            with open(self.project_path / "progetto" / "versione.txt", "w") as f:
-                f.write(__base_version__)
-
-            # Save the project
-            self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
-
-            # cleanup project files
-            old_files = [
-                self.project_path / "progetto_MS.qgs",
-                self.project_path / "progetto_MS.qgs~",
-                self.project_path / "progetto_MS_attachments.zip",
-                self.project_path / "progetto" / "script",
-                self.project_path / "progetto" / "maschere",
-            ]
-            for path in old_files:
-                if path.exists():
-                    if path.is_file():
-                        path.unlink()
-                    elif path.is_dir():
-                        shutil.rmtree(path)
-
-            # completely reload the project
-            iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
-
-        # for future versions it should be possible to update what's needed without clearing the project
-        # elif self.project_version < "2.0.1":
-        #   self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
-
-        if self.db_connection:
-            self.update_history_table("project", old_version, __version__, "project updated successfully")
-
+        # Final success message
         msg = self.tr("Project upgrades completed! Project upgraded to version")
         self.log(f"{msg} {__base_version__}", push=True, duration=0)
 
-    def customize_project_template(self, cod_istat, insert_comune_progetto=True):
-        """pre-2.0.0 method to customize the project with the selected comune data."""
+    # def customize_project_template(self, cod_istat, insert_comune_progetto=True):
+    #     """pre-2.0.0 method to customize the project with the selected comune data."""
 
-        layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
+    #     layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
 
-        comune_data = None
-        if insert_comune_progetto:
-            conn = self.db_connection
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
-                    SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
-                    (cod_istat,),
-                )
-                conn.commit()
+    #     comune_data = None
+    #     if insert_comune_progetto:
+    #         conn = self.db_connection
+    #         cursor = conn.cursor()
+    #         try:
+    #             cursor.execute(
+    #                 """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
+    #                 SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
+    #                 (cod_istat,),
+    #             )
+    #             conn.commit()
 
-                last_inserted_id = cursor.lastrowid
+    #             last_inserted_id = cursor.lastrowid
 
-                cursor.execute(
-                    """SELECT cod_regio, comune, provincia, regione
-                    FROM comune_progetto WHERE rowid = ?""",
-                    (last_inserted_id,),
-                )
-                comune_data = cursor.fetchone()
-            except Exception as e:
-                conn.rollback()
-                self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
-            finally:
-                cursor.close()
-        else:
-            conn = self.db_connection
-            cursor = conn.cursor()
-            try:
-                # assuming there is only one record in comune_progetto
-                cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
-                comune_data = cursor.fetchone()
-            except Exception as e:
-                self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
-            finally:
-                cursor.close()
+    #             cursor.execute(
+    #                 """SELECT cod_regio, comune, provincia, regione
+    #                 FROM comune_progetto WHERE rowid = ?""",
+    #                 (last_inserted_id,),
+    #             )
+    #             comune_data = cursor.fetchone()
+    #         except Exception as e:
+    #             conn.rollback()
+    #             self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
+    #         finally:
+    #             cursor.close()
+    #     else:
+    #         conn = self.db_connection
+    #         cursor = conn.cursor()
+    #         try:
+    #             # assuming there is only one record in comune_progetto
+    #             cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
+    #             comune_data = cursor.fetchone()
+    #         except Exception as e:
+    #             self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
+    #         finally:
+    #             cursor.close()
 
-        codice_regio = comune_data[0]
-        comune = comune_data[1]
-        provincia = comune_data[2]
-        regione = comune_data[3]
+    #     codice_regio = comune_data[0]
+    #     comune = comune_data[1]
+    #     provincia = comune_data[2]
+    #     regione = comune_data[3]
 
-        layer_limiti_comunali = self.current_project.mapLayersByName("Limiti comunali")[0]
-        layer_limiti_comunali.removeSelection()
-        layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
+    #     layer_limiti_comunali = self.current_project.mapLayersByName("Limiti comunali")[0]
+    #     layer_limiti_comunali.removeSelection()
+    #     layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
 
-        logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", codice_regio + ".png")
-        logo_regio_out = os.path.join(self.project_path, "progetto", "loghi", "logo_regio.png")
-        shutil.copyfile(logo_regio_in, logo_regio_out)
+    #     logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", codice_regio + ".png")
+    #     logo_regio_out = os.path.join(self.project_path, "progetto", "loghi", "logo_regio.png")
+    #     shutil.copyfile(logo_regio_in, logo_regio_out)
 
-        mainPath = QgsProject.instance().homePath()
-        canvas = iface.mapCanvas()
+    #     mainPath = QgsProject.instance().homePath()
+    #     canvas = iface.mapCanvas()
 
-        imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
-        save_map_image(imageFilename, layer_limiti_comunali, canvas)
+    #     imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
+    #     save_map_image(imageFilename, layer_limiti_comunali, canvas)
 
-        layer_comune_progetto.dataProvider().updateExtents()
-        layer_comune_progetto.updateExtents()
-        # extent = layer_comune_progetto.dataProvider().extent()
-        canvas.setExtent(layer_comune_progetto.extent())
+    #     layer_comune_progetto.dataProvider().updateExtents()
+    #     layer_comune_progetto.updateExtents()
+    #     # extent = layer_comune_progetto.dataProvider().extent()
+    #     canvas.setExtent(layer_comune_progetto.extent())
 
-        layout_manager = QgsProject.instance().layoutManager()
-        layouts = layout_manager.printLayouts()
+    #     layout_manager = QgsProject.instance().layoutManager()
+    #     layouts = layout_manager.printLayouts()
 
-        for layout in layouts:
-            map_item = layout.itemById("mappa_0")
-            map_item.zoomToExtent(canvas.extent())
-            map_item_2 = layout.itemById("regio_title")
-            map_item_2.setText("Regione " + regione)
-            map_item_3 = layout.itemById("com_title")
-            map_item_3.setText("Comune di " + comune)
-            map_item_4 = layout.itemById("logo")
-            map_item_4.refreshPicture()
-            map_item_5 = layout.itemById("mappa_1")
-            map_item_5.refreshPicture()
+    #     for layout in layouts:
+    #         map_item = layout.itemById("mappa_0")
+    #         map_item.zoomToExtent(canvas.extent())
+    #         map_item_2 = layout.itemById("regio_title")
+    #         map_item_2.setText("Regione " + regione)
+    #         map_item_3 = layout.itemById("com_title")
+    #         map_item_3.setText("Comune di " + comune)
+    #         map_item_4 = layout.itemById("logo")
+    #         map_item_4.refreshPicture()
+    #         map_item_5 = layout.itemById("mappa_1")
+    #         map_item_5.refreshPicture()
 
-        # set project title
-        project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
-        self.current_project.setTitle(project_title)
+    #     # set project title
+    #     project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
+    #     self.current_project.setTitle(project_title)
 
     def customize_project(self):
         """Customize the project with the selected comune data."""
@@ -1230,7 +1195,7 @@ class MzSProjectManager:
         # QgsProject.instance().readEntry("TitleLabel", "Placement")
         # QgsProject.instance().readEntry("TitleLabel", "MarginH")
         # QgsProject.instance().readEntry("TitleLabel", "MarginV")
-        font_style = '<text-style allowHtml="0" fontFamily="Noto Sans" fontSizeUnit="Point" textColor="17,98,152,255,rgb:0.06666666666666667,0.3843137254901961,0.59607843137254901,1" tabStopDistanceUnit="Point" namedStyle="Bold" fontKerning="1" tabStopDistanceMapUnitScale="3x:0,0,0,0,0,0" fontLetterSpacing="0" tabStopDistance="80" capitalization="0" forcedItalic="0" previewBkgrdColor="255,255,255,255,rgb:1,1,1,1" fontWeight="75" fontStrikeout="0" multilineHeightUnit="Percentage" forcedBold="0" textOpacity="1" fontItalic="0" multilineHeight="1" fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontWordSpacing="0" fontSize="10" textOrientation="horizontal" fontUnderline="0" blendMode="0">\n <families/>\n <text-buffer bufferBlendMode="0" bufferDraw="0" bufferSize="1" bufferColor="255,255,255,255,rgb:1,1,1,1" bufferOpacity="1" bufferNoFill="1" bufferJoinStyle="128" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferSizeUnits="MM"/>\n <text-mask maskedSymbolLayers="" maskJoinStyle="128" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskSize="1.5" maskEnabled="0" maskSize2="1.5" maskType="0" maskSizeUnits="MM" maskOpacity="1"/>\n <background shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRotationType="0" shapeBlendMode="0" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeSizeX="0" shapeRadiiUnit="MM" shapeOffsetX="0" shapeRadiiX="0" shapeFillColor="255,255,255,255,rgb:1,1,1,1" shapeOpacity="1" shapeRadiiY="0" shapeBorderColor="128,128,128,255,rgb:0.50196078431372548,0.50196078431372548,0.50196078431372548,1" shapeOffsetY="0" shapeSizeUnit="MM" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeSizeType="0" shapeRotation="0" shapeDraw="0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetUnit="MM" shapeType="0" shapeBorderWidth="0" shapeSizeY="0" shapeJoinStyle="64" shapeSVGFile="" shapeBorderWidthUnit="MM">\n  <symbol alpha="1" force_rhr="0" type="marker" name="markerSymbol" clip_to_extent="1" is_animated="0" frame_rate="10">\n   <data_defined_properties>\n    <Option type="Map">\n     <Option type="QString" name="name" value=""/>\n     <Option name="properties"/>\n     <Option type="QString" name="type" value="collection"/>\n    </Option>\n   </data_defined_properties>\n   <layer locked="0" class="SimpleMarker" enabled="1" pass="0" id="">\n    <Option type="Map">\n     <Option type="QString" name="angle" value="0"/>\n     <Option type="QString" name="cap_style" value="square"/>\n     <Option type="QString" name="color" value="229,182,54,255,rgb:0.89803921568627454,0.71372549019607845,0.21176470588235294,1"/>\n     <Option type="QString" name="horizontal_anchor_point" value="1"/>\n     <Option type="QString" name="joinstyle" value="bevel"/>\n     <Option type="QString" name="name" value="circle"/>\n     <Option type="QString" name="offset" value="0,0"/>\n     <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="offset_unit" value="MM"/>\n     <Option type="QString" name="outline_color" value="35,35,35,255,rgb:0.13725490196078433,0.13725490196078433,0.13725490196078433,1"/>\n     <Option type="QString" name="outline_style" value="solid"/>\n     <Option type="QString" name="outline_width" value="0"/>\n     <Option type="QString" name="outline_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="outline_width_unit" value="MM"/>\n     <Option type="QString" name="scale_method" value="diameter"/>\n     <Option type="QString" name="size" value="2"/>\n     <Option type="QString" name="size_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="size_unit" value="MM"/>\n     <Option type="QString" name="vertical_anchor_point" value="1"/>\n    </Option>\n    <data_defined_properties>\n     <Option type="Map">\n      <Option type="QString" name="name" value=""/>\n      <Option name="properties"/>\n      <Option type="QString" name="type" value="collection"/>\n     </Option>\n    </data_defined_properties>\n   </layer>\n  </symbol>\n  <symbol alpha="1" force_rhr="0" type="fill" name="fillSymbol" clip_to_extent="1" is_animated="0" frame_rate="10">\n   <data_defined_properties>\n    <Option type="Map">\n     <Option type="QString" name="name" value=""/>\n     <Option name="properties"/>\n     <Option type="QString" name="type" value="collection"/>\n    </Option>\n   </data_defined_properties>\n   <layer locked="0" class="SimpleFill" enabled="1" pass="0" id="">\n    <Option type="Map">\n     <Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="color" value="255,255,255,255,rgb:1,1,1,1"/>\n     <Option type="QString" name="joinstyle" value="bevel"/>\n     <Option type="QString" name="offset" value="0,0"/>\n     <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="offset_unit" value="MM"/>\n     <Option type="QString" name="outline_color" value="128,128,128,255,rgb:0.50196078431372548,0.50196078431372548,0.50196078431372548,1"/>\n     <Option type="QString" name="outline_style" value="no"/>\n     <Option type="QString" name="outline_width" value="0"/>\n     <Option type="QString" name="outline_width_unit" value="MM"/>\n     <Option type="QString" name="style" value="solid"/>\n    </Option>\n    <data_defined_properties>\n     <Option type="Map">\n      <Option type="QString" name="name" value=""/>\n      <Option name="properties"/>\n      <Option type="QString" name="type" value="collection"/>\n     </Option>\n    </data_defined_properties>\n   </layer>\n  </symbol>\n </background>\n <shadow shadowBlendMode="6" shadowDraw="0" shadowRadius="1.5" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowRadiusUnit="MM" shadowScale="100" shadowUnder="0" shadowRadiusMapUnitScale="3x:0,0,0,0,0,0" shadowOffsetAngle="135" shadowRadiusAlphaOnly="0" shadowOpacity="0.69999999999999996" shadowColor="0,0,0,255,rgb:0,0,0,1" shadowOffsetUnit="MM" shadowOffsetGlobal="1" shadowOffsetDist="1"/>\n <dd_properties>\n  <Option type="Map">\n   <Option type="QString" name="name" value=""/>\n   <Option name="properties"/>\n   <Option type="QString" name="type" value="collection"/>\n  </Option>\n </dd_properties>\n</text-style>\n'
+        font_style = '<text-style allowHtml="0" fontFamily="Noto Sans" fontSizeUnit="Point" textColor="17,98,152,255,rgb:0.06666666666666667,0.3843137254901961,0.59607843137254901,1" tabStopDistanceUnit="Point" namedStyle="Bold" fontKerning="1" tabStopDistanceMapUnitScale="3x:0,0,0,0,0,0" fontLetterSpacing="0" tabStopDistance="80" capitalization="0" forcedItalic="0" previewBkgrdColor="255,255,255,255,rgb:1,1,1,1" fontWeight="75" fontStrikeout="0" multilineHeightUnit="Percentage" forcedBold="0" textOpacity="1" fontItalic="0" multilineHeight="1" fontSizeMapUnitScale="3x:0,0,0,0,0,0" fontWordSpacing="0" fontSize="10" textOrientation="horizontal" fontUnderline="0" blendMode="0">\n <families/>\n <text-buffer bufferBlendMode="0" bufferDraw="0" bufferSize="1" bufferColor="255,255,255,255,rgb:1,1,1,1" bufferOpacity="1" bufferNoFill="1" bufferJoinStyle="128" bufferSizeMapUnitScale="3x:0,0,0,0,0,0" bufferSizeUnits="MM"/>\n <text-mask maskedSymbolLayers="" maskJoinStyle="128" maskSizeMapUnitScale="3x:0,0,0,0,0,0" maskSize="1.5" maskEnabled="0" maskSize2="1.5" maskType="0" maskSizeUnits="MM" maskOpacity="1"/>\n <background shapeSizeMapUnitScale="3x:0,0,0,0,0,0" shapeRotationType="0" shapeBlendMode="0" shapeRadiiMapUnitScale="3x:0,0,0,0,0,0" shapeSizeX="0" shapeRadiiUnit="MM" shapeOffsetX="0" shapeRadiiX="0" shapeFillColor="255,255,255,255,rgb:1,1,1,1" shapeOpacity="1" shapeRadiiY="0" shapeBorderColor="128,128,128,255,rgb:0.50196078431372548,0.50196078431372548,0.50196078431372548,1" shapeOffsetY="0" shapeSizeUnit="MM" shapeBorderWidthMapUnitScale="3x:0,0,0,0,0,0" shapeSizeType="0" shapeRotation="0" shapeDraw="0" shapeOffsetMapUnitScale="3x:0,0,0,0,0,0" shapeOffsetUnit="MM" shapeType="0" shapeBorderWidth="0" shapeSizeY="0" shapeJoinStyle="64" shapeSVGFile="" shapeBorderWidthUnit="MM">\n  <symbol alpha="1" force_rhr="0" type="marker" name="markerSymbol" clip_to_extent="1" is_animated="0" frame_rate="10">\n   <data_defined_properties>\n    <Option type="Map">\n     <Option type="QString" name="name" value=""/>\n     <Option name="properties"/>\n     <Option type="QString" name="type" value="collection"/>\n    </Option>\n   </data_defined_properties>\n   <layer locked="0" class="SimpleMarker" enabled="1" pass="0" id="">\n    <Option type="Map">\n     <Option type="QString" name="angle" value="0"/>\n     <Option type="QString" name="cap_style" value="square"/>\n     <Option type="QString" name="color" value="229,182,54,255,rgb:0.89803921568627454,0.71372549019607845,0.21176470588235294,1"/>\n     <Option type="QString" name="horizontal_anchor_point" value="1"/>\n     <Option type="QString" name="joinstyle" value="bevel"/>\n     <Option type="QString" name="name" value="circle"/>\n     <Option type="QString" name="offset" value="0,0"/>\n     <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="offset_unit" value="MM"/>\n     <Option type="QString" name="outline_color" value="35,35,35,255,rgb:0.13725490196078433,0.13725490196078433,0.13725490196078433,1"/>\n     <Option type="QString" name="outline_style" value="solid"/>\n     <Option type="QString" name="outline_width" value="0"/>\n     <Option type="QString" name="outline_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="outline_width_unit" value="MM"/>\n     <Option type="QString" name="scale_method" value="diameter"/>\n     <Option type="QString" name="size" value="2"/>\n     <Option type="QString" name="size_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="size_unit" value="MM"/>\n     <Option type="QString" name="vertical_anchor_point" value="1"/>\n    </Option>\n    <data_defined_properties>\n     <Option type="Map">\n      <Option type="QString" name="name" value=""/>\n      <Option name="properties"/>\n      <Option type="QString" name="type" value="collection"/>\n     </Option>\n    </data_defined_properties>\n   </layer>\n  </symbol>\n  <symbol alpha="1" force_rhr="0" type="fill" name="fillSymbol" clip_to_extent="1" is_animated="0" frame_rate="10">\n   <data_defined_properties>\n    <Option type="Map">\n     <Option type="QString" name="name" value=""/>\n     <Option name="properties"/>\n     <Option type="QString" name="type" value="collection"/>\n    </Option>\n   </data_defined_properties>\n   <layer locked="0" class="SimpleFill" enabled="1" pass="0" id="">\n    <Option type="Map">\n     <Option type="QString" name="border_width_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="color" value="255,255,255,255,rgb:1,1,1,1"/>\n     <Option type="QString" name="joinstyle" value="bevel"/>\n     <Option type="QString" name="offset" value="0,0"/>\n     <Option type="QString" name="offset_map_unit_scale" value="3x:0,0,0,0,0,0"/>\n     <Option type="QString" name="offset_unit" value="MM"/>\n     <Option type="QString" name="outline_color" value="128,128,128,255,rgb:0.50196078431372548,0.50196078431372548,0.50196078431372548,1"/>\n     <Option type="QString" name="outline_style" value="no"/>\n     <Option type="QString" name="outline_width" value="0"/>\n     <Option type="QString" name="outline_width_unit" value="MM"/>\n     <Option type="QString" name="style" value="solid"/>\n    </Option>\n    <data_defined_properties>\n     <Option type="Map">\n      <Option type="QString" name="name" value=""/>\n      <Option name="properties"/>\n      <Option type="QString" name="type" value="collection"/>\n     </Option>\n    </data_defined_properties>\n   </layer>\n  </symbol>\n </background>\n <shadow shadowBlendMode="6" shadowDraw="0" shadowRadius="1.5" shadowOffsetMapUnitScale="3x:0,0,0,0,0,0" shadowRadiusUnit="MM" shadowScale="100" shadowUnder="0" shadowRadiusAlphaOnly="0" shadowOpacity="0.69999999999999996" shadowColor="0,0,0,255,rgb:0,0,0,1" shadowOffsetUnit="MM" shadowOffsetGlobal="1" shadowOffsetDist="1"/>\n <dd_properties>\n  <Option type="Map">\n   <Option type="QString" name="name" value=""/>\n   <Option name="properties"/>\n   <Option type="QString" name="type" value="collection"/>\n  </Option>\n </dd_properties>\n</text-style>\n'
         self.current_project.writeEntry("TitleLabel", "/Font", font_style)
         self.current_project.writeEntry("TitleLabel", "/Label", "[%@project_title%]")
         self.current_project.writeEntry(
@@ -1398,48 +1363,118 @@ class MzSProjectManager:
             cursor.close()
 
     def update_db(self):
-        sql_scripts = []
-        if self.project_version < "0.8":
-            sql_scripts.append("query_v08.sql")
-        if self.project_version < "0.9":
-            sql_scripts.append("query_v09.sql")
-        if self.project_version < "1.2":
-            sql_scripts.append("query_v10_12.sql")
-        if self.project_version < "1.9":
-            sql_scripts.append("query_v19.sql")
-        if self.project_version < "1.9.2":
-            sql_scripts.append("query_v192.sql")
-        if self.project_version < "1.9.3":
-            sql_scripts.append("query_v193.sql")
-        if self.project_version < "2.0.0":
-            sql_scripts.append("query_v200.sql")
+        """Update the database structure using the Strategy Pattern with DatabaseUpgrader classes.
+        This method applies all necessary upgrade scripts in sequence without changing the project_version.
 
-        for upgrade_script in sql_scripts:
-            self.log(f"Executing: {upgrade_script}", log_level=1)
-            self._exec_db_upgrade_script(upgrade_script)
+        History entries are collected and only written to the database after upgrading to 2.0.0,
+        as the history tables were only introduced in that version.
+        """
+        upgrader_registry = DatabaseUpgraderRegistry()
 
-        for upgrade_script in sql_scripts:
-            # doing this in a separate loop because the mzs_tools_update_history table was created only in v2.0.0
-            self.update_history_table("db", self.project_version, __version__, f"executed script {upgrade_script}")
+        # Get all applicable upgraders based on the original version
+        current_db_version = self.project_version
+        target_version = __base_version__
 
-        # update mzs_tools_version table
-        self.update_db_version_info()
+        # Collect history entries - will be written to db only after upgrading to 2.0.0
+        history_entries = []
+
+        # We need to iterate multiple times until all upgrades are applied
+        # This ensures we correctly apply upgrade scripts in chain (e.g., 1.9.1->1.9.2->1.9.3->2.0.0)
+        while current_db_version < target_version:
+            # Get the next upgrader in the chain
+            upgraders = upgrader_registry.get_applicable_upgraders(current_db_version, target_version)
+
+            if not upgraders:
+                self.log(f"No more database upgrades needed from version {current_db_version}", log_level=1)
+                break
+
+            # Apply the first upgrader in the sorted list
+            upgrader = upgraders[0]
+            self.log(f"Executing: {upgrader.get_description()}", log_level=1)
+            success = upgrader.upgrade(self)
+
+            if success:
+                # Create a history entry to be written later
+                history_entry = {
+                    "component": "db",
+                    "from_version": current_db_version,  # Use the current version tracker, not the original project version
+                    "to_version": upgrader.to_version,
+                    "notes": f"Executed script {upgrader.script_name if upgrader.script_name else 'no script'}",
+                }
+                history_entries.append(history_entry)
+
+                # Update our local version tracker for the next iteration
+                current_db_version = upgrader.to_version
+                self.log(f"Database upgraded to version {upgrader.to_version}", log_level=1)
+            else:
+                self.log(f"Failed to execute upgrader: {upgrader.get_description()}", log_level=2)
+                break
+
+        # Check if we've reached or passed version 2.0.0 where the history tables were introduced
+        if parse(current_db_version) >= parse("2.0.0"):
+            self.log("Recording update history in database", log_level=1)
+
+            # Record all history entries only once at the end of the process
+            for entry in history_entries:
+                self.update_history_table(
+                    entry["component"], entry["from_version"], entry["to_version"], entry["notes"]
+                )
+
+            # Update the version info in the database
+            self.update_db_version_info()
 
         msg = self.tr("Database upgrades completed! Database upgraded to version")
-        self.log(f"{msg} {__base_version__}", push=True, duration=0)
+        self.log(f"{msg} {current_db_version}", push=True, duration=0)
 
-    def _exec_db_upgrade_script(self, script_name):
-        conn = self.db_connection
-        cursor = conn.cursor()
-        try:
-            script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name
-            with script_path.open("r") as f:
-                cursor.executescript(f.read())
-            conn.commit()
-        finally:
-            cursor.close()
+    # def _ensure_history_tables_exist(self):
+    #     """Ensure that the history and version tables exist in the database.
+    #     These tables were introduced in version 2.0.0.
+    #     """
+    #     conn = self.db_connection
+    #     cursor = conn.cursor()
+    #     try:
+    #         # Check for version table
+    #         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mzs_tools_version'")
+    #         if not cursor.fetchone():
+    #             self.log("Creating mzs_tools_version table", log_level=1)
+    #             cursor.execute("""
+    #                 CREATE TABLE mzs_tools_version (
+    #                     id INTEGER PRIMARY KEY,
+    #                     db_version TEXT NOT NULL
+    #                 )
+    #             """)
+
+    #         # Check for history table
+    #         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mzs_tools_update_history'")
+    #         if not cursor.fetchone():
+    #             self.log("Creating mzs_tools_update_history table", log_level=1)
+    #             cursor.execute("""
+    #                 CREATE TABLE mzs_tools_update_history (
+    #                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    #                     updated_component TEXT NOT NULL,
+    #                     from_version TEXT NOT NULL,
+    #                     to_version TEXT NOT NULL,
+    #                     update_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    #                     notes TEXT
+    #                 )
+    #             """)
+
+    #         conn.commit()
+    #     except Exception as e:
+    #         self.log(f"Failed to create history tables: {e}", log_level=2)
+    #         conn.rollback()
+    #     finally:
+    #         cursor.close()
 
     def update_history_table(self, component: str, from_version: str, to_version: str, notes: str = None):
+        """Add an entry to the update history table.
+
+        Args:
+            component: The component that was updated ('db' or 'project')
+            from_version: Starting version
+            to_version: Ending version after update
+            notes: Optional notes about the update
+        """
         conn = self.db_connection
         cursor = conn.cursor()
         try:
@@ -1452,6 +1487,17 @@ class MzSProjectManager:
                 conn.commit()
         except Exception as e:
             self.log(f"Failed to update history table: {e}", log_level=2)
+        finally:
+            cursor.close()
+
+    def _exec_db_upgrade_script(self, script_name):
+        conn = self.db_connection
+        cursor = conn.cursor()
+        try:
+            script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name
+            with script_path.open("r") as f:
+                cursor.executescript(f.read())
+            conn.commit()
         finally:
             cursor.close()
 

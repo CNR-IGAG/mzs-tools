@@ -609,15 +609,75 @@ class MzSTools:
         msg_box.exec()
 
     def update_current_project(self):
+        """
+        Coordinate the update process for MzS Tools projects.
+        This method orchestrates the update of both the database schema and project structure
+        by delegating to specialized methods in MzSProjectManager.
+        Includes automatic backup, error handling, and progress reporting.
+        """
         if not self.prj_manager.is_mzs_project or not self.prj_manager.project_updateable:
             return
-        self.log("Starting project update process.", log_level=1)
-        self.iface.messageBar().clearWidgets()
 
-        self.prj_manager.backup_project()
-        # TODO: rollback if something goes wrong
-        self.prj_manager.update_db()
-        self.prj_manager.update_project()
+        self.iface.messageBar().clearWidgets()
+        self.log(
+            f"Starting project update process from v{self.prj_manager.project_version} to v{__version__}", log_level=1
+        )
+
+        # Track original version for reporting
+        old_version = self.prj_manager.project_version
+
+        # Step 1: Create comprehensive backup
+        try:
+            backup_path = self.prj_manager.backup_project()
+            self.log(f"Project backup created at {backup_path}", log_level=3)
+        except Exception as e:
+            err_msg = self.tr("Error during project backup:")
+            self.log(f"{err_msg} {str(e)}", log_level=2)
+            self.log(traceback.format_exc(), log_level=2)
+            QMessageBox.critical(
+                None,
+                self.tr("Update Failed"),
+                f"{self.tr('Project update cancelled due to backup failure')}:\n{str(e)}",
+            )
+            return
+
+        try:
+            # Step 2: Update database schema and data
+            # This delegates to the specialized method in MzSProjectManager
+            self.log(self.tr("Updating project database..."), log_level=1)
+            self.prj_manager.update_db()
+            # self.log(self.tr("Database update completed successfully."), log_level=3)
+
+            # Step 3: Update QGIS project structure, layers, styles, etc.
+            # This delegates to the specialized method in MzSProjectManager
+            self.log(self.tr("Updating QGIS project structure..."), log_level=1)
+            self.prj_manager.update_project()
+            # self.log(self.tr("Project structure update completed successfully."), log_level=3)
+
+            # Step 4: Enable plugin actions for the updated project
+            self.enable_plugin_actions(True)
+
+            # Final success message
+            # msg = self.tr("Project update completed successfully!")
+            # details = self.tr("Updated from version {} to version {}")
+            # self.log(f"{msg} {details.format(old_version, __version__)}", log_level=3, push=True, duration=10)
+
+        except Exception as e:
+            # Handle update failure with detailed error reporting
+            err_msg = self.tr("Error during project update:")
+            self.log(f"{err_msg} {str(e)}", log_level=2)
+            self.log(traceback.format_exc(), log_level=2)
+
+            # Prepare rollback information message
+            rollback_msg = self.tr("The update process has failed. The project may be in an inconsistent state.")
+            rollback_details = self.tr("A backup of your original project was created at: {}")
+
+            QMessageBox.critical(
+                None, self.tr("Update Failed"), f"{rollback_msg}\n\n{rollback_details.format(backup_path)}"
+            )
+
+            # Keep actions disabled if update failed
+            self.enable_plugin_actions(False)
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)

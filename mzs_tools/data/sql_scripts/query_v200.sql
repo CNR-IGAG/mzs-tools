@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS mzs_tools_update_history (
 	notes TEXT
 );
 
+-- update instab code
+UPDATE tbl_cod_instab SET cod=3075 WHERE cod=3069;;
+
 -- add column valore_appoggio to parametri_puntuali
 ALTER TABLE parametri_puntuali ADD COLUMN "valore_appoggio" TEXT;;
 
