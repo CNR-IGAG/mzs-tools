@@ -10,7 +10,7 @@ from qgis.core import (
     QgsProject,
 )
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTranslator
+from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTimer, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QAction,
@@ -546,48 +546,51 @@ class MzSTools:
             return
 
         if self.prj_manager.project_updateable:
-            msg_box = QMessageBox()
-            msg_box.setIcon(QMessageBox.Icon.Question)
-            msg_box.setWindowTitle(self.tr("MzS Tools - Project Update"))
-            msg_upd1 = self.tr("The project will be updated from version")
-            msg_upd2 = self.tr("to version")
-            msg_box.setText(f"{msg_upd1} {self.prj_manager.project_version} {msg_upd2} {__version__}.")
-            msg_box.setInformativeText(self.tr("Do you want to proceed?"))
-            msg_box.setDetailedText(
-                self.tr(
-                    "It is possible to cancel the update process and continue using the current project version, "
-                    "but it is highly recommended to proceed with the update to avoid possible issues.\n"
-                    "The QGIS project content (layers, styles, symbols, print layout) will be updated to the latest plugin version.\n"
-                    "The database will be updated if necessary but all data will be preserved.\n"
-                    "The current project will be saved in a backup directory before the update."
-                )
-            )
-            msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-            msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
-
-            response = msg_box.exec()
-            if response == QMessageBox.StandardButton.Yes:
-                self.update_current_project()
-                return
-            else:
-                msg = self.tr(
-                    "Project update cancelled! Most of the plugin functionality will be disabled until the project is updated. "
-                    "It is highly recommended to update the project to avoid possible issues."
-                )
-                self.log(
-                    msg,
-                    log_level=1,
-                    push=True,
-                    duration=0,
-                    button=True,
-                    button_text=self.tr("Update project"),
-                    button_connect=self.update_current_project,
-                )
-                return
+            # Use QTimer to delay the display of the message box until the project is fully loaded
+            QTimer.singleShot(2000, self.show_project_update_dialog)
+            return
 
         self.report_project_issues()
-
         self.prj_manager.connect_editing_signals()
+
+    def show_project_update_dialog(self):
+        """Display the project update confirmation dialog after a delay to ensure project is fully loaded."""
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Icon.Question)
+        msg_box.setWindowTitle(self.tr("MzS Tools - Project Update"))
+        msg_upd1 = self.tr("The project will be updated from version")
+        msg_upd2 = self.tr("to version")
+        msg_box.setText(f"{msg_upd1} {self.prj_manager.project_version} {msg_upd2} {__version__}.")
+        msg_box.setInformativeText(self.tr("Do you want to proceed?"))
+        msg_box.setDetailedText(
+            self.tr(
+                "It is possible to cancel the update process and continue using the current project version, "
+                "but it is highly recommended to proceed with the update to avoid possible issues.\n"
+                "The QGIS project content (layers, styles, symbols, print layout) will be updated to the latest plugin version.\n"
+                "The database will be updated if necessary but all data will be preserved.\n"
+                "The current project will be saved in a backup directory before the update."
+            )
+        )
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
+
+        response = msg_box.exec()
+        if response == QMessageBox.StandardButton.Yes:
+            self.update_current_project()
+        else:
+            msg = self.tr(
+                "Project update cancelled! Most of the plugin functionality will be disabled until the project is updated. "
+                "It is highly recommended to update the project to avoid possible issues."
+            )
+            self.log(
+                msg,
+                log_level=1,
+                push=True,
+                duration=0,
+                button=True,
+                button_text=self.tr("Update project"),
+                button_connect=self.update_current_project,
+            )
 
     def report_project_issues(self):
         if not self.prj_manager.project_issues:

@@ -11,12 +11,6 @@ SELECT DropTable(NULL, 'stab_l2', TRUE);;
 SELECT DropTable(NULL, 'stab_l3', TRUE);;
 SELECT DropTable(NULL, 'isosub_l2', TRUE);;
 SELECT DropTable(NULL, 'isosub_l3', TRUE);;
--- DROP TABLE IF EXISTS instab_l2;;
--- DROP TABLE IF EXISTS instab_l3;;
--- DROP TABLE IF EXISTS stab_l2;;
--- DROP TABLE IF EXISTS stab_l3;;
--- DROP TABLE IF EXISTS isosub_l2;;
--- DROP TABLE IF EXISTS isosub_l3;;
 
 -- upgrade db to spatialite 5
 SELECT CreateMissingSystemTables();;
@@ -42,6 +36,9 @@ CREATE TABLE IF NOT EXISTS mzs_tools_update_history (
 	to_version TEXT,
 	notes TEXT
 );
+
+-- update instab code
+UPDATE tbl_cod_instab SET cod=3075 WHERE cod=3069;;
 
 -- add column valore_appoggio to parametri_puntuali
 ALTER TABLE parametri_puntuali ADD COLUMN "valore_appoggio" TEXT;;

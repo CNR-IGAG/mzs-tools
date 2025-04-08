@@ -10,6 +10,7 @@ from sqlite3 import Connection
 from typing import Optional
 
 from qgis.core import (
+    Qgis,
     QgsCoordinateReferenceSystem,
     QgsEditorWidgetSetup,
     QgsLayerDefinition,
@@ -23,7 +24,8 @@ from qgis.core import (
     QgsTolerance,
     QgsVectorLayer,
 )
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.utils import iface, spatialite_connect
 
@@ -160,14 +162,12 @@ class MzSProjectManager:
             # self.project_issues["general"].append("Error reading project version file")
             self._add_project_issue("project", f"Error reading project version file: {e}")
 
-        if self.project_version and self.project_version < __base_version__:
+        self.project_updateable = bool(self.project_version and self.project_version < __base_version__)
+        if self.project_updateable:
             self.log(
                 f"MzS Project is version {self.project_version} and should be updated to version {__base_version__}",
                 log_level=1,
             )
-            self.project_updateable = True
-        else:
-            self.project_updateable = False
 
         # get comune data from db
         self.comune_data = self.get_project_comune_data()
@@ -838,42 +838,42 @@ class MzSProjectManager:
             return None
         return valid_layers[0].id()
 
-    def create_project_from_template(self, comune_name, cod_istat, study_author, author_email, dir_out):
-        """pre-2.0.0 method to create a new project"""
-        # extract project template in the output directory
-        self.extract_project_template(dir_out)
+    # def create_project_from_template(self, comune_name, cod_istat, study_author, author_email, dir_out):
+    #     """pre-2.0.0 method to create a new project"""
+    #     # extract project template in the output directory
+    #     self.extract_project_template(dir_out)
 
-        comune_name = self.sanitize_comune_name(comune_name)
-        new_project_path = os.path.join(dir_out, f"{cod_istat}_{comune_name}")
-        os.rename(os.path.join(dir_out, "progetto_MS"), new_project_path)
+    #     comune_name = self.sanitize_comune_name(comune_name)
+    #     new_project_path = os.path.join(dir_out, f"{cod_istat}_{comune_name}")
+    #     os.rename(os.path.join(dir_out, "progetto_MS"), new_project_path)
 
-        self.current_project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
+    #     self.current_project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        # init new project info
-        self.current_project = QgsProject.instance()
-        self.project_path = Path(self.current_project.absolutePath())
-        self.db_path = self.project_path / "db" / "indagini.sqlite"
+    #     # init new project info
+    #     self.current_project = QgsProject.instance()
+    #     self.project_path = Path(self.current_project.absolutePath())
+    #     self.db_path = self.project_path / "db" / "indagini.sqlite"
 
-        self._setup_db_connection()
+    #     self._setup_db_connection()
 
-        self.customize_project_template(cod_istat)
+    #     self.customize_project_template(cod_istat)
 
-        self.create_basic_project_metadata(cod_istat, study_author, author_email)
+    #     self.create_basic_project_metadata(cod_istat, study_author, author_email)
 
-        # Refresh layouts
-        self.refresh_project_layouts()
+    #     # Refresh layouts
+    #     self.refresh_project_layouts()
 
-        # write the version file
-        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-            f.write(__base_version__)
+    #     # write the version file
+    #     with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+    #         f.write(__base_version__)
 
-        # Save the project
-        self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
+    #     # Save the project
+    #     self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        # completely reload the project
-        iface.addProject(os.path.join(new_project_path, "progetto_MS.qgs"))
+    #     # completely reload the project
+    #     iface.addProject(os.path.join(new_project_path, "progetto_MS.qgs"))
 
-        return new_project_path
+    #     return new_project_path
 
     def create_project(
         self, comune_name: str, cod_istat: str, study_author: str, author_email: str, dir_out: str
@@ -945,65 +945,65 @@ class MzSProjectManager:
 
         return new_project_path
 
-    def update_project_from_template(self):
-        """pre-2.0.0 method to update a project"""
-        if not self.project_updateable:
-            self.log("Requested project update for non-updateable project!", log_level=1)
-            return
+    # def update_project_from_template(self):
+    #     """pre-2.0.0 method to update a project"""
+    #     if not self.project_updateable:
+    #         self.log("Requested project update for non-updateable project!", log_level=1)
+    #         return
 
-        # extract project template in the current project directory (will be in "progetto_MS" subdir)
-        self.extract_project_template(self.project_path)
+    #     # extract project template in the current project directory (will be in "progetto_MS" subdir)
+    #     self.extract_project_template(self.project_path)
 
-        # remove old project files (maschere, script, loghi, progetto_MS.qgs)
-        shutil.rmtree(os.path.join(self.project_path, "progetto", "maschere"))
-        shutil.copytree(
-            os.path.join(self.project_path, "progetto_MS", "progetto", "maschere"),
-            os.path.join(self.project_path, "progetto", "maschere"),
-        )
+    #     # remove old project files (maschere, script, loghi, progetto_MS.qgs)
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "maschere"))
+    #     shutil.copytree(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto", "maschere"),
+    #         os.path.join(self.project_path, "progetto", "maschere"),
+    #     )
 
-        shutil.rmtree(os.path.join(self.project_path, "progetto", "script"))
-        shutil.copytree(
-            os.path.join(self.project_path, "progetto_MS", "progetto", "script"),
-            os.path.join(self.project_path, "progetto", "script"),
-        )
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "script"))
+    #     shutil.copytree(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto", "script"),
+    #         os.path.join(self.project_path, "progetto", "script"),
+    #     )
 
-        shutil.rmtree(os.path.join(self.project_path, "progetto", "loghi"))
-        shutil.copytree(
-            os.path.join(self.project_path, "progetto_MS", "progetto", "loghi"),
-            os.path.join(self.project_path, "progetto", "loghi"),
-        )
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "loghi"))
+    #     shutil.copytree(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto", "loghi"),
+    #         os.path.join(self.project_path, "progetto", "loghi"),
+    #     )
 
-        # write the new version to the version file
-        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-            f.write(__base_version__)
+    #     # write the new version to the version file
+    #     with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+    #         f.write(__base_version__)
 
-        os.remove(os.path.join(self.project_path, "progetto_MS.qgs"))
-        shutil.copyfile(
-            os.path.join(self.project_path, "progetto_MS", "progetto_MS.qgs"),
-            os.path.join(self.project_path, "progetto_MS.qgs"),
-        )
+    #     os.remove(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     shutil.copyfile(
+    #         os.path.join(self.project_path, "progetto_MS", "progetto_MS.qgs"),
+    #         os.path.join(self.project_path, "progetto_MS.qgs"),
+    #     )
 
-        # read the new project file inside the loaded (old) project
-        self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     # read the new project file inside the loaded (old) project
+    #     self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
 
-        self._setup_db_connection()
+    #     self._setup_db_connection()
 
-        # apply project customizations without creating comune feature
-        self.customize_project_template(self.comune_data.cod_istat, insert_comune_progetto=False)
+    #     # apply project customizations without creating comune feature
+    #     self.customize_project_template(self.comune_data.cod_istat, insert_comune_progetto=False)
 
-        # cleanup the extracted project template
-        shutil.rmtree(os.path.join(self.project_path, "progetto_MS"))
+    #     # cleanup the extracted project template
+    #     shutil.rmtree(os.path.join(self.project_path, "progetto_MS"))
 
-        # Refresh layouts
-        self.refresh_project_layouts()
+    #     # Refresh layouts
+    #     self.refresh_project_layouts()
 
-        # Save the project
-        self.current_project.write(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     # Save the project
+    #     self.current_project.write(os.path.join(self.project_path, "progetto_MS.qgs"))
 
-        # completely reload the project
-        iface.addProject(os.path.join(self.project_path, "progetto_MS.qgs"))
+    #     # completely reload the project
+    #     iface.addProject(os.path.join(self.project_path, "progetto_MS.qgs"))
 
-        return self.project_path
+    #     return self.project_path
 
     def update_project(self):
         """Update the project without loading the project template.
@@ -1015,150 +1015,171 @@ class MzSProjectManager:
 
         old_version = self.project_version
 
-        if old_version < "2.0.0":
-            # version is too old, clear the project and start from scratch
+        # Create a progress message that will stay visible during operations
+        progress_msg = iface.messageBar().createMessage(
+            "MzS Tools", self.tr("Project update in progress. Please wait...")
+        )
+
+        # Add a progress bar to show activity
+        progress_bar = QProgressBar()
+        progress_bar.setRange(0, 0)  # Indeterminate progress bar
+        progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        progress_msg.layout().addWidget(progress_bar)
+
+        # Push the message to the message bar
+        message_item = iface.messageBar().pushWidget(progress_msg, Qgis.MessageLevel.Info)
+
+        # Update the UI to ensure the message is visible
+        iface.mainWindow().repaint()
+
+        try:
+            if old_version < "2.0.0":
+                # version is too old, clear the project and start from scratch
+                if self.db_connection:
+                    self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
+
+                # backup print layouts
+                layout_file_paths = self.backup_print_layouts(
+                    backup_label=f"backup_v.{old_version}", backup_all=True, backup_models=True
+                )
+
+                self.current_project.clear()  # db connection is automatically closed!
+
+                self.add_default_layers()
+                self.customize_project()
+
+                # load the print layouts from the backup
+                try:
+                    for layout_file_path in layout_file_paths:
+                        if layout_file_path.exists():
+                            self.load_print_layout_model(layout_file_path)
+                except Exception as e:
+                    self.log(f"Error loading print layout model backups: {e}", log_level=1)
+
+                self.refresh_project_layouts()
+
+                # write the version file
+                with open(self.project_path / "progetto" / "versione.txt", "w") as f:
+                    f.write(__base_version__)
+
+                # Save the project
+                self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+
+                # cleanup project files
+                old_files = [
+                    self.project_path / "progetto_MS.qgs",
+                    self.project_path / "progetto_MS.qgs~",
+                    self.project_path / "progetto_MS_attachments.zip",
+                    self.project_path / "progetto" / "script",
+                    self.project_path / "progetto" / "maschere",
+                ]
+                for path in old_files:
+                    if path.exists():
+                        if path.is_file():
+                            path.unlink()
+                        elif path.is_dir():
+                            shutil.rmtree(path)
+
+                # completely reload the project
+                iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
+
+            # for future versions it should be possible to update what's needed without clearing the project
+            # elif self.project_version < "2.0.1":
+            #   self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
+
             if self.db_connection:
-                self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
+                self.update_history_table("project", old_version, __version__, "project updated successfully")
 
-            # backup print layouts
-            layout_file_paths = self.backup_print_layouts(
-                backup_label=f"backup_v.{old_version}", backup_all=True, backup_models=True
-            )
+            msg = self.tr("Project upgrades completed! Project upgraded to version")
+            self.log(f"{msg} {__base_version__}", push=True, duration=0)
+        finally:
+            # Clear the message bar once the operation is complete
+            iface.messageBar().popWidget(message_item)
 
-            self.current_project.clear()  # db connection is automatically closed!
+    # def customize_project_template(self, cod_istat, insert_comune_progetto=True):
+    #     """pre-2.0.0 method to customize the project with the selected comune data."""
 
-            self.add_default_layers()
-            self.customize_project()
+    #     layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
 
-            # load the print layouts from the backup
-            try:
-                for layout_file_path in layout_file_paths:
-                    if layout_file_path.exists():
-                        self.load_print_layout_model(layout_file_path)
-            except Exception as e:
-                self.log(f"Error loading print layout model backups: {e}", log_level=1)
+    #     comune_data = None
+    #     if insert_comune_progetto:
+    #         conn = self.db_connection
+    #         cursor = conn.cursor()
+    #         try:
+    #             cursor.execute(
+    #                 """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
+    #                 SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
+    #                 (cod_istat,),
+    #             )
+    #             conn.commit()
 
-            self.refresh_project_layouts()
+    #             last_inserted_id = cursor.lastrowid
 
-            # write the version file
-            with open(self.project_path / "progetto" / "versione.txt", "w") as f:
-                f.write(__base_version__)
+    #             cursor.execute(
+    #                 """SELECT cod_regio, comune, provincia, regione
+    #                 FROM comune_progetto WHERE rowid = ?""",
+    #                 (last_inserted_id,),
+    #             )
+    #             comune_data = cursor.fetchone()
+    #         except Exception as e:
+    #             conn.rollback()
+    #             self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
+    #         finally:
+    #             cursor.close()
+    #     else:
+    #         conn = self.db_connection
+    #         cursor = conn.cursor()
+    #         try:
+    #             # assuming there is only one record in comune_progetto
+    #             cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
+    #             comune_data = cursor.fetchone()
+    #         except Exception as e:
+    #             self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
+    #         finally:
+    #             cursor.close()
 
-            # Save the project
-            self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+    #     codice_regio = comune_data[0]
+    #     comune = comune_data[1]
+    #     provincia = comune_data[2]
+    #     regione = comune_data[3]
 
-            # cleanup project files
-            old_files = [
-                self.project_path / "progetto_MS.qgs",
-                self.project_path / "progetto_MS.qgs~",
-                self.project_path / "progetto_MS_attachments.zip",
-                self.project_path / "progetto" / "script",
-                self.project_path / "progetto" / "maschere",
-            ]
-            for path in old_files:
-                if path.exists():
-                    if path.is_file():
-                        path.unlink()
-                    elif path.is_dir():
-                        shutil.rmtree(path)
+    #     layer_limiti_comunali = self.current_project.mapLayersByName("Limiti comunali")[0]
+    #     layer_limiti_comunali.removeSelection()
+    #     layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
 
-            # completely reload the project
-            iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
+    #     logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", codice_regio + ".png")
+    #     logo_regio_out = os.path.join(self.project_path, "progetto", "loghi", "logo_regio.png")
+    #     shutil.copyfile(logo_regio_in, logo_regio_out)
 
-        # for future versions it should be possible to update what's needed without clearing the project
-        # elif self.project_version < "2.0.1":
-        #   self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
+    #     mainPath = QgsProject.instance().homePath()
+    #     canvas = iface.mapCanvas()
 
-        if self.db_connection:
-            self.update_history_table("project", old_version, __version__, "project updated successfully")
+    #     imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
+    #     save_map_image(imageFilename, layer_limiti_comunali, canvas)
 
-        msg = self.tr("Project upgrades completed! Project upgraded to version")
-        self.log(f"{msg} {__base_version__}", push=True, duration=0)
+    #     layer_comune_progetto.dataProvider().updateExtents()
+    #     layer_comune_progetto.updateExtents()
+    #     # extent = layer_comune_progetto.dataProvider().extent()
+    #     canvas.setExtent(layer_comune_progetto.extent())
 
-    def customize_project_template(self, cod_istat, insert_comune_progetto=True):
-        """pre-2.0.0 method to customize the project with the selected comune data."""
+    #     layout_manager = QgsProject.instance().layoutManager()
+    #     layouts = layout_manager.printLayouts()
 
-        layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
+    #     for layout in layouts:
+    #         map_item = layout.itemById("mappa_0")
+    #         map_item.zoomToExtent(canvas.extent())
+    #         map_item_2 = layout.itemById("regio_title")
+    #         map_item_2.setText("Regione " + regione)
+    #         map_item_3 = layout.itemById("com_title")
+    #         map_item_3.setText("Comune di " + comune)
+    #         map_item_4 = layout.itemById("logo")
+    #         map_item_4.refreshPicture()
+    #         map_item_5 = layout.itemById("mappa_1")
+    #         map_item_5.refreshPicture()
 
-        comune_data = None
-        if insert_comune_progetto:
-            conn = self.db_connection
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
-                    SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
-                    (cod_istat,),
-                )
-                conn.commit()
-
-                last_inserted_id = cursor.lastrowid
-
-                cursor.execute(
-                    """SELECT cod_regio, comune, provincia, regione
-                    FROM comune_progetto WHERE rowid = ?""",
-                    (last_inserted_id,),
-                )
-                comune_data = cursor.fetchone()
-            except Exception as e:
-                conn.rollback()
-                self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
-            finally:
-                cursor.close()
-        else:
-            conn = self.db_connection
-            cursor = conn.cursor()
-            try:
-                # assuming there is only one record in comune_progetto
-                cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
-                comune_data = cursor.fetchone()
-            except Exception as e:
-                self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
-            finally:
-                cursor.close()
-
-        codice_regio = comune_data[0]
-        comune = comune_data[1]
-        provincia = comune_data[2]
-        regione = comune_data[3]
-
-        layer_limiti_comunali = self.current_project.mapLayersByName("Limiti comunali")[0]
-        layer_limiti_comunali.removeSelection()
-        layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
-
-        logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", codice_regio + ".png")
-        logo_regio_out = os.path.join(self.project_path, "progetto", "loghi", "logo_regio.png")
-        shutil.copyfile(logo_regio_in, logo_regio_out)
-
-        mainPath = QgsProject.instance().homePath()
-        canvas = iface.mapCanvas()
-
-        imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
-        save_map_image(imageFilename, layer_limiti_comunali, canvas)
-
-        layer_comune_progetto.dataProvider().updateExtents()
-        layer_comune_progetto.updateExtents()
-        # extent = layer_comune_progetto.dataProvider().extent()
-        canvas.setExtent(layer_comune_progetto.extent())
-
-        layout_manager = QgsProject.instance().layoutManager()
-        layouts = layout_manager.printLayouts()
-
-        for layout in layouts:
-            map_item = layout.itemById("mappa_0")
-            map_item.zoomToExtent(canvas.extent())
-            map_item_2 = layout.itemById("regio_title")
-            map_item_2.setText("Regione " + regione)
-            map_item_3 = layout.itemById("com_title")
-            map_item_3.setText("Comune di " + comune)
-            map_item_4 = layout.itemById("logo")
-            map_item_4.refreshPicture()
-            map_item_5 = layout.itemById("mappa_1")
-            map_item_5.refreshPicture()
-
-        # set project title
-        project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
-        self.current_project.setTitle(project_title)
+    #     # set project title
+    #     project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
+    #     self.current_project.setTitle(project_title)
 
     def customize_project(self):
         """Customize the project with the selected comune data."""

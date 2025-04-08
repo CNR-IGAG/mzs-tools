@@ -45,42 +45,42 @@
 <context>
     <name>DlgExportData</name>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="58"/>
+        <location filename="../gui/dlg_export_data.py" line="60"/>
         <source>Start export</source>
         <translation>Inizia esportazione</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="132"/>
+        <location filename="../gui/dlg_export_data.py" line="138"/>
         <source>[Connection established]</source>
         <translation>[Connessione stabilita]</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="139"/>
+        <location filename="../gui/dlg_export_data.py" line="145"/>
         <source>Use &apos;qpip&apos; QGIS plugin to install dependencies and restart QGIS</source>
         <translation>Usa il plugin per QGIS &apos;qpip&apos; per installare le dipendenze e riavvia QGIS</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="147"/>
+        <location filename="../gui/dlg_export_data.py" line="153"/>
         <source>[Connection failed]</source>
         <translation>[Connessione fallita]</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="233"/>
+        <location filename="../gui/dlg_export_data.py" line="239"/>
         <source>Data export in progress...</source>
         <translation>Esportazione dati in corso...</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="344"/>
+        <location filename="../gui/dlg_export_data.py" line="350"/>
         <source>Data exported successfully</source>
         <translation>Esportazione dati completata</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="347"/>
+        <location filename="../gui/dlg_export_data.py" line="353"/>
         <source>Data export completed with errors. Check the log for details.</source>
         <translation>Esportazione dati completata con alcuni errori. Controlla i log per i dettagli.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="377"/>
+        <location filename="../gui/dlg_export_data.py" line="383"/>
         <source>Data export cancelled!</source>
         <translation>Esportazione dati annullata!</translation>
     </message>
@@ -171,12 +171,12 @@
 </translation>
     </message>
     <message>
-        <location filename="../gui/dlg_fix_layers.py" line="61"/>
+        <location filename="../gui/dlg_fix_layers.py" line="62"/>
         <source>Do you want to proceed?</source>
         <translation>Vuoi proseguire?</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_fix_layers.py" line="62"/>
+        <location filename="../gui/dlg_fix_layers.py" line="63"/>
         <source>An MzS Tools project requires certain settings and specific layers to function properly.
 If some problems are detected in the current project, it is possible to replace the required layers with the default ones.
 The process will not modify data currently stored in the database in any way, only the selected QGIS layer groups will be replaced and all data will be preserved.</source>
@@ -218,27 +218,27 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>DlgImportData</name>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="53"/>
+        <location filename="../gui/dlg_import_data.py" line="56"/>
         <source>Start import</source>
         <translation>Inizia importazione</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="254"/>
+        <location filename="../gui/dlg_import_data.py" line="263"/>
         <source>Project folder does not exist</source>
         <translation>La cartella del progetto non esiste</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="311"/>
+        <location filename="../gui/dlg_import_data.py" line="320"/>
         <source>Project folder does not contain &apos;Indagini&apos; subfolder</source>
         <translation>Il progetto non contiene la cartella &apos;Indagini&apos;</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="316"/>
+        <location filename="../gui/dlg_import_data.py" line="325"/>
         <source>[File not found]</source>
         <translation>[File non trovato]</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="380"/>
+        <location filename="../gui/dlg_import_data.py" line="389"/>
         <source>[Connection failed]</source>
         <translation>[Connessione fallita]</translation>
     </message>
@@ -248,22 +248,22 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">[Connessione {&apos;con password&apos; if password else &apos;&apos;} stabilita]</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="485"/>
+        <location filename="../gui/dlg_import_data.py" line="494"/>
         <source>Data import in progress...</source>
         <translation>Importazione dati in corso...</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="550"/>
+        <location filename="../gui/dlg_import_data.py" line="559"/>
         <source>Data imported successfully</source>
         <translation>Importazione completata</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="553"/>
+        <location filename="../gui/dlg_import_data.py" line="562"/>
         <source>Data import completed with errors. Check the log for details.</source>
         <translation>Importazione completata con alcuni errori. Controlla i log per i dettagli.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="583"/>
+        <location filename="../gui/dlg_import_data.py" line="592"/>
         <source>Data import cancelled!</source>
         <translation>Importazione dati annullata!</translation>
     </message>
@@ -398,12 +398,12 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation>Log di debug</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="384"/>
+        <location filename="../gui/dlg_import_data.py" line="393"/>
         <source>Connection established</source>
         <translation>Connessione stabilita</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="385"/>
+        <location filename="../gui/dlg_import_data.py" line="394"/>
         <source> with password</source>
         <translation> con password</translation>
     </message>
@@ -486,23 +486,23 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
     <message>
         <location filename="../gui/dlg_manage_attachments.ui" line="52"/>
         <source>This option is generally recommended, except when there are many cases where the same file is associated with many different investigations. In this case the same file would be replicated for each investigation it is associated with.</source>
-        <translation type="unfinished">E&apos; generalmente raccomandato attivare questa opzione, tranne quando vi siano molti casi nei quali uno stesso file risulti associato a diverse indagini o parametri. In questi casi, attivando l&apos;opzione, questi file verrebbero replicati per ogni record con cui sono associati.</translation>
+        <translation>E&apos; generalmente raccomandato attivare questa opzione, tranne quando vi siano molti casi nei quali uno stesso file risulti associato a diverse indagini o parametri. In questi casi, attivando l&apos;opzione, questi file verrebbero replicati per ogni record con cui sono associati.</translation>
     </message>
 </context>
 <context>
     <name>DlgMdbPassword</name>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="624"/>
+        <location filename="../gui/dlg_import_data.py" line="633"/>
         <source>Enter database password</source>
         <translation>Inserire la password per il database</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="628"/>
+        <location filename="../gui/dlg_import_data.py" line="637"/>
         <source>A password is required to access CdI_Tabelle.mdb</source>
         <translation>Una password è richiesta per l&apos;accesso a CdI_Tabelle.mdb</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="635"/>
+        <location filename="../gui/dlg_import_data.py" line="644"/>
         <source>Save password in QGIS auth manager</source>
         <translation>Salva la password nel gestore di QGIS</translation>
     </message>
@@ -525,22 +525,22 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Si è verificato un problema nella lettura della tabella comune_progetto dal database!</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_metadata_edit.py" line="121"/>
+        <location filename="../gui/dlg_metadata_edit.py" line="123"/>
         <source>Multiple metadata records found. Please edit the &apos;metadati&apos; table and remove all but one record.</source>
         <translation>Sono presenti più record nella tabella metadati. Rimuovere manualmente dalla tabella i record non pertinenti.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_metadata_edit.py" line="285"/>
+        <location filename="../gui/dlg_metadata_edit.py" line="292"/>
         <source>Metadata updated successfully.</source>
         <translation>Metadati modificati correttamente.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_metadata_edit.py" line="287"/>
+        <location filename="../gui/dlg_metadata_edit.py" line="294"/>
         <source>MzS Tools</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../gui/dlg_metadata_edit.py" line="290"/>
+        <location filename="../gui/dlg_metadata_edit.py" line="297"/>
         <source>MzS Tools - Error</source>
         <translation>MzS Tools - Errore</translation>
     </message>
@@ -944,24 +944,29 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>MzSProjectManager</name>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1315"/>
+        <location filename="../core/mzs_project_manager.py" line="1362"/>
         <source>The database file is corrupted! {self.db_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1330"/>
+        <location filename="../core/mzs_project_manager.py" line="1377"/>
         <source>Error connecting to db! {self.db_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1064"/>
+        <location filename="../core/mzs_project_manager.py" line="1093"/>
         <source>Project upgrades completed! Project upgraded to version</source>
         <translation>Aggiornamento del progetto effettuato! Progetto aggiornato alla versione</translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1402"/>
+        <location filename="../core/mzs_project_manager.py" line="1449"/>
         <source>Database upgrades completed! Database upgraded to version</source>
         <translation>Aggiornamento del database effettuato! Database aggiornato alla versione</translation>
+    </message>
+    <message>
+        <location filename="../core/mzs_project_manager.py" line="1019"/>
+        <source>Project update in progress. Please wait...</source>
+        <translation>Aggiornamento del progetto in corso. Attendere...</translation>
     </message>
 </context>
 <context>
@@ -1067,7 +1072,7 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Il progetto è stato creato correttamente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="551"/>
+        <location filename="../mzs_tools.py" line="560"/>
         <source>MzS Tools - Project Update</source>
         <translation>MzS Tools - Aggiornamento del progetto</translation>
     </message>
@@ -1082,12 +1087,12 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="555"/>
+        <location filename="../mzs_tools.py" line="564"/>
         <source>Do you want to proceed?</source>
         <translation>Vuoi proseguire?</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="556"/>
+        <location filename="../mzs_tools.py" line="565"/>
         <source>It is possible to cancel the update process and continue using the current project version, but it is highly recommended to proceed with the update to avoid possible issues.
 The QGIS project content (layers, styles, symbols, print layout) will be updated to the latest plugin version.
 The database will be updated if necessary but all data will be preserved.
@@ -1213,7 +1218,7 @@ Il formato dei dati del progetto originale deve essere:
 - Shapefiles (layer vettoriali quali &apos;Instab&apos;, &apos;Geotec&apos;, ecc.)</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="598"/>
+        <location filename="../mzs_tools.py" line="601"/>
         <source>MzS Tools - Project Issues</source>
         <translation>MzS Tools Problemi nel progetto</translation>
     </message>
@@ -1260,17 +1265,17 @@ Gli ID numerici dei dati importati (e gli ID composti quali &apos;ID_SPU&apos;, 
 Per conservare gli ID originali è necessario utilizzare un progetto vuoto, oppure eliminare tutti i dati delle indagini puntuali e lineari prima di procedere all&apos;importazione.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="573"/>
+        <location filename="../mzs_tools.py" line="581"/>
         <source>Project update cancelled! Most of the plugin functionality will be disabled until the project is updated. It is highly recommended to update the project to avoid possible issues.</source>
         <translation>Aggiornamento del progetto annullato! La maggior parte delle funzionalità del plugin verranno disabilitate. E&apos; fortemente consigliato procedere all&apos;aggiornamento per evitare possibili problemi.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="577"/>
+        <location filename="../mzs_tools.py" line="585"/>
         <source>Update project</source>
         <translation>Aggiorna progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="599"/>
+        <location filename="../mzs_tools.py" line="602"/>
         <source>Some issues have been found in the current MzS Tools project.
 
 It is suggested to use the &apos;Replace/repair layers&apos; function in the MzS Tools toolbar to try to solve the issues.</source>
@@ -1279,12 +1284,12 @@ It is suggested to use the &apos;Replace/repair layers&apos; function in the MzS
 Utilizzare gli strumenti per la gestione dei layer nella toolbar di MzS Tools per provare a risolverli.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="552"/>
+        <location filename="../mzs_tools.py" line="561"/>
         <source>The project will be updated from version</source>
         <translation>Il progetto verrà aggiornato dalla versione</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="553"/>
+        <location filename="../mzs_tools.py" line="562"/>
         <source>to version</source>
         <translation>alla versione</translation>
     </message>
