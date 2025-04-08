@@ -5,7 +5,7 @@ from pathlib import Path
 
 # used during development to speed up some processes (i.e destructive data deletion)
 # set to False before releasing!
-DEBUG_MODE: bool = True
+DEBUG_MODE: bool = False
 
 DIR_PLUGIN_ROOT: Path = Path(__file__).parent
 PLG_METADATA_FILE: Path = DIR_PLUGIN_ROOT.resolve() / "metadata.txt"

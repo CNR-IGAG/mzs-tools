@@ -108,10 +108,12 @@ class PluginInfo(QDialog, FORM_CLASS):
 
     def update_version_warning(self, version_installed: str, version_available: str):
         """Update the version warning label."""
-        if parse(version_installed).is_prerelease or (version_installed > version_available):
+        parsed_version_installed = parse(version_installed)
+        parsed_version_available = parse(version_available)
+        if parsed_version_installed.is_prerelease or (parsed_version_installed > parsed_version_available):
             self.label_version_warning.setText(self.tr("(Local or development version)"))
             self.label_version_warning.setStyleSheet("font-style: italic; font-weight: bold; color: red;")
-        elif version_installed < version_available:
+        elif parsed_version_installed < parsed_version_available:
             self.label_version_warning.setText(self.tr(f"New version available: {version_available}"))
             self.label_version_warning.setStyleSheet("font-style: italic; font-weight: bold; color: green;")
         else:

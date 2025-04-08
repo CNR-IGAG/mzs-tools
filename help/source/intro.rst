@@ -92,6 +92,7 @@ v2.0.0
     - Accesso diretto e cross-platform ai database Microsoft Access ("CdI_Tabelle.mdb") per l'importazione ed
       esportazione dei dati (richiede l'installazione di Java JVM 64 bit e di librerie esterne gestite tramite il plugin
       per QGIS "QPIP")
+    - Compatibilità preliminare con PyQt6
     
 
 v1.9.4
