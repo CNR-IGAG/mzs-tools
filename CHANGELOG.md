@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.1] - 2025-04-09 [Unreleased]
+## [2.0.1-beta1] - 2025-04-09 [Unreleased]
 
 - Bug fixing
 
