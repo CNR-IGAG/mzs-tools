@@ -1058,10 +1058,6 @@ class MzSProjectManager:
 
                 self.refresh_project_layouts()
 
-                # write the version file
-                with open(self.project_path / "progetto" / "versione.txt", "w") as f:
-                    f.write(__base_version__)
-
                 # Save the project
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 
@@ -1084,11 +1080,18 @@ class MzSProjectManager:
                 iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
 
             # for future versions it should be possible to update what's needed without clearing the project
-            # elif self.project_version < "2.0.1":
-            #   self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
+            elif __base_version__ == "2.0.1":
+                # self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
+                self.log("No changes needed for QGIS project in version 2.0.1", log_level=3)
+
+            # write the version file
+            with open(self.project_path / "progetto" / "versione.txt", "w") as f:
+                f.write(__base_version__)
 
             if self.db_connection:
                 self.update_history_table("project", old_version, __version__, "project updated successfully")
+                # update mzs_tools_version table
+                self.update_db_version_info()
 
             msg = self.tr("Project upgrades completed! Project upgraded to version")
             self.log(f"{msg} {__base_version__}", push=True, duration=0)
