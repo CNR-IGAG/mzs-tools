@@ -85,12 +85,15 @@ class PluginInfo(QDialog, FORM_CLASS):
         return text
 
     def showEvent(self, e):
-        plugin_metadata = self.get_plugin_metadata("MzSTools")
-        version_installed = __version__
-        version_available = plugin_metadata.get("version_available", version_installed)
-
-        self.label_version.setText(self.label_version.text().replace("[[]]", version_installed))
-        self.update_version_warning(version_installed, version_available)
+        try:
+            plugin_metadata = self.get_plugin_metadata("MzSTools")
+            version_installed = __version__
+            version_available = plugin_metadata.get("version_available", version_installed) or version_installed
+            self.label_version.setText(self.label_version.text().replace("[[]]", version_installed))
+            self.update_version_warning(version_installed, version_available)
+        except Exception as e:
+            self.log(f"Error updating version label: {e}", log_level=1)
+            self.label_version_warning.setVisible(False)
 
     def get_plugin_metadata(self, plugin_name: str) -> Dict[str, str]:
         """Fetch plugin metadata."""
