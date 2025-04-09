@@ -6,14 +6,15 @@ Creazione di un nuovo progetto
 .. |ico1| image:: ../../../mzs_tools/resources/icons/ico_nuovo_progetto.png
   :height: 25
 
-Il primo strumento, **Nuovo progetto**, permette di generare un progetto QGIS ed uno spazio di archiviazione adatti ad un **comune** oggetto di studio. 
+Il primo strumento, **Nuovo progetto**, permette di generare un progetto QGIS ed uno spazio di archiviazione adatti ad
+un **comune** oggetto di studio. 
 
 .. figure:: ../img/nuovo_progetto.png
+  :width: 400
   :align: center
 
-|
-
-Dopo aver selezionato il pulsante “Nuovo progetto” |ico1|, viene aperta una finestra contenente una serie di campi da compilare con informazioni relative a:
+Dopo aver selezionato il pulsante “Nuovo progetto” |ico1|, viene aperta una finestra contenente una serie di campi da
+compilare con informazioni relative a:
 
 * il Comune oggetto degli studi: cominciare a digitare il nome del comune e selezionare uno dei risultati della ricerca;
 * il nome e cognome dell'autore dello studio;
@@ -24,9 +25,11 @@ Dopo aver selezionato il pulsante “Nuovo progetto” |ico1|, viene aperta una 
     
   Vengono inoltre compilati alcuni dei **metadati** di base del progetto previsti dagli Standard MS. Questi possono essere in seguito modificati e completati utilizzando lo strumento della toolbar :ref:`metadata-edit`
 
-Dopo aver compilato tutti i campi richiesti, il pulsante “OK” risulterà selezionabile e verrà creata la struttura del progetto nella cartella selezionata.
+Dopo aver compilato tutti i campi richiesti, il pulsante “OK” risulterà selezionabile e verrà creata la struttura del
+progetto nella cartella selezionata.
 
-Il tool, infine, aprirà automaticamente il progetto all'interno di QGIS ed eseguirà uno zoom all'estensione dell'area di studio del comune.
+Il tool, infine, aprirà automaticamente il progetto all'interno di QGIS ed eseguirà uno zoom all'estensione dell'area
+di studio del comune.
 
 .. figure:: ../img/progetto_qgis.png
   :width: 700
@@ -46,7 +49,11 @@ La cartella di lavoro generata dallo strumento è caratterizzata da una serie di
 
 .. Note:: È importante sottolineare il fatto che questa struttura di archiviazione non corrisponde esattamente a quella prevista dagli Standard, in quanto è ottimizzata per l’utilizzo con QGIS ed il plugin MzSTools. La generazione di una struttura conforme agli Standard deve quindi essere considerata come fase finale del flusso di lavoro e può essere eseguita tramite l'apposito strumento di esportazione.
 
-Uno dei file più importanti all’interno della cartella di progetto è il file di progetto QGIS **progetto_MS.qgs**. Questo è il file all’interno del quale viene salvato lo “stato” del progetto, e pertanto contiene informazioni sui layer caricati, sulle simbologie applicate ai dati, i collegamenti alle tabelle del geodatabase, ma anche elementi come le connessioni agli script e alle finestre grafiche, nonché ai layout di stampa. Come per il resto della struttura di archiviazione, è molto importante preservare l’integrità di questo file.  
+Uno dei file più importanti all’interno della cartella di progetto è il file di progetto QGIS **progetto_MS.qgz**.
+Questo è il file all’interno del quale viene salvato lo “stato” del progetto, e pertanto contiene informazioni sui
+layer caricati, sulle simbologie applicate ai dati, i collegamenti alle tabelle del geodatabase, ma anche elementi come
+le connessioni agli script e alle finestre grafiche, nonché ai layout di stampa. Come per il resto della struttura di
+archiviazione, è molto importante preservare l’integrità di questo file.  
 
 .. _progetto-qgis:
 

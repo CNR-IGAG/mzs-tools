@@ -245,8 +245,3 @@ richiedono, senza però interferire con le impostazioni personali effettuate a l
 
 Questo comportamento automatico può comunque essere disattivato o riattivato tramite lo strumento di configurazione di
 MzS Tools (vedi: :ref:`plugin-settings`):
-
-.. image:: ../img/settings.png
-  :width: 400
-  :align: center
-

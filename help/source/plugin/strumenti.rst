@@ -37,34 +37,53 @@ Gli strumenti richiamabili tramite la toolbar sono:
 .. |ico8| image:: ../../../mzs_tools/resources/icons/ico_info.png
   :height: 25
 
-.. |ico9| image:: ../../../mzs_tools/resources/icons/mActionAddHtml.png
+.. |ico9| image:: ../img/plugin_toolbar_layers_button.png
   :height: 25
 
-|ico1| **Nuovo progetto** → :ref:`nuovo-progetto`
+|ico1| **Strumenti per la gestione del progetto**
 
-|ico9| **Modifica metadati di progetto** → :ref:`metadata-edit`
+Questo menu contiene gli strumenti per la creazione di un nuovo progetto (vedi: :ref:`nuovo-progetto`), per l'apertura di un progetto esistente,
+strumenti di gestione dei backup e degli allegati e per la modifica dei metadati del progetto.
+
+.. image:: ../img/plugin_toolbar_project_menu.png
+  :width: 350
+  :align: center
+
+|
+
+|ico9| **Strumenti di gestione dei layer**
+
+Questo menu contiene alcuni strumenti per la gestione dei layer e dei layout di stampa del progetto QGIS.
+
+.. image:: ../img/plugin_toolbar_layers_menu.png
+  :width: 450
+  :align: center
+
+|
 
 |ico2| **Importa dati da un progetto esistente** → :ref:`importazione`
 
 |ico3| **Esporta dati in una struttura di progetto standard** → :ref:`esportazione`
 
-|ico6| **Aggiungi un Sito Puntuale utilizzando le coordinate XY** → :ref:`sito-xy`
-
 |ico7| **Impostazioni di MzS Tools** → :ref:`plugin-settings`
 
-|ico8| **Aiuto**
+|ico8| **Informazioni sul plugin e accesso alla documentazione**
 
 Interfacce di inserimento dati
 """"""""""""""""""""""""""""""
 
-Per ogni layer di un progetto generato dal plugin, all’interno del quale è previsto l’inserimento dati, sono impostate una serie di funzionalità di QGIS che permettono al software di utilizzare **interfacce grafiche semplificate e guidate** per l’inserimento delle informazioni alfanumeriche relative alle geometrie selezionate in fase di editing.
+Per ogni layer di un progetto generato dal plugin, all’interno del quale è previsto l’inserimento dati, sono impostate
+una serie di funzionalità di QGIS che permettono al software di utilizzare **interfacce grafiche semplificate e
+guidate** per l’inserimento delle informazioni alfanumeriche relative alle geometrie selezionate in fase di editing.
 
 Per maggiori informazioni vai a: :ref:`editing`
 
 Layout di stampa
 """"""""""""""""
 
-Il plugin mette a disposizione una serie di layout di stampa predisposti per i principali output cartografici degli studi di MS. I layout sono accessibili tramite il menu “Progetto – Layout” di QGIS, all'interno di un progetto generato dal plugin. 
+Il plugin mette a disposizione una serie di layout di stampa predisposti per i principali output cartografici degli
+studi di MS. I layout sono accessibili tramite il menu “Progetto – Layout” di QGIS, all'interno di un progetto
+generato dal plugin. 
 
 Per maggiori informazioni vai a: :ref:`layout-stampa`
 
@@ -93,6 +112,9 @@ In questo caso è stata sviluppata un'azione che permette di accedere a tutti i
 file pdf archiviati nel progetto ed associati ad ogni indagine, semplicemente
 cliccando su un "sito" d'indagine e selezionando il file pdf da aprire tramite
 una apposita interfaccia grafica.
+
+.. Note:: Per il funzionamento dello strumento è necessario che i file allegati abbiano l'ID dell'indagine incluso nel nome del file. 
+   E\' possibile utilizzare lo strumento **Controllo dei file allegati** per associare automaticamente gli ID delle indagini ai nomi dei file.
 
 .. image:: ../img/pdf_search.png
   :align: center

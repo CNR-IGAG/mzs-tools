@@ -13,37 +13,40 @@ Nel caso in cui il nuovo studio di MS costituisca il proseguimento o approfondim
 esempio quando il nuovo studio tratti un approfondimento di livello 3 precedentemente non effettuato - è possibile
 importare i dati già esistenti, e procedere successivamente alle integrazioni.
 
-.. warning:: La procedura di importazione dei dati preesistenti deve essere effettuata all'interno di un **progetto
-   MzSTools appena creato** (per lo stesso comune oggetto di studio), non modificato ed in cui non siano stati ancora
-   inseriti dati.
+.. warning:: E\' consigliabile effettuare l'importazione di dati preesistenti all'interno di un **progetto MzSTools vuoto o appena
+   creato** per lo stesso comune oggetto di studio.
+   
+   E\' possibile effettuare l'importazione all'interno di un progetto in cui siano già presenti altri dati, ma in questo caso **gli
+   ID numerici dei dati importati risulteranno diversi rispetto ai dati originali**.
 
    Inoltre il progetto dal quale effettuare l'importazione deve essere basato sugli **standard versione 4 o
-   successive** e deve utlizzare il formato **shapefile** per i dati georeferenziati ed il **database Access
-   “CdI_tabelle.mdb”**
+   successive** e deve utlizzare il formato **shapefile** per i dati vettoriali, mentre il database delle indagini può
+   essere in formato **Microsoft Access** (“CdI_tabelle.mdb”), in formato **SQLite** (“CdI_tabelle.sqlite”) o in tabelle
+   esportate in formato **CSV**. 
+
+.. image:: ../img/importazione.png
+  :width: 450
+  :align: center
 
 In particolare, lo strumento è in grado di trasferire in modo automatico nella nuova struttura del plugin:
 
-* i dati provenienti dagli **shapefile** e dal **database Access “CdI_tabelle”** con estensione “.mdb” del vecchio
-  progetto;
+* i dati provenienti dagli **shapefile** e dal **database “CdI_tabelle”** del vecchio progetto;
 * i **documenti** (ad esempio le carte in formato ``.pdf`` e i file degli spettri elastici di risposta in formato
   ``.txt``) presenti nelle cartelle accessorie del vecchio progetto. 
 
-.. Note:: Per l’importazione dei dati dal database Access è necessario eseguire manualmente alcune operazioni di
-   preparazione descritte di seguito.
+.. Note:: Per l’importazione dei dati dal database Access è necessario che siano state installate correttamente le dipendenze del 
+   plugin, come descritto nella guida di installazione.
 
-La procedura di importazione è costituita quindi da 3 operazioni principali:
-
-1. aprire il file **“CdI_Tabelle.mdb”** con Microsoft Access ed **esportare in formato .txt** le tabelle fondamentali
-   di progetto;
-2. creare un nuovo progetto mediante il tool **Nuovo progetto** |ico1| e lasciarlo aperto all’interno di QGIS (il
-   progetto non deve essere editato e le feature class all'interno del geodatabase devono essere vuote);
-3. eseguire il tool **Importa dati da un progetto esistente** |ico2|.
+Al termine delle operazioni, il tool genera un **report testuale** contenente l’esito dell’importazione, all’interno
+della cartella di progetto ``/allegati/log``.
 
 Esportazione dei dati da Microsoft Access
 """""""""""""""""""""""""""""""""""""""""
 
-Prima di eseguire il tool di importazione è necessario esportare in formato ``.txt`` alcune tabelle del database Access
-**“CdI_Tabelle.mdb”**, e collocare i file esportati in una singola cartella (esterna al progetto MS).
+Nel caso in cui non sia possibile accedere direttamente al database Access tramite il plugin, è possibile effettuare
+l'importazione dei dati in modo indiretto, utilizzando Microsoft Access per esportare le tabelle del database in
+formato CSV e successivamente effettuare l'importazione utilizzando l'opzione ``Tabelle esportate in formato CSV`` per
+selezionare la cartella contenente i file ``.txt`` o ``.csv`` esportati.
 
 Le tabelle da esportare da “CdI_Tabelle.mdb” sono:
 
@@ -114,27 +117,3 @@ La procedura da eseguire per esportare le suddette tabelle in formato ``.txt``, 
 
 6. ripetere le operazioni 4 e 5 per tutte le tabelle elencate precedentemente.
 
-Esecuzione dello strumento di importazione
-""""""""""""""""""""""""""""""""""""""""""
-
-Dopo aver esportato le tabelle Access:
-
-1. creare un **nuovo progetto** con MzSTools per il comune oggetto di studio e lasciarlo aperto all'interno di QGIS;
-2. eseguire lo strumento **Importa dati da un progetto esistente** |ico2|
-
-La finestra dello strumento è caratterizzata dalla presenza di due campi:
-
-* “Cartella progetto”: Inserire la cartella del progetto da importare, ossia il percorso e il nome della cartella
-  principale del progetto conforme agli Standard MS;
-* “Cartella file TXT”: Inserire la cartella di salvataggio dei file in formato ``.txt``.
-
-.. image:: ../img/importazione.png
-  :width: 400
-  :align: center
-
-Dopo aver selezionato le cartelle, premere su "Ok" per avviare l'importazione dei dati.
-
-.. note:: Al termine, il tool genera un *report* sull’esito dell’operazione di importazione. Tale documento viene
-   salvato automaticamente nel seguente percorso: ``nome_comune\allegati\log``. Il nome del report sarà caratterizzato
-   dalla data e dall’ora di esecuzione del tool, e dalla la dicitura “import_log” (esempio: 
-   ``2018-06-13_09-06-23_import_log.txt``).

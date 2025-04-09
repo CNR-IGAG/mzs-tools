@@ -43,19 +43,7 @@ Tramite lo strumento *Modifica metadati di progetto* è possibile modificare i d
 ulteriori informazioni.
 
 .. image:: ../img/edit_metadata.png
-  :align: center
-
-|
-
-.. _sito-xy:
-
-Inserimento Sito Puntuale tramite coordinate
-""""""""""""""""""""""""""""""""""""""""""""
-
-Lo strumento della toolbar *Aggiungi un Sito Puntuale utilizzando le coordinate XY* |ico6| consente di inserire un nuovo sito puntuale tramite l'indicazione delle coordinate X e Y (nel sistema **WGS84 UTM33N** - EPSG: 32633), senza dover digitalizzare il punto su mappa. 
-
-.. image:: ../img/sito_xy.png
-  :width: 450
+  :width: 600
   :align: center
 
 |
@@ -69,10 +57,10 @@ Lo strumento “Impostazioni di MzS Tools”, attivabile tramite il pulsante |ic
 alcune impostazioni del plugin.
 
 Attualmente è possibile attivare o disattivare l'impostazione automatica delle opzioni avanzate di editing per alcuni
-layer del progetto (vedi: :ref:`auto-overlaps`).
+layer del progetto (vedi: :ref:`auto-overlaps`) ed abilitare i messaggi di log dettagliati.
 
 .. image:: ../img/settings.png
-  :width: 400
+  :width: 600
   :align: center
 
 
