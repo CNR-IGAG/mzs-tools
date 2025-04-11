@@ -669,14 +669,14 @@ class MzSProjectManager:
         root_layer_group = QgsLayerTreeGroup(group_name)
         root_layer_group.setIsMutuallyExclusive(True)
         root_layer_group.setItemVisibilityChecked(False)
-        self.current_project.layerTreeRoot().insertChildNode(0, root_layer_group)
+        # check if the editing group exists
+        editing_group = QgsProject.instance().layerTreeRoot().findGroup("BANCA DATI GEOGRAFICA")
+        # put the layout group at the top of the tree only if the editing group does not exist
+        idx = 1 if editing_group else 0
+        self.current_project.layerTreeRoot().insertChildNode(idx, root_layer_group)
         for group_name, qlr_path in DEFAULT_LAYOUT_GROUPS.items():
             qlr_full_path = DIR_PLUGIN_ROOT / "data" / "layer_defs" / "print_layout" / qlr_path
             self.add_layer_from_qlr(root_layer_group, qlr_full_path)
-        # set custom property for all layout layers
-        # for layer_tree_layer in root_layer_group.findLayers():
-        #     for prop_name, prop_value in custom_properties.items():
-        #         self.set_layer_custom_property(layer_tree_layer.layer(), prop_name, prop_value)
 
     def load_ogc_services(self, regional_wms=True, webms_wms=True, webms_wfs=True, geo_ispra=True):
         root_layer_group = self.current_project.layerTreeRoot().findGroup("Cartografia di base")
@@ -1076,15 +1076,21 @@ class MzSProjectManager:
                         elif path.is_dir():
                             shutil.rmtree(path)
 
+                # write the version file (must be done *before* addProject())
+                with open(self.project_path / "progetto" / "versione.txt", "w") as f:
+                    f.write(__base_version__)
+
                 # completely reload the project
                 iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
 
-            # for future versions it should be possible to update what's needed without clearing the project
+            # for versions > 2.0.0 it should be possible to update only what's needed without clearing the project
             elif __base_version__ == "2.0.1":
-                # self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
-                self.log("No changes needed for QGIS project in version 2.0.1", log_level=3)
+                # in 2.0.1 the hvsr layer for MOPS layout was updated to point to the new vw_hvsr_punti_misura view
+                self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
+                # Save the project
+                self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 
-            # write the version file
+            # write the version file (if not already done)
             with open(self.project_path / "progetto" / "versione.txt", "w") as f:
                 f.write(__base_version__)
 
@@ -1437,6 +1443,8 @@ class MzSProjectManager:
             sql_scripts.append("query_v193.sql")
         if self.project_version < "2.0.0":
             sql_scripts.append("query_v200.sql")
+        if self.project_version < "2.0.1":
+            sql_scripts.append("query_v201.sql")
 
         for upgrade_script in sql_scripts:
             self.log(f"Executing: {upgrade_script}", log_level=1)
