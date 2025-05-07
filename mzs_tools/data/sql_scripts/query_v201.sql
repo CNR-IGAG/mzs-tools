@@ -1,3 +1,4 @@
+-- view for HVSR data in MOPS map
 CREATE VIEW "vw_hvsr_punti_misura" AS
 SELECT s.pkuid AS rowid,
     p.id_parpu,
@@ -25,3 +26,6 @@ VALUES (
         'geom',
         1
     );
+
+-- fix for lithology codes not being shown in the data entry form
+UPDATE parametri_puntuali SET valore_appoggio = valore WHERE valore IS NOT NULL AND tipo_parpu = 'L';
