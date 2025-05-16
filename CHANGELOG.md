@@ -1,8 +1,8 @@
 # Changelog
 
-## [2.0.1-beta1] - 2025-05-06 [Unreleased]
+## [2.0.1] - 2025-05-16
 
-- Bug fixing
+- Bug fixes
 - Update HVSR map logic by adding a dedicated view in the db
 
 ## [2.0.0] - 2025-04-08

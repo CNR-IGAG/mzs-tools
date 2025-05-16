@@ -86,6 +86,10 @@ Riferimenti
 Changelog
 ---------
 
+v2.0.1
+    - Risoluzione di bug minori
+    - Aggiornata la logica per la mappa HVSR tramite la creazione di una vista dedicata nel database
+
 v2.0.0
     - Rinnovo generale del plugin
     - Miglioramento della gestione dei progetti e dei database
@@ -93,7 +97,6 @@ v2.0.0
       esportazione dei dati (richiede l'installazione di Java JVM 64 bit e di librerie esterne gestite tramite il plugin
       per QGIS "QPIP")
     - Compatibilità preliminare con PyQt6
-    
 
 v1.9.4
     - Sistemati i layer per i layout di stampa

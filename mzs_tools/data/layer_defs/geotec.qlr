@@ -649,7 +649,7 @@
         <default field="ID_gt" applyOnUpdate="0" expression=""/>
         <default field="Tipo_gt" applyOnUpdate="0" expression=""/>
         <default field="Stato" applyOnUpdate="0" expression=""/>
-        <default field="Gen" applyOnUpdate="1" expression="NULL"/>
+        <default field="Gen" applyOnUpdate="0" expression="NULL"/>
         <default field="Tipo_geo" applyOnUpdate="0" expression=""/>
       </defaults>
       <constraints>

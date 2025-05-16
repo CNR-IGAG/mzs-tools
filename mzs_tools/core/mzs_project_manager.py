@@ -1083,10 +1083,11 @@ class MzSProjectManager:
                 # completely reload the project
                 iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
 
-            # for versions > 2.0.0 it should be possible to update only what's needed without clearing the project
-            elif __base_version__ == "2.0.1":
+            # for versions >= 2.0.0 update only what's needed without clearing the project
+            elif old_version == "2.0.0":
                 # in 2.0.1 the hvsr layer for MOPS layout was updated to point to the new vw_hvsr_punti_misura view
-                self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
+                # and the geotec editing layer had a small update
+                self.add_default_layers(add_base_layers=False, add_editing_layers=True, add_layout_groups=True)
                 # Save the project
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 

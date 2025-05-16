@@ -370,7 +370,7 @@ class MzSTools:
                 err_msg = self.tr("Error during project creation")
                 self.log(f"{err_msg}: {e} ", log_level=2)
                 self.log(traceback.format_exc(), log_level=2)
-                QMessageBox.critical(None, "MzS Tools error", f'{err_msg}:\n"{str(e)}"')
+                QMessageBox.critical(None, self.tr("MzS Tools error"), f'{err_msg}:\n"{str(e)}"')
                 # cleanup
                 QgsProject.instance().clear()
                 prj_path = Path(dir_out) / f"{cod_istat}_{self.prj_manager.sanitize_comune_name(comune_name)}"
@@ -617,10 +617,17 @@ class MzSTools:
         self.log("Starting project update process.", log_level=1)
         self.iface.messageBar().clearWidgets()
 
-        self.prj_manager.backup_project()
-        # TODO: rollback if something goes wrong
-        self.prj_manager.update_db()
-        self.prj_manager.update_project()
+        backup_path = self.prj_manager.backup_project()
+        try:
+            self.prj_manager.update_db()
+            self.prj_manager.update_project()
+        except Exception as e:
+            err_msg = self.tr("An error occurred during project update.")
+            self.log(f"{err_msg} {e}", log_level=2)
+            self.log(traceback.format_exc(), log_level=2)
+            backup_msg = self.tr("You can can find a backup of the project in: ") + "\n\n" + str(backup_path)
+            QMessageBox.critical(None, self.tr("MzS Tools error"), f"{err_msg}\n\n{str(e)}\n\n{backup_msg}")
+            return
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)
