@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.2-beta1] - 2025-06-12 [Unreleased]
+
+- Reduced the municipality overview image size in print layouts causing slow project loading and excessive memory usage.
+
 ## [2.0.1] - 2025-05-16
 
 - Bug fixes

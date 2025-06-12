@@ -31,7 +31,7 @@ from qgis.utils import iface, spatialite_connect
 
 from ..__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
 from ..plugin_utils.logging import MzSToolsLogger
-from ..plugin_utils.misc import save_map_image
+from ..plugin_utils.misc import save_map_image, save_map_image_direct
 from ..plugin_utils.settings import PlgOptionsManager
 from .constants import (
     DEFAULT_BASE_LAYERS,
@@ -1091,6 +1091,11 @@ class MzSProjectManager:
                 # Save the project
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 
+            # Resize the overview municipality map image used in print layouts if it's too large (applies to all version updates)
+            # In versions < 2.0.2 the generated overview map was too large and causing slowdown during project loading
+            # and enormous memory usage.
+            self._resize_overview_map_image_if_needed()
+
             # write the version file (if not already done)
             with open(self.project_path / "progetto" / "versione.txt", "w") as f:
                 f.write(__base_version__)
@@ -1215,22 +1220,84 @@ class MzSProjectManager:
         image_file_path = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
         layer_limiti_comunali_id = self.find_layer_by_table_name_role("comuni", "base")
         layer_limiti_comunali_node = self.current_project.layerTreeRoot().findLayer(layer_limiti_comunali_id)
-        layer_limiti_comunali = layer_limiti_comunali_node.layer()
+        # layer_limiti_comunali = layer_limiti_comunali_node.layer()  # Only needed for visibility
 
         layer_comune_progetto_id = self.find_layer_by_table_name_role("comune_progetto", "base")
         layer_comune_progetto_node = self.current_project.layerTreeRoot().findLayer(layer_comune_progetto_id)
         layer_comune_progetto = layer_comune_progetto_node.layer()
+
+        # Ensure layers have data before proceeding
+        if not layer_comune_progetto or layer_comune_progetto.featureCount() == 0:
+            self.log("Warning: comune_progetto layer is empty or not found", log_level=1)
+            return
+
         layer_comune_progetto.dataProvider().updateExtents()
         layer_comune_progetto.updateExtents()
-        # extent = layer_comune_progetto.dataProvider().extent()
-        canvas.setExtent(layer_comune_progetto.extent())
 
-        # this assumes comune_progetto and comuni layers are the only layers currently active
-        layer_limiti_comunali_node.setItemVisibilityCheckedParentRecursive(True)
+        # Get the extent from layer_comune_progetto for canvas positioning
+        extent = layer_comune_progetto.extent()
+        if extent.isEmpty():
+            self.log("Warning: comune_progetto layer extent is empty", log_level=1)
+            return
+
+        # Get the extent from layer_limiti_comunali for the map image (broader view)
+        if layer_limiti_comunali_node and layer_limiti_comunali_node.layer():
+            layer_limiti_comunali = layer_limiti_comunali_node.layer()
+            layer_limiti_comunali.dataProvider().updateExtents()
+            layer_limiti_comunali.updateExtents()
+            map_extent = layer_limiti_comunali.extent()
+            zoom_layer_for_image = layer_limiti_comunali
+            self.log(f"Using layer_limiti_comunali extent for map image: {map_extent}")
+        else:
+            # Fallback to comune_progetto if limiti_comunali is not available
+            map_extent = extent
+            zoom_layer_for_image = layer_comune_progetto
+            self.log("Fallback: using layer_comune_progetto extent for map image")
+
+        # Set canvas extent to the project municipality (for canvas display)
+        canvas.setExtent(extent)
+
+        # Ensure both layers are visible for the map image
+        if layer_limiti_comunali_node:
+            layer_limiti_comunali_node.setItemVisibilityCheckedParentRecursive(True)
         layer_comune_progetto_node.setItemVisibilityCheckedParentRecursive(True)
-        save_map_image(image_file_path, layer_limiti_comunali, canvas)
 
-        canvas.setExtent(layer_comune_progetto.extent())
+        # Force canvas to use specific layers for rendering
+        layers_to_render = []
+        if layer_limiti_comunali_node and layer_limiti_comunali_node.layer():
+            layer = layer_limiti_comunali_node.layer()
+            layers_to_render.append(layer)
+            self.log(f"Added layer_limiti_comunali: {layer.name()}, features: {layer.featureCount()}")
+        if layer_comune_progetto:
+            layers_to_render.append(layer_comune_progetto)
+            self.log(
+                f"Added layer_comune_progetto: {layer_comune_progetto.name()}, features: {layer_comune_progetto.featureCount()}"
+            )
+
+        if not layers_to_render:
+            self.log("Error: No valid layers found for rendering", log_level=1)
+            return
+
+        canvas.setLayers(layers_to_render)
+
+        # Refresh canvas to ensure layers are rendered
+        canvas.refresh()
+
+        self.log(f"Canvas layers set to: {[layer.name() for layer in layers_to_render]}")
+        self.log(f"Canvas extent: {canvas.extent()}")
+        self.log(f"Map image extent: {map_extent}")
+        self.log(f"Canvas scale: {canvas.scale()}")
+
+        # Try the canvas-based approach first
+        try:
+            # Use layer_limiti_comunali extent for the map image (broader regional view)
+            save_map_image(image_file_path, zoom_layer_for_image, canvas)
+        except Exception as e:
+            self.log(f"Canvas-based image generation failed: {e}, trying direct approach", log_level=1)
+            # Fallback to direct rendering with the broader extent
+            save_map_image_direct(image_file_path, layers_to_render, map_extent, zoom_layer_for_image.crs())
+
+        canvas.setExtent(extent)
 
         self.load_print_layouts()
 
@@ -1360,6 +1427,64 @@ class MzSProjectManager:
         layouts = layout_manager.printLayouts()
         for layout in layouts:
             layout.refresh()
+
+    def _resize_overview_map_image_if_needed(self):
+        """Resize the municipality overview map image used in print layouts if it's larger than 2000px."""
+        map_image_path = self.project_path / "progetto" / "loghi" / "mappa_reg.png"
+
+        if not map_image_path.exists():
+            self.log("Map image not found, skipping resize", log_level=4)
+            return
+
+        try:
+            from qgis.PyQt.QtGui import QPixmap
+
+            # Load the image to check its dimensions
+            pixmap = QPixmap(str(map_image_path))
+            if pixmap.isNull():
+                self.log("Failed to load map image for size check", log_level=1)
+                return
+
+            original_width = pixmap.width()
+            original_height = pixmap.height()
+
+            self.log(f"Map image current size: {original_width}x{original_height}")
+
+            # Check if the image is larger than 2000px width
+            if original_width > 2000:
+                # Calculate new height maintaining aspect ratio
+                new_width = 1920
+                new_height = int((new_width * original_height) / original_width)
+
+                self.log(f"Resizing map image from {original_width}x{original_height} to {new_width}x{new_height}")
+
+                # Resize the image
+                scaled_pixmap = pixmap.scaled(
+                    new_width,
+                    new_height,
+                    aspectRatioMode=1,  # Qt.KeepAspectRatio
+                    transformMode=1,  # Qt.SmoothTransformation
+                )
+
+                # Create backup of original
+                backup_path = map_image_path.with_suffix(".png.backup")
+                if not backup_path.exists():
+                    import shutil
+
+                    shutil.copy2(map_image_path, backup_path)
+                    self.log(f"Created backup of original map image: {backup_path}")
+
+                # Save the resized image
+                success = scaled_pixmap.save(str(map_image_path), "PNG")
+                if success:
+                    self.log(f"Successfully resized map image to {new_width}x{new_height}")
+                else:
+                    self.log("Failed to save resized map image", log_level=1)
+            else:
+                self.log(f"Map image size ({original_width}px) is within acceptable limits, no resize needed")
+
+        except Exception as e:
+            self.log(f"Error resizing map image: {e}", log_level=1)
 
     # database operations --------------------------------------------------------------------------------------------
 

@@ -86,6 +86,10 @@ Riferimenti
 Changelog
 ---------
 
+v2.0.2
+    - Risolti alcuni problemi di lentezza nel caricamento del progetto e di uso eccessivo di memoria causati
+      dall'inserimento di un'immagine con risoluzione troppo elevata nei layout di stampa.
+
 v2.0.1
     - Risoluzione di bug minori
     - Aggiornata la logica per la mappa HVSR tramite la creazione di una vista dedicata nel database
