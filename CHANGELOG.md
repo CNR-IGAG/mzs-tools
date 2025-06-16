@@ -1,8 +1,9 @@
 # Changelog
 
-## [2.0.2-beta1] - 2025-06-12 [Unreleased]
+## [2.0.2-beta2] - 2025-06-16 [Unreleased]
 
 - Reduced the municipality overview image size in print layouts causing slow project loading and excessive memory usage.
+- Fixed an SVG symbol in Carta Geologico-Tecnica and Carta delle MOPS
 
 ## [2.0.1] - 2025-05-16
 

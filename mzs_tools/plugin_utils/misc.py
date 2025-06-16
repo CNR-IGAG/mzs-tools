@@ -47,7 +47,7 @@ def retry_on_lock(retries=5, delay=1):
     return decorator
 
 
-def save_map_image(image_path, zoom_to_layer, canvas, width=1920, height=1080):
+def save_map_image(image_path, zoom_to_layer, canvas, width=1280, height=1024):
     """Creates and saves a PNG image of the map canvas
     zoomed to the `zoom_to_layer` layer's extent.
 
@@ -57,9 +57,9 @@ def save_map_image(image_path, zoom_to_layer, canvas, width=1920, height=1080):
     :type zoom_to_layer: QgsVectorLayer
     :param canvas: map canvas
     :type canvas: QgsMapCanvas
-    :param width: image width in pixels (default: 1920)
+    :param width: image width in pixels (default: 1280)
     :type width: int
-    :param height: image height in pixels (default: 1080)
+    :param height: image height in pixels (default: 1024)
     :type height: int
     """
     # Validate inputs
@@ -113,7 +113,7 @@ def save_map_image(image_path, zoom_to_layer, canvas, width=1920, height=1080):
         MzSToolsLogger.log(f"Failed to save map image to {image_path}", log_level=1)
 
 
-def save_map_image_from_canvas(image_path, zoom_to_layer, canvas, width=1920, height=1080):
+def save_map_image_from_canvas(image_path, zoom_to_layer, canvas, width=1280, height=1024):
     """Creates and saves a PNG image using the map canvas directly.
     This is an alternative approach that preserves the current canvas styling.
 
@@ -123,9 +123,9 @@ def save_map_image_from_canvas(image_path, zoom_to_layer, canvas, width=1920, he
     :type zoom_to_layer: QgsVectorLayer
     :param canvas: map canvas
     :type canvas: QgsMapCanvas
-    :param width: image width in pixels (default: 1920)
+    :param width: image width in pixels (default: 1280)
     :type width: int
-    :param height: image height in pixels (default: 1080)
+    :param height: image height in pixels (default: 1024)
     :type height: int
     """
     # Store current canvas state
@@ -152,7 +152,7 @@ def save_map_image_from_canvas(image_path, zoom_to_layer, canvas, width=1920, he
         canvas.refresh()
 
 
-def save_map_image_direct(image_path, layers, extent, crs, width=1920, height=1080):
+def save_map_image_direct(image_path, layers, extent, crs, width=1280, height=1024):
     """Creates and saves a PNG image directly from specified layers and extent.
     This approach doesn't rely on the canvas and is more reliable for programmatic use.
 
@@ -164,9 +164,9 @@ def save_map_image_direct(image_path, layers, extent, crs, width=1920, height=10
     :type extent: QgsRectangle
     :param crs: coordinate reference system
     :type crs: QgsCoordinateReferenceSystem
-    :param width: image width in pixels (default: 1920)
+    :param width: image width in pixels (default: 1280)
     :type width: int
-    :param height: image height in pixels (default: 1080)
+    :param height: image height in pixels (default: 1024)
     :type height: int
     """
     if not layers:

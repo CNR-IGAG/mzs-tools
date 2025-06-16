@@ -1085,10 +1085,17 @@ class MzSProjectManager:
 
             # for versions >= 2.0.0 update only what's needed without clearing the project
             elif old_version == "2.0.0":
-                # in 2.0.1 the hvsr layer for MOPS layout was updated to point to the new vw_hvsr_punti_misura view
-                # and the geotec editing layer had a small update
+                # update from 2.0.0 to current __base_version__: update both the editing and the layout groups
+                # - in 2.0.1 the hvsr layer for MOPS layout was updated to point to the new vw_hvsr_punti_misura view
+                #   and the geotec editing layer had a small update
+                # - in 2.0.2 "Cono o edificio vulcanico..." symbol in Carta Geologico-Tecnica and Carta delle MOPS
+                #   was updated to use an embedded SVG symbol
                 self.add_default_layers(add_base_layers=False, add_editing_layers=True, add_layout_groups=True)
-                # Save the project
+                self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+
+            elif old_version == "2.0.1":
+                # update from 2.0.1 to current __base_version__: update only the layout groups
+                self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 
             # Resize the overview municipality map image used in print layouts if it's too large (applies to all version updates)
@@ -1267,12 +1274,12 @@ class MzSProjectManager:
         if layer_limiti_comunali_node and layer_limiti_comunali_node.layer():
             layer = layer_limiti_comunali_node.layer()
             layers_to_render.append(layer)
-            self.log(f"Added layer_limiti_comunali: {layer.name()}, features: {layer.featureCount()}")
+            # self.log(f"Added layer_limiti_comunali: {layer.name()}, features: {layer.featureCount()}")
         if layer_comune_progetto:
             layers_to_render.append(layer_comune_progetto)
-            self.log(
-                f"Added layer_comune_progetto: {layer_comune_progetto.name()}, features: {layer_comune_progetto.featureCount()}"
-            )
+            # self.log(
+            #     f"Added layer_comune_progetto: {layer_comune_progetto.name()}, features: {layer_comune_progetto.featureCount()}"
+            # )
 
         if not layers_to_render:
             self.log("Error: No valid layers found for rendering", log_level=1)
@@ -1283,10 +1290,10 @@ class MzSProjectManager:
         # Refresh canvas to ensure layers are rendered
         canvas.refresh()
 
-        self.log(f"Canvas layers set to: {[layer.name() for layer in layers_to_render]}")
-        self.log(f"Canvas extent: {canvas.extent()}")
-        self.log(f"Map image extent: {map_extent}")
-        self.log(f"Canvas scale: {canvas.scale()}")
+        # self.log(f"Canvas layers set to: {[layer.name() for layer in layers_to_render]}")
+        # self.log(f"Canvas extent: {canvas.extent()}")
+        # self.log(f"Map image extent: {map_extent}")
+        # self.log(f"Canvas scale: {canvas.scale()}")
 
         # Try the canvas-based approach first
         try:
@@ -1300,21 +1307,6 @@ class MzSProjectManager:
         canvas.setExtent(extent)
 
         self.load_print_layouts()
-
-        # layout_manager = QgsProject.instance().layoutManager()
-        # layouts = layout_manager.printLayouts()
-
-        # for layout in layouts:
-        #     map_item = layout.itemById("mappa_0")
-        #     map_item.zoomToExtent(canvas.extent())
-        #     map_item_2 = layout.itemById("regio_title")
-        #     map_item_2.setText("Regione " + self.comune_data.regione)
-        #     map_item_3 = layout.itemById("com_title")
-        #     map_item_3.setText("Comune di " + self.comune_data.comune)
-        #     map_item_4 = layout.itemById("logo")
-        #     map_item_4.refreshPicture()
-        #     map_item_5 = layout.itemById("mappa_1")
-        #     map_item_5.refreshPicture()
 
         # set project title
         project_title = f"MzS Tools - Comune di {self.comune_data.comune} ({self.comune_data.provincia}, {self.comune_data.regione}) - Studio di Microzonazione Sismica"
@@ -1453,7 +1445,7 @@ class MzSProjectManager:
             # Check if the image is larger than 2000px width
             if original_width > 2000:
                 # Calculate new height maintaining aspect ratio
-                new_width = 1920
+                new_width = 1280
                 new_height = int((new_width * original_height) / original_width)
 
                 self.log(f"Resizing map image from {original_width}x{original_height} to {new_width}x{new_height}")

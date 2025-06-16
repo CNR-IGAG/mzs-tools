@@ -89,6 +89,7 @@ Changelog
 v2.0.2
     - Risolti alcuni problemi di lentezza nel caricamento del progetto e di uso eccessivo di memoria causati
       dall'inserimento di un'immagine con risoluzione troppo elevata nei layout di stampa.
+    - Corretto un simbolo SVG nella Carta Geologico-Tecnica e Carta delle MOPS
 
 v2.0.1
     - Risoluzione di bug minori
