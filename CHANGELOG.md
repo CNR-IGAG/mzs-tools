@@ -1,8 +1,9 @@
 # Changelog
 
-## [2.0.2-beta2] - 2025-06-16 [Unreleased]
+## [2.0.2] - 2025-06-18
 
 - Reduced the municipality overview image size in print layouts causing slow project loading and excessive memory usage.
+- Update the HVSR db view to include values from the dedicated non-standard hvsr table
 - Fixed an SVG symbol in Carta Geologico-Tecnica and Carta delle MOPS
 
 ## [2.0.1] - 2025-05-16

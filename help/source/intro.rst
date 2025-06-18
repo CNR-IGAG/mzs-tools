@@ -89,6 +89,7 @@ Changelog
 v2.0.2
     - Risolti alcuni problemi di lentezza nel caricamento del progetto e di uso eccessivo di memoria causati
       dall'inserimento di un'immagine con risoluzione troppo elevata nei layout di stampa.
+    - Aggiornata la vista dei valori HVSR in modo da includere i valori inseriti nella tabella non standard dedicata.
     - Corretto un simbolo SVG nella Carta Geologico-Tecnica e Carta delle MOPS
 
 v2.0.1
