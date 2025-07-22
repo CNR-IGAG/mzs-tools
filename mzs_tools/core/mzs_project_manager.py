@@ -1563,7 +1563,9 @@ class MzSProjectManager:
             sql_scripts.append("query_v200.sql")
         if self.project_version < "2.0.1":
             sql_scripts.append("query_v201.sql")
-        if self.project_version < "2.0.2":
+        # in v2.0.2 release forgot to update the db template indagini.sqlite.zip, so the query_v202.sql must be applied
+        # to projects v2.0.2 too
+        if self.project_version < "2.0.3":
             sql_scripts.append("query_v202.sql")
 
         for upgrade_script in sql_scripts:

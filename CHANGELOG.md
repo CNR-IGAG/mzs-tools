@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.3] - 2025-07-22
+
+- Reapply the HVSR view migration script, as the change was not included in v2.0.2 db template
+
 ## [2.0.2] - 2025-06-18
 
 - Reduced the municipality overview image size in print layouts causing slow project loading and excessive memory usage.

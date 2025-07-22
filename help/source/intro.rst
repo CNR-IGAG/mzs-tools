@@ -86,6 +86,10 @@ Riferimenti
 Changelog
 ---------
 
+v2.0.3
+    - Sistemata la vista HVSR per i progetti creati con la versione 2.0.2, per i quali il template di database non
+      includeva il cambiamento
+
 v2.0.2
     - Risolti alcuni problemi di lentezza nel caricamento del progetto e di uso eccessivo di memoria causati
       dall'inserimento di un'immagine con risoluzione troppo elevata nei layout di stampa.
@@ -242,14 +246,35 @@ v0.4
 Credits
 -------
 
-|logo_igag| |logo_cnr|
+|logo_igag|
 
 .. |logo_igag| image:: ../../mzs_tools/resources/img/logo_IGAG.png
-    :width: 14%
+    :width: 160px
     :target: https://www.igag.cnr.it
-
-.. |logo_cnr| image:: ./img/logo_cnr.png
-    :width: 18%
 
 Il plugin viene sviluppato nell'ambito delle attività del 
 `Laboratorio GIS del CNR-IGAG <https://www.igag.cnr.it/lista-laboratori/labgis/>`_  
+
+**Contributors**
+
+* Giuseppe Cosentino
+* Francesco Pennica
+* Emanuele Tarquini (v1.x)
+
+**Special Thanks**
+
+* Francesco Stigliano (MS projects support)
+* Monia Coltella (MS standard support)
+* Alessandro Pasotti (QGIS 3 port, v1.5)
+
+**License**
+
+This project is licensed under the **GPL-3.0 License**.
+
+**Acknowledgements**
+
+* External libraries:
+    * `UCanAccess <https://github.com/spannm/ucanaccess>`_ (Apache-2.0 license)
+    * `JayDeBeApi <https://github.com/baztian/jaydebeapi>`_ (LGPL-3.0 license)
+* 'CNR' logo, 'IGAG' logo, 'LabGIS' logo, 'DPC' logo, 'Conferenza regioni e provincie autonome' logo and 'Regioni' logos belong to their respective owners who retain all rights in law;
+* Italian administrative boundaries data by `Istituto Nazionale di Statistica (ISTAT) <https://www.istat.it/notizia/confini-delle-unita-amministrative-a-fini-statistici-al-1-gennaio-2018-2/>`_ - CC BY 4.0 Deed;
