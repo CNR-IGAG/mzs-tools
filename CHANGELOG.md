@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.4-beta1] - 2025-08-28 [Unreleased]
+
+- Tooling updates
+
 ## [2.0.3] - 2025-07-22
 
 - Reapply the HVSR view migration script, as the change was not included in v2.0.2 db template

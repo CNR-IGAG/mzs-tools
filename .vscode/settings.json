@@ -10,9 +10,20 @@
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
+  // Python
+  "python.analysis.autoFormatStrings": false, // breaking PyQt translation
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.diagnosticSeverityOverrides": {
+      "reportOptionalMemberAccess": "none"  // Disable warning for optional member access
+  },
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.terminal.activateEnvironment": true,
   "[python]": {
     "editor.formatOnPaste": true,
-    "editor.defaultFormatter": "charliermarsh.ruff"
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+        "source.organizeImports":"explicit"
+    },
   },
   "esbonio.sphinx.confDir": "${workspaceFolder}/help/source",
   "makefile.configureOnOpen": false,

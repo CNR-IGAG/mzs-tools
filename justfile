@@ -1,9 +1,42 @@
+PLUGIN_SLUG:="mzs_tools"
+
 # default recipe to display help information
 default:
   @just --list
 
-# create venv with uv on linux, assuming qgis is installed with libs in system python dist-packages and shared libraries in /usr/share/qgis/python
-create-venv PYTHON_VERSION="3.12" QGIS_PYTHON_LIB_PATH="/usr/share/qgis/python":
+# create venv with uv on linux, automatically detecting system python version and qgis path
+create-venv:
+    #!/bin/bash
+    set -euo pipefail
+
+    # Detect system Python version
+    PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+    echo "Detected system Python version: $PYTHON_VERSION"
+
+    # Try to find QGIS Python libraries in common locations
+    QGIS_PYTHON_LIB_PATH=""
+    for path in "/usr/lib/python${PYTHON_VERSION}/site-packages" "/usr/share/qgis/python" "/usr/local/lib/python${PYTHON_VERSION}/site-packages"; do
+        if [ -d "$path/qgis" ]; then
+            QGIS_PYTHON_LIB_PATH="$path"
+            echo "Found QGIS libraries at: $QGIS_PYTHON_LIB_PATH"
+            break
+        fi
+    done
+
+    if [ -z "$QGIS_PYTHON_LIB_PATH" ]; then
+        echo "Warning: Could not find QGIS Python libraries. Using default path."
+        QGIS_PYTHON_LIB_PATH="/usr/lib/python${PYTHON_VERSION}/site-packages"
+    fi
+
+    # Create virtual environment
+    rm -rf .venv
+    uv venv --system-site-packages --python "$PYTHON_VERSION"
+    echo "$QGIS_PYTHON_LIB_PATH" > .venv/lib/python${PYTHON_VERSION}/site-packages/qgis.pth
+    uv sync --all-groups
+    uv run qgis-plugin-ci changelog latest
+
+# create venv with manual python version and qgis path (for special cases)
+create-venv-manual PYTHON_VERSION QGIS_PYTHON_LIB_PATH:
     rm -rf .venv
     uv venv --system-site-packages --python "{{ PYTHON_VERSION }}"
     echo "{{ QGIS_PYTHON_LIB_PATH }}" > .venv/lib/python{{ PYTHON_VERSION }}/site-packages/qgis.pth
@@ -11,25 +44,25 @@ create-venv PYTHON_VERSION="3.12" QGIS_PYTHON_LIB_PATH="/usr/share/qgis/python":
     uv run qgis-plugin-ci changelog latest
 
 # create symbolic links for development
-dev-link QGIS_PLUGIN_PATH="/home/francesco/.local/share/QGIS/QGIS3/profiles/default/python/plugins":
+dev-link QGIS_PLUGIN_PATH="~/.local/share/QGIS/QGIS3/profiles/default/python/plugins":
     #!/bin/bash
     # Ensure the target directory exists
     mkdir -p {{ QGIS_PLUGIN_PATH }}
-    rm -rf {{ QGIS_PLUGIN_PATH }}/mzs_tools
-    
+    rm -rf {{ QGIS_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}
+
     # Create a relative path symlink
-    PLUGIN_SOURCE=$(pwd)/mzs_tools
+    PLUGIN_SOURCE=$(pwd)/{{ PLUGIN_SLUG }}
     cd {{ QGIS_PLUGIN_PATH }}
     ln -sf $(python3 -c "import os; print(os.path.relpath('$PLUGIN_SOURCE', os.getcwd()))")
     cd -
-    
+
     # Create symlinks for supporting files
-    ln -sf $(pwd)/LICENSE $(pwd)/mzs_tools/LICENSE
-    ln -sf $(pwd)/CREDITS.md $(pwd)/mzs_tools/CREDITS.md
-    ln -sf $(pwd)/CHANGELOG.md $(pwd)/mzs_tools/CHANGELOG.md
-    
+    ln -sf $(pwd)/LICENSE $(pwd)/{{ PLUGIN_SLUG }}/LICENSE
+    ln -sf $(pwd)/CREDITS.md $(pwd)/{{ PLUGIN_SLUG }}/CREDITS.md
+    ln -sf $(pwd)/CHANGELOG.md $(pwd)/{{ PLUGIN_SLUG }}/CHANGELOG.md
+
     # Show success message
-    echo "Plugin symlink created at {{ QGIS_PLUGIN_PATH }}/mzs_tools"
+    echo "Plugin symlink created at {{ QGIS_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}"
 
 @bootstrap-dev: create-venv dev-link
 
@@ -37,15 +70,20 @@ dev-link QGIS_PLUGIN_PATH="/home/francesco/.local/share/QGIS/QGIS3/profiles/defa
     uv lock --upgrade
 
 trans-update:
-    uv run pylupdate5 ./mzs_tools/mzs_tools.pro
+    uv run pylupdate5 ./{{ PLUGIN_SLUG }}/{{ PLUGIN_SLUG }}.pro
 
 trans-compile:
-    uv run lrelease ./mzs_tools/i18n/MzSTools_it.ts
+    uv run lrelease ./{{ PLUGIN_SLUG }}/i18n/MzSTools_it.ts
 
-build-docs-html:
+docs-autobuild:
+    uv sync --group docs
+    uv run sphinx-autobuild -b html -c help/source help/source help/_build --port 8000
+
+docs-build-html:
+    uv sync --group docs
     uv run sphinx-build -b html -j auto -d help/_build/cache -q help/source help/_build/html
 
-build-docs-pdf:
+docs-build-pdf:
     #!/bin/bash
     set -e
     uv run sphinx-build -b latex -j auto -d help/_build/cache -q help/source help/_build/latex
@@ -57,27 +95,27 @@ build-docs-pdf:
 test:
     uv sync --no-group ci
     uv sync --group testing
-    uv run pytest -v --cov=mzs_tools --cov-report=term-missing
+    uv run pytest -v --cov={{ PLUGIN_SLUG }} --cov-report=term-missing
 
 @package VERSION:
     #!/bin/bash
     uv sync --group ci
-    cp --remove-destination LICENSE mzs_tools/
-    cp --remove-destination CHANGELOG.md mzs_tools/
-    cp --remove-destination CREDITS.md mzs_tools/
+    cp --remove-destination LICENSE {{ PLUGIN_SLUG }}/
+    cp --remove-destination CHANGELOG.md {{ PLUGIN_SLUG }}/
+    cp --remove-destination CREDITS.md {{ PLUGIN_SLUG }}/
     git add .
     uv run qgis-plugin-ci package -c {{ VERSION }}
 
     # change the directory name in the zip file to MzSTools for compatibility with older versions of the plugin
     mkdir temp
-    unzip mzs_tools.*.zip -d temp
-    mv temp/mzs_tools temp/MzSTools
+    unzip {{ PLUGIN_SLUG }}.*.zip -d temp
+    mv temp/{{ PLUGIN_SLUG }} temp/MzSTools
     cd temp
-    zip -r $(cd ../ && ls -1 mzs_tools.*.zip) MzSTools
+    zip -r $(cd ../ && ls -1 {{ PLUGIN_SLUG }}.*.zip) MzSTools
     cp *.zip ../
     cd ..
     rm -rf temp
-    mv "$(find . -name 'mzs_tools.*.zip')" "$(find . -name 'mzs_tools.*.zip' | sed 's/mzs_tools/MzSTools/')"
+    mv "$(find . -name '{{ PLUGIN_SLUG }}.*.zip')" "$(find . -name '{{ PLUGIN_SLUG }}.*.zip' | sed 's/{{ PLUGIN_SLUG }}/MzSTools/')"
 
     just dev-link
     git add .
@@ -85,23 +123,23 @@ test:
 @release-test VERSION:
     #!/bin/bash
     uv sync --group ci
-    cp --remove-destination LICENSE mzs_tools/
-    cp --remove-destination CHANGELOG.md mzs_tools/
-    cp --remove-destination CREDITS.md mzs_tools/
+    cp --remove-destination LICENSE {{ PLUGIN_SLUG }}/
+    cp --remove-destination CHANGELOG.md {{ PLUGIN_SLUG }}/
+    cp --remove-destination CREDITS.md {{ PLUGIN_SLUG }}/
     # enforce DEBUG_MODE to False
-    sed -i 's/DEBUG_MODE: bool = True/DEBUG_MODE: bool = False/g' mzs_tools/__about__.py
+    sed -i 's/DEBUG_MODE: bool = True/DEBUG_MODE: bool = False/g' {{ PLUGIN_SLUG }}/__about__.py
     # change main plugin directory name to MzSTools for compatibility with older versions of the plugin
-    mv mzs_tools MzSTools
+    mv {{ PLUGIN_SLUG }} MzSTools
     # change plugin_path in pyproject.toml
-    sed -i 's/plugin_path = "mzs_tools"/plugin_path = "MzSTools"/g' pyproject.toml
+    sed -i 's/plugin_path = "{{ PLUGIN_SLUG }}"/plugin_path = "MzSTools"/g' pyproject.toml
     git add .
 
     # run qgis-plugin-ci release without github token and osgeo auth
     uv run qgis-plugin-ci release -c {{ VERSION }}
 
     # revert changes
-    mv MzSTools mzs_tools
-    sed -i 's/plugin_path = "MzSTools"/plugin_path = "mzs_tools"/g' pyproject.toml
+    mv MzSTools {{ PLUGIN_SLUG }}
+    sed -i 's/plugin_path = "MzSTools"/plugin_path = "{{ PLUGIN_SLUG }}"/g' pyproject.toml
     just dev-link
     git add .
 
@@ -113,38 +151,38 @@ qgis-docker VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/def
     #!/bin/bash
     # Allow local X server connections
     xhost +local:
-    
+
     # Define paths and variables
     USER_ID=$(id -u)
     GROUP_ID=$(id -g)
-    
+
     # Create necessary directories with correct permissions
     TEMP_DIR=$(mktemp -d)
     mkdir -p ${TEMP_DIR}/certificates
     mkdir -p ${TEMP_DIR}/qgis_config/{processing,profile,cache,data/expressions}
     mkdir -p ${TEMP_DIR}/qgis_config/python/expressions
-    
+
     # Copy and set permissions for certificates
     cp -L /etc/ssl/certs/ca-certificates.crt ${TEMP_DIR}/certificates/
     chmod 644 ${TEMP_DIR}/certificates/ca-certificates.crt
-    
+
     # Set permissions for QGIS config directories
     chmod -R 777 ${TEMP_DIR}/qgis_config
-    
+
     # Create an empty qgis.db file that QGIS can write to
     touch ${TEMP_DIR}/qgis_config/data/qgis.db
     chmod 666 ${TEMP_DIR}/qgis_config/data/qgis.db
-    
+
     # Ensure plugin directory exists in host
     mkdir -p ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins
-    
+
     # Run QGIS in container with proper mounts and environment
     docker run --rm --name qgis_ltr \
         -it \
         -e DISPLAY=unix$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         -v ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/python/plugins \
-        -v $(pwd)/mzs_tools:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+        -v $(pwd)/{{ PLUGIN_SLUG }}:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/python/plugins/{{ PLUGIN_SLUG }} \
         -v ${HOME}:/home/host \
         -v ${TEMP_DIR}/certificates:/etc/ssl/certs:ro \
         -v ${TEMP_DIR}/qgis_config/processing:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/processing \
@@ -158,7 +196,7 @@ qgis-docker VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/def
         -e PYTHONHOME= \
         --user ${USER_ID}:${GROUP_ID} \
         qgis/qgis:{{ VERSION }} qgis
-    
+
     # Clean up temporary directory
     rm -rf ${TEMP_DIR}
 
