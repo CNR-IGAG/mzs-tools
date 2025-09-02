@@ -1,14 +1,17 @@
 import logging
 from functools import partial
-from typing import Callable
+from typing import Callable, Optional, cast
 
-from qgis.core import QgsMessageLog, QgsMessageOutput
-from qgis.gui import QgsMessageBar
+from qgis.core import Qgis, QgsMessageLog, QgsMessageOutput
+from qgis.gui import QgisInterface, QgsMessageBar
 from qgis.PyQt.QtWidgets import QPushButton, QWidget
-from qgis.utils import iface
+from qgis.utils import iface as _iface
 
 from ..__about__ import __title__
 from . import settings as plg_prefs_hdlr
+
+# Properly typed iface for better type checking
+iface: QgisInterface = cast(QgisInterface, _iface)
 
 # map python logging levels to QGIS message levels
 QGIS_LEVELS = {
@@ -37,13 +40,13 @@ class MzSToolsLogger(logging.Handler):
         application: str = __title__,
         log_level: int = 0,
         push: bool = False,
-        duration: int = None,
+        duration: Optional[int] = None,
         # widget
         button: bool = False,
-        button_text: str = None,
-        button_connect: Callable = None,
+        button_text: Optional[str] = None,
+        button_connect: Optional[Callable] = None,
         # parent
-        parent_location: QWidget = None,
+        parent_location: Optional[QWidget] = None,
     ):
         """Send messages to QGIS messages windows and to the user as a message bar. \
         Plugin name is used as title. If debug mode is disabled, only warnings (1) and \
@@ -101,6 +104,10 @@ class MzSToolsLogger(logging.Handler):
         debug_mode = plg_prefs_hdlr.PlgOptionsManager.get_plg_settings().debug_mode
         if not debug_mode and not push and log_level > 2:
             return
+
+        # if log_level is an int, convert it to Qgis.MessageLevel
+        if isinstance(log_level, int):
+            log_level = Qgis.MessageLevel(log_level)
 
         # ensure message is a string
         if not isinstance(message, str):

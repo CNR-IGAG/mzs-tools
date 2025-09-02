@@ -7,7 +7,7 @@ from datetime import datetime
 from functools import partial
 from pathlib import Path
 from sqlite3 import Connection
-from typing import Optional
+from typing import Optional, cast
 
 from qgis.core import (
     Qgis,
@@ -24,10 +24,12 @@ from qgis.core import (
     QgsTolerance,
     QgsVectorLayer,
 )
+from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtXml import QDomDocument
-from qgis.utils import iface, spatialite_connect
+from qgis.utils import iface as _iface
+from qgis.utils import spatialite_connect
 
 from ..__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
 from ..plugin_utils.logging import MzSToolsLogger
@@ -43,6 +45,9 @@ from .constants import (
     PRINT_LAYOUT_MODELS,
     REMOVED_EDITING_LAYERS,
 )
+
+# Properly typed iface for better type checking
+iface: QgisInterface = cast(QgisInterface, _iface)
 
 
 @dataclass
@@ -75,15 +80,15 @@ class MzSProjectManager:
             MzSProjectManager._instance = self
 
         self.log = MzSToolsLogger().log
-        self.current_project: QgsProject = None
 
-        self.project_path = None
-        self.project_version = None
+        self.current_project: Optional[QgsProject] = None
+        self.project_path: Optional[Path] = None
+        self.project_version: Optional[str] = None
         self.project_updateable = False
-        self.db_path = None
+        self.db_path: Optional[Path] = None
         self.db_connection: Optional[Connection] = None
 
-        self.comune_data: ComuneData = None
+        self.comune_data: Optional[ComuneData] = None
         self.project_metadata = None
 
         self.required_layer_registry = {}
@@ -99,13 +104,13 @@ class MzSProjectManager:
         # be careful using Path with QgsProject functions such as absolutePath(), fileName(), baseName(), etc.
         # when clicking on New Project these functions will return empty strings but Path.resolve() will return
         # the paths relative to the last opened project!
-        project_path = self.current_project.absolutePath()
-        self.log(f"Current project path: {project_path}", log_level=4)
-        db_path = Path(project_path) / "db" / "indagini.sqlite"
+        project_path_str = self.current_project.absolutePath()
+        self.log(f"Current project path: {project_path_str}", log_level=4)
+        db_path = Path(project_path_str) / "db" / "indagini.sqlite"
 
         # TODO: better project detection
         # if project_file_name != "progetto_MS" or not db_path.exists() or not version_file_path.exists():
-        if not project_path or not db_path.exists():
+        if not project_path_str or not db_path.exists():
             self.log("No MzS Tools project detected", log_level=4)
             self.is_mzs_project = False
             self.project_path = None
@@ -117,7 +122,7 @@ class MzSProjectManager:
 
         self.is_mzs_project = True
 
-        self.project_path = Path(project_path)
+        self.project_path = Path(project_path_str)
         self.db_path = db_path
 
         # setup db connection and save it to the manager
@@ -139,12 +144,29 @@ class MzSProjectManager:
 
         self.log(f"MzS Tools project version {self.project_version} detected. Manager initialized.")
 
-    def _add_project_issue(self, issue_type: str, issue: str, traceback: str = None, log=True):
-        if issue_type not in self.project_issues:
-            self.project_issues[issue_type] = []
+    def _add_project_issue(
+        self,
+        issue_type: str,
+        issue: str,
+        traceback: Optional[str] = None,
+        log: bool = True,
+    ) -> None:
+        """Store a project issue in the internal registry.
+
+        Args:
+            issue_type: Category of the issue (e.g. "project", "layers", "db").
+            issue: Human readable description of the issue.
+            tb: Optional traceback or extra diagnostic information appended on a new line.
+            log: If True the issue is logged immediately.
+        """
+        # Lazily initialize the issues dictionary if it is not yet available
+        if self.project_issues is None:
+            self.project_issues = {}
+
+        issues_list = self.project_issues.setdefault(issue_type, [])
         if traceback:
             issue = f"{issue}\n{traceback}"
-        self.project_issues[issue_type].append(issue)
+        issues_list.append(issue)
         if log:
             self.log(f"Project issue found: {issue_type} - {issue}", log_level=2)
 
@@ -153,7 +175,11 @@ class MzSProjectManager:
         self.project_issues = {}
 
         # check project version
-        version_file_path = Path(self.project_path) / "progetto" / "versione.txt"
+        if self.project_path is None:
+            self._add_project_issue("project", "Project path is not set")
+            return
+
+        version_file_path = self.project_path / "progetto" / "versione.txt"
         try:
             with version_file_path.open("r") as f:
                 self.project_version = f.read().strip()
@@ -219,7 +245,9 @@ class MzSProjectManager:
         for layer_group in NO_OVERLAPS_LAYER_GROUPS:
             layer_ids = [self.find_layer_by_table_name_role(t_name, "editing") for t_name in layer_group]
             for layer_id in layer_ids:
-                ly: QgsVectorLayer = self.current_project.mapLayer(layer_id)
+                ly = self.current_project.mapLayer(layer_id)
+                if ly is None or not isinstance(ly, QgsVectorLayer):
+                    continue
                 if table_name in layer_group:
                     editing_group_layers.append(ly)
                 if ly.id() != current_layer_id and ly.isEditable():
@@ -707,6 +735,10 @@ class MzSProjectManager:
         return root_layer_group.name()
 
     def add_layer_from_qlr(self, layer_group: QgsLayerTreeGroup, qlr_full_path: Path):
+        if self.project_path is None:
+            self.log("Project path is not set, cannot add layer from QLR", log_level=2)
+            return
+
         # copy .qlr file in project folder
         shutil.copy(qlr_full_path, self.project_path)
         success, error_msg = QgsLayerDefinition.loadLayerDefinition(
@@ -1013,6 +1045,14 @@ class MzSProjectManager:
             self.log("Requested project update for non-updateable project!", log_level=1)
             return
 
+        if self.project_path is None:
+            self.log("Project path is not set, cannot update project", log_level=2)
+            return
+
+        if self.project_version is None:
+            self.log("Cannot determine project version", log_level=2)
+            return
+
         old_version = self.project_version
 
         # Create a progress message that will stay visible during operations
@@ -1093,10 +1133,15 @@ class MzSProjectManager:
                 self.add_default_layers(add_base_layers=False, add_editing_layers=True, add_layout_groups=True)
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 
-            elif old_version == "2.0.1":
-                # update from 2.0.1 to current __base_version__: update only the layout groups
+            elif old_version >= "2.0.1" and old_version <= "2.0.3":
+                # update from 2.0.1 - 2.0.3 to current __base_version__: update only the layout groups
                 self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+
+            else:
+                self.log(
+                    f"No actions needed to update MzSTools QGIS project from version {old_version} to {__base_version__}."
+                )
 
             # Resize the overview municipality map image used in print layouts if it's too large (applies to all version updates)
             # In versions < 2.0.2 the generated overview map was too large and causing slowdown during project loading
@@ -1205,6 +1250,9 @@ class MzSProjectManager:
 
     def customize_project(self):
         """Customize the project with the selected comune data."""
+        if self.project_path is None:
+            self.log("Project path is not set, cannot customize project", log_level=2)
+            return
 
         crs = QgsCoordinateReferenceSystem("EPSG:32633")
         self.current_project.setCrs(crs)
@@ -1234,7 +1282,11 @@ class MzSProjectManager:
         layer_comune_progetto = layer_comune_progetto_node.layer()
 
         # Ensure layers have data before proceeding
-        if not layer_comune_progetto or layer_comune_progetto.featureCount() == 0:
+        if (
+            not layer_comune_progetto
+            or not isinstance(layer_comune_progetto, QgsVectorLayer)
+            or layer_comune_progetto.featureCount() == 0
+        ):
             self.log("Warning: comune_progetto layer is empty or not found", log_level=1)
             return
 
@@ -1275,7 +1327,7 @@ class MzSProjectManager:
             layer = layer_limiti_comunali_node.layer()
             layers_to_render.append(layer)
             # self.log(f"Added layer_limiti_comunali: {layer.name()}, features: {layer.featureCount()}")
-        if layer_comune_progetto:
+        if layer_comune_progetto is not None:
             layers_to_render.append(layer_comune_progetto)
             # self.log(
             #     f"Added layer_comune_progetto: {layer_comune_progetto.name()}, features: {layer_comune_progetto.featureCount()}"
@@ -1372,7 +1424,7 @@ class MzSProjectManager:
 
     def backup_print_layouts(
         self,
-        backup_label: str = None,
+        backup_label: Optional[str] = None,
         backup_timestamp: bool = False,
         backup_models: bool = False,
         backup_all: bool = False,
@@ -1393,7 +1445,9 @@ class MzSProjectManager:
                     layout_file_paths.append(layout_file_path)
         return layout_file_paths
 
-    def backup_print_layout(self, layout: QgsPrintLayout, backup_label: str = None, backup_model_file: bool = False):
+    def backup_print_layout(
+        self, layout: QgsPrintLayout, backup_label: Optional[str] = None, backup_model_file: bool = False
+    ):
         self.log(f"Backing up layout: {layout.name()}", log_level=4)
         layout_name = layout.name()
         layout_clone = layout.clone()
@@ -1406,6 +1460,9 @@ class MzSProjectManager:
         return layout_file_path
 
     def save_print_layout(self, layout: QgsPrintLayout):
+        if self.project_path is None:
+            self.log("Project path is not set", log_level=2)
+            return
         layout_name = layout.name()
         layout_models_path = self.project_path / "progetto" / "layout"
         layout_models_path.mkdir(parents=True, exist_ok=True)
@@ -1422,6 +1479,10 @@ class MzSProjectManager:
 
     def _resize_overview_map_image_if_needed(self):
         """Resize the municipality overview map image used in print layouts if it's larger than 2000px."""
+        if self.project_path is None:
+            self.log("Project path is not set, cannot resize overview map image", log_level=2)
+            return
+
         map_image_path = self.project_path / "progetto" / "loghi" / "mappa_reg.png"
 
         if not map_image_path.exists():
@@ -1546,6 +1607,10 @@ class MzSProjectManager:
             cursor.close()
 
     def update_db(self):
+        if self.project_version is None:
+            self.log("Project version is not set, cannot update database", log_level=2)
+            return
+
         sql_scripts = []
         if self.project_version < "0.8":
             sql_scripts.append("query_v08.sql")
@@ -1593,7 +1658,7 @@ class MzSProjectManager:
         finally:
             cursor.close()
 
-    def update_history_table(self, component: str, from_version: str, to_version: str, notes: str = None):
+    def update_history_table(self, component: str, from_version: str, to_version: str, notes: Optional[str] = None):
         conn = self.db_connection
         cursor = conn.cursor()
         try:
@@ -1659,11 +1724,11 @@ class MzSProjectManager:
             cursor.execute(
                 """
                 INSERT INTO metadati (
-                    id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, data_metadato, srs_dati, 
-                    ruolo, formato, tipo_dato, keywords, keywords_inspire, limitazione, vincoli_accesso, vincoli_fruibilita, 
+                    id_metadato, liv_gerarchico, resp_metadato_nome, resp_metadato_email, data_metadato, srs_dati,
+                    ruolo, formato, tipo_dato, keywords, keywords_inspire, limitazione, vincoli_accesso, vincoli_fruibilita,
                     vincoli_sicurezza, categoria_iso, estensione_ovest, estensione_est, estensione_sud, estensione_nord
                 ) VALUES (
-                    :id_metadato, :liv_gerarchico, :resp_metadato_nome, :resp_metadato_email, :data_metadato, :srs_dati, 
+                    :id_metadato, :liv_gerarchico, :resp_metadato_nome, :resp_metadato_email, :data_metadato, :srs_dati,
                     :ruolo, :formato, :tipo_dato, :keywords, :keywords_inspire, :limitazione, :vincoli_accesso, :vincoli_fruibilita,
                     :vincoli_sicurezza, :categoria_iso, :estensione_ovest, :estensione_est, :estensione_sud, :estensione_nord
                 );
@@ -1743,6 +1808,14 @@ class MzSProjectManager:
     # backup methods -------------------------------------------------------------------------------------------------
 
     def backup_database(self, out_dir=None):
+        if self.project_path is None:
+            self.log("Project path is not set, cannot backup database", log_level=2)
+            return None
+
+        if self.db_path is None:
+            self.log("Database path is not set, cannot backup database", log_level=2)
+            return None
+
         if not out_dir:
             out_dir = self.project_path / "db"
 
@@ -1756,10 +1829,14 @@ class MzSProjectManager:
         return db_backup_path
 
     def backup_project(self, out_dir=None):
+        if self.project_path is None:
+            self.log("Project path is not set, cannot backup project", log_level=2)
+            return None
+
         if not out_dir:
             out_dir = self.project_path.parent
 
-        project_folder_name = Path(self.project_path).name
+        project_folder_name = self.project_path.name
         backup_dir_name = (
             f"{project_folder_name}_backup_v{self.project_version}_{datetime.now().strftime('%Y_%m_%d_%H_%M')}"
         )
@@ -1770,7 +1847,11 @@ class MzSProjectManager:
 
         return backup_path
 
-    def backup_qgis_project(self) -> Path:
+    def backup_qgis_project(self) -> Optional[Path]:
+        if self.project_path is None:
+            self.log("Project path is not set, cannot backup QGIS project", log_level=2)
+            return None
+
         project_file_name = f"{self.current_project.baseName()}_backup_v{self.project_version}_{datetime.now().strftime('%Y_%m_%d-%H_%M')}.qgz"
         project_backup_path = self.project_path / project_file_name
 

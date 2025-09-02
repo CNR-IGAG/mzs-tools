@@ -1,0 +1,6 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Documentation
+    url: https://cnr-igag.github.io/mzs-tools/
+    about: Please read carefully the documentation before submitting an issue.
