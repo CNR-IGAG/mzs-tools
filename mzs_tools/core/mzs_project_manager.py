@@ -1063,7 +1063,7 @@ class MzSProjectManager:
         # Add a progress bar to show activity
         progress_bar = QProgressBar()
         progress_bar.setRange(0, 0)  # Indeterminate progress bar
-        progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        progress_bar.setAlignment(Qt.Alignment.AlignLeft | Qt.Alignment.AlignVCenter)
         progress_msg.layout().addWidget(progress_bar)
 
         # Push the message to the message bar
@@ -1512,11 +1512,17 @@ class MzSProjectManager:
                 self.log(f"Resizing map image from {original_width}x{original_height} to {new_width}x{new_height}")
 
                 # Resize the image
+                # PyQt5:
+                #   aspectRatioMode=Qt.KeepAspectRatio,
+                #   transformMode=Qt.SmoothTransformation,
+                # PyQt6:
+                #   aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio,
+                #   transformMode=Qt.TransformationMode.SmoothTransformation,
                 scaled_pixmap = pixmap.scaled(
                     new_width,
                     new_height,
-                    aspectRatioMode=1,  # Qt.KeepAspectRatio
-                    transformMode=1,  # Qt.SmoothTransformation
+                    aspectRatioMode=1,  # type: ignore
+                    transformMode=1,  # type: ignore
                 )
 
                 # Create backup of original

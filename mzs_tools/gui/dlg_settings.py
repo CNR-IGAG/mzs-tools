@@ -11,7 +11,7 @@ from urllib.parse import quote
 from qgis.core import Qgis, QgsApplication
 from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 from qgis.PyQt import uic
-from qgis.PyQt.Qt import QUrl
+from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QIcon
 
 from ..__about__ import (
@@ -44,7 +44,7 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
             "> Reported from plugin settings\n\n"
             f"- operating system: {platform.system()} "
             f"{platform.release()}_{platform.version()}\n"
-            f"- QGIS: {Qgis.QGIS_VERSION}"
+            f"- QGIS: {Qgis.version()}\n"
             f"- plugin version: {__version__}\n"
         )
 
@@ -57,7 +57,12 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
 
         self.btn_report.setIcon(QIcon(QgsApplication.iconPath("console/iconSyntaxErrorConsole.svg")))
 
-        self.btn_report.pressed.connect(partial(QDesktopServices.openUrl, QUrl(f"{__uri_tracker__}new/choose")))
+        self.btn_report.pressed.connect(
+            partial(
+                QDesktopServices.openUrl,
+                QUrl(f"{__uri_tracker__}new/?template=10_bug_report.yml&about-info={report_context_message}"),
+            )
+        )
 
         self.btn_reset.setIcon(QIcon(QgsApplication.iconPath("mActionUndo.svg")))
         self.btn_reset.pressed.connect(self.reset_settings)

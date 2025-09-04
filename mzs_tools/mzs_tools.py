@@ -571,7 +571,7 @@ class MzSTools:
                 "The current project will be saved in a backup directory before the update."
             )
         )
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg_box.setStandardButtons(QMessageBox.StandardButtons.Yes | QMessageBox.StandardButtons.No)
         msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
 
         response = msg_box.exec()
