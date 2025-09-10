@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
@@ -18,8 +19,8 @@ class ImportSitiLineariTask(QgsTask):
         self,
         proj_paths: dict,
         data_source: str,
-        mdb_password: str = None,
-        csv_files: dict = None,
+        mdb_password: Optional[str] = None,
+        csv_files: Optional[dict] = None,
         adapt_counters: bool = True,
     ):
         super().__init__("Import siti lineari (siti, indagini, parametri)", QgsTask.Flag.CanCancel)
@@ -380,7 +381,7 @@ class ImportSitiLineariTask(QgsTask):
         try:
             cursor.execute(
                 """INSERT INTO sito_lineare (pkuid, id_sln, mod_identcoord, desc_modcoord, aquota, bquota, data_sito,
-                note_sito, geom) 
+                note_sito, geom)
                         VALUES(:pkey_sln, :ID_SLN, :mod_identcoord, :desc_modcoord, :Aquota, :Bquota, :data_sito,
                         :note_sito, GeomFromText(:geom, 32633));""",
                 data,
@@ -517,8 +518,8 @@ class ImportSitiLineariTask(QgsTask):
         cursor = self.sqlite_db_connection.cursor()
         try:
             cursor.execute("""
-                SELECT pkey_sln, ID_SLN, ubicazione_prov, ubicazione_com, Acoord_X, Acoord_Y, 
-                    Bcoord_X, Bcoord_Y, mod_identcoord, desc_modcoord, Aquota, Bquota, 
+                SELECT pkey_sln, ID_SLN, ubicazione_prov, ubicazione_com, Acoord_X, Acoord_Y,
+                    Bcoord_X, Bcoord_Y, mod_identcoord, desc_modcoord, Aquota, Bquota,
                     data_sito, note_sito
                 FROM sito_lineare
             """)
@@ -589,7 +590,7 @@ class ImportSitiLineariTask(QgsTask):
         try:
             cursor.execute("""
                 SELECT pkey_indln, pkey_parln, tipo_parln, ID_PARLN, prof_top, prof_bot,
-                    spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, 
+                    spessore, quota_slm_top, quota_slm_bot, valore, attend_mis,
                     note_par, data_par, id_indln
                 FROM parametri_lineari
             """)

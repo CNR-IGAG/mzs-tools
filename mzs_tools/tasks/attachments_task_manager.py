@@ -42,7 +42,11 @@ class AttachmentsTaskManager:
         # setup file-based logging
         timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
         filename = f"attachments_check_{timestamp}.log"
-        self.log_file_path = self.prj_manager.project_path / "Allegati" / "log" / filename
+        if self.prj_manager.project_path is not None:
+            self.log_file_path = self.prj_manager.project_path / "Allegati" / "log" / filename
+        else:
+            self.log("There is a problem with the project path! Process not started!", log_level=2)
+            return
         self.file_handler = logging.FileHandler(self.log_file_path, encoding="utf-8")
         self.file_logger.addHandler(self.file_handler)
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
@@ -54,8 +58,8 @@ class AttachmentsTaskManager:
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
+        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)  # type: ignore[arg-type]
+        progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(  # type: ignore[attr-defined]
             "MzS Tools", self.tr("Attachments check in progress...")
         )
         progress_msg.layout().addWidget(self.progress_bar)
@@ -65,7 +69,7 @@ class AttachmentsTaskManager:
         cancel_button.clicked.connect(self.cancel_tasks)
         progress_msg.layout().addWidget(cancel_button)
 
-        self.iface.messageBar().pushWidget(progress_msg, Qgis.MessageLevel.Info)
+        self.iface.messageBar().pushWidget(progress_msg, Qgis.MessageLevel.Info)  # type: ignore[attr-defined]
 
         # QgsApplication.taskManager().progressChanged.connect(self._on_manage_attachments_task_progress)
         # QgsApplication.taskManager().allTasksFinished.connect(self._on_manage_attachments_task_completed)
@@ -93,10 +97,10 @@ class AttachmentsTaskManager:
         msg = self.tr("Attachment check completed successfully. Check the log for missing files or other problems.")
         self.file_logger.info(f"{'#' * 15} {msg}")
 
-        self.iface.messageBar().clearWidgets()
+        self.iface.messageBar().clearWidgets()  # type: ignore[attr-defined]
         # load log file
         log_text = self.log_file_path.read_text(encoding="utf-8")
-        self.iface.messageBar().pushMessage(
+        self.iface.messageBar().pushMessage(  # type: ignore[attr-defined]
             "MzS Tools",
             msg,
             log_text if log_text else "...",
@@ -109,10 +113,10 @@ class AttachmentsTaskManager:
         msg = self.tr("Attachment check terminated. Check the log for details.")
         self.file_logger.info(f"{'#' * 15} {msg}")
 
-        self.iface.messageBar().clearWidgets()
+        self.iface.messageBar().clearWidgets()  # type: ignore[attr-defined]
         # load log file
         log_text = self.log_file_path.read_text(encoding="utf-8")
-        self.iface.messageBar().pushMessage(
+        self.iface.messageBar().pushMessage(  # type: ignore[attr-defined]
             "MzS Tools",
             msg,
             log_text if log_text else "...",
@@ -125,8 +129,10 @@ class AttachmentsTaskManager:
         self.file_logger.warning(f"{'#' * 15} Attachment check cancelled. Terminating all tasks")
         QgsApplication.taskManager().cancelAll()
 
-        self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Attachment check cancelled!"), level=Qgis.MessageLevel.Warning)
+        self.iface.messageBar().clearWidgets()  # type: ignore[attr-defined]
+        self.iface.messageBar().pushMessage(  # type: ignore[attr-defined]
+            "MzS Tools", self.tr("Attachment check cancelled!"), level=Qgis.MessageLevel.Warning
+        )
 
         self.file_logger.removeHandler(self.file_handler)
 

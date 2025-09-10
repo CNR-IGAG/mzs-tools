@@ -1,3 +1,5 @@
+from typing import Optional
+
 from ..__about__ import DIR_PLUGIN_ROOT
 from ..plugin_utils.logging import MzSToolsLogger
 
@@ -7,13 +9,13 @@ try:
     import jaydebeapi
     import jpype
     import jpype.imports
-    from jpype.types import *  # noqa: F403
+    from jpype.types import *  # type: ignore # noqa: F403
 except ImportError:
     EXT_LIBS_LOADED = False
 
 
 class AccessDbConnection:
-    def __init__(self, db_path: str, password: str = None):
+    def __init__(self, db_path: str, password: Optional[str] = None):
         self.log = MzSToolsLogger().log
 
         if not EXT_LIBS_LOADED:
@@ -50,11 +52,11 @@ class AccessDbConnection:
             # can import only when the JVM is running
             from net.ucanaccess.exception import AuthenticationException  # type: ignore
 
-            self.log(f"{e} - {e.getMessage()}", log_level=4)
-            self.log(f"cause: {e.getCause()}", log_level=4)
+            self.log(f"{e} - {e.getMessage()}", log_level=4)  # type: ignore
+            self.log(f"cause: {e.getCause()}", log_level=4)  # type: ignore
             # self.log(f"getErrorCode: {e.getErrorCode()}", log_level=4)
 
-            if isinstance(e.getCause(), AuthenticationException):
+            if isinstance(e.getCause(), AuthenticationException):  # type: ignore
                 raise MdbAuthError("Invalid password")
 
             raise e

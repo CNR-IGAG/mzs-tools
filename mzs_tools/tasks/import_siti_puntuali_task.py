@@ -3,6 +3,7 @@ import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
@@ -18,8 +19,8 @@ class ImportSitiPuntualiTask(QgsTask):
         self,
         proj_paths: dict,
         data_source: str,
-        mdb_password: str = None,
-        csv_files: dict = None,
+        mdb_password: Optional[str] = None,
+        csv_files: Optional[dict] = None,
         adapt_counters: bool = True,
     ):
         super().__init__("Import siti puntuali (siti, indagini, parametri, curve)", QgsTask.Flag.CanCancel)
@@ -527,7 +528,7 @@ class ImportSitiPuntualiTask(QgsTask):
         try:
             cursor.execute(
                 """INSERT INTO sito_puntuale (pkuid, id_spu, indirizzo, mod_identcoord, desc_modcoord,
-                        quota_slm, modo_quota, data_sito, note_sito, geom) 
+                        quota_slm, modo_quota, data_sito, note_sito, geom)
                         VALUES(:pkey_spu, :ID_SPU, :indirizzo, :mod_identcoord, :desc_modcoord,
                         :quota_slm, :modo_quota, :data_sito, :note_sito, GeomFromText(:geom, 32633));""",
                 data,
@@ -658,8 +659,8 @@ class ImportSitiPuntualiTask(QgsTask):
         cursor = self.sqlite_db_connection.cursor()
         try:
             cursor.execute("""
-                SELECT pkey_spu, ID_SPU, ubicazione_prov, ubicazione_com, indirizzo, 
-                    coord_X, coord_Y, mod_identcoord, desc_modcoord, quota_slm, 
+                SELECT pkey_spu, ID_SPU, ubicazione_prov, ubicazione_com, indirizzo,
+                    coord_X, coord_Y, mod_identcoord, desc_modcoord, quota_slm,
                     modo_quota, data_sito, note_sito
                 FROM sito_puntuale
             """)
@@ -695,7 +696,7 @@ class ImportSitiPuntualiTask(QgsTask):
         try:
             cursor.execute("""
                 SELECT pkey_spu, pkey_indpu, classe_ind, tipo_ind, ID_INDPU, id_indpuex,
-                    arch_ex, note_ind, prof_top, prof_bot, spessore, quota_slm_top, 
+                    arch_ex, note_ind, prof_top, prof_bot, spessore, quota_slm_top,
                     quota_slm_bot, data_ind, doc_pag, doc_ind, id_spu
                 FROM indagini_puntuali
             """)
@@ -735,7 +736,7 @@ class ImportSitiPuntualiTask(QgsTask):
         try:
             cursor.execute("""
                 SELECT pkey_indpu, pkey_parpu, tipo_parpu, ID_PARPU, prof_top, prof_bot,
-                    spessore, quota_slm_top, quota_slm_bot, valore, attend_mis, 
+                    spessore, quota_slm_top, quota_slm_bot, valore, attend_mis,
                     tab_curve, note_par, data_par, id_indpu
                 FROM parametri_puntuali
             """)

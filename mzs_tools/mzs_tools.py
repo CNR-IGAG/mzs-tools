@@ -90,7 +90,7 @@ class MzSTools:
         parent=None,
     ):
         icon = QIcon(icon_path)
-        action = QAction(icon, text, parent)
+        action = QAction(icon, text, parent)  # type: ignore[arg-type]
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
 
@@ -104,7 +104,7 @@ class MzSTools:
             self.toolbar.addAction(action)
 
         if add_to_menu:
-            self.iface.addPluginToDatabaseMenu(self.menu, action)
+            self.iface.addPluginToDatabaseMenu(self.menu, action)  # type: ignore[arg-type]
 
         self.actions.append(action)
 
@@ -137,7 +137,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.new_project_action)
+        menu_project.addAction(self.new_project_action)  # type: ignore[arg-type]
 
         self.open_standard_project_action = self.add_action(
             QgsApplication.getThemeIcon("mIconDataDefine.svg"),
@@ -149,7 +149,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.open_standard_project_action)
+        menu_project.addAction(self.open_standard_project_action)  # type: ignore[arg-type]
 
         menu_project.addSeparator()
 
@@ -161,7 +161,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.backup_db_action)
+        menu_project.addAction(self.backup_db_action)  # type: ignore[arg-type]
 
         self.backup_project_action = self.add_action(
             QgsApplication.getThemeIcon("mIconAuxiliaryStorage.svg"),
@@ -171,7 +171,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.backup_project_action)
+        menu_project.addAction(self.backup_project_action)  # type: ignore[arg-type]
 
         self.check_attachments_action = self.add_action(
             QgsApplication.getThemeIcon("mActionFolder.svg"),
@@ -181,7 +181,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.check_attachments_action)
+        menu_project.addAction(self.check_attachments_action)  # type: ignore[arg-type]
 
         menu_project.addSeparator()
 
@@ -193,7 +193,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.edit_metadata_action)
+        menu_project.addAction(self.edit_metadata_action)  # type: ignore[arg-type]
 
         project_menu_button.setMenu(menu_project)
 
@@ -212,7 +212,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.check_project_action)
+        menu_layers.addAction(self.check_project_action)  # type: ignore[arg-type]
         self.add_default_layers_action = self.add_action(
             QgsApplication.getThemeIcon("mActionAddLayer.svg"),
             enabled_flag=enabled_flag,
@@ -222,7 +222,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.add_default_layers_action)
+        menu_layers.addAction(self.add_default_layers_action)  # type: ignore[arg-type]
 
         self.load_default_print_layouts_action = self.add_action(
             QgsApplication.getThemeIcon("mIconLayout.svg"),
@@ -233,7 +233,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.load_default_print_layouts_action)
+        menu_layers.addAction(self.load_default_print_layouts_action)  # type: ignore[arg-type]
 
         menu_layers.addSeparator()
 
@@ -248,7 +248,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.add_ogc_services_action)
+        menu_layers.addAction(self.add_ogc_services_action)  # type: ignore[arg-type]
         layers_menu_button.setMenu(menu_layers)
 
         self.toolbar.addSeparator()
@@ -286,7 +286,7 @@ class MzSTools:
             parent=self.iface.mainWindow(),
         )
         # add the help action to the QGIS plugin help menu
-        self.iface.pluginHelpMenu().addAction(self.help_action)
+        self.iface.pluginHelpMenu().addAction(self.help_action)  # type: ignore[arg-type]
 
         self.check_project()
 
@@ -304,7 +304,7 @@ class MzSTools:
         del self.toolbar
 
         # remove the help action from the QGIS plugin help menu
-        self.iface.pluginHelpMenu().removeAction(self.help_action)
+        self.iface.pluginHelpMenu().removeAction(self.help_action)  # type: ignore[arg-type]
         del self.help_action
 
         # disconnect QgisInterface signals
@@ -571,7 +571,11 @@ class MzSTools:
                 "The current project will be saved in a backup directory before the update."
             )
         )
-        msg_box.setStandardButtons(QMessageBox.StandardButtons.Yes | QMessageBox.StandardButtons.No)
+        # Build flags incrementally to satisfy Pylance
+        buttons = QMessageBox.StandardButtons()
+        buttons |= QMessageBox.StandardButton.Yes
+        buttons |= QMessageBox.StandardButton.No
+        msg_box.setStandardButtons(buttons)
         msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
 
         response = msg_box.exec()

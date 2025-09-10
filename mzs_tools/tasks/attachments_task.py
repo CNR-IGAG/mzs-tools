@@ -27,7 +27,7 @@ class AttachmentsTask(QgsTask):
         # Configuration for each attachment type
         self.attachment_config = {
             "indagini_puntuali": {
-                "query": """SELECT pkuid, id_spu, id_indpu, doc_ind FROM indagini_puntuali 
+                "query": """SELECT pkuid, id_spu, id_indpu, doc_ind FROM indagini_puntuali
                           WHERE doc_ind IS NOT NULL AND doc_ind != ''""",
                 "id_field": "id_indpu",
                 "check_field": "id_spu",
@@ -35,7 +35,7 @@ class AttachmentsTask(QgsTask):
                 "dest_folder": "Documenti",
             },
             "parametri_puntuali": {
-                "query": """SELECT pkuid, id_indpu, id_parpu, tab_curve FROM parametri_puntuali 
+                "query": """SELECT pkuid, id_indpu, id_parpu, tab_curve FROM parametri_puntuali
                           WHERE tab_curve IS NOT NULL AND tab_curve != ''""",
                 "id_field": "id_parpu",
                 "check_field": "id_parpu",
@@ -43,7 +43,7 @@ class AttachmentsTask(QgsTask):
                 "dest_folder": "Documenti",
             },
             "indagini_lineari": {
-                "query": """SELECT pkuid, id_sln, id_indln, doc_ind FROM indagini_lineari 
+                "query": """SELECT pkuid, id_sln, id_indln, doc_ind FROM indagini_lineari
                           WHERE doc_ind IS NOT NULL AND doc_ind != ''""",
                 "id_field": "id_indln",
                 "check_field": "id_sln",
@@ -51,7 +51,7 @@ class AttachmentsTask(QgsTask):
                 "dest_folder": "Documenti",
             },
             "instab_l23": {
-                "query": """SELECT pkuid, ID_i, SPETTRI FROM instab_l23 
+                "query": """SELECT pkuid, ID_i, SPETTRI FROM instab_l23
                           WHERE SPETTRI IS NOT NULL AND SPETTRI != ''""",
                 "id_field": "ID_i",
                 "check_field": None,
@@ -59,7 +59,7 @@ class AttachmentsTask(QgsTask):
                 "dest_folder": "Spettri",
             },
             "stab_l23": {
-                "query": """SELECT pkuid, ID_z, SPETTRI FROM stab_l23 
+                "query": """SELECT pkuid, ID_z, SPETTRI FROM stab_l23
                           WHERE SPETTRI IS NOT NULL AND SPETTRI != ''""",
                 "id_field": "ID_z",
                 "check_field": None,
@@ -159,7 +159,7 @@ class AttachmentsTask(QgsTask):
             dest_file_name = f"{id_value}_{file_full_path.name}"
 
         # Destination path
-        dest_path = self.prj_manager.project_path / "Allegati" / dest_folder / dest_file_name
+        dest_path = self.prj_manager.project_path / "Allegati" / dest_folder / dest_file_name  # type: ignore
 
         # Check if file is already in the correct location
         if file_full_path == dest_path:

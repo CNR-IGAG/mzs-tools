@@ -214,12 +214,16 @@ class MzSProjectManager:
 
     def connect_editing_signals(self):
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
-        # for layer in self.current_project.mapLayers().values():
         for group in NO_OVERLAPS_LAYER_GROUPS:
             for table_name in group:
                 layer_id = self.find_layer_by_table_name_role(table_name, "editing")
+                if not layer_id:
+                    continue
                 layer = self.current_project.mapLayer(layer_id)
-                if layer and layer not in self.editing_signals_connected_layers:
+                # Ensure we only proceed with vector layers (satisfies type checker)
+                if not isinstance(layer, QgsVectorLayer):
+                    continue
+                if layer not in self.editing_signals_connected_layers:
                     layer.editingStarted.connect(partial(self.set_advanced_editing_config, layer, table_name))
                     layer.editingStopped.connect(self.reset_advanced_editing_config)
                     self.editing_signals_connected_layers[layer] = (
@@ -265,44 +269,42 @@ class MzSProjectManager:
             snapping_config = QgsSnappingConfig(self.proj_snapping_config)
 
             # snapping_config.clearIndividualLayerSettings()
+
+            # Pylance complains because the QGIS Python type stubs do not expose the nested enum QgsSnappingConfig.SnappingMode.*.
+            # Runtime works, but static analysis cannot find SnappingMode, so it flags it.
+            # In QGIS < 3.26 the enum values are exported directly as class attributes
+            # (QgsSnappingConfig.AdvancedConfiguration, AllLayers, ActiveLayer) instead of under a SnappingMode namespace.
             snapping_config.setEnabled(True)
-            snapping_config.setMode(QgsSnappingConfig.SnappingMode.AdvancedConfiguration)
+            try:
+                snapping_config.setMode(QgsSnappingConfig.SnappingMode.AdvancedConfiguration)  # type: ignore[attr-defined]
+            except AttributeError:
+                snapping_config.setMode(QgsSnappingConfig.AdvancedConfiguration)  # type: ignore[attr-defined]
             snapping_config.setIntersectionSnapping(True)
             snapping_config.setTolerance(20)
 
-            """
-            TODO: deprecation warning when using IndividualLayerSettings constructor
-            This works in QGIS but not here:
-
-            proj = QgsProject.instance()
-            proj_snapping_config = proj.snappingConfig()
-
-            layer = iface.activeLayer()
-
-            layer_settings = proj_snapping_config.individualLayerSettings(layer)
+            # deprecated constructor:
+            # layer_settings = QgsSnappingConfig.IndividualLayerSettings(
+            #     True,
+            #     QgsSnappingConfig.SnappingTypes.VertexFlag,
+            #     20,
+            #     QgsTolerance.UnitType.ProjectUnits,
+            # )
+            layer_settings = snapping_config.individualLayerSettings(layer)
             layer_settings.setEnabled(True)
-            layer_settings.setType(QgsSnappingConfig.Vertex)
+            layer_settings.setTypeFlag(Qgis.SnappingType.Vertex)
             layer_settings.setTolerance(20)
-            layer_settings.setUnits(QgsTolerance.ProjectUnits)
-
-            proj_snapping_config.setIndividualLayerSettings(layer, layer_settings)
-            #proj_snapping_config.addLayers([layer])
-
-            proj.setSnappingConfig(proj_snapping_config)
-            """
-            layer_settings = QgsSnappingConfig.IndividualLayerSettings(
-                True,
-                QgsSnappingConfig.SnappingTypes.VertexFlag,
-                20,
-                QgsTolerance.UnitType.ProjectUnits,
-            )
+            try:
+                layer_settings.setUnits(Qgis.MapToolUnit.Project)
+            except AttributeError:
+                # QGIS < 3.32
+                layer_settings.setUnits(QgsTolerance.ProjectUnits)  # type: ignore
 
             for ly in editing_group_layers:
                 snapping_config.setIndividualLayerSettings(ly, layer_settings)
             self.current_project.setAvoidIntersectionsLayers(editing_group_layers)
 
             # actually set "follow advanced config" for overlaps
-            self.current_project.setAvoidIntersectionsMode(QgsProject.AvoidIntersectionsMode.AvoidIntersectionsLayers)
+            self.current_project.setAvoidIntersectionsMode(Qgis.AvoidIntersectionsMode.AvoidIntersectionsLayers)
 
             # enable topological editing
             self.current_project.setTopologicalEditing(True)
@@ -458,9 +460,12 @@ class MzSProjectManager:
             elif type(layer_data) is str:
                 group = self.current_project.layerTreeRoot().findGroup(table_name)
                 if group:
-                    for layer in group.findLayers():
+                    for layer_node in group.findLayers():
+                        map_layer = layer_node.layer()
+                        if map_layer is None:
+                            continue  # skip missing layer
                         for prop_name, prop_value in custom_properties.items():
-                            self.set_layer_custom_property(layer.layer(), prop_name, prop_value)
+                            self.set_layer_custom_property(map_layer, prop_name, prop_value)
 
     def add_default_layers(self, add_base_layers=True, add_editing_layers=True, add_layout_groups=True):
         """Add the default layers to the project, removing first any existing layers of the
@@ -563,11 +568,16 @@ class MzSProjectManager:
                     #     layer.setEditFormConfig(form_config)
 
                     # set subset string if needed
-                    if "subset_string" in layer_data and layer_data["subset_string"] is not None:
-                        subset_string = layer_data["subset_string"]
+                    map_layer = layer_tree_layer.layer()
+                    subset_string = layer_data["subset_string"]
+                    if (
+                        "subset_string" in layer_data
+                        and subset_string is not None
+                        and isinstance(map_layer, QgsVectorLayer)
+                    ):
                         if subset_string == "cod_regio":
                             subset_string = f"cod_regio = '{self.comune_data.cod_regio}'"
-                            layer_tree_layer.layer().setSubsetString(subset_string)
+                            map_layer.setSubsetString(subset_string)
 
                     # set custom properties
                     # for prop_name, prop_value in custom_properties.items():
@@ -760,7 +770,8 @@ class MzSProjectManager:
                 if group:
                     self.log(f"Removing group '{table_name}'", log_level=4)
                     parent_node = group.parent()
-                    parent_node.removeChildNode(group)
+                    if parent_node and isinstance(parent_node, QgsLayerTreeGroup):
+                        parent_node.removeChildNode(group)
                 continue
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
@@ -774,8 +785,10 @@ class MzSProjectManager:
                         parent_node = layer_node.parent()
                     self.current_project.removeMapLayer(layer)
                     # remove parent group if empty
-                    if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
-                        parent_node.parent().removeChildNode(parent_node)
+                    if parent_node and isinstance(parent_node, QgsLayerTreeGroup) and len(parent_node.children()) == 0:
+                        gp = parent_node.parent()
+                        if gp and isinstance(gp, QgsLayerTreeGroup):
+                            gp.removeChildNode(parent_node)
 
     def _cleanup_editing_layers(self):
         self.log("Cleaning up removed layers...", log_level=4)
@@ -790,8 +803,10 @@ class MzSProjectManager:
                         parent_node = layer_node.parent()
                     self.current_project.removeMapLayer(layer)
                     # remove parent group if empty
-                    if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
-                        parent_node.parent().removeChildNode(parent_node)
+                    if parent_node and isinstance(parent_node, QgsLayerTreeGroup) and len(parent_node.children()) == 0:
+                        gp = parent_node.parent()
+                        if gp and isinstance(gp, QgsLayerTreeGroup):
+                            gp.removeChildNode(parent_node)
 
         self.log("Cleaning up editing layers...", log_level=4)
         for table_name in DEFAULT_EDITING_LAYERS.keys():
@@ -805,8 +820,10 @@ class MzSProjectManager:
                         parent_node = layer_node.parent()
                     self.current_project.removeMapLayer(layer)
                     # remove parent group if empty
-                    if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
-                        parent_node.parent().removeChildNode(parent_node)
+                    if parent_node and isinstance(parent_node, QgsLayerTreeGroup) and len(parent_node.children()) == 0:
+                        gp = parent_node.parent()
+                        if gp and isinstance(gp, QgsLayerTreeGroup):
+                            gp.removeChildNode(parent_node)
 
         self.log("Cleaning up table layers...", log_level=4)
         for table_name in DEFAULT_TABLE_LAYERS_NAMES:
@@ -820,24 +837,27 @@ class MzSProjectManager:
                         parent_node = layer_node.parent()
                     self.current_project.removeMapLayer(layer)
                     # remove parent group if empty
-                    if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
-                        parent_node.parent().removeChildNode(parent_node)
+                    if parent_node and isinstance(parent_node, QgsLayerTreeGroup) and len(parent_node.children()) == 0:
+                        gp = parent_node.parent()
+                        if gp and isinstance(gp, QgsLayerTreeGroup):
+                            gp.removeChildNode(parent_node)
 
     def _cleanup_layout_groups(self):
         self.log("Cleaning up layout groups...", log_level=4)
         for group_name in DEFAULT_LAYOUT_GROUPS.keys():
             group = self.current_project.layerTreeRoot().findGroup(group_name)
             if group:
-                parent_node = None
-                if group.parent():
-                    parent_node = group.parent()
-                else:
+                parent_node = group.parent()
+                if not parent_node:
                     continue
                 self.log(f"Removing layout group '{group_name}'", log_level=4)
-                parent_node.removeChildNode(group)
-                # remove parent group if empty
-                if parent_node and len(parent_node.children()) == 0 and parent_node.parent():
-                    parent_node.parent().removeChildNode(parent_node)
+                if isinstance(parent_node, QgsLayerTreeGroup):
+                    parent_node.removeChildNode(group)
+                    # remove parent group if empty
+                    if parent_node and isinstance(parent_node, QgsLayerTreeGroup) and len(parent_node.children()) == 0:
+                        gp = parent_node.parent()
+                        if gp and isinstance(gp, QgsLayerTreeGroup):
+                            gp.removeChildNode(parent_node)
 
     def find_layers_by_table_name(self, table_name: str) -> list:
         """Find all vector layers in the currrent project with the given table name in datasource uri."""
@@ -1063,7 +1083,14 @@ class MzSProjectManager:
         # Add a progress bar to show activity
         progress_bar = QProgressBar()
         progress_bar.setRange(0, 0)  # Indeterminate progress bar
-        progress_bar.setAlignment(Qt.Alignment.AlignLeft | Qt.Alignment.AlignVCenter)
+        # Cross-version (PyQt5 / PyQt6) alignment with simple cast to silence Pylance
+        try:
+            # PyQt6
+            alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+        except AttributeError:
+            # PyQt5: bitwise OR returns int, cast to Qt.Alignment
+            alignment = cast("Qt.Alignment", Qt.AlignLeft | Qt.AlignVCenter)  # type: ignore[attr-defined]
+        progress_bar.setAlignment(alignment)
         progress_msg.layout().addWidget(progress_bar)
 
         # Push the message to the message bar
@@ -1303,7 +1330,8 @@ class MzSProjectManager:
         if layer_limiti_comunali_node and layer_limiti_comunali_node.layer():
             layer_limiti_comunali = layer_limiti_comunali_node.layer()
             layer_limiti_comunali.dataProvider().updateExtents()
-            layer_limiti_comunali.updateExtents()
+            if isinstance(layer_limiti_comunali, QgsVectorLayer):
+                layer_limiti_comunali.updateExtents()
             map_extent = layer_limiti_comunali.extent()
             zoom_layer_for_image = layer_limiti_comunali
             self.log(f"Using layer_limiti_comunali extent for map image: {map_extent}")
@@ -1410,15 +1438,16 @@ class MzSProjectManager:
             canvas = iface.mapCanvas()
             map_item = layout.itemById("mappa_0")
             # TODO: get extent from comune_progetto table
-            map_item.zoomToExtent(canvas.extent())
+            # TODO: properly check map item types
+            map_item.zoomToExtent(canvas.extent())  # type: ignore
             map_item_2 = layout.itemById("regio_title")
-            map_item_2.setText("Regione " + self.comune_data.regione)
+            map_item_2.setText("Regione " + self.comune_data.regione)  # type: ignore
             map_item_3 = layout.itemById("com_title")
-            map_item_3.setText("Comune di " + self.comune_data.comune)
+            map_item_3.setText("Comune di " + self.comune_data.comune)  # type: ignore
             map_item_4 = layout.itemById("logo")
-            map_item_4.refreshPicture()
+            map_item_4.refreshPicture()  # type: ignore
             map_item_5 = layout.itemById("mappa_1")
-            map_item_5.refreshPicture()
+            map_item_5.refreshPicture()  # type: ignore
 
         layout_manager.addLayout(layout)
 
@@ -1453,7 +1482,7 @@ class MzSProjectManager:
         layout_clone = layout.clone()
         layout_clone.setName(f"[{backup_label or 'backup'}]_{layout_name}")
         layout_file_path = None
-        if backup_model_file:
+        if backup_model_file and layout_clone:
             layout_file_path = self.save_print_layout(layout_clone)
         layout_manager = self.current_project.layoutManager()
         layout_manager.addLayout(layout_clone)
