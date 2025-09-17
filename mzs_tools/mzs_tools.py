@@ -625,6 +625,12 @@ class MzSTools:
         try:
             self.prj_manager.update_db()
             self.prj_manager.update_project()
+            # execute check_project() again to update the detected plugin version
+            # and re-enable the plugin actions
+            # TODO: this is reduntant in case of project version < 2.0.0, because the project is completely
+            # reloaded in update_project() and the projectRead() signal will trigger check_project() anyway
+            self.check_project()
+            # TODO: check if the connected signals get duplicated
         except Exception as e:
             err_msg = self.tr("An error occurred during project update.")
             self.log(f"{err_msg} {e}", log_level=2)

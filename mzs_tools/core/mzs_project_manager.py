@@ -569,12 +569,8 @@ class MzSProjectManager:
 
                     # set subset string if needed
                     map_layer = layer_tree_layer.layer()
-                    subset_string = layer_data["subset_string"]
-                    if (
-                        "subset_string" in layer_data
-                        and subset_string is not None
-                        and isinstance(map_layer, QgsVectorLayer)
-                    ):
+                    subset_string = layer_data.get("subset_string", None)
+                    if subset_string is not None and isinstance(map_layer, QgsVectorLayer):
                         if subset_string == "cod_regio":
                             subset_string = f"cod_regio = '{self.comune_data.cod_regio}'"
                             map_layer.setSubsetString(subset_string)
@@ -1148,6 +1144,8 @@ class MzSProjectManager:
                     f.write(__base_version__)
 
                 # completely reload the project
+                # this will trigger projectRead() signal, the main module will execute check_project() and finally
+                # init_project() here, thus updating the detected plugin version
                 iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
 
             # for versions >= 2.0.0 update only what's needed without clearing the project

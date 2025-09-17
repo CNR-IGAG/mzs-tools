@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.4-beta2] - 2025-09-02 [Unreleased]
+## [2.0.4-beta3] - 2025-09-17 [Unreleased]
 
 - Update layout layer definitions
 - Tooling updates
