@@ -205,3 +205,46 @@ pyqt5-to-pyqt6:
     #!/bin/bash
     docker pull registry.gitlab.com/oslandia/qgis/pyqgis-4-checker/pyqgis-qt-checker:latest
     docker run --rm -v "$(pwd):/home/pyqgisdev/" registry.gitlab.com/oslandia/qgis/pyqgis-4-checker/pyqgis-qt-checker:latest pyqt5_to_pyqt6.py --logfile /home/pyqgisdev/pyqt6_checker.log .
+
+# build docker image for QGIS 3.44 with Qt6 on Linux, compiling QGIS from source
+build-image-qgis-qt6-linux-build:
+    #!/bin/bash
+    cd docker
+    docker build -t qgis-qt6-linux:3_44 -f ./qgis-qt6-linux-build.dockerfile .
+
+# build docker image for QGIS 3.44 with Qt6 on Linux, without compiling QGIS from source, for use with mounted QGIS build
+build-image-qgis-qt6-linux-deps-only:
+    #!/bin/bash
+    cd docker
+    docker build -t qgis-qt6-linux-deps-only:3_44 -f ./qgis-qt6-linux-deps-only.dockerfile .
+
+# start QGIS 3.44 with Qt6 from docker image with compiled QGIS
+run-qgis-qt6-linux QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
+    #!/bin/bash
+    xhost +local:
+    cd docker
+    docker run -it --rm \
+        -e DISPLAY=$DISPLAY \
+        -e LC_ALL=C.utf8 \
+        -e LANG=C.utf8 \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
+        -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+        qgis-qt6-linux:3_44 \
+        ./QGIS/build/output/bin/qgis
+
+# start QGIS 3.44 with Qt6 from docker image with mounted QGIS build directory
+run-qgis-qt6-linux-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
+    #!/bin/bash
+    xhost +local:
+    cd docker
+    docker run -it --rm \
+        -e DISPLAY=$DISPLAY \
+        -e LC_ALL=C.utf8 \
+        -e LANG=C.utf8 \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v ${HOME}/QGIS:/home/quser/QGIS \
+        -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
+        -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+        qgis-qt6-linux-deps-only:3_44 \
+        ./QGIS/build/output/bin/qgis

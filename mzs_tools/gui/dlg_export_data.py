@@ -14,8 +14,7 @@ from qgis.core import (
 )
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
-from qgis.PyQt.Qt import QUrl
-from qgis.PyQt.QtCore import QCoreApplication, Qt, QVariant
+from qgis.PyQt.QtCore import QCoreApplication, Qt, QUrl, QVariant
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QDialog,
@@ -298,7 +297,9 @@ class DlgExportData(QDialog, FORM_CLASS):
         # adding this as a subtask of indagini puntuali task to avoid concurrent db writes
         self.export_siti_lineari_task = ExportSitiLineariTask(exported_project_path, self.indagini_output_format)
         # QgsApplication.taskManager().addTask(self.export_siti_lineari_task)
-        self.export_siti_puntuali_task.addSubTask(self.export_siti_lineari_task, [], QgsTask.SubTaskDependency.ParentDependsOnSubTask)
+        self.export_siti_puntuali_task.addSubTask(
+            self.export_siti_lineari_task, [], QgsTask.SubTaskDependency.ParentDependsOnSubTask
+        )
         QgsApplication.taskManager().addTask(self.export_siti_puntuali_task)
 
         # export project files (attachments, plots, etc.)
@@ -380,7 +381,9 @@ class DlgExportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data export cancelled!"), level=Qgis.MessageLevel.Warning)
+        self.iface.messageBar().pushMessage(
+            "MzS Tools", self.tr("Data export cancelled!"), level=Qgis.MessageLevel.Warning
+        )
 
         self.file_logger.removeHandler(self.file_handler)
 

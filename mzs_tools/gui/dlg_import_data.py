@@ -5,8 +5,7 @@ from pathlib import Path
 from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig, QgsTask
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
-from qgis.PyQt.Qt import QUrl
-from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtCore import QCoreApplication, Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QCheckBox,
@@ -589,7 +588,9 @@ class DlgImportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().cancelAll()
 
         self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage("MzS Tools", self.tr("Data import cancelled!"), level=Qgis.MessageLevel.Warning)
+        self.iface.messageBar().pushMessage(
+            "MzS Tools", self.tr("Data import cancelled!"), level=Qgis.MessageLevel.Warning
+        )
 
         self.iface.mapCanvas().refreshAllLayers()
 

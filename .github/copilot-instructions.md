@@ -8,6 +8,8 @@ In `pyproject.toml` dependencies are grouped into categories such as `ci`, `test
 
 When launching terminal commands, use `uv run` to ensure the correct environment is activated. To avoid possible issues with the fish shell, the use of `bash -c` might be required to run commands that require a shell environment.
 
+Python code should be Python 3.9+ compatible, as the default MacOS QGIS builds still use Python 3.9. PyQt is used for GUI development, and the plugin should be compatible with both PyQt5 and PyQt6, until QGIS fully transitions to PyQt6.
+
 When adding text messages directed to the user, use the `QCoreApplication.translate` function to ensure proper translation support. Use a module level function or method for translations (keeping it at the bottom of the file), like this:
 
 ```python

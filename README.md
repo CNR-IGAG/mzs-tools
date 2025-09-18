@@ -6,6 +6,8 @@
 
 **QGIS plugin for italian Seismic Microzonation.**
 
+Database management and cartographic representations for the Italian seismic microzonation studies according to the [standards of representation and computer archiving](https://centromicrozonazionesismica.it/en/tools/standard-per-la-microzonazione-sismica/) version 4.2 (Technical commission for seismic microzonation - art. 5 paragraph 7, OPCM 13 nov. 2010, n. 3907).
+
 Download and install MzS Tools using the [QGIS](https://qgis.org/) 3.26+ [plugin manager](https://docs.qgis.org/3.34/en/docs/user_manual/plugins/plugins.html) (search for "mzs tools").
 
 You can also download and install manually a release file from the Releases section or the [QGIS plugin repository](https://plugins.qgis.org/plugins/MzSTools/).

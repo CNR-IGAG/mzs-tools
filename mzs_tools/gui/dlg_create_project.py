@@ -7,8 +7,8 @@ from contextlib import closing
 from pathlib import Path
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import QCoreApplication
-from qgis.PyQt.QtWidgets import QCompleter, QDialog, QDialogButtonBox, QMessageBox
+from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtWidgets import QCompleter, QDialog, QDialogButtonBox, QFileDialog, QMessageBox
 
 from ..__about__ import DIR_PLUGIN_ROOT
 
@@ -22,6 +22,8 @@ class DlgCreateProject(QDialog, FORM_CLASS):
         self.setupUi(self)
 
         self.database_template_path = DIR_PLUGIN_ROOT / "data" / "indagini.sqlite.zip"
+
+        self.output_dir_widget.setOptions(QFileDialog.Option.ShowDirsOnly)
 
         self.help_button = self.button_box.button(QDialogButtonBox.StandardButton.Help)
         self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
@@ -64,7 +66,7 @@ class DlgCreateProject(QDialog, FORM_CLASS):
 
         # Set up the completer
         completer = QCompleter(self.comuni_names, self)
-        completer.setCaseSensitivity(False)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.comune_line_edit.setCompleter(completer)
 
     def clear_fields(self):

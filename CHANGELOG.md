@@ -1,9 +1,10 @@
 # Changelog
 
-## [2.0.4-beta3] - 2025-09-17 [Unreleased]
+## [2.0.4-beta4] - 2025-09-18 [Unreleased]
 
 - Update layout layer definitions
 - Tooling updates
+- WIP PyQt6 compatibility
 
 ## [2.0.3] - 2025-07-22
 

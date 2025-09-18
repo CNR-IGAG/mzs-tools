@@ -11,8 +11,7 @@ except ImportError:
 from packaging.version import parse
 from qgis.core import QgsApplication
 from qgis.PyQt import uic
-from qgis.PyQt.Qt import QUrl  # type: ignore
-from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt
+from qgis.PyQt.QtCore import QCoreApplication, QSettings, Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QIcon, QPixmap
 from qgis.PyQt.QtWidgets import QDialog
 from qgis.utils import iface
