@@ -4,9 +4,9 @@ Introduzione
 Gli studi di microzonazione sismica in Italia
 ---------------------------------------------
 
-Dopo il terremoto in Abruzzo del 6 aprile 2009, è stato lanciato il "Piano nazionale per la prevenzione del rischio sismico" (legge 77/2009 art. 11) e sono state assegnate risorse sulla base dell'indice medio di rischio sismico dei territori per la realizzazione di studi di microzonazione sismica. 
+Dopo il terremoto in Abruzzo del 6 aprile 2009, è stato lanciato il "Piano nazionale per la prevenzione del rischio sismico" (legge 77/2009 art. 11) e sono state assegnate risorse sulla base dell'indice medio di rischio sismico dei territori per la realizzazione di studi di microzonazione sismica.
 
-Per la realizzazione di tali studi, il documento tecnico di riferimento è rappresentato dagli **"Indirizzi e criteri per la microzonazione sismica"** (*"Gruppo di lavoro MS 2008. Indirizzi e criteri per la microzonazione sismica. Conferenza delle Regioni e delle Provincie autonome, 2008"*), di seguito **ICMS 2008**. 
+Per la realizzazione di tali studi, il documento tecnico di riferimento è rappresentato dagli **"Indirizzi e criteri per la microzonazione sismica"** (*"Gruppo di lavoro MS 2008. Indirizzi e criteri per la microzonazione sismica. Conferenza delle Regioni e delle Provincie autonome, 2008"*), di seguito **ICMS 2008**.
 
 Per supportare i geologi e per facilitare e omogeneizzare l’elaborazione delle carte di microzonazione sismica (MS), sono stati predisposti degli **standard** (*Standard di rappresentazione ed archiviazione informatica, versione 4.2, 2020*), di seguito **Standard MS**. Questo documento, in particolare, costituisce il riferimento per la creazione di prodotti cartografici e per l'archiviazione delle informazioni utili per lo svolgimento degli studi.
 
@@ -34,14 +34,14 @@ Attualmente gli Standard MS prevedono l'archiviazione delle informazioni all'int
 Il plugin MzSTools
 -------------------------
 
-La realizzazione di uno studio di MS richiede l’utilizzo di strumenti software che permettano di svolgere diversi tipi di operazioni sui dati e che possano semplificare compiti ripetitivi e facilmente soggetti all’introduzione di errori: 
+La realizzazione di uno studio di MS richiede l’utilizzo di strumenti software che permettano di svolgere diversi tipi di operazioni sui dati e che possano semplificare compiti ripetitivi e facilmente soggetti all’introduzione di errori:
 
-* creazione, gestione ed editing di dati all’interno di strutture di database e geodatabase; 
-* gestione di progetti GIS contenenti i diversi layer cartografici, sia di base che tematici; 
-* inserimento e codifica di dati strutturati; 
-* utilizzo di strumenti di elaborazione e visualizzazione; 
-* allestimento dei layout per la produzione delle carte; 
-* importazione di dati pregressi ed esportazione verso altri formati; 
+* creazione, gestione ed editing di dati all’interno di strutture di database e geodatabase;
+* gestione di progetti GIS contenenti i diversi layer cartografici, sia di base che tematici;
+* inserimento e codifica di dati strutturati;
+* utilizzo di strumenti di elaborazione e visualizzazione;
+* allestimento dei layout per la produzione delle carte;
+* importazione di dati pregressi ed esportazione verso altri formati;
 * controllo degli errori topologici e di coerenza dei dati.
 
 Gli ICMS 2008 e gli Standard MS definiscono le linee guida e le specifiche tecniche per l’esecuzione degli studi di MS. L’esecutore dello studio ha la facoltà di organizzare il proprio lavoro e di scegliere in autonomia gli strumenti da utilizzare:
@@ -65,12 +65,12 @@ Il plugin MzSTools riunisce in un unico ambiente una serie di strumenti utili al
 * **progetto GIS predisposto** con i principali layer cartografici necessari alla produzione delle carte di MS, completi di appositi filtri e regole di visualizzazione per l’inserimento nei layout di stampa;
 * **layout cartografici preimpostati** che riducono i tempi di realizzazione delle mappe.
 
-Il plugin MzSTools è pubblicato tramite il `repository ufficiale <https://plugins.qgis.org/plugins/MzSTools/>`_ dei plugin di QGIS ed è scaricabile direttamente tramite l’interfaccia di gestione delle estensioni di QGIS. Inoltre lo sviluppo del Plugin è aperto e i contributi, sotto forma di codice, suggerimenti e segnalazioni, possono essere proposti da chiunque tramite la piattaforma `GitHub <https://github.com/CNR-IGAG/mzs-tools>`_. 
+Il plugin MzSTools è pubblicato tramite il `repository ufficiale <https://plugins.qgis.org/plugins/MzSTools/>`_ dei plugin di QGIS ed è scaricabile direttamente tramite l’interfaccia di gestione delle estensioni di QGIS. Inoltre lo sviluppo del Plugin è aperto e i contributi, sotto forma di codice, suggerimenti e segnalazioni, possono essere proposti da chiunque tramite la piattaforma `GitHub <https://github.com/CNR-IGAG/mzs-tools>`_.
 
 Videoguide
 ----------
 
-Il plugin MzSTools è corredato da una serie di videoguide che illustrano le principali funzionalità del plugin. 
+Il plugin MzSTools è corredato da una serie di videoguide che illustrano le principali funzionalità del plugin.
 
 Le videoguide sono disponibili sul `canale YouTube del plugin <https://youtube.com/playlist?list=PLM5qQOkOkzgWH2VogqeQIDybylmE4P1TQ&feature=shared>`_.
 
@@ -79,12 +79,17 @@ Riferimenti
 
 * Gruppo di lavoro MS 2008. *Indirizzi e criteri per la microzonazione sismica*. Conferenza delle Regioni delle Provincie autonome. Roma: Presidenza del Consiglio dei Ministri - Dipartimento della protezione civile. Tratto il giorno 10/06/2021 da https://www.centromicrozonazionesismica.it/it/download/category/24-linee-guida
 
-* Manuale utente di QGIS 3.16  tratto il giorno 10/06/2021 da https://docs.qgis.org/3.16/it/docs/user_manual/ 
+* Manuale utente di QGIS 3.16  tratto il giorno 10/06/2021 da https://docs.qgis.org/3.16/it/docs/user_manual/
 
 * *Microzonazione Simica - Standard di rappresentazione ed archiviazione informatica* versione 4.2 Roma dicembre 2020: Commissione tecnica per la microzonazione sismica. Tratto il giorno 10/06/2021 da https://www.centromicrozonazionesismica.it/it/download/download/38-standardms-42/98-standardms-4-2
 
 Changelog
 ---------
+
+v2.0.4
+    - Aggiornati alcuni layer e simbologie per i layout di stampa
+    - Aggiornamento degli strumenti di sviluppo
+    - Aggiornamenti per la compatibilità con PyQt6 (sperimentale)
 
 v2.0.3
     - Sistemata la vista HVSR per i progetti creati con la versione 2.0.2, per i quali il template di database non
@@ -120,14 +125,14 @@ v1.9.2
     - Unificati i layer "Zone stabili" e "Zone instabili" dei livelli 2-3, così come previsto dagli Standard MS
     - Nel progetto QGIS i layer gestiti dal plugin sono ora impostati come "richiesti", ed i layer per i layout di
       stampa sono impostati in sola lettura; l'utente viene avvisato nel caso in cui tenti di rinominare un layer
-      richiesto 
+      richiesto
     - Semplificato e reso più efficiente lo strumento di creazione di un nuovo progetto
     - Aggiunto uno strumento per l'inserimento e la modifica dei metadati dello studio di MS
     - Sistemata e resa automatica l'impostazione dei controlli di editing topologico e sovrapposizione fra determinati
       layer, quali "Zone stabili" e "Zone instabili"
     - Aggiunto uno strumento di configurazione del plugin in cui è possibile attivare o disattivare l'impostazione
       automatica dei controlli di editing topologico e sovrapposizione fra i layer
-    - Rimossi gli strumenti di editing dalla toolbar di MzS Tools (le impostazioni di editing topologico sono ora 
+    - Rimossi gli strumenti di editing dalla toolbar di MzS Tools (le impostazioni di editing topologico sono ora
       gestite automaticamente tramite gli strumenti di editing base di QGIS)
     - Rimosso lo strumento di copia delle feature fra i layer "Zone stabili" e "Zone instabili"
     - Risolti alcuni problemi con l'importazione e l'esportazione dei dati
@@ -171,10 +176,10 @@ v1.5
 
 v1.4
     -  Updated to new MS 4.2 standards;
-    -  update project (fixed labels, update .py files, added new style); 
+    -  update project (fixed labels, update .py files, added new style);
     -  updated italian manual.
 
-v1.3	
+v1.3
     -  updated layout "CDI - Carta delle Indagini" (added legend);
     -  updated export shapefiles and "Export geodatabase to project folder" tool (to meet the standards);
     -  removed "Validate project" tool;
@@ -185,7 +190,7 @@ v1.3
 v1.2
     -  updated layouts ("Carta di Microzonazione Sismica (FA 0.1-0.5 s)", "Carta di Microzonazione Sismica (FA 0.4-0.8 s)", "Carta di Microzonazione Sismica (FA 0.7-1.1 s)");
     -  added "pkey" field in "Indagini" and "Parametri" tables;
-    -  removed english manual.	
+    -  removed english manual.
 
 v1.1
     -  modified the layout layer "CDI - Indagini puntuali";
@@ -198,11 +203,11 @@ v1.0
     -  update project (fixed labels and styles errors, update .py files);
     -  updated italian manuals.
 
-v0.9	
+v0.9
     -  update table "Indagine stazione singola (HVSR)", "freq.ui" mask and added a new layout ("Carta delle frequenze naturali dei terreni fr");
-    -  update constraint "quota_slm_top_verify" and "quota_slm_bot_verify" in "indagini_puntuali", "parametri_puntuali" and "parametri_lineari" tables;	
+    -  update constraint "quota_slm_top_verify" and "quota_slm_bot_verify" in "indagini_puntuali", "parametri_puntuali" and "parametri_lineari" tables;
     -  moved export process to a separate thread;
-    -  export progress shown in qgis interface;				
+    -  export progress shown in qgis interface;
     -  fixed bug in "siti_ind_param.py";
     -  update "New project" tool;
     -  added a new table ("metadati");
@@ -217,7 +222,7 @@ v0.8
     -  update project (in particular .ui, .py files);
     -  changed update project process and removed "Update project" tool;
     -  updated italian manuals.
-		
+
 v0.7
     -  moved import process to a separate thread;
     -  import progress shown in qgis interface;
@@ -226,20 +231,20 @@ v0.7
     -  added "Update project" tool;
     -  update project (in particular .ui, .py files);
     -  updated italian manuals.
-		
+
 v0.6
     -  video-guide additions;
     -  update project (in particular .ui, .py files);
     -  resolved bugs;
     -  updated italian manual.
-		
+
 v0.5
     -  improved "Add feature or record" tool;
     -  removed useless tool;
     -  update project (in particular .ui, .py files);
     -  resolved bugs;
     -  updated manuals.
-		
+
 v0.4
     -  initial relase.
 
@@ -252,8 +257,8 @@ Credits
     :width: 160px
     :target: https://www.igag.cnr.it
 
-Il plugin viene sviluppato nell'ambito delle attività del 
-`Laboratorio GIS del CNR-IGAG <https://www.igag.cnr.it/lista-laboratori/labgis/>`_  
+Il plugin viene sviluppato nell'ambito delle attività del
+`Laboratorio GIS del CNR-IGAG <https://www.igag.cnr.it/lista-laboratori/labgis/>`_
 
 **Contributors**
 
