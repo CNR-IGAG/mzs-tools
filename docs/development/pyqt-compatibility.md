@@ -90,6 +90,19 @@ value = enum_value(SomeEnum, "ValueName")
 accepted = get_dialog_result(QDialog, "Accepted")  # Works in both PyQt5/6
 ```
 
+#### 6. Alignment Flag Handling
+
+```python
+from mzs_tools.plugin_utils import get_alignment_flag
+
+# Combine alignment flags consistently across PyQt versions
+alignment = get_alignment_flag("AlignLeft", "AlignVCenter")
+progress_bar.setAlignment(alignment)  # Works in both PyQt5/6
+
+# Multiple flags can be combined
+alignment = get_alignment_flag("AlignRight", "AlignTop", "AlignJustify")
+```
+
 ## Usage Patterns
 
 ### Field Type Setting
@@ -101,6 +114,16 @@ from mzs_tools.plugin_utils import QMetaTypeWrapper as QMetaType
 field = QgsField()
 field.setName("value_field")
 field.setType(QMetaType.Double)  # Works in both PyQt5/6
+```
+
+### Alignment Flag Setting
+
+```python
+from mzs_tools.plugin_utils import get_alignment_flag
+
+# Set progress bar alignment consistently
+progress_bar = QProgressBar()
+progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
 ```
 
 ### Value Handling

@@ -34,6 +34,7 @@ from qgis.utils import spatialite_connect
 from ..__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import save_map_image, save_map_image_direct
+from ..plugin_utils.qt_compat import get_alignment_flag
 from ..plugin_utils.settings import PlgOptionsManager
 from .constants import (
     DEFAULT_BASE_LAYERS,
@@ -1079,14 +1080,7 @@ class MzSProjectManager:
         # Add a progress bar to show activity
         progress_bar = QProgressBar()
         progress_bar.setRange(0, 0)  # Indeterminate progress bar
-        # Cross-version (PyQt5 / PyQt6) alignment with simple cast to silence Pylance
-        try:
-            # PyQt6
-            alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-        except AttributeError:
-            # PyQt5: bitwise OR returns int, cast to Qt.Alignment
-            alignment = cast("Qt.Alignment", Qt.AlignLeft | Qt.AlignVCenter)  # type: ignore[attr-defined]
-        progress_bar.setAlignment(alignment)
+        progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
         progress_msg.layout().addWidget(progress_bar)
 
         # Push the message to the message bar

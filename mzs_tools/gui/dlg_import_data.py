@@ -23,6 +23,7 @@ from ..__about__ import __version__
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import get_path_for_name
+from ..plugin_utils.qt_compat import get_alignment_flag
 from ..tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
 from ..tasks.import_shapefile_task import ImportShapefileTask
 from ..tasks.import_siti_lineari_task import ImportSitiLineariTask
@@ -489,7 +490,7 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
         self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
             "MzS Tools", self.tr("Data import in progress...")
         )

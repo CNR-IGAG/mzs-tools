@@ -3,7 +3,7 @@ import logging
 from qgis.core import Qgis, QgsApplication, QgsTask
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore
-from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import (
     QProgressBar,
     QPushButton,
@@ -13,6 +13,7 @@ from qgis.utils import iface
 from ..__about__ import __version__
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.qt_compat import get_alignment_flag
 from ..plugin_utils.settings import PlgOptionsManager
 from .attachments_task import AttachmentsTask
 
@@ -58,7 +59,7 @@ class AttachmentsTaskManager:
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)  # type: ignore[arg-type]
+        self.progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
         progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(  # type: ignore[attr-defined]
             "MzS Tools", self.tr("Attachments check in progress...")
         )

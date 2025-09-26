@@ -14,7 +14,7 @@ from qgis.core import (
 )
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
-from qgis.PyQt.QtCore import QCoreApplication, Qt, QUrl, QVariant
+from qgis.PyQt.QtCore import QCoreApplication, QUrl, QVariant
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QDialog,
@@ -27,6 +27,7 @@ from qgis.utils import iface
 from ..__about__ import DIR_PLUGIN_ROOT, __version__
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.qt_compat import get_alignment_flag
 from ..tasks.access_db_connection import AccessDbConnection, JVMError
 from ..tasks.export_project_files_task import ExportProjectFilesTask
 from ..tasks.export_siti_lineari_task import ExportSitiLineariTask
@@ -234,7 +235,7 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         self.progress_bar = QProgressBar()
         self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
         self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
             "MzS Tools", self.tr("Data export in progress...")
         )

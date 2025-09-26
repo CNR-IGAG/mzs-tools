@@ -335,6 +335,75 @@ def get_selection_behavior(behavior_name: str) -> Any:
         return 0
 
 
+def get_alignment_flag(*alignment_names: str) -> Any:
+    """Get alignment flags combined in a compatible way.
+
+    Args:
+        *alignment_names: The alignment flag names (e.g., 'AlignLeft', 'AlignVCenter', 'AlignRight')
+
+    Returns:
+        The combined alignment flags value
+    """
+    try:
+        from qgis.PyQt.QtCore import Qt  # noqa: E402
+
+        alignment_value = 0
+
+        for alignment_name in alignment_names:
+            if IS_PYQT6:
+                # In PyQt6: Qt.AlignmentFlag.AlignLeft
+                if hasattr(Qt, "AlignmentFlag"):
+                    alignment_flag = getattr(Qt, "AlignmentFlag")
+                    if hasattr(alignment_flag, alignment_name):
+                        alignment_value |= getattr(alignment_flag, alignment_name)
+                    else:
+                        # Fallback for common alignment flags
+                        fallback_values = {
+                            "AlignLeft": 0x0001,
+                            "AlignRight": 0x0002,
+                            "AlignHCenter": 0x0004,
+                            "AlignJustify": 0x0008,
+                            "AlignTop": 0x0020,
+                            "AlignBottom": 0x0040,
+                            "AlignVCenter": 0x0080,
+                        }
+                        alignment_value |= fallback_values.get(alignment_name, 0)
+            else:
+                # In PyQt5: Qt.AlignLeft
+                if hasattr(Qt, alignment_name):
+                    alignment_value |= getattr(Qt, alignment_name)
+                else:
+                    # Fallback for common alignment flags
+                    fallback_values = {
+                        "AlignLeft": 0x0001,
+                        "AlignRight": 0x0002,
+                        "AlignHCenter": 0x0004,
+                        "AlignJustify": 0x0008,
+                        "AlignTop": 0x0020,
+                        "AlignBottom": 0x0040,
+                        "AlignVCenter": 0x0080,
+                    }
+                    alignment_value |= fallback_values.get(alignment_name, 0)
+
+        return alignment_value
+
+    except ImportError:
+        # Ultimate fallback - return combined common values
+        fallback_values = {
+            "AlignLeft": 0x0001,
+            "AlignRight": 0x0002,
+            "AlignHCenter": 0x0004,
+            "AlignJustify": 0x0008,
+            "AlignTop": 0x0020,
+            "AlignBottom": 0x0040,
+            "AlignVCenter": 0x0080,
+        }
+        alignment_value = 0
+        for alignment_name in alignment_names:
+            alignment_value |= fallback_values.get(alignment_name, 0)
+        return alignment_value
+
+
 # Export commonly used compatibility items
 __all__ = [
     "IS_PYQT5",
@@ -348,6 +417,7 @@ __all__ = [
     "get_dialog_result",
     "get_cursor_shape",
     "get_selection_behavior",
+    "get_alignment_flag",
     "signal_connect",
     "signal_disconnect",
     "get_qt_version_info",
