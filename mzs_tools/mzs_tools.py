@@ -31,6 +31,7 @@ from .gui.dlg_load_ogc_services import DlgLoadOgcServices
 from .gui.dlg_manage_attachments import DlgManageAttachments
 from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_settings import PlgOptionsFactory
+from .plugin_utils.dependency_manager import DependencyManager
 from .plugin_utils.logging import MzSToolsLogger
 
 
@@ -68,6 +69,9 @@ class MzSTools:
         # immediately init the manager to be able to set some gui elements (actions)
         # even when reloading the plugin in an already open project
         self.prj_manager.init_manager()
+
+        # initialize dependency manager
+        self.dependency_manager = DependencyManager()
 
         # connect to projectRead signal
         self.iface.projectRead.connect(self.check_project)
@@ -111,6 +115,9 @@ class MzSTools:
         return action
 
     def initGui(self):
+        # Check and ensure Python dependencies are available at startup
+        self._check_python_dependencies()
+
         # settings page within the QGIS preferences menu
         self.options_factory = PlgOptionsFactory()
         self.iface.registerOptionsWidgetFactory(self.options_factory)
@@ -272,19 +279,44 @@ class MzSTools:
 
         self.toolbar.addSeparator()
 
+        # -- Tools menu button
+        tools_menu_button = QToolButton(self.toolbar)  # Set toolbar as parent
+        tools_menu_button.setIcon(QgsApplication.getThemeIcon("mActionOptions.svg"))
+        tools_menu_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        tools_menu_button.setToolTip(self.tr("Additional Tools and Plugin Info"))
+        tools_menu = QMenu(tools_menu_button)  # Set button as parent for menu
+        self.toolbar.addWidget(tools_menu_button)
+
         self.settings_action = self.add_action(
-            QgsApplication.getThemeIcon("/mActionOptions.svg"),
+            QgsApplication.getThemeIcon("mActionOptions.svg"),
             text=self.tr("MzS Tools Settings"),
             callback=lambda: self.iface.showOptionsDialog(currentPage="mOptionsPage{}".format(__title__)),
-            parent=self.iface.mainWindow(),
+            # parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
         )
+        tools_menu.addAction(self.settings_action)  # type: ignore[arg-type]
+
+        self.dependency_manager_action = self.add_action(
+            QgsApplication.getThemeIcon("mIconPythonFile.svg"),
+            text=self.tr("Manage Python Dependencies"),
+            status_tip=self.tr("Check and install Python dependencies for Access database support"),
+            callback=self.open_dependency_manager,
+            # parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+        )
+        tools_menu.addAction(self.dependency_manager_action)  # type: ignore[arg-type]
 
         self.help_action = self.add_action(
             str(ico_info),
             text=self.tr("MzS Tools Help"),
             callback=self.info_dlg.show,
-            parent=self.iface.mainWindow(),
+            # parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
         )
+        tools_menu.addAction(self.help_action)  # type: ignore[arg-type]
+
+        tools_menu_button.setMenu(tools_menu)
+
         # add the help action to the QGIS plugin help menu
         self.iface.pluginHelpMenu().addAction(self.help_action)  # type: ignore[arg-type]
 
@@ -317,6 +349,7 @@ class MzSTools:
             self.open_standard_project_action,
             self.settings_action,
             self.help_action,
+            self.dependency_manager_action,
         ]
         for action in self.actions:
             if action not in always_enabled_actions:
@@ -638,6 +671,52 @@ class MzSTools:
             backup_msg = self.tr("You can can find a backup of the project in: ") + "\n\n" + str(backup_path)
             QMessageBox.critical(None, self.tr("MzS Tools error"), f"{err_msg}\n\n{str(e)}\n\n{backup_msg}")
             return
+
+    def _check_python_dependencies(self):
+        """Check Python dependencies at startup and inform user if missing."""
+        try:
+            # Use QTimer to delay the check and avoid blocking GUI initialization
+            QTimer.singleShot(2000, self._perform_dependency_check)
+        except Exception as e:
+            self.log(f"Error scheduling dependency check: {str(e)}", log_level=1)
+
+    def _perform_dependency_check(self):
+        """Perform the actual dependency check in a non-blocking way."""
+        try:
+            # Check if Python dependencies are available
+            if self.dependency_manager.check_python_dependencies():
+                self.log(
+                    self.tr("Python dependencies for Access database support are available."),
+                    log_level=4,  # Debug/None - don't show to user
+                )
+            else:
+                # Show informational message about missing dependencies
+                self.log(
+                    self.tr(
+                        "Python dependencies for Access database support are not installed. "
+                        "Use the 'Manage Dependencies' tool or QPIP plugin to install them."
+                    ),
+                    log_level=1,
+                )
+
+        except Exception as e:
+            self.log(f"Error checking Python dependencies: {str(e)}", log_level=1)
+
+    def open_dependency_manager(self):
+        """Open the dependency management dialog."""
+        try:
+            if self.dependency_manager.check_python_dependencies():
+                QMessageBox.information(
+                    None,
+                    self.tr("Dependencies Available"),
+                    self.tr("Python dependencies for Access database support are already installed and available."),
+                )
+            else:
+                # Let the dependency manager handle the user interaction
+                self.dependency_manager.install_python_dependencies_interactive()
+
+        except Exception as e:
+            self.log(f"Error in dependency manager: {str(e)}", log_level=2)
 
     def tr(self, message):
         return QCoreApplication.translate("MzSTools", message)

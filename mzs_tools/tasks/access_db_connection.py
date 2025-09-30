@@ -1,6 +1,7 @@
 from typing import Optional
 
 from ..__about__ import DIR_PLUGIN_ROOT
+from ..plugin_utils.dependency_manager import DependencyManager
 from ..plugin_utils.logging import MzSToolsLogger
 
 EXT_LIBS_LOADED = True
@@ -16,10 +17,27 @@ except ImportError:
 
 class AccessDbConnection:
     def __init__(self, db_path: str, password: Optional[str] = None):
+        global EXT_LIBS_LOADED, jaydebeapi, jpype
         self.log = MzSToolsLogger().log
 
+        # Check if dependencies are available
         if not EXT_LIBS_LOADED:
-            raise ImportError("Required external libraries not loaded")
+            # Check if dependencies were installed after initial import
+            dependency_manager = DependencyManager()
+            if dependency_manager.check_python_dependencies():
+                # Try importing again
+                try:
+                    import jaydebeapi
+                    import jpype
+                    import jpype.imports
+
+                    EXT_LIBS_LOADED = True
+                except ImportError:
+                    pass
+
+            # If still not loaded, raise clear error
+            if not EXT_LIBS_LOADED:
+                raise ImportError("Required Python libraries not loaded")
 
         self.driver = "net.ucanaccess.jdbc.UcanaccessDriver"
         self.url = f"jdbc:ucanaccess://{db_path}"
