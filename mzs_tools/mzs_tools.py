@@ -706,11 +706,16 @@ class MzSTools:
         """Open the dependency management dialog."""
         try:
             if self.dependency_manager.check_python_dependencies():
-                QMessageBox.information(
+                reply = QMessageBox.question(
                     None,
                     self.tr("Dependencies Available"),
-                    self.tr("Python dependencies for Access database support are already installed and available."),
+                    self.tr(
+                        "Python dependencies for Access database support are already installed and available.\n\n"
+                        "Do you want to reinstall them anyway?"
+                    ),
                 )
+                if reply == QMessageBox.StandardButton.Yes:
+                    self.dependency_manager.install_python_dependencies_interactive()
             else:
                 # Let the dependency manager handle the user interaction
                 self.dependency_manager.install_python_dependencies_interactive()

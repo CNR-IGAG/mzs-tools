@@ -1659,6 +1659,8 @@ class MzSProjectManager:
         # to projects v2.0.2 too
         if self.project_version < "2.0.3":
             sql_scripts.append("query_v202.sql")
+        if self.project_version < "2.0.5":
+            sql_scripts.append("query_v205.sql")
 
         for upgrade_script in sql_scripts:
             self.log(f"Executing: {upgrade_script}", log_level=1)

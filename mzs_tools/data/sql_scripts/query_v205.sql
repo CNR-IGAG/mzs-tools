@@ -18,4 +18,4 @@ FROM (
 ) hvsr_union
     LEFT JOIN indagini_puntuali i ON hvsr_union.id_indpu = i.id_indpu
     LEFT JOIN sito_puntuale s ON i.id_spu = s.id_spu
-WHERE i.tipo_ind = 'HVSR';);
+WHERE i.tipo_ind = 'HVSR';

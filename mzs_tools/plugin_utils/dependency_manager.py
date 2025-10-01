@@ -15,13 +15,12 @@ from .logging import MzSToolsLogger
 class DependencyManager:
     """Manages plugin-specific Python dependencies."""
 
-    def __init__(self, plugin_name: str = "mzs-tools"):
-        self.plugin_name = plugin_name
+    def __init__(self):
         self.log = MzSToolsLogger.log
 
         # Use QGIS profile directory for dependencies
         profile_path = Path(QgsApplication.qgisSettingsDirPath())
-        self.site_packages = profile_path / "python" / f"{plugin_name}-dependencies"
+        self.site_packages = profile_path / "python" / "dependencies"
 
         # Ensure the directory exists and is in Python path
         self._ensure_path_setup()
@@ -203,11 +202,11 @@ class DependencyManager:
                 "Alternative: Use the QPIP plugin (recommended).\n\n"
                 "Note: You will also need Java JRE installed on your system. Refer to the documentation for details."
             ).format(packages=", ".join(required_packages)),
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,  # type: ignore
+            QMessageBox.StandardButton.No,
         )
 
-        if reply != QMessageBox.Yes:
+        if reply != QMessageBox.StandardButton.Yes:
             return False
 
         # Show installation progress

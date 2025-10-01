@@ -246,5 +246,6 @@ run-qgis-qt6-linux-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/
         -v ${HOME}/QGIS:/home/quser/QGIS \
         -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
         -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+        -v ${HOME}/temp:/home/quser/temp \
         qgis-qt6-linux-deps-only:3_44 \
         ./QGIS/build/output/bin/qgis
