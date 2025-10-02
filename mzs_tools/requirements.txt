@@ -1,1 +1,3 @@
 JayDeBeApi==1.2.3
+# for testing, this should fail on Linux
+# statsmodels<0.14.0,>=0.13.0

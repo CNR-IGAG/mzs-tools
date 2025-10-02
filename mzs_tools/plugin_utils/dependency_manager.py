@@ -1,6 +1,6 @@
 import os
+import platform
 import site
-import subprocess
 import sys
 from pathlib import Path
 
@@ -9,6 +9,7 @@ from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from ..__about__ import DIR_PLUGIN_ROOT
+from ..plugin_utils.misc import run_cmd
 from .logging import MzSToolsLogger
 
 
@@ -113,27 +114,41 @@ class DependencyManager:
 
             # Build pip command - allow dependencies but suppress warnings
             cmd = [
-                sys.executable,
-                "-m",
+                self.python_command(),
+                "-um",
                 "pip",
                 "install",
                 f"--target={self.site_packages}",
                 "--upgrade",
-                "--quiet",  # Suppress dependency conflict warnings
+                # "--quiet",
             ] + packages
 
             # Environment to suppress pip warnings
-            env = os.environ.copy()
-            env["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
-            env["PIP_NO_WARN_SCRIPT_LOCATION"] = "1"
+            # env = os.environ.copy()
+            # env["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+            # env["PIP_NO_WARN_SCRIPT_LOCATION"] = "1"
 
             self.log(f"Installing dependencies: {', '.join(packages)}", log_level=0)
 
-            result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+            # result = subprocess.run(cmd, capture_output=True, text=True, env=env)
 
-            # Check if installation was successful
-            # Even with dependency warnings, installation often succeeds
-            if result.returncode == 0 or "Successfully installed" in result.stdout:
+            # # Check if installation was successful
+            # # Even with dependency warnings, installation often succeeds
+            # if result.returncode == 0 or "Successfully installed" in result.stdout:
+            #     self._add_to_path()
+            #     self.log(
+            #         self.tr("Successfully installed dependencies: {packages}").format(packages=", ".join(packages)),
+            #         log_level=3,  # Success
+            #     )
+            #     return True
+            # else:
+            #     self.log(f"Installation failed: {result.stderr}", log_level=1)  # Warning
+            #     return False
+
+            # Use run_cmd to show progress dialog
+            description = self.tr("Installing Python dependencies...")
+            result = run_cmd(cmd, description=description)
+            if result:
                 self._add_to_path()
                 self.log(
                     self.tr("Successfully installed dependencies: {packages}").format(packages=", ".join(packages)),
@@ -141,7 +156,7 @@ class DependencyManager:
                 )
                 return True
             else:
-                self.log(f"Installation failed: {result.stderr}", log_level=1)  # Warning
+                self.log(f"Installation failed for the following packages: {', '.join(packages)}", log_level=1)
                 return False
 
         except Exception as e:
@@ -170,11 +185,12 @@ class DependencyManager:
                 results[package] = True
             except ImportError:
                 results[package] = False
+            self.log(f"Dependency check - {package}: {'Available' if results[package] else 'Missing'}", log_level=4)
 
         return results
 
     def check_python_dependencies(self) -> bool:
-        """Check if Python dependencies for Java connectivity are available.
+        """Check if all Python dependencies are available.
 
         Returns:
             True if all dependencies are available, False otherwise
@@ -183,8 +199,10 @@ class DependencyManager:
         status = self.check_dependencies(required_packages)
         return all(status.values())
 
-    def install_python_dependencies_interactive(self) -> bool:
-        """Install Python dependencies for Java connectivity with user confirmation.
+    def install_python_dependencies(self, interactive: bool = False) -> bool:
+        """Install Python dependencies.
+        Args:
+            interactive: If True, show confirmation dialog to user
 
         Returns:
             True if installation successful, False otherwise
@@ -193,28 +211,30 @@ class DependencyManager:
         requirements_for_install = self._get_requirements_for_install()  # For actual pip install
 
         # Ask user for confirmation
-        reply = QMessageBox.question(
-            None,
-            self.tr("Install Python Dependencies"),
-            self.tr(
-                "MzS Tools requires additional Python libraries ({packages}) for Access database support.\n\n"
-                "Do you want to install them now using pip?\n\n"
-                "Alternative: Use the QPIP plugin (recommended).\n\n"
-                "Note: You will also need Java JRE installed on your system. Refer to the documentation for details."
-            ).format(packages=", ".join(required_packages)),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,  # type: ignore
-            QMessageBox.StandardButton.No,
-        )
+        if interactive:
+            reply = QMessageBox.question(
+                None,
+                self.tr("Install Python Dependencies"),
+                self.tr(
+                    "MzS Tools requires additional Python libraries ({packages}) for full functionality.\n\n"
+                    "Do you want to install them now using pip?\n\n"
+                    "Alternative: Use the QPIP plugin (recommended).\n\n"
+                    "Note: You will also need Java JRE installed on your system for Access database support. Refer to the documentation for details."
+                ).format(packages=", ".join(required_packages)),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,  # type: ignore
+                QMessageBox.StandardButton.No,
+            )
 
-        if reply != QMessageBox.StandardButton.Yes:
-            return False
+            if reply != QMessageBox.StandardButton.Yes:
+                return False
 
-        # Show installation progress
         self.log(
-            self.tr("Installing Python dependencies. This may take a few moments..."),
+            self.tr(
+                "Installing Python dependencies. This may take a few moments or several minutes depending on the number and nature of the packages."
+            ),
             log_level=0,  # Info
             push=True,
-            duration=10,
+            duration=5,
         )
 
         success = self.install_dependencies(requirements_for_install)  # Use full requirements with versions
@@ -227,14 +247,60 @@ class DependencyManager:
                 duration=8,
             )
         else:
+            showmore_text = self.tr(
+                "IMPORTANT: some packages may require development tools to be installed on your system.\n\n"
+                "Please check the plugin user guide and the log messages for details.\n\n"
+                "Refer to the documentation of the specific failing packages for more information."
+            )
             self.log(
                 self.tr("Failed to install Python dependencies. Please try using QPIP plugin."),
                 log_level=2,  # Critical
                 push=True,
-                duration=10,
+                duration=0,
+                showmore_text=showmore_text,
             )
 
         return success
+
+    def python_command(self):
+        """Determine the appropriate python command for pip installation.
+           Adapted from https://github.com/opengisch/qpip/blob/main/a00_qpip/plugin.py
+
+        Returns:
+            Path to python executable as string
+        """
+        if os.path.exists(os.path.join(sys.prefix, "conda-meta")):  # Conda
+            self.log("Attempt Conda install at 'python' shortcut")
+            return "python"
+
+        # python is normally found at sys.executable, but there is an issue on windows qgis: https://github.com/qgis/QGIS/issues/45646
+        if platform.system() == "Windows":  # Windows
+            base_path = sys.prefix
+            for file in ["python.exe", "python3.exe"]:
+                path = os.path.join(base_path, file)
+                if os.path.isfile(path):
+                    self.log(f"Attempt Windows install at {str(path)}")
+                    return path
+            path = sys.executable
+            self.log(f"Attempt Windows install at {str(path)}")
+            return path
+
+        # Same bug on mac as windows: https://github.com/opengisch/qpip/issues/34#issuecomment-2995221985
+        if platform.system() == "Darwin":  # Mac
+            base_path = os.path.join(sys.prefix, "bin")
+            for file in ["python", "python3"]:
+                path = os.path.join(base_path, file)
+                if os.path.isfile(path):
+                    self.log(f"Attempt MacOS install at {str(path)}")
+                    return path
+            path = sys.executable
+            self.log(f"Attempt MacOS install at {str(path)}")
+            return path
+
+        else:  # Fallback attempt
+            path = sys.executable
+            self.log(f"Attempt fallback install at {str(path)}")
+            return path
 
     def tr(self, message: str) -> str:
         """Get the translation for a string using Qt translation API.

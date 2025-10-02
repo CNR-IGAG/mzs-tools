@@ -1,14 +1,19 @@
+import os
 import sqlite3
 import time
 from functools import wraps
 from pathlib import Path
+from subprocess import PIPE, STDOUT, Popen
 
 from qgis.core import (
+    QgsApplication,
     QgsMapRendererCustomPainterJob,
     QgsMapSettings,
 )
-from qgis.PyQt.QtCore import QSize
+from qgis.PyQt.QtCore import QSize, Qt
 from qgis.PyQt.QtGui import QImage, QPainter
+from qgis.PyQt.QtWidgets import QLabel, QMessageBox, QProgressDialog
+from qgis.utils import iface
 
 from ..plugin_utils.logging import MzSToolsLogger
 
@@ -242,3 +247,110 @@ def get_path_for_name(root_dir_path, name):
             if d.lower() == name:
                 return root / d
     return None
+
+
+def run_cmd(args, description="running a system command"):
+    """Run a system command from QGIS and show a progress dialog with real-time output.
+    Adapted and improved from https://github.com/opengisch/qpip/blob/main/a00_qpip/utils.py
+
+    :param args: command and arguments as a list
+    :type args: list[str]
+    :param description: description for the progress dialog
+    :type description: str
+    :return: True if the command succeeded, False otherwise
+    :rtype: bool
+    """
+    parent = iface.mainWindow()  # type: ignore
+    progress_dlg = QProgressDialog(description, "Abort", 0, 0, parent=parent)
+    progress_dlg.setWindowTitle("Please wait...")
+    progress_dlg.setFixedWidth(500)
+    progress_dlg.setMaximumHeight(500)
+    label = QLabel(description)
+    label.setMargin(5)
+    label.setWordWrap(True)
+    progress_dlg.setLabel(label)
+    progress_dlg.setWindowModality(Qt.WindowModality.WindowModal)
+    progress_dlg.show()
+
+    startupinfo = None
+    if os.name == "nt":
+        from subprocess import (
+            STARTF_USESHOWWINDOW,
+            STARTF_USESTDHANDLES,
+            STARTUPINFO,
+            SW_HIDE,
+        )
+
+        startupinfo = STARTUPINFO()
+        startupinfo.dwFlags |= STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = SW_HIDE
+
+    process = Popen(args, stdout=PIPE, stderr=STDOUT, startupinfo=startupinfo, universal_newlines=True, bufsize=1)
+
+    full_output = ""
+    while True:
+        QgsApplication.processEvents()
+
+        # Check if process has finished
+        if process.poll() is not None:
+            # Read any remaining output
+            remaining_output = process.stdout.read()
+            if remaining_output:
+                full_output += remaining_output
+                # Split by lines and update progress dialog with last line
+                lines = remaining_output.strip().split("\n")
+                for line in lines:
+                    if line.strip():
+                        progress_dlg.setLabelText(line.strip())
+                        MzSToolsLogger.log("COMMAND OUTPUT: " + line.strip(), log_level=4)
+            break
+
+        # Read output line by line
+        try:
+            # Use readline with a small timeout simulation by checking if data is available
+            import select
+
+            if hasattr(select, "select"):  # Unix-like systems
+                ready, _, _ = select.select([process.stdout], [], [], 0.1)
+                if ready:
+                    line = process.stdout.readline()
+                    if line:
+                        output = line.strip()
+                        full_output += line
+                        if output:
+                            progress_dlg.setLabelText(output)
+                            MzSToolsLogger.log("COMMAND OUTPUT: " + output, log_level=4)
+            else:  # Windows fallback
+                # On Windows, just try to read with a timeout
+                line = process.stdout.readline()
+                if line:
+                    output = line.strip()
+                    full_output += line
+                    if output:
+                        progress_dlg.setLabelText(output)
+                        MzSToolsLogger.log("COMMAND OUTPUT: " + output, log_level=4)
+
+        except Exception:
+            # If reading fails, just continue
+            pass
+
+        if progress_dlg.wasCanceled():
+            process.kill()
+            break
+
+    progress_dlg.close()
+
+    if process.returncode != 0:
+        MzSToolsLogger.log("Command failed.", log_level=2)
+        message = QMessageBox(
+            QMessageBox.Icon.Critical,
+            "Command failed",
+            f"Encountered an error while {description}!",
+            parent=parent,
+        )
+        message.setDetailedText(full_output)
+        message.exec()
+        return False
+    else:
+        MzSToolsLogger.log("Command succeeded.", log_level=3, push=True, duration=5)
+        return True

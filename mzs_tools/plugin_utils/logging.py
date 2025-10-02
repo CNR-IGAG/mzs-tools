@@ -41,6 +41,8 @@ class MzSToolsLogger(logging.Handler):
         log_level: int = 0,
         push: bool = False,
         duration: Optional[int] = None,
+        # additional info (showMore)
+        showmore_text: Optional[str] = None,
         # widget
         button: bool = False,
         button_text: Optional[str] = None,
@@ -70,6 +72,9 @@ class MzSToolsLogger(logging.Handler):
         If set to 0, then the message must be manually dismissed by the user. \
         Defaults to None.
         :type duration: int, optional
+        :param showmore_text: optional text for the "Show more" link in the message bar. \
+        If not set, no "Show more" link is displayed. Defaults to None.
+        :type showmore_text: str, optional
         :param button: display a button in the message bar. Defaults to False.
         :type button: bool, optional
         :param button_text: text label of the button. Defaults to None.
@@ -158,9 +163,18 @@ class MzSToolsLogger(logging.Handler):
 
             else:
                 # send simple message
-                msg_bar.pushMessage(
-                    title=application,
-                    text=message,
-                    level=log_level,
-                    duration=duration,
-                )
+                if showmore_text:
+                    msg_bar.pushMessage(
+                        title=application,
+                        text=message,
+                        showMore=showmore_text,
+                        level=log_level,
+                        duration=duration,
+                    )
+                else:
+                    msg_bar.pushMessage(
+                        title=application,
+                        text=message,
+                        level=log_level,
+                        duration=duration,
+                    )

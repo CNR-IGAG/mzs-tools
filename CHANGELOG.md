@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.5-beta1] - 2025-10-01
+## [2.0.5-beta2] - 2025-10-02
 
 - Fix for HVSR view to handle comma as decimal separator
 - Custom python dependency manager and new tool to check and install required python libraries; this is alternative to QPIP, which is not being updated and is not PyQt6 compatible

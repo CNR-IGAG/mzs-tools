@@ -368,6 +368,22 @@ class MzSTools:
             return
 
         if import_data:
+            if not self.dependency_manager.check_python_dependencies():
+                reply = QMessageBox.question(
+                    self.iface.mainWindow(),
+                    self.tr("MzS Tools"),
+                    self.tr(
+                        "Python dependencies for Access database support are missing.\n\n"
+                        "You can install them using the 'Manage Python Dependencies' tool.\n\n"
+                        "Note: You will also need Java JRE installed on your system for Access database support. Refer to the documentation for details.\n\n"
+                        "Are you sure you want to proceed?"
+                    ),
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,  # type: ignore
+                    QMessageBox.StandardButton.No,
+                )
+                if reply != QMessageBox.StandardButton.Yes:
+                    return False
+
             QMessageBox.information(
                 self.iface.mainWindow(),
                 self.tr("MzS Tools"),
@@ -686,15 +702,15 @@ class MzSTools:
             # Check if Python dependencies are available
             if self.dependency_manager.check_python_dependencies():
                 self.log(
-                    self.tr("Python dependencies for Access database support are available."),
+                    self.tr("Python dependencies are available."),
                     log_level=4,  # Debug/None - don't show to user
                 )
             else:
                 # Show informational message about missing dependencies
                 self.log(
                     self.tr(
-                        "Python dependencies for Access database support are not installed. "
-                        "Use the 'Manage Dependencies' tool or QPIP plugin to install them."
+                        "Some Python dependencies are missing. "
+                        "Use the 'Manage Python Dependencies' tool or QPIP plugin to install them."
                     ),
                     log_level=1,
                 )
@@ -710,15 +726,15 @@ class MzSTools:
                     None,
                     self.tr("Dependencies Available"),
                     self.tr(
-                        "Python dependencies for Access database support are already installed and available.\n\n"
+                        "Python dependencies are already installed and available.\n\n"
                         "Do you want to reinstall them anyway?"
                     ),
                 )
                 if reply == QMessageBox.StandardButton.Yes:
-                    self.dependency_manager.install_python_dependencies_interactive()
+                    self.dependency_manager.install_python_dependencies()
             else:
                 # Let the dependency manager handle the user interaction
-                self.dependency_manager.install_python_dependencies_interactive()
+                self.dependency_manager.install_python_dependencies(interactive=True)
 
         except Exception as e:
             self.log(f"Error in dependency manager: {str(e)}", log_level=2)
