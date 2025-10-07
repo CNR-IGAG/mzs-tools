@@ -23,6 +23,13 @@ In generale, per ognuno di questi elaborati cartografici gli Standard indicano:
 * i **simboli grafici** con cui rappresentare gli oggetti georeferenziati; è da evidenziare che gli standard riportano, per ogni simbolo, un esempio grafico con relativo codice e descrizione, ma non forniscono specifiche tecniche precise per la loro costruzione tramite un programma di grafica o GIS;
 * i **layout delle carte**, riferibili ai diversi formati (A0, A1, A2), con specifiche riguardanti le dimensioni e la composizione di alcuni elementi quali ad esempio il cartiglio, la legenda ed il posizionamento delle informazioni relative all’autore o agli autori che hanno condotto gli studi; queste indicazioni servono alla costruzione dei layout per la produzione delle carte all’interno di specifici software GIS o di grafica, a discrezione dell’autore dello studio.
 
+.. Tip:: Per ulteriori informazioni sugli strumenti disponibili per la Microzonazione Sismica in Italia, è disponibile il
+  volume `La cartografia di microzonazione sismica in Italia: metodi e strumenti
+  <https://centromicrozonazionesismica.it/documents/40/Libro_MS__strumenti_final_web.pdf>`_,
+  liberamente scaricabile dal sito web del `CentroMS <https://centromicrozonazionesismica.it/it/strumenti/bookms/>`_
+  (licenza CC-BY 4.0). Le informazioni su MzS Tools riportate nel volume si riferiscono alla versione 1.x del plugin,
+  pertanto si consiglia di fare riferimento a questo manuale per i dettagli sulle funzionalità aggiornate.
+
 .. image:: img/intro_carte_ms.png
 
 I prodotti cartografici devono essere accompagnati da una relazione illustrativa per ogni livello di approfondimento, oppure da una singola relazione nel caso in cui lo studio sia condotto su più livelli contemporaneamente. Tutti i prodotti dello studio, inoltre, devono essere inseriti all’interno di una **struttura di archiviazione ben definita**, costituita da  cartelle e file, rispettando una serie di indicazioni riguardanti il numero, formato, struttura e nome di ogni file. La conformità dello studio alle indicazioni degli Standard viene verificata in una fase di istruttoria che predede l'approvazione finale dello studio.
@@ -82,6 +89,9 @@ Riferimenti
 * Manuale utente di QGIS 3.16  tratto il giorno 10/06/2021 da https://docs.qgis.org/3.16/it/docs/user_manual/
 
 * *Microzonazione Simica - Standard di rappresentazione ed archiviazione informatica* versione 4.2 Roma dicembre 2020: Commissione tecnica per la microzonazione sismica. Tratto il giorno 10/06/2021 da https://www.centromicrozonazionesismica.it/it/download/download/38-standardms-42/98-standardms-4-2
+
+* La cartografia di microzonazione sismica in Italia: metodi e strumenti. CNR Edizioni, 2022. ISBN: 978-88-8080-513-7 -
+  DOI: https://doi.org/10.32053/LA_CARTOGRAFIA_DI_MICROZONAZIONE_SISMICA_IN_ITALIA_METODI_E_STRUMENTI_2022
 
 Changelog
 ---------

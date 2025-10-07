@@ -25,13 +25,23 @@ definito dagli Standard MS), richiedono l'installazione di alcune componenti agg
 Installazione di Java
 """""""""""""""""""""
 
-Per l'accesso ai database Access tramite il plugin è necessario installare una versione recente di Java runtime
-environment (JRE o JDK) a **64 bit** sul sistema operativo.
+Per abilitare le funzionalità del plugin che richiedono l'accesso ai database in formato Microsoft Access, è necessario
+installare una versione recente di Java Runtime Environment (JRE o JDK) a **64 bit** sul sistema operativo.
 
 .. Attention:: La versione 8 di Java disponibile sul sito `www.java.com <https://www.java.com/it/download/>`_ **NON è
   compatibile** con il driver JDBC UcanAccess, che dalla versione 5.1.0 richiede **Java 11 o superiore**. Si consiglia
   di scaricare una versione recente di OpenJDK (free ed open source) tramite ad esempio il sito `Adoptium <https://adoptium.net/>`_,
   oppure la `JDK Oracle <https://www.oracle.com/java/technologies/downloads/>`_ (licenza NFTC).
+
+Dopo aver installato la JDK o JRE, potrebbe essere necessario impostare la variabile di ambiente di sistema
+``JAVA_HOME`` con il percorso della cartella di installazione (ad es. ``C:\Program Files\Eclipse
+Adoptium\jre-25.0.0.36-hotspot\``).
+
+Durante l'installazione dei pacchetti per Windows scaricati da `Adoptium <https://adoptium.net/>`_, è possibile
+selezionare un'opzione per l'impostazione automatica della variabile di ambiente ``JAVA_HOME``:
+
+.. image:: ../img/jdk_install_01.png
+    :align: center
 
 Installazione librerie Python con QPIP
 """"""""""""""""""""""""""""""""""""""

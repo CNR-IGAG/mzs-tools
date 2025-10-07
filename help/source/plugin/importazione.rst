@@ -15,26 +15,26 @@ importare i dati già esistenti, e procedere successivamente alle integrazioni.
 
 .. warning:: E\' consigliabile effettuare l'importazione di dati preesistenti all'interno di un **progetto MzSTools vuoto o appena
    creato** per lo stesso comune oggetto di studio.
-   
+
    E\' possibile effettuare l'importazione all'interno di un progetto in cui siano già presenti altri dati, ma in questo caso **gli
    ID numerici dei dati importati risulteranno diversi rispetto ai dati originali**.
 
    Inoltre il progetto dal quale effettuare l'importazione deve essere basato sugli **standard versione 4 o
    successive** e deve utlizzare il formato **shapefile** per i dati vettoriali, mentre il database delle indagini può
    essere in formato **Microsoft Access** (“CdI_tabelle.mdb”), in formato **SQLite** (“CdI_tabelle.sqlite”) o in tabelle
-   esportate in formato **CSV**. 
+   esportate in formato **CSV**.
 
 .. image:: ../img/importazione.png
-  :width: 450
+  :width: 420
   :align: center
 
 In particolare, lo strumento è in grado di trasferire in modo automatico nella nuova struttura del plugin:
 
 * i dati provenienti dagli **shapefile** e dal **database “CdI_tabelle”** del vecchio progetto;
 * i **documenti** (ad esempio le carte in formato ``.pdf`` e i file degli spettri elastici di risposta in formato
-  ``.txt``) presenti nelle cartelle accessorie del vecchio progetto. 
+  ``.txt``) presenti nelle cartelle accessorie del vecchio progetto.
 
-.. Note:: Per l’importazione dei dati dal database Access è necessario che siano state installate correttamente le dipendenze del 
+.. Note:: Per l’importazione dei dati dal database Access è necessario che siano state installate correttamente le dipendenze del
    plugin, come descritto nella guida di installazione.
 
 Al termine delle operazioni, il tool genera un **report testuale** contenente l’esito dell’importazione, all’interno
@@ -68,10 +68,10 @@ La procedura da eseguire per esportare le suddette tabelle in formato ``.txt``, 
 
 2. entrare nella cartella “Indagini” e aprire il “CdI_Tabelle.mdb” con Microsoft Access (versione Microsoft Office 2013
    e successive);
-   
+
 3. selezionare una delle tabelle da esportare, premere il pulsante destro del mouse e selezionare **Esporta - File di
    testo**;
-    
+
 .. image:: ../img/esportazione_access.png
   :width: 540
   :align: center
@@ -83,9 +83,9 @@ La procedura da eseguire per esportare le suddette tabelle in formato ``.txt``, 
 .. image:: ../img/esportazione2_access.png
   :width: 540
   :align: center
-   
+
 5. si aprirà la finestra “Esportazione guidata testo”:
-  
+
    a. nel primo step, spuntare la voce “Delimitato” e premere il pulsante “Avanti”;
 
       .. image:: ../img/esportazione3_access.png
