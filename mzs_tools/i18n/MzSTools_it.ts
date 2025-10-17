@@ -4,40 +4,103 @@
 <context>
     <name>AttachmentsTaskManager</name>
     <message>
-        <location filename="../tasks/attachments_task_manager.py" line="58"/>
+        <location filename="../tasks/attachments_task_manager.py" line="63"/>
         <source>Attachments check in progress...</source>
         <translation>Controllo degli allegati in corso...</translation>
     </message>
     <message>
-        <location filename="../tasks/attachments_task_manager.py" line="64"/>
+        <location filename="../tasks/attachments_task_manager.py" line="69"/>
         <source>Cancel</source>
         <translation>Annulla</translation>
     </message>
     <message>
-        <location filename="../tasks/attachments_task_manager.py" line="93"/>
+        <location filename="../tasks/attachments_task_manager.py" line="98"/>
         <source>Attachment check completed successfully. Check the log for missing files or other problems.</source>
         <translation>Controllo degli allegati completato correttamente. Controlla i log per individuare eventuali file mancanti o altri problemi.</translation>
     </message>
     <message>
-        <location filename="../tasks/attachments_task_manager.py" line="109"/>
+        <location filename="../tasks/attachments_task_manager.py" line="114"/>
         <source>Attachment check terminated. Check the log for details.</source>
         <translation>Il controllo degli allegati è stato interrotto. Controlla i log per i dettagli.</translation>
     </message>
     <message>
-        <location filename="../tasks/attachments_task_manager.py" line="129"/>
+        <location filename="../tasks/attachments_task_manager.py" line="134"/>
         <source>Attachment check cancelled!</source>
         <translation>Controllo degli allegati annullato!</translation>
     </message>
 </context>
 <context>
+    <name>DependencyManager</name>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="149"/>
+        <source>Installing Python dependencies...</source>
+        <translation>Installazione dipendenze Python...</translation>
+    </message>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="153"/>
+        <source>Successfully installed dependencies: {packages}</source>
+        <translation>Dipendenze installate correttamente: {packages}</translation>
+    </message>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="215"/>
+        <source>Install Python Dependencies</source>
+        <translation>Installazione dipendenze Python</translation>
+    </message>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="215"/>
+        <source>MzS Tools requires additional Python libraries ({packages}) for full functionality.
+
+Do you want to install them now using pip?
+
+Alternative: Use the QPIP plugin (recommended).
+
+Note: You will also need Java JRE installed on your system for Access database support. Refer to the documentation for details.</source>
+        <translation>MzS Tools richiede l&apos;installazione di librerie Python aggiuntive ({packages}) per alcune funzionalità.
+
+Vuoi installarle ora con pip?
+
+In alternativa usa il plugin QPIP (raccomandato).
+
+Nota: Dovrai anche installare Java JRE sul tuo sistema per poter accedere ai database Access. Consulta la documentazione per i dettagli.</translation>
+    </message>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="231"/>
+        <source>Installing Python dependencies. This may take a few moments or several minutes depending on the number and nature of the packages.</source>
+        <translation>Installazione delle dipendenze Python. Questo potrebbe richiedere pochi secondi o alcuni minuti a seconda del numero e della tipologia dei pacchetti.</translation>
+    </message>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="243"/>
+        <source>Python dependencies installed successfully. Make sure Java JRE is also installed.</source>
+        <translation type="unfinished">Dipendenze Python installate correttamente. Assicurati anche di avere installato Java JRE.</translation>
+    </message>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="250"/>
+        <source>IMPORTANT: some packages may require development tools to be installed on your system.
+
+Please check the plugin user guide and the log messages for details.
+
+Refer to the documentation of the specific failing packages for more information.</source>
+        <translation>IMPORTANTE: alcune librerie potrebbero richiedere l&apos;installazione di specifici strumenti di sviluppo sul tuo sistema.
+
+Consulta il manuale del plugin e i messagi di log per i dettagli.
+
+Fai riferimento alla documentazione delle librerie per ulteriori informazioni in caso di problemi di installazione.</translation>
+    </message>
+    <message>
+        <location filename="../plugin_utils/dependency_manager.py" line="255"/>
+        <source>Failed to install Python dependencies. Please try using QPIP plugin.</source>
+        <translation>Installazione delle dipendenze Python fallita. Prova ad utilizzare il plugin QPIP.</translation>
+    </message>
+</context>
+<context>
     <name>DlgCreateProject</name>
     <message>
-        <location filename="../gui/dlg_create_project.py" line="86"/>
+        <location filename="../gui/dlg_create_project.py" line="88"/>
         <source>The selected directory seems to contain an MzS Tools project. Select a different directory.</source>
         <translation>La cartella selezionata sembra contenere un progetto di MzS Tools. Seleziona una cartella differente.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_create_project.py" line="89"/>
+        <location filename="../gui/dlg_create_project.py" line="91"/>
         <source>Warning</source>
         <translation>Attenzione</translation>
     </message>
@@ -70,17 +133,17 @@
         <translation>Esportazione dati in corso...</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="350"/>
+        <location filename="../gui/dlg_export_data.py" line="352"/>
         <source>Data exported successfully</source>
         <translation>Esportazione dati completata</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="353"/>
+        <location filename="../gui/dlg_export_data.py" line="355"/>
         <source>Data export completed with errors. Check the log for details.</source>
         <translation>Esportazione dati completata con alcuni errori. Controlla i log per i dettagli.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="383"/>
+        <location filename="../gui/dlg_export_data.py" line="385"/>
         <source>Data export cancelled!</source>
         <translation>Esportazione dati annullata!</translation>
     </message>
@@ -492,17 +555,17 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>DlgMdbPassword</name>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="633"/>
+        <location filename="../gui/dlg_import_data.py" line="635"/>
         <source>Enter database password</source>
         <translation>Inserire la password per il database</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="637"/>
+        <location filename="../gui/dlg_import_data.py" line="639"/>
         <source>A password is required to access CdI_Tabelle.mdb</source>
         <translation>Una password è richiesta per l&apos;accesso a CdI_Tabelle.mdb</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="644"/>
+        <location filename="../gui/dlg_import_data.py" line="646"/>
         <source>Save password in QGIS auth manager</source>
         <translation>Salva la password nel gestore di QGIS</translation>
     </message>
@@ -944,27 +1007,27 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>MzSProjectManager</name>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1362"/>
+        <location filename="../core/mzs_project_manager.py" line="1577"/>
         <source>The database file is corrupted! {self.db_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1377"/>
+        <location filename="../core/mzs_project_manager.py" line="1592"/>
         <source>Error connecting to db! {self.db_path}</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1093"/>
+        <location filename="../core/mzs_project_manager.py" line="1179"/>
         <source>Project upgrades completed! Project upgraded to version</source>
         <translation>Aggiornamento del progetto effettuato! Progetto aggiornato alla versione</translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1449"/>
+        <location filename="../core/mzs_project_manager.py" line="1676"/>
         <source>Database upgrades completed! Database upgraded to version</source>
         <translation>Aggiornamento del database effettuato! Database aggiornato alla versione</translation>
     </message>
     <message>
-        <location filename="../core/mzs_project_manager.py" line="1019"/>
+        <location filename="../core/mzs_project_manager.py" line="1076"/>
         <source>Project update in progress. Please wait...</source>
         <translation>Aggiornamento del progetto in corso. Attendere...</translation>
     </message>
@@ -972,17 +1035,17 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>MzSTools</name>
     <message>
-        <location filename="../mzs_tools.py" line="302"/>
+        <location filename="../mzs_tools.py" line="334"/>
         <source>&amp;MzS Tools</source>
         <translation>&amp;MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="132"/>
+        <location filename="../mzs_tools.py" line="139"/>
         <source>New project</source>
         <translation>Nuovo progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="256"/>
+        <location filename="../mzs_tools.py" line="263"/>
         <source>Import project folder from geodatabase</source>
         <translation>Importa dati da un progetto esistente</translation>
     </message>
@@ -1017,17 +1080,17 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Aiuto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="188"/>
+        <location filename="../mzs_tools.py" line="195"/>
         <source>Edit project metadata</source>
         <translation>Modifica i metadati del progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="275"/>
+        <location filename="../mzs_tools.py" line="290"/>
         <source>MzS Tools Settings</source>
         <translation>Impostazioni di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="495"/>
+        <location filename="../mzs_tools.py" line="544"/>
         <source>Warning</source>
         <translation>Attenzione</translation>
     </message>
@@ -1042,7 +1105,7 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Non è al momento possibile rinominare un layer richiesto dal plugin MzS Tools! Si prega di ritornare al nome precedente per evitare possibili problemi.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="282"/>
+        <location filename="../mzs_tools.py" line="309"/>
         <source>MzS Tools Help</source>
         <translation>Aiuto di MzS Tools</translation>
     </message>
@@ -1052,12 +1115,12 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">ATTENZIONE!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="330"/>
+        <location filename="../mzs_tools.py" line="363"/>
         <source>Close the current project before creating a new one.</source>
         <translation>Chiudi il progetto corrente prima di crearne uno nuovo.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="370"/>
+        <location filename="../mzs_tools.py" line="419"/>
         <source>Error during project creation</source>
         <translation>Errore durante la creazione del progetto</translation>
     </message>
@@ -1072,27 +1135,27 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation type="obsolete">Il progetto è stato creato correttamente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="560"/>
+        <location filename="../mzs_tools.py" line="609"/>
         <source>MzS Tools - Project Update</source>
         <translation>MzS Tools - Aggiornamento del progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="338"/>
+        <location filename="../mzs_tools.py" line="387"/>
         <source>MzS Tools</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="518"/>
+        <location filename="../mzs_tools.py" line="567"/>
         <source>The tool must be used within an opened MS project!</source>
         <translation>Il tool deve essere utilizzato all&apos;interno di un progetto di MS aperto!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="564"/>
+        <location filename="../mzs_tools.py" line="613"/>
         <source>Do you want to proceed?</source>
         <translation>Vuoi proseguire?</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="565"/>
+        <location filename="../mzs_tools.py" line="614"/>
         <source>It is possible to cancel the update process and continue using the current project version, but it is highly recommended to proceed with the update to avoid possible issues.
 The QGIS project content (layers, styles, symbols, print layout) will be updated to the latest plugin version.
 The database will be updated if necessary but all data will be preserved.
@@ -1103,107 +1166,107 @@ Il database sarà aggiornato se necessario, ma tutti i dati verranno conservati.
 Il progetto corrente verrà salvato in una cartella di backup prima dell&apos;aggiornamento.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="128"/>
+        <location filename="../mzs_tools.py" line="135"/>
         <source>Tools for managing MzS Tools project and database</source>
         <translation>Strumenti per la gestione del progetto e del database di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="132"/>
+        <location filename="../mzs_tools.py" line="139"/>
         <source>Create a new MzS Tools project for the provided municipality</source>
         <translation>Crea un nuovo progetto MzS Tools per il comune selezionato</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="142"/>
+        <location filename="../mzs_tools.py" line="149"/>
         <source>Open a &apos;Standard MS&apos; project</source>
         <translation>Apri un progetto basato su &apos;Standard MS&apos;</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="142"/>
+        <location filename="../mzs_tools.py" line="149"/>
         <source>Open an existing &apos;Standard MS&apos; project and import the data in a new MzS Tools project</source>
         <translation>Apre un progetto esistente basato sugli &apos;Standard MS&apos; ed importa i dati in un nuovo progetto MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="156"/>
+        <location filename="../mzs_tools.py" line="163"/>
         <source>Backup database</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="156"/>
+        <location filename="../mzs_tools.py" line="163"/>
         <source>Backup the current MzS Tools project database</source>
         <translation>Effettua un backup del database per il progetto corrente di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="166"/>
+        <location filename="../mzs_tools.py" line="173"/>
         <source>Backup project</source>
         <translation>Backup progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="166"/>
+        <location filename="../mzs_tools.py" line="173"/>
         <source>Backup the entire MzS Tools project</source>
         <translation>Effettua un backup dell&apos;intero progetto di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="176"/>
+        <location filename="../mzs_tools.py" line="183"/>
         <source>Check file attachments</source>
         <translation>Controllo dei file allegati</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="176"/>
+        <location filename="../mzs_tools.py" line="183"/>
         <source>Check, collect and consolidate file attachments</source>
         <translation>Controlla, raccogli e sistema i file allegati</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="203"/>
+        <location filename="../mzs_tools.py" line="210"/>
         <source>Tools for managing MzS Tools QGIS layers</source>
         <translation>Strumenti per la gestione dei layer QGIS di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="206"/>
+        <location filename="../mzs_tools.py" line="213"/>
         <source>Check the integrity of the current MzS Tools QGIS project</source>
         <translation>Controlla l&apos;integrità del progetto QGIS corrente di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="206"/>
+        <location filename="../mzs_tools.py" line="213"/>
         <source>Check the current MzS Tools QGIS project for common issues</source>
         <translation>Effettua un controllo del progetto QGIS corrente per individuare errori comuni</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="216"/>
+        <location filename="../mzs_tools.py" line="223"/>
         <source>Replace/repair default MzS Tools project layers</source>
         <translation>Ripristina/sostituisci i layer di default del progetto MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="216"/>
+        <location filename="../mzs_tools.py" line="223"/>
         <source>Replace or repair the default MzS Tools project layers to fix common issues</source>
         <translation>Ripristina o sostituisci i layer di default del progetto MzS Tools per risolvere problemi comuni</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="227"/>
+        <location filename="../mzs_tools.py" line="234"/>
         <source>Load default MzS Tools print layouts</source>
         <translation>Carica i layout di stampa di default di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="227"/>
+        <location filename="../mzs_tools.py" line="234"/>
         <source>Load the default MzS Tools print layouts, existing layouts will be preserved</source>
         <translation>Carica i layout di stampa di default di MzS Tools, i layout esistenti verranno conservati</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="240"/>
+        <location filename="../mzs_tools.py" line="247"/>
         <source>Load WMS/WFS services</source>
         <translation>Carica servizi WMS/WFS</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="240"/>
+        <location filename="../mzs_tools.py" line="247"/>
         <source>Load useful OGC services (such as regional CTR and MS services) in the current project</source>
         <translation>Carica servizi OGC utili (quali CTR regionali e servizi MS) nel progetto corrente</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="265"/>
+        <location filename="../mzs_tools.py" line="272"/>
         <source>Export data to Ms standard data structure</source>
         <translation>Esporta i dati in una struttura conforme agli Standard MS</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="338"/>
+        <location filename="../mzs_tools.py" line="387"/>
         <source>This tool allows to open an existing Seismic Microzonation project based on italian &apos;Standard MS&apos; by creating a new MzS Tools project for the provided municipality and then importing the data from the &apos;Standard MS&apos; project.
 
 The original project data format must be: 
@@ -1218,22 +1281,22 @@ Il formato dei dati del progetto originale deve essere:
 - Shapefiles (layer vettoriali quali &apos;Instab&apos;, &apos;Geotec&apos;, ecc.)</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="601"/>
+        <location filename="../mzs_tools.py" line="654"/>
         <source>MzS Tools - Project Issues</source>
         <translation>MzS Tools Problemi nel progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="406"/>
+        <location filename="../mzs_tools.py" line="455"/>
         <source>No issues found in the current project.</source>
         <translation>Nessun problema rilevato nel progetto corrente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="413"/>
+        <location filename="../mzs_tools.py" line="462"/>
         <source>MzS Tools - Load default print layouts</source>
         <translation>MzS Tools - Carica i layout di stampa di default</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="413"/>
+        <location filename="../mzs_tools.py" line="462"/>
         <source>Load the default MzS Tools print layouts. The existing layouts will be preserved.
 
 Do you want to proceed?</source>
@@ -1242,17 +1305,17 @@ Do you want to proceed?</source>
 Vuoi procedere?</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="423"/>
+        <location filename="../mzs_tools.py" line="472"/>
         <source>Print layouts loaded.</source>
         <translation>Layout di stampa caricati.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="441"/>
+        <location filename="../mzs_tools.py" line="490"/>
         <source>Warning!</source>
         <translation>Attenzione!</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="442"/>
+        <location filename="../mzs_tools.py" line="491"/>
         <source>The project already contains &apos;Indagini&apos; data (siti, indagini, parametri, curve).
 
 The imported data numeric IDs (and composite ID such as &apos;ID_SPU&apos;, &apos;ID_INDPU&apos;, etc.), will be different from the original data.
@@ -1265,17 +1328,17 @@ Gli ID numerici dei dati importati (e gli ID composti quali &apos;ID_SPU&apos;, 
 Per conservare gli ID originali è necessario utilizzare un progetto vuoto, oppure eliminare tutti i dati delle indagini puntuali e lineari prima di procedere all&apos;importazione.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="581"/>
+        <location filename="../mzs_tools.py" line="634"/>
         <source>Project update cancelled! Most of the plugin functionality will be disabled until the project is updated. It is highly recommended to update the project to avoid possible issues.</source>
         <translation>Aggiornamento del progetto annullato! La maggior parte delle funzionalità del plugin verranno disabilitate. E&apos; fortemente consigliato procedere all&apos;aggiornamento per evitare possibili problemi.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="585"/>
+        <location filename="../mzs_tools.py" line="638"/>
         <source>Update project</source>
         <translation>Aggiorna progetto</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="602"/>
+        <location filename="../mzs_tools.py" line="655"/>
         <source>Some issues have been found in the current MzS Tools project.
 
 It is suggested to use the &apos;Replace/repair layers&apos; function in the MzS Tools toolbar to try to solve the issues.</source>
@@ -1284,59 +1347,125 @@ It is suggested to use the &apos;Replace/repair layers&apos; function in the MzS
 Utilizzare gli strumenti per la gestione dei layer nella toolbar di MzS Tools per provare a risolverli.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="561"/>
+        <location filename="../mzs_tools.py" line="610"/>
         <source>The project will be updated from version</source>
         <translation>Il progetto verrà aggiornato dalla versione</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="562"/>
+        <location filename="../mzs_tools.py" line="611"/>
         <source>to version</source>
         <translation>alla versione</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="475"/>
+        <location filename="../mzs_tools.py" line="524"/>
         <source>Select backup directory</source>
         <translation>Seleziona la cartella in cui effettuare il backup</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="508"/>
+        <location filename="../mzs_tools.py" line="557"/>
         <source>Project backup created in:</source>
         <translation>Backup del progetto creato in:</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="464"/>
+        <location filename="../mzs_tools.py" line="513"/>
         <source>Error during database backup:</source>
         <translation>Errore durante il backup del database:</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="504"/>
+        <location filename="../mzs_tools.py" line="688"/>
         <source>MzS Tools error</source>
         <translation>Errore di MzS Tools</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="471"/>
+        <location filename="../mzs_tools.py" line="520"/>
         <source>Database backup created in:</source>
         <translation>Backup del database creato in:</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="486"/>
+        <location filename="../mzs_tools.py" line="535"/>
         <source>The backup directory cannot be the same as the project directory. Select a different directory.</source>
         <translation>Il percorso del backup non può essere lo stesso di quello del progetto. Seleziona una cartella differente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="492"/>
+        <location filename="../mzs_tools.py" line="541"/>
         <source>The selected directory seems to contain an MzS Tools project. Select a different directory.</source>
         <translation>La cartella selezionata sembra contenere un progetto di MzS Tools. Seleziona una cartella differente.</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="501"/>
+        <location filename="../mzs_tools.py" line="550"/>
         <source>Error during project backup:</source>
         <translation>Errore durante il backup del progetto:</translation>
     </message>
     <message>
-        <location filename="../mzs_tools.py" line="386"/>
+        <location filename="../mzs_tools.py" line="435"/>
         <source>Project created successfully in:</source>
         <translation>Progetto creato correttamente in:</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="286"/>
+        <source>Additional Tools and Plugin Info</source>
+        <translation>Strumenti Aggiuntivi e Informazioni sul Plugin</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="299"/>
+        <source>Manage Python Dependencies</source>
+        <translation>Gestione Dipendenze Python</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="299"/>
+        <source>Check and install Python dependencies for Access database support</source>
+        <translation>Controlla ed installa le librerie Python richieste per l&apos;accesso ai database Access</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="372"/>
+        <source>Python dependencies for Access database support are missing.
+
+You can install them using the &apos;Manage Python Dependencies&apos; tool.
+
+Note: You will also need Java JRE installed on your system for Access database support. Refer to the documentation for details.
+
+Are you sure you want to proceed?</source>
+        <translation>Le dipendenze Python richieste per l&apos;accesso ai database Access non sono installate.
+
+Puoi installarle utilizzando lo strumento &apos;Gestione Dipendenze Python&apos;.
+
+Nota: Dovrai anche installare Java JRE sul tuo sistema per abilitare l&apos;accesso ai database Access. Consulta la documentazione per i dettagli.
+
+Sei sicuro di voler procedere?</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="684"/>
+        <source>An error occurred during project update.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="687"/>
+        <source>You can can find a backup of the project in: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="704"/>
+        <source>Python dependencies are available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="710"/>
+        <source>Some Python dependencies are missing. Use the &apos;Manage Python Dependencies&apos; tool or QPIP plugin to install them.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="725"/>
+        <source>Dependencies Available</source>
+        <translation>Dipendenze Rilevate</translation>
+    </message>
+    <message>
+        <location filename="../mzs_tools.py" line="725"/>
+        <source>Python dependencies are already installed and available.
+
+Do you want to reinstall them anyway?</source>
+        <translation>Le dipendenze Python risultano installate correttamente.
+
+Vuoi reinstallarle comunque?</translation>
     </message>
 </context>
 <context>
@@ -1395,12 +1524,32 @@ Utilizzare gli strumenti per la gestione dei layer nella toolbar di MzS Tools pe
     <message>
         <location filename="../gui/dlg_info.py" line="115"/>
         <source>New version available: {version_available}</source>
-        <translation type="unfinished">Nuova versione disponibile: {version_available}</translation>
+        <translation type="obsolete">Nuova versione disponibile: {version_available}</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_info.py" line="112"/>
+        <location filename="../gui/dlg_info.py" line="175"/>
         <source>(Local or development version)</source>
         <translation>(Versione locale o di sviluppo)</translation>
+    </message>
+    <message>
+        <location filename="../gui/dlg_info.py" line="84"/>
+        <source>File not found: {filename}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/dlg_info.py" line="95"/>
+        <source>Error reading file: {filename}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/dlg_info.py" line="98"/>
+        <source>Error loading file: {filename}</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/dlg_info.py" line="178"/>
+        <source>New version available: {version}</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

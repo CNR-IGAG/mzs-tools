@@ -9,6 +9,7 @@ SOURCES = mzs_tools.py \
           gui/dlg_manage_attachments.py \
           gui/dlg_metadata_edit.py \
           gui/dlg_settings.py \
+          plugin_utils/dependency_manager.py \
           tasks/access_db_connection.py \
           tasks/attachments_task_manager.py \
           tasks/attachments_task.py \
@@ -29,6 +30,6 @@ FORMS = gui/dlg_create_project.ui \
         gui/dlg_manage_attachments.ui \
         gui/dlg_metadata_edit.ui \
         gui/dlg_settings.ui
-        
+
 
 TRANSLATIONS = i18n/MzSTools_it.ts

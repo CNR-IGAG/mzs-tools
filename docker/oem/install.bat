@@ -5,18 +5,18 @@ REM Set installer URL and local path
 set "QGIS_URL=https://qgis.org/downloads/QGIS-OSGeo4W-3.44.3-1.msi"
 set "QGIS_MSI=%SystemDrive%\OEM\QGIS-OSGeo4W-3.44.3-1.msi"
 
-REM JRE installer URL and local path
-set "JRE_URL=https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25%2B36/OpenJDK25U-jre_x64_windows_hotspot_25_36.msi"
+REM JRE installer URL and local path - % needs to be escaped as %% !!!
+set "JRE_URL=https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25%%2B36/OpenJDK25U-jre_x64_windows_hotspot_25_36.msi"
 set "JRE_MSI=%SystemDrive%\OEM\OpenJDK25U-jre_x64_windows_hotspot_25_36.msi"
 
 REM Download QGIS installer if not already present
 if not exist "%QGIS_MSI%" (
-    powershell -Command "Invoke-WebRequest -Uri '%QGIS_URL%' -OutFile '%QGIS_MSI%'"
+    curl.exe -L -o "%QGIS_MSI%" "%QGIS_URL%"
 )
 
 REM Download JRE installer if not already present
 if not exist "%JRE_MSI%" (
-    powershell -Command "Invoke-WebRequest -Uri '%JRE_URL%' -OutFile '%JRE_MSI%'"
+    curl.exe -L -o "%JRE_MSI%" "%JRE_URL%"
 )
 
 REM Install QGIS silently
