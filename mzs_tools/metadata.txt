@@ -5,7 +5,7 @@ author=CNR-IGAG
 email=labgis@igag.cnr.it
 
 qgisMinimumVersion=3.26
-qgisMaximumVersion=3.99
+qgisMaximumVersion=4.99
 supportsQt6=True
 
 plugin_dependencies=qpip

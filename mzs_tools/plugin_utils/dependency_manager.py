@@ -7,6 +7,7 @@ from pathlib import Path
 from qgis.core import QgsApplication
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.utils import iface
 
 from ..__about__ import DIR_PLUGIN_ROOT
 from ..plugin_utils.misc import run_cmd
@@ -17,6 +18,7 @@ class DependencyManager:
     """Manages plugin-specific Python dependencies."""
 
     def __init__(self):
+        self.iface = iface
         self.log = MzSToolsLogger.log
 
         # Use QGIS profile directory for dependencies
@@ -228,23 +230,27 @@ class DependencyManager:
             if reply != QMessageBox.StandardButton.Yes:
                 return False
 
+        # Show progress message
         self.log(
             self.tr(
                 "Installing Python dependencies. This may take a few moments or several minutes depending on the number and nature of the packages."
             ),
             log_level=0,  # Info
             push=True,
-            duration=5,
+            duration=10,
         )
 
         success = self.install_dependencies(requirements_for_install)  # Use full requirements with versions
+
+        # Clear progress message
+        self.iface.messageBar().clearWidgets()  # type: ignore[attr-defined]
 
         if success:
             self.log(
                 self.tr("Python dependencies installed successfully. Make sure Java JRE is also installed."),
                 log_level=3,  # Success
                 push=True,
-                duration=8,
+                duration=10,
             )
         else:
             showmore_text = self.tr(
