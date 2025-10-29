@@ -72,47 +72,60 @@ class ImportShapefileTask(QgsTask):
         super().cancel()
 
     def attribute_adaptor(self, targetLayer, sourceLayer):
-        targetLayerFields = []
-        sourceLayerFields = []
+        # Create case-insensitive mapping dictionaries
+        targetLayerFieldsMap = {}  # lowercase -> actual name
+        sourceLayerFieldsMap = {}  # lowercase -> actual name
         primaryKeyList = []
 
         for index in targetLayer.dataProvider().pkAttributeIndexes():
             primaryKeyList.append(targetLayer.dataProvider().fields().at(index).name())
 
         for field in sourceLayer.dataProvider().fields().toList():
-            sourceLayerFields.append(field.name())
+            sourceLayerFieldsMap[field.name().lower()] = field.name()
 
         for field in targetLayer.dataProvider().fields().toList():
-            targetLayerFields.append(field.name())
+            targetLayerFieldsMap[field.name().lower()] = field.name()
 
-        commonFields = list(set(sourceLayerFields) & set(targetLayerFields))
-        commonFields = list(set(commonFields) - set(primaryKeyList))
+        # Find common fields (case-insensitive) and exclude primary keys
+        primaryKeyListLower = [pk.lower() for pk in primaryKeyList]
+        commonFieldsLower = set(sourceLayerFieldsMap.keys()) & set(targetLayerFieldsMap.keys())
+        commonFieldsLower = commonFieldsLower - set(primaryKeyListLower)
+
+        # Return a dict mapping source field names to target field names
+        commonFields = {
+            sourceLayerFieldsMap[field_lower]: targetLayerFieldsMap[field_lower] for field_lower in commonFieldsLower
+        }
 
         return commonFields
 
     def attribute_fill(self, qgsFeature, targetLayer, commonFields):
         featureFields = {}
 
+        # Build a mapping of source field names (case-insensitive) for special field handling
         for field in qgsFeature.fields().toList():
-            if field.name() == "desc_modco":
+            field_name_lower = field.name().lower()
+
+            # Handle special field name mappings (case-insensitive)
+            if field_name_lower == "desc_modco":
                 featureFields["desc_modcoord"] = qgsFeature[field.name()]
-            elif field.name() == "mod_identc":
+            elif field_name_lower == "mod_identc":
                 featureFields["mod_identcoord"] = qgsFeature[field.name()]
-            elif field.name() == "ub_prov":
+            elif field_name_lower == "ub_prov":
                 featureFields["ubicazione_prov"] = qgsFeature[field.name()]
-            elif field.name() == "ub_com":
+            elif field_name_lower == "ub_com":
                 featureFields["ubicazione_com"] = qgsFeature[field.name()]
-            elif field.name() == "ID_SPU":
+            elif field_name_lower == "id_spu":
                 featureFields["id_spu"] = qgsFeature[field.name()]
-            elif field.name() == "ID_SLN":
+            elif field_name_lower == "id_sln":
                 featureFields["id_sln"] = qgsFeature[field.name()]
             else:
                 featureFields[field.name()] = qgsFeature[field.name()]
 
         qgsFeature.setFields(targetLayer.dataProvider().fields())
         if commonFields:
-            for fieldName in commonFields:
-                qgsFeature[fieldName] = featureFields[fieldName]
+            # commonFields is now a dict: {source_field_name: target_field_name}
+            for source_field, target_field in commonFields.items():
+                qgsFeature[target_field] = featureFields[source_field]
 
         return qgsFeature
 
