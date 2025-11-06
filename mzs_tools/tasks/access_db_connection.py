@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from ..__about__ import DIR_PLUGIN_ROOT
@@ -109,6 +110,78 @@ class AccessDbConnection:
     def rollback(self):
         # Rollback the transaction
         self.connection.rollback()
+
+    def _validate_date(self, date_value: Optional[str]) -> Optional[str]:
+        """
+        Validate and parse a date string. Returns None if the date is empty, None,
+        or cannot be parsed in a recognizable format. If a datetime string is provided,
+        the time part is stripped and only the date is validated and returned.
+
+        The date is always returned in ISO format (yyyy-MM-dd).
+
+        Args:
+            date_value: Date string to validate
+
+        Returns:
+            The date string in ISO format (yyyy-MM-dd) if valid and parsable, None otherwise
+        """
+        if not date_value or date_value.strip() == "":
+            return None
+
+        # Strip and check for datetime strings (containing time parts)
+        # Common patterns: "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss"
+        stripped_value = date_value.strip()
+
+        # Try to detect and strip time part
+        # Look for space followed by time pattern (HH:mm:ss or HH:mm)
+        if " " in stripped_value:
+            date_part = stripped_value.split(" ")[0]
+        else:
+            date_part = stripped_value
+
+        # List of common date formats to try
+        date_formats = [
+            "%Y-%m-%d",  # ISO format (yyyy-MM-dd)
+            "%d/%m/%Y",  # dd/MM/yyyy
+            "%m/%d/%Y",  # MM/dd/yyyy
+            "%Y/%m/%d",  # yyyy/MM/dd
+            "%d-%m-%Y",  # dd-MM-yyyy
+            "%Y%m%d",  # yyyyMMdd
+        ]
+
+        for fmt in date_formats:
+            try:
+                parsed_date = datetime.strptime(date_part, fmt)
+                # If parsing succeeds, return the date in ISO format (yyyy-MM-dd)
+                return parsed_date.strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                continue
+
+        # If no format matched, log a warning and return None
+        self.log(f"Unable to parse date value '{date_value}' - setting to NULL", log_level=1)
+        return None
+
+    def _validate_float(self, float_value: Optional[str]) -> Optional[float]:
+        """
+        Validate and parse a float string. Returns None if the value is empty, None,
+        or cannot be parsed as a float.
+
+        Args:
+            float_value: Float string to validate
+
+        Returns:
+            The float value if valid and parsable, None otherwise
+        """
+        if not float_value or float_value.strip() == "":
+            return None
+
+        stripped_value = float_value.strip()
+
+        try:
+            return float(stripped_value)
+        except (ValueError, TypeError):
+            self.log(f"Unable to parse float value '{float_value}' - setting to NULL", log_level=1)
+            return None
 
     def get_sito_puntuale_data(self):
         field_names = [
@@ -313,7 +386,7 @@ class AccessDbConnection:
                         row[8],
                         row[9],
                         row[10],
-                        row[11] if row[11] else None,  # data_sito - no empty strings
+                        self._validate_date(row[11]),  # data_sito
                         row[12],
                     ),
                 )
@@ -349,7 +422,7 @@ class AccessDbConnection:
                         row[10],
                         row[11],
                         row[12],
-                        row[13] if row[13] else None,  # data_ind - no empty strings
+                        self._validate_date(row[13]),  # data_ind
                         row[14],
                         row[15],
                     ),
@@ -385,7 +458,7 @@ class AccessDbConnection:
                         row[10],
                         row[11],
                         row[12],
-                        row[13] if row[13] else None,  # data_par - no empty strings
+                        self._validate_date(row[13]),  # data_par
                     ),
                 )
                 self.commit()
@@ -443,7 +516,7 @@ class AccessDbConnection:
                         row[9],
                         row[10],
                         row[11],
-                        row[12] if row[12] else None,  # data_sito - no empty strings
+                        self._validate_date(row[12]),  # data_sito
                         row[13],
                     ),
                 )
@@ -473,7 +546,7 @@ class AccessDbConnection:
                         row[5],
                         row[6],
                         row[7],
-                        row[8] if row[8] else None,  # data_sito - no empty strings
+                        self._validate_date(row[8]),  # data_ind
                         row[9],
                         row[10],
                     ),
@@ -508,7 +581,7 @@ class AccessDbConnection:
                         row[9],
                         row[10],
                         row[11],
-                        row[12] if row[12] else None,  # data_sito - no empty strings
+                        self._validate_date(row[12]),  # data_par
                     ),
                 )
                 self.commit()
@@ -541,12 +614,12 @@ class AccessDbConnection:
                         row[2],
                         row[3],
                         row[4],
-                        row[5] if row[5] else None,
+                        self._validate_date(row[5]),  # data_metadato
                         row[6],
                         row[7],
                         row[8],
                         row[9],
-                        row[10] if row[10] else None,
+                        self._validate_date(row[10]),  # data_dato
                         row[11],
                         row[12],
                         row[13],
@@ -573,7 +646,7 @@ class AccessDbConnection:
                         row[34],
                         row[35],
                         row[36],
-                        row[37],
+                        self._validate_float(row[37]),  # precisione
                         row[38],
                     ),
                 )
