@@ -1,13 +1,13 @@
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, cast
 
-from qgis.gui import QgsDateTimeEdit
+from qgis.gui import QgisInterface, QgsDateTimeEdit
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QLineEdit, QMessageBox, QTextEdit
-from qgis.utils import iface
+from qgis.utils import iface  # as _iface
 
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
@@ -34,6 +34,8 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
         super().__init__(parent)
         self.log = MzSToolsLogger().log
         self.setupUi(self)
+
+        self.iface: QgisInterface = cast(QgisInterface, iface)
 
         self.help_button = self.button_box.button(QDialogButtonBox.StandardButton.Help)
         self.cancel_button = self.button_box.button(QDialogButtonBox.StandardButton.Cancel)
@@ -107,19 +109,15 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
         comune_info = f"{comune} ({provincia}, {regione})"
 
         # check if "metadati" table contains a single record with expected id
-        conn = self.prj_manager.db_connection
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT COUNT(*) FROM metadati WHERE id_metadato = ?", (expected_id,))
-            count = cursor.fetchone()[0]
-        finally:
-            cursor.close()
+        count = self.prj_manager.db.execute_query(
+            "SELECT COUNT(*) FROM metadati WHERE id_metadato = ?", (expected_id,), fetch_mode="value"
+        )
 
         if count == 0:
             self.log("Metadata record not found. Creating a new record...", log_level=1)
             self.prj_manager.create_basic_project_metadata(cod_istat)
         if count > 1:
-            self.log("Multiple metadata records found.", log_level="2")
+            self.log("Multiple metadata records found.", log_level=2)
             self.show_error(
                 self.tr(
                     "Multiple metadata records found. Please edit the 'metadati' table and remove all but one record."
@@ -140,13 +138,9 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
 
     def load_data(self, record_id, comune_info):
         """Load data from the SQLite table and populate the form fields."""
-        conn = self.prj_manager.db_connection
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT * FROM metadati WHERE id_metadato = ?", (record_id,))
-            record = cursor.fetchone()
-        finally:
-            cursor.close()
+        record = self.prj_manager.db.execute_query(
+            "SELECT * FROM metadati WHERE id_metadato = ?", (record_id,), fetch_mode="one"
+        )
 
         if record:
             data_metadato = self.parse_date(record[5])
@@ -227,74 +221,68 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
     def save_data(self):
         """Save the edited data back to the SQLite table."""
         self.log("Updating metadata record...")
-        conn = self.prj_manager.db_connection
-        cursor = conn.cursor()
-        try:
-            cursor.execute(
-                """
-                UPDATE metadati SET
-                    liv_gerarchico = ?, resp_metadato_nome = ?, resp_metadato_email = ?, resp_metadato_sito = ?, data_metadato = ?, 
-                    srs_dati = ?, proprieta_dato_nome = ?, proprieta_dato_email = ?, proprieta_dato_sito = ?, data_dato = ?, 
-                    ruolo = ?, desc_dato = ?, formato = ?, tipo_dato = ?, contatto_dato_nome = ?, contatto_dato_email = ?, 
-                    contatto_dato_sito = ?, keywords = ?, keywords_inspire = ?, limitazione = ?, vincoli_accesso = ?, 
-                    vincoli_fruibilita = ?, vincoli_sicurezza = ?, scala = ?, categoria_iso = ?, estensione_ovest = ?, 
-                    estensione_est = ?, estensione_sud = ?, estensione_nord = ?, formato_dati = ?, distributore_dato_nome = ?, 
-                    distributore_dato_telefono = ?, distributore_dato_email = ?, distributore_dato_sito = ?, url_accesso_dato = ?, 
-                    funzione_accesso_dato = ?, precisione = ?, genealogia = ?
-                WHERE id_metadato = ?
-            """,
-                (
-                    self.liv_gerarchico.text(),
-                    self.resp_metadato_nome.text(),
-                    self.resp_metadato_email.text(),
-                    self.resp_metadato_sito.text(),
-                    self.data_metadato.text() if not self.data_metadato.isNull() else None,
-                    self.srs_dati.text(),
-                    self.proprieta_dato_nome.text(),
-                    self.proprieta_dato_email.text(),
-                    self.proprieta_dato_sito.text(),
-                    self.data_dato.text() if not self.data_dato.isNull() else None,
-                    self.ruolo.text(),
-                    self.desc_dato.toPlainText(),
-                    self.formato.text(),
-                    self.tipo_dato.text(),
-                    self.contatto_dato_nome.text(),
-                    self.contatto_dato_email.text(),
-                    self.contatto_dato_sito.text(),
-                    self.keywords.text(),
-                    self.keywords_inspire.text(),
-                    self.limitazione.text(),
-                    self.vincoli_accesso.text(),
-                    self.vincoli_fruibilita.text(),
-                    self.vincoli_sicurezza.text(),
-                    self.scala.text(),
-                    self.categoria_iso.text(),
-                    self.estensione_ovest.text(),
-                    self.estensione_est.text(),
-                    self.estensione_sud.text(),
-                    self.estensione_nord.text(),
-                    self.formato_dati.text(),
-                    self.distributore_dato_nome.text(),
-                    self.distributore_dato_telefono.text(),
-                    self.distributore_dato_email.text(),
-                    self.distributore_dato_sito.text(),
-                    self.url_accesso_dato.text(),
-                    self.funzione_accesso_dato.text(),
-                    self.precisione.text(),
-                    self.genealogia.toPlainText(),
-                    self.id_metadato.text(),
-                ),
-            )
-            conn.commit()
-        finally:
-            cursor.close()
+        self.prj_manager.db.execute_update(
+            """
+            UPDATE metadati SET
+                liv_gerarchico = ?, resp_metadato_nome = ?, resp_metadato_email = ?, resp_metadato_sito = ?, data_metadato = ?,
+                srs_dati = ?, proprieta_dato_nome = ?, proprieta_dato_email = ?, proprieta_dato_sito = ?, data_dato = ?,
+                ruolo = ?, desc_dato = ?, formato = ?, tipo_dato = ?, contatto_dato_nome = ?, contatto_dato_email = ?,
+                contatto_dato_sito = ?, keywords = ?, keywords_inspire = ?, limitazione = ?, vincoli_accesso = ?,
+                vincoli_fruibilita = ?, vincoli_sicurezza = ?, scala = ?, categoria_iso = ?, estensione_ovest = ?,
+                estensione_est = ?, estensione_sud = ?, estensione_nord = ?, formato_dati = ?, distributore_dato_nome = ?,
+                distributore_dato_telefono = ?, distributore_dato_email = ?, distributore_dato_sito = ?, url_accesso_dato = ?,
+                funzione_accesso_dato = ?, precisione = ?, genealogia = ?
+            WHERE id_metadato = ?
+        """,
+            (
+                self.liv_gerarchico.text(),
+                self.resp_metadato_nome.text(),
+                self.resp_metadato_email.text(),
+                self.resp_metadato_sito.text(),
+                self.data_metadato.text() if not self.data_metadato.isNull() else None,
+                self.srs_dati.text(),
+                self.proprieta_dato_nome.text(),
+                self.proprieta_dato_email.text(),
+                self.proprieta_dato_sito.text(),
+                self.data_dato.text() if not self.data_dato.isNull() else None,
+                self.ruolo.text(),
+                self.desc_dato.toPlainText(),
+                self.formato.text(),
+                self.tipo_dato.text(),
+                self.contatto_dato_nome.text(),
+                self.contatto_dato_email.text(),
+                self.contatto_dato_sito.text(),
+                self.keywords.text(),
+                self.keywords_inspire.text(),
+                self.limitazione.text(),
+                self.vincoli_accesso.text(),
+                self.vincoli_fruibilita.text(),
+                self.vincoli_sicurezza.text(),
+                self.scala.text(),
+                self.categoria_iso.text(),
+                self.estensione_ovest.text(),
+                self.estensione_est.text(),
+                self.estensione_sud.text(),
+                self.estensione_nord.text(),
+                self.formato_dati.text(),
+                self.distributore_dato_nome.text(),
+                self.distributore_dato_telefono.text(),
+                self.distributore_dato_email.text(),
+                self.distributore_dato_sito.text(),
+                self.url_accesso_dato.text(),
+                self.funzione_accesso_dato.text(),
+                self.precisione.text(),
+                self.genealogia.toPlainText(),
+                self.id_metadato.text(),
+            ),
+        )
 
         success_msg = self.tr("Metadata updated successfully.")
         self.log(success_msg)
-        QMessageBox.information(iface.mainWindow(), self.tr("MzS Tools"), success_msg)
+        QMessageBox.information(self.iface.mainWindow(), self.tr("MzS Tools"), success_msg)
 
     def show_error(self, message):
-        QMessageBox.critical(iface.mainWindow(), self.tr("MzS Tools - Error"), message)
+        QMessageBox.critical(self.iface.mainWindow(), self.tr("MzS Tools - Error"), message)
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)

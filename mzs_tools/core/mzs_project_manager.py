@@ -1,12 +1,10 @@
 import os
 import shutil
-import traceback
 import zipfile
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from sqlite3 import Connection
 from typing import Optional, cast
 
 from qgis.core import (
@@ -25,13 +23,13 @@ from qgis.core import (
     QgsVectorLayer,
 )
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.utils import iface as _iface
-from qgis.utils import spatialite_connect
 
 from ..__about__ import DIR_PLUGIN_ROOT, __base_version__, __version__
+from ..core.db_manager import DatabaseManager
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import save_map_image, save_map_image_direct
 from ..plugin_utils.qt_compat import get_alignment_flag
@@ -87,16 +85,42 @@ class MzSProjectManager:
         self.project_version: Optional[str] = None
         self.project_updateable = False
         self.db_path: Optional[Path] = None
-        self.db_connection: Optional[Connection] = None
+
+        # Database manager
+        self.db_manager = None
 
         self.comune_data: Optional[ComuneData] = None
         self.project_metadata = None
-
         self.required_layer_registry = {}
-
         self.project_issues = None
 
         self.is_mzs_project: bool = False
+
+    @property
+    def db(self) -> DatabaseManager:
+        """Get database manager with validation.
+
+        Returns:
+            DatabaseManager: The active database manager instance
+
+        Raises:
+            RuntimeError: If database manager is not initialized or not connected
+
+        Example:
+            # Instead of checking manually:
+            if self.db_manager and self.db_manager.is_connected():
+                self.db_manager.execute_query(...)
+
+            # Just use:
+            self.db.execute_query(...)  # Raises if not ready
+        """
+        if not self.db_manager:
+            self.log("Database manager not initialized", log_level=2)
+            raise RuntimeError("Database manager not initialized")
+        if not self.db_manager.is_connected():
+            self.log("Database is not connected", log_level=2)
+            raise RuntimeError("Database is not connected")
+        return self.db_manager
 
     def init_manager(self):
         """Detect if the current project is a MzS Tools project and setup the manager."""
@@ -116,7 +140,8 @@ class MzSProjectManager:
             self.is_mzs_project = False
             self.project_path = None
             self.db_path = None
-            self.db_connection = None
+            # self.db_connection = None
+            self.db_manager = None
             self.project_updateable = False
             self.project_issues = None
             return False
@@ -149,7 +174,7 @@ class MzSProjectManager:
         self,
         issue_type: str,
         issue: str,
-        traceback: Optional[str] = None,
+        trace: Optional[str] = None,
         log: bool = True,
     ) -> None:
         """Store a project issue in the internal registry.
@@ -165,8 +190,8 @@ class MzSProjectManager:
             self.project_issues = {}
 
         issues_list = self.project_issues.setdefault(issue_type, [])
-        if traceback:
-            issue = f"{issue}\n{traceback}"
+        if trace:
+            issue = f"{issue}\n{trace}"
         issues_list.append(issue)
         if log:
             self.log(f"Project issue found: {issue_type} - {issue}", log_level=2)
@@ -206,12 +231,6 @@ class MzSProjectManager:
 
         # check relations
         self._check_default_project_relations()
-
-    def cleanup_db_connection(self):
-        if self.db_connection:
-            self.log(f"Closing db connection to {self.db_path}...", log_level=4)
-            self.db_connection.close()
-            self.db_connection = None
 
     def connect_editing_signals(self):
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
@@ -887,43 +906,6 @@ class MzSProjectManager:
             return None
         return valid_layers[0].id()
 
-    # def create_project_from_template(self, comune_name, cod_istat, study_author, author_email, dir_out):
-    #     """pre-2.0.0 method to create a new project"""
-    #     # extract project template in the output directory
-    #     self.extract_project_template(dir_out)
-
-    #     comune_name = self.sanitize_comune_name(comune_name)
-    #     new_project_path = os.path.join(dir_out, f"{cod_istat}_{comune_name}")
-    #     os.rename(os.path.join(dir_out, "progetto_MS"), new_project_path)
-
-    #     self.current_project.read(os.path.join(new_project_path, "progetto_MS.qgs"))
-
-    #     # init new project info
-    #     self.current_project = QgsProject.instance()
-    #     self.project_path = Path(self.current_project.absolutePath())
-    #     self.db_path = self.project_path / "db" / "indagini.sqlite"
-
-    #     self._setup_db_connection()
-
-    #     self.customize_project_template(cod_istat)
-
-    #     self.create_basic_project_metadata(cod_istat, study_author, author_email)
-
-    #     # Refresh layouts
-    #     self.refresh_project_layouts()
-
-    #     # write the version file
-    #     with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-    #         f.write(__base_version__)
-
-    #     # Save the project
-    #     self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgs"))
-
-    #     # completely reload the project
-    #     iface.addProject(os.path.join(new_project_path, "progetto_MS.qgs"))
-
-    #     return new_project_path
-
     def create_project(
         self, comune_name: str, cod_istat: str, study_author: str, author_email: str, dir_out: str
     ) -> Path:
@@ -975,11 +957,8 @@ class MzSProjectManager:
         self.comune_data = self.get_project_comune_data()
 
         self.add_default_layers()
-
         self.customize_project()
-
         self.create_basic_project_metadata(cod_istat, study_author, author_email)
-
         self.refresh_project_layouts()
 
         # write the version file
@@ -993,66 +972,6 @@ class MzSProjectManager:
         iface.addProject(os.path.join(new_project_path, "progetto_MS.qgz"))
 
         return new_project_path
-
-    # def update_project_from_template(self):
-    #     """pre-2.0.0 method to update a project"""
-    #     if not self.project_updateable:
-    #         self.log("Requested project update for non-updateable project!", log_level=1)
-    #         return
-
-    #     # extract project template in the current project directory (will be in "progetto_MS" subdir)
-    #     self.extract_project_template(self.project_path)
-
-    #     # remove old project files (maschere, script, loghi, progetto_MS.qgs)
-    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "maschere"))
-    #     shutil.copytree(
-    #         os.path.join(self.project_path, "progetto_MS", "progetto", "maschere"),
-    #         os.path.join(self.project_path, "progetto", "maschere"),
-    #     )
-
-    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "script"))
-    #     shutil.copytree(
-    #         os.path.join(self.project_path, "progetto_MS", "progetto", "script"),
-    #         os.path.join(self.project_path, "progetto", "script"),
-    #     )
-
-    #     shutil.rmtree(os.path.join(self.project_path, "progetto", "loghi"))
-    #     shutil.copytree(
-    #         os.path.join(self.project_path, "progetto_MS", "progetto", "loghi"),
-    #         os.path.join(self.project_path, "progetto", "loghi"),
-    #     )
-
-    #     # write the new version to the version file
-    #     with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
-    #         f.write(__base_version__)
-
-    #     os.remove(os.path.join(self.project_path, "progetto_MS.qgs"))
-    #     shutil.copyfile(
-    #         os.path.join(self.project_path, "progetto_MS", "progetto_MS.qgs"),
-    #         os.path.join(self.project_path, "progetto_MS.qgs"),
-    #     )
-
-    #     # read the new project file inside the loaded (old) project
-    #     self.current_project.read(os.path.join(self.project_path, "progetto_MS.qgs"))
-
-    #     self._setup_db_connection()
-
-    #     # apply project customizations without creating comune feature
-    #     self.customize_project_template(self.comune_data.cod_istat, insert_comune_progetto=False)
-
-    #     # cleanup the extracted project template
-    #     shutil.rmtree(os.path.join(self.project_path, "progetto_MS"))
-
-    #     # Refresh layouts
-    #     self.refresh_project_layouts()
-
-    #     # Save the project
-    #     self.current_project.write(os.path.join(self.project_path, "progetto_MS.qgs"))
-
-    #     # completely reload the project
-    #     iface.addProject(os.path.join(self.project_path, "progetto_MS.qgs"))
-
-    #     return self.project_path
 
     def update_project(self):
         """Update the project without loading the project template.
@@ -1092,8 +1011,7 @@ class MzSProjectManager:
         try:
             if old_version < "2.0.0":
                 # version is too old, clear the project and start from scratch
-                if self.db_connection:
-                    self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
+                self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
 
                 # backup print layouts
                 layout_file_paths = self.backup_print_layouts(
@@ -1171,101 +1089,15 @@ class MzSProjectManager:
             with open(self.project_path / "progetto" / "versione.txt", "w") as f:
                 f.write(__base_version__)
 
-            if self.db_connection:
-                self.update_history_table("project", old_version, __version__, "project updated successfully")
-                # update mzs_tools_version table
-                self.update_db_version_info()
+            self.update_history_table("project", old_version, __version__, "project updated successfully")
+            # update mzs_tools_version table
+            self.update_db_version_info()
 
             msg = self.tr("Project upgrades completed! Project upgraded to version")
             self.log(f"{msg} {__base_version__}", push=True, duration=0)
         finally:
             # Clear the message bar once the operation is complete
             iface.messageBar().popWidget(message_item)
-
-    # def customize_project_template(self, cod_istat, insert_comune_progetto=True):
-    #     """pre-2.0.0 method to customize the project with the selected comune data."""
-
-    #     layer_comune_progetto = self.current_project.mapLayersByName("Comune del progetto")[0]
-
-    #     comune_data = None
-    #     if insert_comune_progetto:
-    #         conn = self.db_connection
-    #         cursor = conn.cursor()
-    #         try:
-    #             cursor.execute(
-    #                 """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
-    #                 SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
-    #                 (cod_istat,),
-    #             )
-    #             conn.commit()
-
-    #             last_inserted_id = cursor.lastrowid
-
-    #             cursor.execute(
-    #                 """SELECT cod_regio, comune, provincia, regione
-    #                 FROM comune_progetto WHERE rowid = ?""",
-    #                 (last_inserted_id,),
-    #             )
-    #             comune_data = cursor.fetchone()
-    #         except Exception as e:
-    #             conn.rollback()
-    #             self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
-    #         finally:
-    #             cursor.close()
-    #     else:
-    #         conn = self.db_connection
-    #         cursor = conn.cursor()
-    #         try:
-    #             # assuming there is only one record in comune_progetto
-    #             cursor.execute("""SELECT cod_regio, comune, provincia, regione FROM comune_progetto LIMIT 1""")
-    #             comune_data = cursor.fetchone()
-    #         except Exception as e:
-    #             self.log(f"Failed to read comune data: {e}", log_level=2, push=True, duration=0)
-    #         finally:
-    #             cursor.close()
-
-    #     codice_regio = comune_data[0]
-    #     comune = comune_data[1]
-    #     provincia = comune_data[2]
-    #     regione = comune_data[3]
-
-    #     layer_limiti_comunali = self.current_project.mapLayersByName("Limiti comunali")[0]
-    #     layer_limiti_comunali.removeSelection()
-    #     layer_limiti_comunali.setSubsetString(f"cod_regio='{codice_regio}'")
-
-    #     logo_regio_in = os.path.join(DIR_PLUGIN_ROOT, "img", "logo_regio", codice_regio + ".png")
-    #     logo_regio_out = os.path.join(self.project_path, "progetto", "loghi", "logo_regio.png")
-    #     shutil.copyfile(logo_regio_in, logo_regio_out)
-
-    #     mainPath = QgsProject.instance().homePath()
-    #     canvas = iface.mapCanvas()
-
-    #     imageFilename = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
-    #     save_map_image(imageFilename, layer_limiti_comunali, canvas)
-
-    #     layer_comune_progetto.dataProvider().updateExtents()
-    #     layer_comune_progetto.updateExtents()
-    #     # extent = layer_comune_progetto.dataProvider().extent()
-    #     canvas.setExtent(layer_comune_progetto.extent())
-
-    #     layout_manager = QgsProject.instance().layoutManager()
-    #     layouts = layout_manager.printLayouts()
-
-    #     for layout in layouts:
-    #         map_item = layout.itemById("mappa_0")
-    #         map_item.zoomToExtent(canvas.extent())
-    #         map_item_2 = layout.itemById("regio_title")
-    #         map_item_2.setText("Regione " + regione)
-    #         map_item_3 = layout.itemById("com_title")
-    #         map_item_3.setText("Comune di " + comune)
-    #         map_item_4 = layout.itemById("logo")
-    #         map_item_4.refreshPicture()
-    #         map_item_5 = layout.itemById("mappa_1")
-    #         map_item_5.refreshPicture()
-
-    #     # set project title
-    #     project_title = f"MzS Tools - Comune di {comune} ({provincia}, {regione}) - Studio di Microzonazione Sismica"
-    #     self.current_project.setTitle(project_title)
 
     def customize_project(self):
         """Customize the project with the selected comune data."""
@@ -1569,71 +1401,64 @@ class MzSProjectManager:
     # database operations --------------------------------------------------------------------------------------------
 
     def _setup_db_connection(self):
-        # setup db connection
-        if not self.db_connection:
+        """Setup database connection."""
+        if not self.db_path:
+            self.log("Database path is not set, cannot setup db connection", log_level=2)
+            return False
+
+        if not self.db_manager:
             self.log(f"Creating db connection to {self.db_path}...", log_level=4)
-            # database cannot be an empty 0-byte file
-            if self.db_path.stat().st_size == 0:
-                err_msg = self.tr(f"The database file is corrupted! {self.db_path}")
-                self.log(err_msg, log_level=2, push=True, duration=0)
-                # self.project_issues["db"].append("Empty database file")
-                self._add_project_issue("db", "Empty database file", log=False)
-                self.cleanup_db_connection()
-                return False
+
+            # Create new DatabaseManager
+            self.db_manager = DatabaseManager(self.db_path, logger=self)
+
             try:
-                self.db_connection = spatialite_connect(str(self.db_path))
-                # validate connection
-                cursor = self.db_connection.cursor()
-                # cursor.execute("PRAGMA integrity_check")
-                cursor.execute("PRAGMA quick_check")
-                # cursor.execute("SELECT * FROM sito_puntuale LIMIT 1")
-                cursor.close()
+                self.db_manager.connect()
+                return True
             except Exception as e:
                 err_msg = self.tr(f"Error connecting to db! {self.db_path}")
                 self.log(f"{err_msg}: {e}", log_level=2, push=True, duration=0)
-                self.log(traceback.format_exc(), log_level=2)
                 self.cleanup_db_connection()
                 return False
         return True
 
+    def cleanup_db_connection(self):
+        """Cleanup both legacy and new database connections."""
+        if self.db_manager:
+            self.db_manager.disconnect()
+            self.db_manager = None
+
     def get_project_comune_data(self) -> Optional[ComuneData]:
-        data = None
-        conn = self.db_connection
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT * FROM comune_progetto LIMIT 1")
-            row = cursor.fetchone()
-            if row:
-                data = ComuneData(
-                    cod_regio=row[1],
-                    cod_prov=row[2],
-                    cod_com=row[3],
-                    comune=row[4],
-                    provincia=row[7],
-                    regione=row[8],
-                    cod_istat=row[6],
-                )
-        finally:
-            cursor.close()
-        return data
+        """Get municipality data from the project database."""
+        row = self.db.execute_query("SELECT * FROM comune_progetto LIMIT 1", fetch_mode="one")
+
+        if row:
+            return ComuneData(
+                cod_regio=row[1],
+                cod_prov=row[2],
+                cod_com=row[3],
+                comune=row[4],
+                provincia=row[7],
+                regione=row[8],
+                cod_istat=row[6],
+            )
+        return None
 
     def _insert_comune_progetto(self, cod_istat):
-        conn = self.db_connection
-        cursor = conn.cursor()
+        """Insert municipality data into the project database."""
         try:
-            cursor.execute(
+            self.db.execute_update(
                 """INSERT INTO comune_progetto (cod_regio, cod_prov, "cod_com ", comune, geom, cod_istat, provincia, regione)
-                    SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione FROM comuni WHERE cod_istat = ?""",
+                SELECT cod_regio, cod_prov, cod_com, comune, GEOMETRY, cod_istat, provincia, regione
+                FROM comuni WHERE cod_istat = ?""",
                 (cod_istat,),
             )
-            conn.commit()
         except Exception as e:
-            conn.rollback()
             self.log(f"Failed to insert comune data: {e}", log_level=2, push=True, duration=0)
-        finally:
-            cursor.close()
+            raise
 
     def update_db(self):
+        """Update database schema to current version."""
         if self.project_version is None:
             self.log("Project version is not set, cannot update database", log_level=2)
             return
@@ -1664,7 +1489,9 @@ class MzSProjectManager:
 
         for upgrade_script in sql_scripts:
             self.log(f"Executing: {upgrade_script}", log_level=1)
-            self._exec_db_upgrade_script(upgrade_script)
+            # self._exec_db_upgrade_script(upgrade_script)
+            script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / upgrade_script
+            self.db.execute_script_file(script_path)
 
         for upgrade_script in sql_scripts:
             # doing this in a separate loop because the mzs_tools_update_history table was created only in v2.0.0
@@ -1676,55 +1503,33 @@ class MzSProjectManager:
         msg = self.tr("Database upgrades completed! Database upgraded to version")
         self.log(f"{msg} {__base_version__}", push=True, duration=0)
 
-    def _exec_db_upgrade_script(self, script_name):
-        conn = self.db_connection
-        cursor = conn.cursor()
-        try:
-            script_path = DIR_PLUGIN_ROOT / "data" / "sql_scripts" / script_name
-            with script_path.open("r") as f:
-                cursor.executescript(f.read())
-            conn.commit()
-        finally:
-            cursor.close()
-
     def update_history_table(self, component: str, from_version: str, to_version: str, notes: Optional[str] = None):
-        conn = self.db_connection
-        cursor = conn.cursor()
+        """Update the project update history table."""
         try:
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='mzs_tools_update_history'")
-            if cursor.fetchone():
-                cursor.execute(
-                    "INSERT INTO mzs_tools_update_history (updated_component, from_version, to_version, notes) VALUES (?, ? ,?, ?)",
+            # Check if table exists
+            if self.db.table_exists("mzs_tools_update_history"):
+                self.db.execute_update(
+                    "INSERT INTO mzs_tools_update_history (updated_component, from_version, to_version, notes) VALUES (?, ?, ?, ?)",
                     (component, from_version, to_version, notes),
                 )
-                conn.commit()
         except Exception as e:
             self.log(f"Failed to update history table: {e}", log_level=2)
-        finally:
-            cursor.close()
 
     def update_db_version_info(self):
-        conn = self.db_connection
-        cursor = conn.cursor()
+        """Update the database version information."""
         try:
-            cursor.execute(
-                "INSERT OR REPLACE INTO mzs_tools_version (id, db_version) VALUES (?, ?)",
-                (
-                    1,
-                    __base_version__,
-                ),
+            self.db.execute_update(
+                "INSERT OR REPLACE INTO mzs_tools_version (id, db_version) VALUES (?, ?)", (1, __base_version__)
             )
-            conn.commit()
         except Exception as e:
             self.log(f"Failed to update version info: {e}", log_level=2)
-        finally:
-            cursor.close()
 
     def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
         """Create a basic metadata record for an MzS Tools project."""
         date_now = datetime.now().strftime(r"%Y-%m-%d")
         layer_comune_id = self.find_layer_by_table_name_role("comune_progetto", "base")
         extent = self.current_project.layerTreeRoot().findLayer(layer_comune_id).layer().extent()
+
         values = {
             "id_metadato": f"{cod_istat}M1",
             "liv_gerarchico": "series",
@@ -1747,9 +1552,10 @@ class MzSProjectManager:
             "estensione_sud": str(extent.yMinimum()),
             "estensione_nord": str(extent.yMaximum()),
         }
-        conn = self.db_connection
-        cursor = conn.cursor()
-        try:
+
+        # Note: execute_update doesn't support named parameters yet
+        # Use transaction context for complex operations
+        with self.db.transaction() as cursor:
             cursor.execute(
                 """
                 INSERT INTO metadati (
@@ -1764,75 +1570,42 @@ class MzSProjectManager:
                 """,
                 values,
             )
-            conn.commit()
-        finally:
-            cursor.close()
 
     def count_indagini_data(self):
-        result = {
-            "sito_puntuale": [],
-            "indagini_puntuali": [],
-            "parametri_puntuali": [],
-            "curve": [],
-            "sito_lineare": [],
-            "indagini_lineari": [],
-            "parametri_lineari": [],
-        }
-        conn = self.db_connection
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT COUNT(*) FROM sito_puntuale")
-            result["sito_puntuale"].append(cursor.fetchone()[0])
-            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="sito_puntuale"').fetchone()
-            result["sito_puntuale"].append(res[0] if res else 0)
+        """Count records and sequences for investigation tables."""
+        tables = [
+            "sito_puntuale",
+            "indagini_puntuali",
+            "parametri_puntuali",
+            "curve",
+            "sito_lineare",
+            "indagini_lineari",
+            "parametri_lineari",
+        ]
 
-            cursor.execute("SELECT COUNT(*) FROM indagini_puntuali")
-            result["indagini_puntuali"].append(cursor.fetchone()[0])
-            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="indagini_puntuali"').fetchone()
-            result["indagini_puntuali"].append(res[0] if res else 0)
+        result = {}
+        for table in tables:
+            count = self.db.get_row_count(table)
+            seq = self.db.get_sequence_value(table)
+            result[table] = [count, seq]
 
-            cursor.execute("SELECT COUNT(*) FROM parametri_puntuali")
-            result["parametri_puntuali"].append(cursor.fetchone()[0])
-            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="parametri_puntuali"').fetchone()
-            result["parametri_puntuali"].append(res[0] if res else 0)
-
-            cursor.execute("SELECT COUNT(*) FROM curve")
-            result["curve"].append(cursor.fetchone()[0])
-            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="curve"').fetchone()
-            result["curve"].append(res[0] if res else 0)
-
-            cursor.execute("SELECT COUNT(*) FROM sito_lineare")
-            result["sito_lineare"].append(cursor.fetchone()[0])
-            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="sito_lineare"').fetchone()
-            result["sito_lineare"].append(res[0] if res else 0)
-
-            cursor.execute("SELECT COUNT(*) FROM indagini_lineari")
-            result["indagini_lineari"].append(cursor.fetchone()[0])
-            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="indagini_lineari"').fetchone()
-            result["indagini_lineari"].append(res[0] if res else 0)
-
-            cursor.execute("SELECT COUNT(*) FROM parametri_lineari")
-            result["parametri_lineari"].append(cursor.fetchone()[0])
-            res = cursor.execute('SELECT seq FROM sqlite_sequence WHERE name="parametri_lineari"').fetchone()
-            result["parametri_lineari"].append(res[0] if res else 0)
-        finally:
-            cursor.close()
         return result
 
     def reset_indagini_sequences(self):
-        conn = self.db_connection
-        cursor = conn.cursor()
-        try:
-            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="sito_puntuale"')
-            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="indagini_puntuali"')
-            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="parametri_puntuali"')
-            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="curve"')
-            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="sito_lineare"')
-            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="indagini_lineari"')
-            cursor.execute('UPDATE sqlite_sequence SET seq = 0 WHERE name="parametri_lineari"')
-            conn.commit()
-        finally:
-            cursor.close()
+        """Reset auto-increment sequences for investigation tables."""
+        tables = [
+            "sito_puntuale",
+            "indagini_puntuali",
+            "parametri_puntuali",
+            "curve",
+            "sito_lineare",
+            "indagini_lineari",
+            "parametri_lineari",
+        ]
+
+        with self.db.transaction() as cursor:
+            for table in tables:
+                cursor.execute("UPDATE sqlite_sequence SET seq = 0 WHERE name=?", (table,))
 
     # backup methods -------------------------------------------------------------------------------------------------
 
