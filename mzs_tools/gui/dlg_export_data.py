@@ -2,6 +2,7 @@ import logging
 import shutil
 from functools import partial
 from pathlib import Path
+from typing import cast
 
 from qgis.core import (
     Qgis,
@@ -12,7 +13,7 @@ from qgis.core import (
     QgsVectorLayerExporterTask,
     edit,
 )
-from qgis.gui import QgsMessageBarItem
+from qgis.gui import QgisInterface, QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
 from qgis.PyQt.QtCore import QCoreApplication, QUrl, QVariant
 from qgis.PyQt.QtGui import QDesktopServices
@@ -41,8 +42,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         super().__init__(parent)
 
         self.setupUi(self)
-        self.iface = iface
-
+        self.iface: QgisInterface = cast(QgisInterface, iface)
         self.log = MzSToolsLogger.log
 
         # setup proper python logger to be used in tasks with file-based logging
@@ -86,13 +86,19 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.completed_tasks = 0
         self.failed_tasks = []
 
+        # Exported project standard version, used to select CdI_Tabelle.mdb model and for naming the output folder
+        # TODO: should be centralized and could be selectable by the user
+        self.standard_version_string = "S42"
+        # TODO: the file(s) should be renamed to f"CdI_Tabelle_{self.standard_version_string}.mdb"
+        self.cdi_tabelle_model_file = "CdI_Tabelle_4.2.mdb"
+
     def showEvent(self, e):
         super().showEvent(e)
         self.output_dir_widget.lineEdit().setText("")
 
         if not self.mdb_checked:
             # test mdb connection
-            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
+            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / self.cdi_tabelle_model_file
             connected = self.check_mdb_connection(cdi_tabelle_path)
             if connected:
                 self.radio_button_mdb.setEnabled(True)
@@ -161,7 +167,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         """Setup file-based logging for the export tasks."""
         timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
         filename = f"data_export_{timestamp}.log"
-        log_dir = self.prj_manager.project_path / "Allegati" / "log"
+        log_dir = self.prj_manager.project_path / "Allegati" / "log"  # type: ignore
         log_dir.mkdir(exist_ok=True, parents=True)  # Ensure log directory exists
 
         self.log_file_path = log_dir / filename
@@ -179,6 +185,11 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.file_logger.info("############### Data export started")
 
     def start_export_tasks(self):
+        """Start export tasks based on user selections."""
+        if not self.prj_manager.project_path or not self.output_path:
+            self.log("Project path or output path not set", log_level=2)
+            return
+
         # Setup file-based logging
         self.setup_logging()
 
@@ -197,13 +208,18 @@ class DlgExportData(QDialog, FORM_CLASS):
             self.output_path.mkdir(parents=True)
 
         # get current project comune
-        current_project = self.prj_manager.get_project_comune_data()
-        comune_name = self.prj_manager.sanitize_comune_name(current_project.comune)
-        exported_project_path = self.output_path / f"{comune_name}_S42_Shapefile"
+        comune_data = self.prj_manager.get_project_comune_data()
+        comune_name = self.prj_manager.sanitize_comune_name(comune_data.comune)
+        exported_project_path = (
+            self.output_path / f"{comune_data.cod_istat}_{comune_name}_{self.standard_version_string}_Shapefile"
+        )
 
         if exported_project_path.exists():
             timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
-            exported_project_path = self.output_path / f"{comune_name}_S42_Shapefile_{timestamp}"
+            exported_project_path = (
+                self.output_path
+                / f"{comune_data.cod_istat}_{comune_name}_{self.standard_version_string}_Shapefile_{timestamp}"
+            )
 
         exported_project_path.mkdir(parents=True, exist_ok=False)
         self.file_logger.info(f"Exported project path: {exported_project_path}")
@@ -227,7 +243,7 @@ class DlgExportData(QDialog, FORM_CLASS):
 
         # copy the db file to the output directory
         if self.indagini_output_format == "mdb":
-            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
+            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / self.cdi_tabelle_model_file
             shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.mdb")
         elif self.indagini_output_format == "sqlite":
             cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite"
@@ -279,7 +295,7 @@ class DlgExportData(QDialog, FORM_CLASS):
                 layer = self.prj_manager.current_project.mapLayer(layer_id)
                 path = exported_project_path / shapefile_name
                 task = QgsVectorLayerExporterTask(
-                    layer,
+                    layer,  # type: ignore
                     str(path),
                     "ogr",
                     layer.crs(),
