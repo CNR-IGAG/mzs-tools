@@ -86,7 +86,9 @@ def save_map_image(image_path, zoom_to_layer, canvas, width=1280, height=1024):
         canvas_layers = [zoom_to_layer]
 
     MzSToolsLogger.log(f"Creating map image: {width}x{height} pixels, extent: {extent}")
-    MzSToolsLogger.log(f"Using {len(canvas_layers)} canvas layers: {[layer.name() for layer in canvas_layers]}")
+    MzSToolsLogger.log(
+        f"Using {len(canvas_layers)} canvas layers: {[layer.name() for layer in canvas_layers]}", log_level=4
+    )
 
     # Create map settings
     settings = QgsMapSettings()
@@ -183,8 +185,8 @@ def save_map_image_direct(image_path, layers, extent, crs, width=1280, height=10
         return
 
     MzSToolsLogger.log(f"Creating map image directly: {width}x{height} pixels")
-    MzSToolsLogger.log(f"Using {len(layers)} layers: {[layer.name() for layer in layers]}")
-    MzSToolsLogger.log(f"Extent: {extent}")
+    MzSToolsLogger.log(f"Using {len(layers)} layers: {[layer.name() for layer in layers]}", log_level=4)
+    MzSToolsLogger.log(f"Extent: {extent}", log_level=4)
 
     # Create map settings
     settings = QgsMapSettings()

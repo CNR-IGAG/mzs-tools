@@ -1,9 +1,13 @@
 # Changelog
 
-## [2.0.5-beta2] - 2025-10-02
+## [2.0.5-beta3] - 2025-11-08
 
 - Fix for HVSR view to handle comma as decimal separator
-- Custom python dependency manager and new tool to check and install required python libraries; this is alternative to QPIP, which is not being updated and is not PyQt6 compatible
+- Custom python dependency manager and new tool to check and install required python libraries (alternative to QPIP)
+- Disabled plugin dependency on QPIP
+- Implemented a db_manager module to improve database operations
+- Handle malformed date strings for data export to Access
+- Export tool improvements
 
 ## [2.0.4] - 2025-09-18
 
