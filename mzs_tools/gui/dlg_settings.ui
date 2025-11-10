@@ -68,9 +68,6 @@
        <height>100</height>
       </size>
      </property>
-     <property name="locale">
-      <locale language="English" country="UnitedStates"/>
-     </property>
      <property name="title">
       <string>Miscellaneous</string>
      </property>
@@ -78,7 +75,89 @@
       <bool>false</bool>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="1">
+      <item row="4" column="0">
+       <widget class="QLabel" name="lbl_version_saved">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="locale">
+         <locale language="English" country="UnitedStates"/>
+        </property>
+        <property name="text">
+         <string>Version used to save settings:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <widget class="QCheckBox" name="opt_debug">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="toolTip">
+         <string>Enable debug mode.</string>
+        </property>
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="locale">
+         <locale language="English" country="UnitedStates"/>
+        </property>
+        <property name="text">
+         <string>Debug mode (verbose logging)</string>
+        </property>
+        <property name="tristate">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="opt_auto_advanced_editing">
+        <property name="text">
+         <string>Auto advanced editing</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QPushButton" name="btn_reset">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>25</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="autoFillBackground">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>Reset setttings to factory defaults</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
        <widget class="QLabel" name="lbl_version_saved_value">
         <property name="minimumSize">
          <size>
@@ -148,29 +227,7 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="lbl_version_saved">
-        <property name="minimumSize">
-         <size>
-          <width>0</width>
-          <height>25</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>30</height>
-         </size>
-        </property>
-        <property name="locale">
-         <locale language="English" country="UnitedStates"/>
-        </property>
-        <property name="text">
-         <string>Version used to save settings:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0" colspan="2">
-       <widget class="QCheckBox" name="opt_debug">
+       <widget class="QLabel" name="lbl_java_home">
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -184,27 +241,21 @@
          </size>
         </property>
         <property name="toolTip">
-         <string>Enable debug mode.</string>
-        </property>
-        <property name="autoFillBackground">
-         <bool>true</bool>
+         <string>Path to Java JRE installation directory. Leave empty to auto-detect.</string>
         </property>
         <property name="locale">
          <locale language="English" country="UnitedStates"/>
         </property>
         <property name="text">
-         <string>Debug mode (verbose logging)</string>
-        </property>
-        <property name="tristate">
-         <bool>false</bool>
+         <string>Java JRE path (optional):</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="0" colspan="2">
-       <widget class="QPushButton" name="btn_reset">
+      <item row="3" column="1">
+       <widget class="QgsFileWidget" name="txt_java_home">
         <property name="minimumSize">
          <size>
-          <width>200</width>
+          <width>0</width>
           <height>25</height>
          </size>
         </property>
@@ -214,18 +265,17 @@
           <height>30</height>
          </size>
         </property>
-        <property name="autoFillBackground">
-         <bool>true</bool>
+        <property name="toolTip">
+         <string>Path to Java JRE installation directory (e.g., /usr/lib/jvm/java-21-openjdk-amd64)</string>
         </property>
-        <property name="text">
-         <string>Reset setttings to factory defaults</string>
+        <property name="locale">
+         <locale language="English" country="UnitedStates"/>
         </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="opt_auto_advanced_editing">
-        <property name="text">
-         <string>Auto advanced editing</string>
+        <property name="storageMode">
+         <enum>QgsFileWidget::GetDirectory</enum>
+        </property>
+        <property name="options">
+         <set>QFileDialog::ShowDirsOnly</set>
         </property>
        </widget>
       </item>
@@ -247,6 +297,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsFileWidget</class>
+   <extends>QWidget</extends>
+   <header>qgsfilewidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

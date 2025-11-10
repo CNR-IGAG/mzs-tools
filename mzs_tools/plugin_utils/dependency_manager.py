@@ -220,7 +220,7 @@ class DependencyManager:
                 self.tr(
                     "MzS Tools requires additional Python libraries ({packages}) for full functionality.\n\n"
                     "Do you want to install them now using pip?\n\n"
-                    "Alternative: Use the QPIP plugin (recommended).\n\n"
+                    "Alternative: Use the QPIP plugin.\n\n"
                     "Note: You will also need Java JRE installed on your system for Access database support. Refer to the documentation for details."
                 ).format(packages=", ".join(required_packages)),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,  # type: ignore

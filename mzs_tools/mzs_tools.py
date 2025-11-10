@@ -33,6 +33,7 @@ from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_settings import PlgOptionsFactory
 from .plugin_utils.dependency_manager import DependencyManager
 from .plugin_utils.logging import MzSToolsLogger
+from .tasks.access_db_connection import AccessDbConnection, JVMError
 
 
 class MzSTools:
@@ -298,8 +299,8 @@ class MzSTools:
 
         self.dependency_manager_action = self.add_action(
             QgsApplication.getThemeIcon("mIconPythonFile.svg"),
-            text=self.tr("Manage Python Dependencies"),
-            status_tip=self.tr("Check and install Python dependencies for Access database support"),
+            text=self.tr("Check Plugin Dependencies"),
+            status_tip=self.tr("Check Python dependencies and Java JVM for Access database support"),
             callback=self.open_dependency_manager,
             # parent=self.iface.mainWindow(),
             add_to_toolbar=False,
@@ -369,19 +370,8 @@ class MzSTools:
 
         if import_data:
             if not self.dependency_manager.check_python_dependencies():
-                reply = QMessageBox.question(
-                    self.iface.mainWindow(),
-                    self.tr("MzS Tools"),
-                    self.tr(
-                        "Python dependencies for Access database support are missing.\n\n"
-                        "You can install them using the 'Manage Python Dependencies' tool.\n\n"
-                        "Note: You will also need Java JRE installed on your system for Access database support. Refer to the documentation for details.\n\n"
-                        "Are you sure you want to proceed?"
-                    ),
-                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,  # type: ignore
-                    QMessageBox.StandardButton.No,
-                )
-                if reply != QMessageBox.StandardButton.Yes:
+                reply = self._show_missing_dependencies_dialog()
+                if not reply:
                     return False
 
             QMessageBox.information(
@@ -498,11 +488,21 @@ class MzSTools:
         else:
             self.dlg_import_data.reset_sequences = sequences_gt_0
 
+        if not self.dependency_manager.check_python_dependencies():
+            reply = self._show_missing_dependencies_dialog()
+            if not reply:
+                return False
+
         self.dlg_import_data.exec()
 
     def open_dlg_export_data(self):
         if self.dlg_export_data is None:
             self.dlg_export_data = DlgExportData(self.iface.mainWindow())
+
+        if not self.dependency_manager.check_python_dependencies():
+            reply = self._show_missing_dependencies_dialog()
+            if not reply:
+                return False
 
         self.dlg_export_data.exec()
 
@@ -576,7 +576,82 @@ class MzSTools:
         if result:
             self.dlg_metadata_edit.save_data()
 
+    def open_dependency_manager(self):
+        """Open the dependency check dialog."""
+
+        cdi_tabelle_model_file = "CdI_Tabelle_4.2.mdb"
+        cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / cdi_tabelle_model_file
+        result = self.check_mdb_connection(cdi_tabelle_path)
+
+        check_msg = f"{'✅' if result['deps_ok'] else '❌'} " + self.tr("Python dependencies") + "\n"
+        if result["deps_ok"]:
+            check_msg += f"{'✅' if result['jvm_ok'] else '❌'} " + self.tr("Java JRE") + "\n"
+            if result["jvm_ok"]:
+                check_msg += (
+                    f"{'✅' if result['connected'] else '❌'} "
+                    + self.tr("Connection to Access test database successful")
+                    + "\n\n"
+                )
+        if not result["jvm_ok"]:
+            check_msg += self.tr(
+                "\n\nJava JRE was not detected.\n"
+                "If you are sure it is installed, try setting up the JAVA_HOME environment variable or set the installation folder in the plugin settings.\n"
+                "Check the plugin documentation for more details.\n"
+            )
+
+        if result["connected"]:
+            QMessageBox.information(
+                None,
+                self.tr("MzS Tools - Dependency Manager"),
+                self.tr("All dependencies are installed and the connection to Access database is successful.\n\n")
+                + check_msg,
+            )
+        else:
+            QMessageBox.warning(
+                None,
+                self.tr("MzS Tools - Dependency Manager"),
+                self.tr("Some dependencies are missing or the connection to Access database failed.\n\n") + check_msg,
+            )
+
+        if not result["deps_ok"]:
+            self.dependency_manager.install_python_dependencies(interactive=True)
+
     # end action callbacks ----------------------------------------------------
+
+    def check_mdb_connection(self, mdb_path):
+        """Test connection to an Access database."""
+        connected = False
+        mdb_conn = None
+        deps_ok = True
+        jvm_ok = True
+
+        try:
+            mdb_conn = AccessDbConnection(mdb_path)
+            connected = mdb_conn.open()
+
+        except ImportError as e:
+            error_msg = f"{e}. Python dependencies missing."
+            self.log(error_msg, log_level=1)
+            deps_ok = False
+
+        except JVMError as e:
+            self.log(f"{e}", log_level=1)
+            jvm_ok = False
+
+        except Exception as e:
+            self.log(f"{e}", log_level=2)
+
+        finally:
+            if mdb_conn and connected:
+                mdb_conn.close()
+
+        result = {
+            "connected": connected,
+            "deps_ok": deps_ok,
+            "jvm_ok": jvm_ok,
+        }
+
+        return result
 
     def check_project(self):
         """
@@ -718,8 +793,26 @@ class MzSTools:
         except Exception as e:
             self.log(f"Error checking Python dependencies: {str(e)}", log_level=1)
 
-    def open_dependency_manager(self):
-        """Open the dependency management dialog."""
+    def _show_missing_dependencies_dialog(self) -> bool:
+        """Show a dialog informing the user about missing dependencies.
+        Returns True if the user wants to proceed despite missing dependencies, False otherwise.
+        """
+        reply = QMessageBox.question(
+            self.iface.mainWindow(),
+            self.tr("MzS Tools"),
+            self.tr(
+                "Python dependencies for Access database support are missing.\n\n"
+                "You can install them using the 'Manage Python Dependencies' tool.\n\n"
+                "Note: You will also need Java JRE installed on your system for Access database support. Refer to the documentation for details.\n\n"
+                "Are you sure you want to proceed?"
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,  # type: ignore
+            QMessageBox.StandardButton.No,
+        )
+        return reply == QMessageBox.StandardButton.Yes
+
+    def _install_python_dependencies(self):
+        """Install or force reinstall of Python dependencies using the dependency manager."""
         try:
             if self.dependency_manager.check_python_dependencies():
                 reply = QMessageBox.question(

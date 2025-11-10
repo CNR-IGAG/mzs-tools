@@ -114,10 +114,6 @@ class ImportShapefileTask(QgsTask):
                 featureFields["ubicazione_prov"] = qgsFeature[field.name()]
             elif field_name_lower == "ub_com":
                 featureFields["ubicazione_com"] = qgsFeature[field.name()]
-            elif field_name_lower == "id_spu":
-                featureFields["id_spu"] = qgsFeature[field.name()]
-            elif field_name_lower == "id_sln":
-                featureFields["id_sln"] = qgsFeature[field.name()]
             else:
                 featureFields[field.name()] = qgsFeature[field.name()]
 

@@ -145,14 +145,12 @@ class DlgExportData(QDialog, FORM_CLASS):
                 self.radio_button_mdb.setToolTip("")
 
         except ImportError as e:
-            error_msg = f"{e}. Use 'qpip' QGIS plugin to install dependencies."
-            self.log(error_msg, log_level=2)
+            error_msg = self.tr("Use the dependency check tool or 'qpip' QGIS plugin to install dependencies.")
+            self.log(f"{e}. {error_msg}", log_level=1)
             self.label_mdb_msg.setText(f"[{e}]")
-            self.radio_button_mdb.setToolTip(
-                self.tr("Use 'qpip' QGIS plugin to install dependencies and restart QGIS")
-            )
+            self.radio_button_mdb.setToolTip(error_msg)
         except JVMError as e:
-            self.log(f"{e}", log_level=2)
+            self.log(f"{e}", log_level=1)
             self.label_mdb_msg.setText(f"[{e} - check your Java JVM installation]")
         except Exception as e:
             self.log(f"{e}", log_level=2)

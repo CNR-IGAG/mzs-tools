@@ -79,6 +79,7 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
         # misc
         settings.debug_mode = self.opt_debug.isChecked()
         settings.auto_advanced_editing = self.opt_auto_advanced_editing.isChecked()
+        settings.java_home_path = self.txt_java_home.filePath().strip()
         settings.version = __version__
 
         # dump new settings into QgsSettings
@@ -94,6 +95,7 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
         # global
         self.opt_debug.setChecked(settings.debug_mode)
         self.opt_auto_advanced_editing.setChecked(settings.auto_advanced_editing)
+        self.txt_java_home.setFilePath(settings.java_home_path)
         self.lbl_version_saved_value.setText(settings.version)
 
     def reset_settings(self):
