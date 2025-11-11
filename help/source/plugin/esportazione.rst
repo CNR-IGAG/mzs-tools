@@ -7,7 +7,7 @@ Esportazione del progetto in una struttura standard
   :height: 25
 
 La struttura di archiviazione generata dal plugin MzSTools non corrisponde esattamente a quella prevista dagli Standard
-MS, in quanto è ottimizzata per l’utilizzo con QGIS. 
+MS, in quanto è ottimizzata per l’utilizzo con QGIS.
 
 La generazione di una struttura conforme agli Standard deve quindi essere considerata come fase finale del flusso di
 lavoro e può essere eseguita tramite l'apposito strumento di esportazione |ico3| presente sulla toolbar.
@@ -17,7 +17,9 @@ lavoro e può essere eseguita tramite l'apposito strumento di esportazione |ico3
   :align: center
 
 La finestra di dialogo dello strumento richiede di selezionare la cartella in cui effettuare l’esportazione e il
-formato di output per il database delle indagini. 
+formato di output per il database delle indagini.
+
+.. tip:: E\' consigliabile effettuare il :ref:`controllo-allegati` prima di eseguire l'esportazione.
 
 Al termine delle operazioni, il tool genera un **report testuale** contenente l’esito dell’esportazione del progetto,
 all’interno della cartella di progetto ``/allegati/log``.

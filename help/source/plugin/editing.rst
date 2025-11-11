@@ -12,9 +12,9 @@ Inserimento dati vettoriali e relativi attributi
 Come descritto nella sezione :ref:`progetto-qgis`, il progetto generato dal plugin MzSTools è strutturato in gruppi di layer.
 
 L\'**inserimento dei dati geografici vettoriali** necessari per lo studio di MS, secondo quanto definito dagli Standard, viene effettuato tramite i layer del gruppo
-**Banca dati geografica**, utilizzando *gli strumenti di editing messi a disposizione da QGIS*. 
+**Banca dati geografica**, utilizzando *gli strumenti di editing messi a disposizione da QGIS*.
 
-MzS Tools associa agli strumenti di editing di QGIS una serie di *interfacce di inserimento dati personalizzate* 
+MzS Tools associa agli strumenti di editing di QGIS una serie di *interfacce di inserimento dati personalizzate*
 che aiutano nell'inserimento degli attributi e delle informazioni correlate alle geometrie.
 
 La procedura generale per **inserire nuovi dati** consiste in:
@@ -40,9 +40,9 @@ Per **modificare gli attributi** di una feature già esistente, è possibile pro
 * selezionare il layer da editare;
 * attivare l’editing con lo strumento della toolbar di QGIS “Attiva modifiche”;
 * "identificare" la feature da editare su mappa tramite lo strumento "Informazioni elementi" di QGIS;
-  
+
   .. tip:: Per fare in modo che QGIS apra direttamente la maschera di inserimento, nel pannello “Informazioni risultati” mettere la spunta su “Apri modulo automaticamente”.
-  
+
     .. image:: ../img/ident_maschera.png
         :width: 550
         :align: center
@@ -89,7 +89,7 @@ Una volta inserita almeno un'indagine per un sito puntuale o lineare, sarà poss
     :align: center
 
 * selezionare l'indagine dalla lista di indagini associate al sito, cliccare sulla scheda *Parametri* e sul pulsante *Passa alla vista modulo* ;
-  
+
   .. image:: ../img/editing_param.png
     :width: 680
     :align: center
@@ -159,7 +159,7 @@ In particolare sono presenti varie impostazioni che riguardano:
 Impostazioni di aggancio (snapping)
 ===================================
 
-Le impostazioni di aggancio sono raggiungibili tramite il menu ``Progetto - Opzioni di Aggancio…``. E\' possibile inoltre attivare 
+Le impostazioni di aggancio sono raggiungibili tramite il menu ``Progetto - Opzioni di Aggancio…``. E\' possibile inoltre attivare
 la *Barra degli strumenti di aggancio* di QGIS, la quale dà accesso alla maggior parte di queste funzioni.
 
 Editing topologico
@@ -177,15 +177,11 @@ alcune funzionalità topologiche, quali:
   :width: 700
   :align: center
 
-|
-
 Altre opzioni di editing topologico sono disponibili nel pannello delle `proprietà Digitalizzazione del layer <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/vector_properties.html#digitizing-properties>`_:
 
 .. image:: ../img/proprieta_layer_digitalizzazione.png
   :width: 700
   :align: center
-
-|
 
 E\' qui possibile attivare, a seconda del tipo di geometria del layer, alcuni **Controlli topologici** per *assicurare che le geometrie inserite nel layer rispettino determinate regole*, indipendentemente dalle impostazioni
 di aggancio ed editing viste in precedenza.
@@ -212,8 +208,6 @@ tra elementi poligonali appartenenti allo stesso layer.
   :width: 473
   :align: center
 
-|
-
 In alcuni casi può essere utile attivare l'opzione **"Segui configurazione avanzata"**, che permette di impostare regole di sovrapposizione
 tra i poligoni appartenenti a *layer diversi*.
 
@@ -223,17 +217,15 @@ L'impostazione, in questo caso, dovrebbe avvenire come mostrato in figura:
 .. image:: ../img/config_avanzata_overlaps.png
   :align: center
 
-|
-
 Come segnalato nel `manuale di QGIS <https://docs.qgis.org/3.34/it/docs/user_manual/working_with_vector/editing_geometry_attributes.html#overlapping-control>`_,
-questa impostazione è da usare con cautela in quanto si potrebbero ottenere geometrie inaspettate nel caso ci si dimentichi di deselezionare questa opzione 
+questa impostazione è da usare con cautela in quanto si potrebbero ottenere geometrie inaspettate nel caso ci si dimentichi di deselezionare questa opzione
 quando non è più necessaria.
 
-Per questo motivo **MzS Tools effettua automaticamente l'impostazione di alcune opzioni di editing avanzato** nel momento in cui 
+Per questo motivo **MzS Tools effettua automaticamente l'impostazione di alcune opzioni di editing avanzato** nel momento in cui
 si attiva l'editing per determinati layer:
 
 * attivazione dell'opzione "Segui configurazione avanzata" per il controllo delle sovrapposizioni tra layer
-  appartenenti ad uno stesso "gruppo" (ad esempio i layer delle zone stabili e instabili del livello 1 o del livello 2-3); 
+  appartenenti ad uno stesso "gruppo" (ad esempio i layer delle zone stabili e instabili del livello 1 o del livello 2-3);
 * attivazione dell'opzione "Modifica topologica" per facilitare l'editing dei poligoni aventi confini in comune ed
   evitare la presenza di vuoti tra l'uno e l'altro.
 
@@ -241,7 +233,7 @@ Le opzioni vengono poi **automaticamente riportate allo stato iniziale salvato n
 interrompe l'editing.
 
 In questo modo si evitano errori topologici garantendo la corretta gestione delle sovrapposizioni tra i layer che lo
-richiedono, senza però interferire con le impostazioni personali effettuate a livello di progetto. 
+richiedono, senza però interferire con le impostazioni personali effettuate a livello di progetto.
 
 Questo comportamento automatico può comunque essere disattivato o riattivato tramite lo strumento di configurazione di
 MzS Tools (vedi: :ref:`plugin-settings`):

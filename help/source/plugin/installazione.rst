@@ -20,7 +20,8 @@ definito dagli Standard MS), richiedono l'installazione di alcune componenti agg
 - una release recente di Java runtime environment (JRE o JDK versione 11 o successiva) a **64 bit** installata sul sistema operativo;
 - driver JDBC per Access (`UcanAccess <https://github.com/spannm/ucanaccess>`_) (incluso nel plugin);
 - librerie Python (`JayDeBeApi <https://github.com/baztian/jaydebeapi>`_) per l'accesso alle funzionalità Java,
-  installate tramite il plugin per QGIS `QPIP <https://github.com/opengisch/qpip>`_.
+  installate tramite lo strumento integrato del plugin (vedi: :ref:`plugin-deps`) oppure tramite il plugin per QGIS `QPIP
+  <https://github.com/opengisch/qpip>`_ (da installare separatamente).
 
 Installazione di Java
 """""""""""""""""""""
@@ -41,7 +42,12 @@ Durante l'installazione dei pacchetti per Windows scaricati da `Adoptium <https:
 selezionare un'opzione per l'impostazione automatica della variabile di ambiente ``JAVA_HOME``:
 
 .. image:: ../img/jdk_install_01.png
+    :width: 525
     :align: center
+
+In alternativa, se si è sicuri di aver installato correttamente la JRE ma questa non viene rilevata dal plugin, è
+possibile impostare manualmente il percorso della cartella di installazione di Java nelle impostazioni
+(vedi: :ref:`plugin-settings`).
 
 Installazione librerie Python con QPIP
 """"""""""""""""""""""""""""""""""""""
@@ -55,8 +61,6 @@ funzionamento:
 .. image:: ../img/qpip_01.png
   :align: center
 
-|
-
 Controllare nel gestore dei plugin di QGIS che il plugin **QPIP** sia installato e attivo.
 
 .. Tip:: Dopo aver installato QPIP potrebbe essere necessario riavviare QGIS.
@@ -65,8 +69,6 @@ Al riavvio, QPIP chiederà automaticamente di installare le librerie Python rich
 
 .. image:: ../img/qpip_02.png
   :align: center
-
-|
 
 Installazione versione di sviluppo
 """"""""""""""""""""""""""""""""""
