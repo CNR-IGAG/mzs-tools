@@ -1,10 +1,10 @@
 from datetime import datetime
-from pathlib import Path
 from typing import Optional
 
 from ..__about__ import DIR_PLUGIN_ROOT
 from ..plugin_utils.dependency_manager import DependencyManager
 from ..plugin_utils.logging import MzSToolsLogger
+from ..plugin_utils.misc import find_libjvm
 from ..plugin_utils.settings import PlgOptionsManager
 
 EXT_LIBS_LOADED = True
@@ -16,46 +16,6 @@ try:
     from jpype.types import *  # type: ignore # noqa: F403
 except ImportError:
     EXT_LIBS_LOADED = False
-
-
-def find_libjvm(java_home: str) -> Optional[str]:
-    """
-    Recursively search for libjvm.so (Linux), libjvm.dylib (macOS), or jvm.dll (Windows)
-    in the provided Java home directory.
-
-    Args:
-        java_home: Path to Java JRE installation directory
-
-    Returns:
-        Full path to libjvm file if found, None otherwise
-    """
-    if not java_home or not java_home.strip():
-        return None
-
-    java_home_path = Path(java_home)
-    if not java_home_path.exists() or not java_home_path.is_dir():
-        return None
-
-    # Determine the library name based on platform
-    import platform
-
-    system = platform.system()
-    if system == "Linux":
-        lib_names = ["libjvm.so"]
-    elif system == "Darwin":  # macOS
-        lib_names = ["libjvm.dylib"]
-    elif system == "Windows":
-        lib_names = ["jvm.dll"]
-    else:
-        lib_names = ["libjvm.so", "libjvm.dylib", "jvm.dll"]
-
-    # Search for the library file
-    for lib_name in lib_names:
-        for lib_path in java_home_path.rglob(lib_name):
-            if lib_path.is_file():
-                return str(lib_path)
-
-    return None
 
 
 class AccessDbConnection:

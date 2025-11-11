@@ -31,9 +31,9 @@ from .gui.dlg_load_ogc_services import DlgLoadOgcServices
 from .gui.dlg_manage_attachments import DlgManageAttachments
 from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_settings import PlgOptionsFactory
+from .plugin_utils.db_utils import check_mdb_connection
 from .plugin_utils.dependency_manager import DependencyManager
 from .plugin_utils.logging import MzSToolsLogger
-from .tasks.access_db_connection import AccessDbConnection, JVMError
 
 
 class MzSTools:
@@ -581,7 +581,7 @@ class MzSTools:
 
         cdi_tabelle_model_file = "CdI_Tabelle_4.2.mdb"
         cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / cdi_tabelle_model_file
-        result = self.check_mdb_connection(cdi_tabelle_path)
+        result = check_mdb_connection(cdi_tabelle_path)
 
         check_msg = f"{'✅' if result['deps_ok'] else '❌'} " + self.tr("Python dependencies") + "\n"
         if result["deps_ok"]:
@@ -617,41 +617,6 @@ class MzSTools:
             self.dependency_manager.install_python_dependencies(interactive=True)
 
     # end action callbacks ----------------------------------------------------
-
-    def check_mdb_connection(self, mdb_path):
-        """Test connection to an Access database."""
-        connected = False
-        mdb_conn = None
-        deps_ok = True
-        jvm_ok = True
-
-        try:
-            mdb_conn = AccessDbConnection(mdb_path)
-            connected = mdb_conn.open()
-
-        except ImportError as e:
-            error_msg = f"{e}. Python dependencies missing."
-            self.log(error_msg, log_level=1)
-            deps_ok = False
-
-        except JVMError as e:
-            self.log(f"{e}", log_level=1)
-            jvm_ok = False
-
-        except Exception as e:
-            self.log(f"{e}", log_level=2)
-
-        finally:
-            if mdb_conn and connected:
-                mdb_conn.close()
-
-        result = {
-            "connected": connected,
-            "deps_ok": deps_ok,
-            "jvm_ok": jvm_ok,
-        }
-
-        return result
 
     def check_project(self):
         """

@@ -4,6 +4,7 @@ import time
 from functools import wraps
 from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen
+from typing import Optional
 
 from qgis.core import (
     QgsApplication,
@@ -241,6 +242,7 @@ def get_file_path(root_dir_path, file_name):
 def get_path_for_name(root_dir_path, name):
     """case insensitive recursive search for a file or subdirectory in the provided path"""
     name = name.lower()
+    # MzSToolsLogger.log(f"Searching for {name} in {root_dir_path}", log_level=4)
     for root, dirs, files in Path(root_dir_path).walk():
         for f in files:
             if f.lower() == name:
@@ -356,3 +358,66 @@ def run_cmd(args, description="running a system command"):
     else:
         MzSToolsLogger.log("Command succeeded.", log_level=3, push=True, duration=5)
         return True
+
+
+def find_libjvm(java_home: str, max_depth: int = 4, save_to_settings: bool = True) -> Optional[str]:
+    """
+    Recursively search for libjvm.so (Linux), libjvm.dylib (macOS), or jvm.dll (Windows)
+    in the provided Java home directory.
+
+    Args:
+        java_home: Path to Java JRE installation directory
+        max_depth: Maximum depth for recursive search (default: 4)
+        save_to_settings: If True, save the java_home path to plugin settings when libjvm is found (default: True)
+
+    Returns:
+        Full path to libjvm file if found, None otherwise
+    """
+    if not java_home or not java_home.strip():
+        return None
+
+    java_home_path = Path(java_home)
+    if not java_home_path.exists() or not java_home_path.is_dir():
+        return None
+
+    # Determine the library name based on platform
+    import platform
+
+    system = platform.system()
+    if system == "Linux":
+        lib_names = ["libjvm.so"]
+    elif system == "Darwin":  # macOS
+        lib_names = ["libjvm.dylib"]
+    elif system == "Windows":
+        lib_names = ["jvm.dll"]
+    else:
+        lib_names = ["libjvm.so", "libjvm.dylib", "jvm.dll"]
+
+    # Search for the library file with depth limit
+    for lib_name in lib_names:
+        for lib_path in java_home_path.rglob(lib_name):
+            # Calculate depth relative to java_home_path
+            try:
+                relative_path = lib_path.relative_to(java_home_path)
+                depth = len(relative_path.parents)
+                if depth <= max_depth and lib_path.is_file():
+                    # Save the directory containing the found library to settings if requested
+                    if save_to_settings:
+                        from ..plugin_utils.settings import PlgOptionsManager
+
+                        lib_dir = str(lib_path.parent)
+                        plg_settings = PlgOptionsManager()
+                        current_settings = plg_settings.get_plg_settings()
+                        # Only update if different from current value
+                        if current_settings.java_home_path != lib_dir:
+                            MzSToolsLogger.log(
+                                f"Updating java_home_path setting to: {lib_dir}", log_level=3, push=True, duration=5
+                            )
+                            plg_settings.set_value_from_key("java_home_path", lib_dir)
+
+                    return str(lib_path)
+            except ValueError:
+                # Skip if path is not relative to java_home_path
+                continue
+
+    return None

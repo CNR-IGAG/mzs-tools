@@ -1,9 +1,10 @@
 import logging
 from functools import partial
 from pathlib import Path
+from typing import cast
 
 from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig, QgsTask
-from qgis.gui import QgsMessageBarItem
+from qgis.gui import QgisInterface, QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
 from qgis.PyQt.QtCore import QCoreApplication, Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
@@ -37,7 +38,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         super().__init__(parent)
 
         self.setupUi(self)
-        self.iface = iface
+        self.iface: QgisInterface = cast(QgisInterface, iface)
 
         self.log = MzSToolsLogger.log
 
@@ -307,6 +308,11 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         for name, data in self.standard_proj_paths.items():
             parent_path = Path(input_dir) if not data["parent"] else Path(input_dir) / data["parent"]
+
+            # if parent_path does not exist check for lower case name
+            if not parent_path.exists():
+                parent_path = parent_path.parent / str(parent_path.name).lower()
+
             data["path"] = get_path_for_name(parent_path, name.split("-")[1] if "-" in name else name)
             # self.log(f"{name}: {data['path']}", log_level=4)
             if data["checkbox"]:
@@ -405,8 +411,8 @@ class DlgImportData(QDialog, FORM_CLASS):
         return None
 
     def start_import_tasks(self):
-        if not self.input_path:
-            self.log("No input path selected", log_level=2)
+        if not self.prj_manager.project_path or not self.input_path:
+            self.log("Project path or input path not set", log_level=2)
             return
 
         # make sure document paths exist
@@ -451,8 +457,8 @@ class DlgImportData(QDialog, FORM_CLASS):
         tasks = []
         if self.chk_siti_puntuali.isEnabled() and self.chk_siti_puntuali.isChecked():
             self.import_spu_task = ImportSitiPuntualiTask(
-                self.standard_proj_paths,
-                data_source=indagini_data_source,
+                self.standard_proj_paths,  # type: ignore
+                data_source=indagini_data_source,  # type: ignore
                 mdb_password=self.mdb_password,
                 csv_files=self.csv_files_found,
             )
@@ -460,8 +466,8 @@ class DlgImportData(QDialog, FORM_CLASS):
             tasks.append(self.import_spu_task)
         if self.chk_siti_lineari.isEnabled() and self.chk_siti_lineari.isChecked():
             self.import_sln_task = ImportSitiLineariTask(
-                self.standard_proj_paths,
-                data_source=indagini_data_source,
+                self.standard_proj_paths,  # type: ignore
+                data_source=indagini_data_source,  # type: ignore
                 mdb_password=self.mdb_password,
                 csv_files=self.csv_files_found,
             )
@@ -476,7 +482,7 @@ class DlgImportData(QDialog, FORM_CLASS):
                 and data["checkbox"].isChecked()
             ):
                 task_name = f"import_shapefile_task_{name}"
-                self.import_shapefile_tasks[task_name] = ImportShapefileTask(self.standard_proj_paths, name)
+                self.import_shapefile_tasks[task_name] = ImportShapefileTask(self.standard_proj_paths, name)  # type: ignore
                 tasks.append(self.import_shapefile_tasks[task_name])
 
         if not tasks:
@@ -634,7 +640,7 @@ class DlgMdbPassword(QDialog):
         super().__init__(parent)
         self.setWindowTitle(self.tr("Enter database password"))
 
-        self.layout = QVBoxLayout()
+        self.layout: QVBoxLayout = QVBoxLayout()
 
         self.label = QLabel(self.tr("A password is required to access CdI_Tabelle.mdb"))
         self.layout.addWidget(self.label)
@@ -648,7 +654,7 @@ class DlgMdbPassword(QDialog):
         self.chkbox_save.stateChanged.connect(self.on_chkbox_save_state_changed)
         self.layout.addWidget(self.chkbox_save)
 
-        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)  # type: ignore
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
         self.layout.addWidget(self.button_box)
