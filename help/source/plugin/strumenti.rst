@@ -59,8 +59,6 @@ Strumenti di gestione del progetto
   :width: 350
   :align: center
 
-|
-
 - **Nuovo progetto**: avvia la procedura guidata per la creazione di un nuovo progetto MzS Tools. Vedi: :ref:`nuovo-progetto`
 - **Apri un progetto basato su 'Standard MS'**: questo strumento permette di importare uno studio di MS esistente, la
   cui struttura sia conforme agli Standard MS. Lo strumento crea un nuovo progetto MzS Tools per il comune indicato e
@@ -77,12 +75,21 @@ Strumenti di gestione dei layer
   :width: 450
   :align: center
 
-|
+- **Controlla l'integrità del progetto QGIS corrente di MzS Tools**: esegue un controllo su diversi aspetti del progetto
+  QGIS corrente, verificando la presenza di eventuali errori o incongruenze che potrebbero influire sul corretto
+  funzionamento del plugin.
+- **Ripristina/Sostituisci i layer di default del progetto MzS Tools**: in caso di problemi rilevati a livello dei
+  layer fondamentali del progetto (ad esempio a causa di modifiche accidentali o cancellazioni), questo strumento
+  consente di ripristinare automaticamente i gruppi di layer richiesti senza influire sui dati esistenti.
+- **Carica i layout di stampa di default di MzS Tools**: aggiunge al progetto QGIS corrente i layout di stampa di
+  default forniti dal plugin, conservando i layout esistenti.
+- **Carica servizi WMS/WFS**: apre una finestra di dialogo per l'aggiunta di una serie di servizi WMS o WFS utili al
+  progetto corrente.
 
 Strumenti di importazione ed esportazione dati
 """"""""""""""""""""""""""""""""""""""""""""""
 
-Per maggiori informazioni sui processi di importazione ed esportazione dati, fare riferimento a:
+Per maggiori informazioni sui processi di |ico2| importazione ed |ico3| esportazione dati, fare riferimento a:
 
 - :ref:`importazione`
 - :ref:`esportazione`
@@ -91,10 +98,10 @@ Strumenti di utilità
 """"""""""""""""""""
 
 - |ico7| **Impostazioni di MzS Tools**: apre la finestra delle impostazioni del plugin. Vedi: :ref:`plugin-settings`
-- **Controllo delle dipendenze del plugin**: verifica che le librerie esterne e la Java Runtime Environment richiesti
+- **Controllo dipendenze plugin**: verifica che le librerie esterne e la Java Runtime Environment richiesti
   dal plugin siano correttamente installate e funzionanti. Vedi: :ref:`plugin-deps`
 - |ico8| **Aiuto di MzS Tools**: apre una finestra contenente una serie di informazioni utili sul plugin, compreso
-  l'accesso a questa documentazione.
+  l'accesso alla documentazione.
 
 Interfacce di inserimento dati
 """"""""""""""""""""""""""""""
@@ -113,47 +120,3 @@ studi di MS. I layout sono accessibili tramite il menu “Progetto – Layout”
 generato dal plugin.
 
 Per maggiori informazioni vai a: :ref:`layout-stampa`
-
-.. _consultazione-allegati:
-
-Strumento di consultazione rapida indagini
-""""""""""""""""""""""""""""""""""""""""""
-
-Secondo gli Standard MS le informazioni relative alle indagini devono essere
-organizzate in una struttura dati composta da:
-
-- "siti" di indagine contenenti le geometrie georeferenziate lineari e puntuali;
-- "indagini" vere e proprie, in rapporto n-1 con i siti;
-- "parametri", ovvero i valori registrati per ogni tipologia di indagine, in
-  rapporto n-1 con le indagini.
-
-Questo rende difficoltoso l’accesso alle informazioni delle indagini a partire
-dall’interrogazione dei siti collocati su mappa, in quanto ad ogni sito possono
-essere correlate n indagini, ciascuna contenente un riferimento ad un file pdf
-contenente le informazioni di dettaglio.
-
-Per semplificare l’accesso a queste informazioni è stato realizzato un apposito
-strumento basato sul meccanismo delle "azioni" associate ad un layer. Questa
-funzionalità di QGIS permette di associare ad un layer vettoriale delle “azioni”
-basate sugli attributi associati ai singoli elementi del vettore.
-
-In questo caso è stata sviluppata un'azione che permette di accedere a tutti i
-file pdf archiviati nel progetto ed associati ad ogni indagine, semplicemente
-cliccando su un "sito" d'indagine e selezionando il file pdf da aprire tramite
-una apposita interfaccia grafica.
-
-.. Note:: Per il funzionamento dello strumento è necessario che i file allegati abbiano l'ID dell'indagine incluso nel nome del file.
-   E\' possibile utilizzare lo strumento **Controllo dei file allegati** per associare automaticamente gli ID delle indagini ai nomi dei file.
-
-.. image:: ../img/pdf_search.png
-  :align: center
-
-Per l'utilizzo dello strumento è possibile procedere in questo modo:
-
-1. Selezionare il layer "Siti puntuali" o "Siti Lineari";
-2. Selezionare l’icona "Azione" e fare clic su "Cerca documenti PDF delle
-   indagini associate ai siti";
-3. una volta attivato lo strumento è possibile cliccare su un sito d'indagine
-   visualizzato sulla mappa per effettuare la ricerca dei documenti associati;
-4. i risultati della ricerca vengono presentati in una apposita finestra
-   contenente la lista dei file trovati.

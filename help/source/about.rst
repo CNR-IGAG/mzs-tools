@@ -21,23 +21,19 @@ Questa documentazione è rilasciata con licenza `Creative Commons Attribution 4.
    :target: https://creativecommons.org/licenses/by/4.0/
    :alt: CC BY 4.0
 
-**Sei libero di:**
-
-- **Condividere** — copiare e ridistribuire il materiale in qualsiasi formato o mezzo per qualsiasi scopo, anche commerciale
-- **Adattare** — remixare, trasformare e sviluppare il materiale per qualsiasi scopo, anche commerciale
-
-**A condizione che:**
-
-- **Attribuzione** — Devi riconoscere una paternità adeguata, fornire un link alla licenza e indicare se sono state
-  apportate modifiche. Puoi farlo in qualsiasi modo ragionevole, ma non in modo tale da suggerire che il licenziante
-  avalli te o il tuo utilizzo.
-- **Nessuna restrizione aggiuntiva** — Non puoi applicare termini legali o misure tecnologiche che limitino legalmente
-  altri dal fare quanto la licenza consente.
-
 Per maggiori informazioni sulla CC BY 4.0, visita: `<https://creativecommons.org/licenses/by/4.0/>`_.
 
 Changelog
 =========
+
+v2.0.5
+    - Corretta la vista HVSR per gestire il caso di utilizzo della virgola come separatore decimale nel campo testuale "valore"
+    - Nuovo strumento per controllare ed installare le librerie python richieste (in alternativa a QPIP) e rilevare
+      l'installazione di Java
+    - Nuova impostazione per memorizzare manualmente il percorso della Java JRE
+    - Disabilitata la dipendenza del plugin da QPIP
+    - Miglioramenti nella gestione del database
+    - Miglioramenti nell'importazione ed esportazione dei dati
 
 v2.0.4
     - Aggiornati alcuni layer e simbologie per i layout di stampa

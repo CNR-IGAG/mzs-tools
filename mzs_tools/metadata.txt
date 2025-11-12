@@ -1,6 +1,6 @@
 [general]
 name=MzS Tools
-version=2.0.5-beta3
+version=2.0.5-beta4
 author=CNR-IGAG
 email=labgis@igag.cnr.it
 
@@ -27,7 +27,7 @@ changelog=
 tracker=https://github.com/CNR-IGAG/mzs-tools/issues/
 repository=https://github.com/CNR-IGAG/mzs-tools/
 
-tags=Italy, Seismic hazard, seismic microzonation
+tags=Italy, Seismic hazard, seismic microzonation, geology
 tags[it]=microzonazione sismica, pericolosità geologica, geologia
 
 homepage=https://github.com/CNR-IGAG/mzs-tools/

@@ -23,6 +23,8 @@ definito dagli Standard MS), richiedono l'installazione di alcune componenti agg
   installate tramite lo strumento integrato del plugin (vedi: :ref:`plugin-deps`) oppure tramite il plugin per QGIS `QPIP
   <https://github.com/opengisch/qpip>`_ (da installare separatamente).
 
+.. _installazione-java:
+
 Installazione di Java
 """""""""""""""""""""
 
@@ -49,23 +51,38 @@ In alternativa, se si è sicuri di aver installato correttamente la JRE ma quest
 possibile impostare manualmente il percorso della cartella di installazione di Java nelle impostazioni
 (vedi: :ref:`plugin-settings`).
 
+Controllo ed installazione delle dipendenze del plugin
+""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Installazione librerie Python
+'''''''''''''''''''''''''''''
+
+Per installare le librerie Python richieste è possibile utilizzare lo strumento integrato :ref:`plugin-deps`.
+
+.. image:: ../img/plugin_deps_02.png
+    :width: 525
+    :align: center
+
+Questo strumento consente di rilevare ed installare automaticamente le librerie mancanti, oltre ad effettuare un
+controllo della corretta installazione della Java Runtime Environment.
+
+.. image:: ../img/plugin_deps_04.png
+    :width: 525
+    :align: center
+
+Per maggiori dettagli sull'utilizzo dello strumento, vedere la sezione :ref:`plugin-deps`.
+
 Installazione librerie Python con QPIP
-""""""""""""""""""""""""""""""""""""""
+''''''''''''''''''''''''''''''''''''''
 
-Per installare le librerie Python necessarie per l'accesso alle funzionalità Java, è possibile utilizzare il plugin per QGIS
+In alternativa allo strumento integrato, è possibile utilizzare il plugin per QGIS
 `QPIP <https://github.com/opengisch/qpip>`_.
-
-Durante l'installazione di MzS Tools, QGIS richiederà di installare le **dipendenze** necessarie per il corretto
-funzionamento:
-
-.. image:: ../img/qpip_01.png
-  :align: center
 
 Controllare nel gestore dei plugin di QGIS che il plugin **QPIP** sia installato e attivo.
 
 .. Tip:: Dopo aver installato QPIP potrebbe essere necessario riavviare QGIS.
 
-Al riavvio, QPIP chiederà automaticamente di installare le librerie Python richieste da MzS Tools.
+Al riavvio, utilizzare lo strumento *"Run dependencies check"* di QPIP per installare le librerie Python richieste da MzS Tools.
 
 .. image:: ../img/qpip_02.png
   :align: center

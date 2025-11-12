@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.5-beta3] - 2025-11-08
+## [2.0.5-beta4] - 2025-11-12
 
 - Fix for HVSR view to handle comma as decimal separator
 - Custom dependency manager and new tool to check and install required python libraries (alternative to QPIP) and detect Java JVM
