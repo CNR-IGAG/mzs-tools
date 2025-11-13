@@ -1,6 +1,6 @@
 [general]
 name=MzS Tools
-version=2.0.5-beta4
+version=2.0.5
 author=CNR-IGAG
 email=labgis@igag.cnr.it
 
@@ -8,7 +8,7 @@ qgisMinimumVersion=3.26
 qgisMaximumVersion=4.99
 supportsQt6=True
 
-# plugin_dependencies=qpip  # disabled until fixed
+# plugin_dependencies=qpip
 
 description=Plugin for Italian seismic microzonation.
 description[it]=Plugin per la Microzonazione Sismica in Italia.
