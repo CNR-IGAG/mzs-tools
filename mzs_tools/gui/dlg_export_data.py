@@ -15,7 +15,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface, QgsMessageBarItem
 from qgis.PyQt import QtCore, uic
-from qgis.PyQt.QtCore import QCoreApplication, QUrl, QVariant
+from qgis.PyQt.QtCore import QCoreApplication, QMetaType, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
     QDialog,
@@ -26,6 +26,7 @@ from qgis.PyQt.QtWidgets import (
 from qgis.utils import iface
 
 from ..__about__ import DIR_PLUGIN_ROOT, __version__
+from ..core.constants import STANDARD_SHAPEFILES_INT_FIELDS
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.qt_compat import get_alignment_flag
@@ -326,17 +327,25 @@ class DlgExportData(QDialog, FORM_CLASS):
     def on_shapefile_export_complete(self, table_name, path: Path):
         self.file_logger.info(f"Exported {table_name} to {path}")
 
+        # workaround for QgsVectorLayerExporterTask always exporting integer fields as float
+        for layer_name, fields in STANDARD_SHAPEFILES_INT_FIELDS.items():
+            if table_name == layer_name:
+                layer = QgsVectorLayer(str(path), str(path.stem), "ogr")
+                for field_name in fields:
+                    self.change_field_type(layer, field_name, QMetaType.Type.Int)
+                break
+
         # modify specific datasets
         if table_name == "sito_puntuale":
             self.rename_field(QgsVectorLayer(str(path), str(path.stem), "ogr"), "id_spu", "ID_SPU")
         elif table_name == "sito_lineare":
             self.rename_field(QgsVectorLayer(str(path), str(path.stem), "ogr"), "id_sln", "ID_SLN")
-        elif table_name in ["isosub_l1", "isosub_l23"]:
-            # "Quota" from float to int
-            self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "Quota", QVariant.Int)
+        # elif table_name in ["isosub_l1", "isosub_l23"]:
+        #     # "Quota" from float to int
+        #     self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "Quota", QMetaType.Type.Int)
         elif table_name in ["stab_l1", "stab_l23", "instab_l1", "instab_l23"]:
             # for some absurd reason, the field "LIVELLO" must be a float
-            self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QVariant.Double)
+            self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QMetaType.Type.Double)
             if table_name in ["stab_l23", "instab_l23"]:
                 # extract file name from path "SPETTRI"
                 self.extract_file_name_from_path(QgsVectorLayer(str(path), str(path.stem), "ogr"), "SPETTRI")
@@ -420,7 +429,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         Args:
             layer (QgsVectorLayer): The layer containing the field to modify
             field_name (str): Name of the field to change
-            field_type (QVariant.Type): New data type for the field
+            field_type (QMetaType.Type): New data type for the field
         """
         self.file_logger.debug(f"Changing field type for field '{field_name}'")
 
@@ -437,12 +446,10 @@ class DlgExportData(QDialog, FORM_CLASS):
         # Create new QgsField objects without using deprecated constructor
         temp_field = QgsField()
         temp_field.setName(temp_field_name)
-        # TODO: Deprecated since version 3.38: Use the method with a QMetaType.Type argument instead.
         temp_field.setType(field_type)
 
         new_field = QgsField()
         new_field.setName(field_name)
-        # TODO: Deprecated since version 3.38: Use the method with a QMetaType.Type argument instead.
         new_field.setType(field_type)
 
         # Use edit context manager to handle editing sessions

@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.6-beta1] - 2025-11-20
+
+- Fix for integer fields converted to float in exported shapefiles
+
 ## [2.0.5] - 2025-11-13
 
 - Fix for HVSR view to handle comma as decimal separator
