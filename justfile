@@ -61,6 +61,10 @@ dev-link QGIS_PLUGIN_PATH="~/.local/share/QGIS/QGIS3/profiles/default/python/plu
     ln -sf $(pwd)/CREDITS.md $(pwd)/{{ PLUGIN_SLUG }}/CREDITS.md
     ln -sf $(pwd)/CHANGELOG.md $(pwd)/{{ PLUGIN_SLUG }}/CHANGELOG.md
 
+    # Create symlink for Continue plugin rules
+    mkdir -p $(pwd)/.continue/rules
+    ln -sf $(pwd)/.github/copilot-instructions.md $(pwd)/.continue/rules/01-general.md
+
     # Show success message
     echo "Plugin symlink created at {{ QGIS_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}"
 

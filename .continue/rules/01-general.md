@@ -1,1 +1,0 @@
-/home/francesco/GIT/mzs-tools/.github/copilot-instructions.md

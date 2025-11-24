@@ -1,1 +1,0 @@
-/home/francesco/GIT/mzs-tools/CREDITS.md
