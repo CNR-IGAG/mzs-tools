@@ -1,8 +1,9 @@
 # Changelog
 
-## [2.0.6-beta1] - 2025-11-20
+## [2.0.6-beta2] - 2025-11-25
 
 - Fix for integer fields converted to float in exported shapefiles
+- Updated layout layer groups
 
 ## [2.0.5] - 2025-11-13
 

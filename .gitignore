@@ -1,5 +1,9 @@
 *.qgs~
 /*.zip
+.continue/rules/
+mzs_tools/CHANGELOG.md
+mzs_tools/CREDITS.md
+mzs_tools/LICENSE
 
 # shpinx build
 help/_build
