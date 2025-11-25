@@ -13,6 +13,7 @@ from qgis.gui import QgsOptionsPageWidget, QgsOptionsWidgetFactory
 from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QUrl
 from qgis.PyQt.QtGui import QDesktopServices, QIcon
+from qgis.PyQt.QtWidgets import QFileDialog
 
 from ..__about__ import (
     __icon_path__,
@@ -63,6 +64,8 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
                 QUrl(f"{__uri_tracker__}new/?template=10_bug_report.yml&about-info={report_context_message}"),
             )
         )
+
+        self.txt_java_home.setOptions(QFileDialog.Option.ShowDirsOnly)
 
         self.btn_reset.setIcon(QIcon(QgsApplication.iconPath("mActionUndo.svg")))
         self.btn_reset.pressed.connect(self.reset_settings)

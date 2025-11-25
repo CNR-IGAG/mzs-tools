@@ -1,6 +1,6 @@
 [general]
 name=MzS Tools
-version=2.0.5-beta3
+version=2.0.6-beta1
 author=CNR-IGAG
 email=labgis@igag.cnr.it
 
@@ -8,7 +8,7 @@ qgisMinimumVersion=3.26
 qgisMaximumVersion=4.99
 supportsQt6=True
 
-# plugin_dependencies=qpip  # disabled until fixed
+# plugin_dependencies=qpip
 
 description=Plugin for Italian seismic microzonation.
 description[it]=Plugin per la Microzonazione Sismica in Italia.
@@ -27,7 +27,7 @@ changelog=
 tracker=https://github.com/CNR-IGAG/mzs-tools/issues/
 repository=https://github.com/CNR-IGAG/mzs-tools/
 
-tags=Italy, Seismic hazard, seismic microzonation
+tags=Italy, Seismic hazard, seismic microzonation, geology
 tags[it]=microzonazione sismica, pericolosità geologica, geologia
 
 homepage=https://github.com/CNR-IGAG/mzs-tools/

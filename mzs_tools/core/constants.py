@@ -561,3 +561,17 @@ NO_OVERLAPS_LAYER_GROUPS = [
     ["instab_l1", "stab_l1"],
     ["instab_l23", "stab_l23"],
 ]
+
+STANDARD_SHAPEFILES_INT_FIELDS = {
+    "elineari": ["ID_el", "Tipo_el"],
+    "epuntuali": ["ID_ep", "Tipo_ep"],
+    "forme": ["ID_f", "Tipo_f"],
+    "geoidr": ["ID_gi"],
+    "geotec": ["ID_gt", "Stato"],
+    "instab_l1": ["ID_i", "Tipo_i"],
+    "instab_l23": ["ID_i", "Tipo_i"],
+    "stab_l1": ["ID_z", "Tipo_z"],
+    "stab_l23": ["ID_z", "Tipo_z"],
+    "isosub_l1": ["ID_isosub", "Quota"],
+    "isosub_l23": ["ID_isosub", "Quota"],
+}

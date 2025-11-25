@@ -1,13 +1,16 @@
 # Changelog
 
-## [2.0.5-beta3] - 2025-11-08
+## [2.0.6-beta1] - 2025-11-20
+
+- Fix for integer fields converted to float in exported shapefiles
+
+## [2.0.5] - 2025-11-13
 
 - Fix for HVSR view to handle comma as decimal separator
-- Custom dependency manager and new tool to check and install required python libraries (alternative to QPIP) and detect Java JVM
-- New setting to manually store the Java JRE location
+- Custom dependency manager and new tool to install python libraries (alternative to QPIP) and detect Java JVM
+- New options in the plugin settings to manually set the Java JRE location
 - Disabled plugin dependency on QPIP
-- Implemented a db_manager module to improve database operations
-- Handle malformed date strings for data export to Access
+- Database handling improvements
 - Data import and export improvements
 
 ## [2.0.4] - 2025-09-18
