@@ -7,7 +7,6 @@ import pytest
 from mzs_tools.tasks.access_db_connection import AccessDbConnection
 
 
-@pytest.mark.unit
 class TestAccessDbDateValidation:
     """Test date validation in AccessDbConnection."""
 

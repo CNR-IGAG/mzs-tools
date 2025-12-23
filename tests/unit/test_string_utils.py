@@ -5,7 +5,6 @@ import pytest
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 
 
-@pytest.mark.unit
 class TestStringUtils:
     """Test string utility functions."""
 

@@ -1,5 +1,4 @@
 import json
-import os
 import shutil
 import traceback
 from functools import partial
@@ -8,9 +7,10 @@ from pathlib import Path
 from qgis.core import (
     QgsApplication,
     QgsProject,
+    QgsSettings,
 )
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QCoreApplication, QSettings, QTimer, QTranslator
+from qgis.PyQt.QtCore import QCoreApplication, QLocale, QTimer, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QAction,
@@ -41,13 +41,9 @@ class MzSTools:
         self.iface: QgisInterface = iface
         self.log = MzSToolsLogger.log
 
-        # initialize locale
-        try:
-            locale = QSettings().value("locale/userLocale", "en", type=str)[0:2]
-        except Exception:
-            locale = "en"
-        locale_path = DIR_PLUGIN_ROOT / "i18n" / "MzSTools_{}.qm".format(locale)
-        if os.path.exists(locale_path):
+        locale: str = QgsSettings().value("locale/userLocale", QLocale().name())[0:2]
+        locale_path = DIR_PLUGIN_ROOT / "i18n" / f"MzSTools_{locale}.qm"
+        if locale_path.exists():
             self.translator = QTranslator()
             self.translator.load(str(locale_path))
             QCoreApplication.installTranslator(self.translator)
@@ -81,6 +77,14 @@ class MzSTools:
         # and set some gui elements (actions) even when reloading the plugin in an already open project
         # https://qgis.org/pyqgis/master/gui/QgisInterface.html#qgis.gui.QgisInterface.newProjectCreated
         self.iface.newProjectCreated.connect(self.check_project)
+
+        # TODO: check_project calls enable_plugin_actions with hardcoded list of actions to be always enabled
+        # this causes issues in tests where those actions are not created, and it should be better handled
+        self.new_project_action = None
+        self.open_standard_project_action = None
+        self.settings_action = None
+        self.help_action = None
+        self.dependency_manager_action = None
 
     def add_action(
         self,

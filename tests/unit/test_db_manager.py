@@ -42,7 +42,6 @@ def db_with_test_table(db_manager):
     return db_manager
 
 
-@pytest.mark.unit
 class TestDatabaseManagerInit:
     """Tests for DatabaseManager initialization."""
 
@@ -67,7 +66,6 @@ class TestDatabaseManagerInit:
         db.log("Test message", log_level=4)
 
 
-@pytest.mark.unit
 class TestDatabaseManagerConnection:
     """Tests for database connection management."""
 
@@ -118,7 +116,6 @@ class TestDatabaseManagerConnection:
         assert not db.is_connected()
 
 
-@pytest.mark.unit
 class TestDatabaseManagerContextManager:
     """Tests for context manager functionality."""
 
@@ -149,7 +146,6 @@ class TestDatabaseManagerContextManager:
         # Connection should be closed (can't easily verify without accessing internals)
 
 
-@pytest.mark.unit
 class TestDatabaseManagerQueries:
     """Tests for query execution."""
 
@@ -211,7 +207,6 @@ class TestDatabaseManagerQueries:
             db_manager.execute_query("SELECT * FROM nonexistent_table")
 
 
-@pytest.mark.unit
 class TestDatabaseManagerUpdates:
     """Tests for update/insert/delete operations."""
 
@@ -267,7 +262,6 @@ class TestDatabaseManagerUpdates:
             db.execute_update("UPDATE test SET value = 1")
 
 
-@pytest.mark.unit
 class TestDatabaseManagerScripts:
     """Tests for script execution."""
 
@@ -307,7 +301,6 @@ class TestDatabaseManagerScripts:
             db_manager.execute_script_file(tmp_path / "nonexistent.sql")
 
 
-@pytest.mark.unit
 class TestDatabaseManagerTransactions:
     """Tests for transaction handling."""
 
@@ -342,7 +335,6 @@ class TestDatabaseManagerTransactions:
         assert db_with_test_table.get_row_count("test_table") == 0
 
 
-@pytest.mark.unit
 class TestDatabaseManagerHelpers:
     """Tests for helper methods."""
 
@@ -393,7 +385,6 @@ class TestDatabaseManagerHelpers:
         assert db_with_test_table.get_sequence_value("test_table") == 0
 
 
-@pytest.mark.unit
 class TestDatabaseManagerCursor:
     """Tests for cursor context manager."""
 

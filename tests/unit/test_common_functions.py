@@ -7,7 +7,6 @@ import pytest
 from mzs_tools.tasks.common_functions import setup_mdb_connection
 
 
-@pytest.mark.unit
 class TestCommonFunctions:
     """Test common utility functions."""
 

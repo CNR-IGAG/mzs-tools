@@ -12,7 +12,6 @@ from mzs_tools.plugin_utils.misc import (
 )
 
 
-@pytest.mark.unit
 class TestPathUtils:
     """Test path utility functions."""
 

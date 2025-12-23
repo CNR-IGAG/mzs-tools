@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 
-@pytest.mark.unit
 class TestPluginMetadataCore:
     """Test plugin metadata functionality without QGIS dependencies."""
 

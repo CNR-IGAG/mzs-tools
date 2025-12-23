@@ -17,7 +17,10 @@ dev = [
 testing = [
     "pytest>=8.3.4",
     "pytest-cov>=6.0.0",
+    "pytest-qt>=4.5.0",
     "pytest-qgis>=2.1.0",
+    "pytest-sugar>=1.1.1",
+    "factory-boy>=3.3.3",
 ]
 ci = [
     "qgis-plugin-ci>=2.8.10",
@@ -83,3 +86,48 @@ indent-width = 4
 
 [tool.setuptools]
 packages = ["mzs_tools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    # "--verbose",
+]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests that simulate full user interaction with the plugin in a QGIS GUI environment",
+    "no_qgis: Tests that don't require pyqgis or full QGIS environment",
+    "display: Tests that display GUIs for visual inspection, but can be run in headless CI environments by setting QT_QPA_PLATFORM or --qgis_disable_gui",
+    "visual: Tests that require visual inspection of GUIs or visual output (e.g., map rendering) and are not suitable for headless CI environments",
+]
+
+[tool.coverage.run]
+source = ["mzs_tools"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

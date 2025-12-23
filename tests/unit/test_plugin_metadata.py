@@ -15,7 +15,6 @@ from mzs_tools.__about__ import (
 )
 
 
-@pytest.mark.unit
 class TestPluginMetadata:
     """Test plugin metadata and version information."""
 

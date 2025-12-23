@@ -3,13 +3,9 @@
 import pytest
 
 
-def pytest_configure(config):
-    """Configure pytest markers."""
-    config.addinivalue_line("markers", "unit: mark test as a unit test (fast, no external dependencies)")
-    config.addinivalue_line(
-        "markers", "integration: mark test as an integration test (slower, may need external services)"
-    )
-    config.addinivalue_line("markers", "qgis: mark test as requiring QGIS environment")
+def pytest_collection_modifyitems(items):
+    for item in items:
+        item.add_marker("unit")
 
 
 @pytest.fixture

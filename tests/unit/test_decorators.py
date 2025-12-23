@@ -11,7 +11,6 @@ from mzs_tools.plugin_utils.misc import (
 )
 
 
-@pytest.mark.unit
 class TestDecorators:
     """Test decorator functions."""
 

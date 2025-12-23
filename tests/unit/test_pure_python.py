@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 
-@pytest.mark.unit
 class TestPurePythonUtils:
     """Test pure Python utility functions."""
 

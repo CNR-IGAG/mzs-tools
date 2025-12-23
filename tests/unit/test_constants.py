@@ -8,7 +8,6 @@ from mzs_tools.core.constants import (
 )
 
 
-@pytest.mark.unit
 class TestConstants:
     """Test constants and configuration structures."""
 

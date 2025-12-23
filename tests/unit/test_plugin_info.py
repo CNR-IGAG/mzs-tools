@@ -1,28 +1,8 @@
-import os
-import sys
 from pathlib import Path
 
 from packaging.version import parse
-from qgis.PyQt.QtCore import QT_VERSION_STR
-from qgis.core import QgsProject, QgsVectorLayer
-from qgis.PyQt.QtCore import QT_VERSION_STR as QGIS_QT_VERSION_STR
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
 
 from mzs_tools import __about__
-
-
-def test_qt_version_compatibility():
-    assert (
-        QT_VERSION_STR == QGIS_QT_VERSION_STR
-    ), f"PyQt5 Qt version ({QT_VERSION_STR}) does not match QGIS Qt version ({QGIS_QT_VERSION_STR})"
-
-
-def test_add_layer():
-    layer = QgsVectorLayer("Polygon", "dummy_polygon_layer", "memory")
-    QgsProject.instance().addMapLayer(layer)
-    assert set(QgsProject.instance().mapLayers().values()) == {layer}
 
 
 def test_metadata_types():

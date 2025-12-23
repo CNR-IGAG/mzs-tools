@@ -95,11 +95,17 @@ docs-build-pdf:
     latexmk -pdf -dvi- -ps- -interaction=nonstopmode -halt-on-error MzSTools.tex
     popd
 
-# Run tests with pytest and coverage info
+# Run all tests with pytest and coverage info, without GUI display
 test:
     uv sync --no-group ci
     uv sync --group testing
-    uv run pytest -v --cov={{ PLUGIN_SLUG }} --cov-report=term-missing
+    uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --qgis_disable_gui
+
+# Run all tests with pytest and coverage info, with GUI display
+test-gui GUI_TIMEOUT="2":
+    uv sync --no-group ci
+    uv sync --group testing
+    GUI_TIMEOUT={{ GUI_TIMEOUT }} uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing
 
 @package VERSION:
     #!/bin/bash

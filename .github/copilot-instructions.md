@@ -28,7 +28,7 @@ The primary development tools are **uv** for dependency management and **just** 
 
 [qgis-plugin-ci](https://github.com/opengisch/qgis-plugin-ci) is used for tasks such as plugin packaging, changelog generation, and continuous integration through GitHub Actions.
 
-When launching terminal commands, use `uv run` to ensure the correct environment is activated. To avoid possible issues with the fish shell, the use of `bash -c` might be required to run commands that require a shell environment.
+When launching terminal commands, use `uv run` to ensure the correct environment is activated.
 
 ## Coding Guidelines
 
@@ -49,23 +49,7 @@ Avoid translating log messages, especially at debug level, as these are meant fo
 
 ## Testing
 
-The project uses **pytest** and [pytest-qgis](https://github.com/GispoCoding/pytest-qgis) for testing, with specific markers for unit tests and QGIS-related tests.
+Before adding or modifying tests:
 
-Tests are organized in 2 separate folders:
-
-- `tests/unit`: testing code which is independent of QGIS API (uses mocking)
-- `tests/qgis`: testing code which depends on QGIS API (integration tests)
-
-Tests are organized using pytest markers:
-
-- `@pytest.mark.unit`: Unit tests that don't require QGIS
-- `@pytest.mark.qgis`: Tests that require QGIS environment
-- `@pytest.mark.integration`: Integration tests
-
-When running tests, use the `uv run pytest` command to ensure the correct environment is activated. If there are Qt library issues, use the `--no-group ci` option:
-
-```bash
-uv sync --no-group ci
-uv sync --group testing
-uv run pytest -v
-```
+- Always refer to the [Testing the plugin](../docs/development/testing.md) document for detailed information on test organization.
+- Inspect [pytest-qgis readme](https://github.com/GispoCoding/pytest-qgis) for proper usage of pytest-qgis features.

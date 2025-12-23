@@ -128,7 +128,10 @@ class MzSToolsLogger(logging.Handler):
 
         # if level is 2 (critical), open the message log
         if iface is not None and log_level == 2:
-            iface.openMessageLog()
+            try:
+                iface.openMessageLog()
+            except Exception:
+                pass  # iface.openMessageLog() may not be available in testing
 
         # optionally, display message on QGIS Message bar (above the map canvas)
         if push and iface is not None:
