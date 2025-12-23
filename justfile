@@ -107,6 +107,36 @@ test-gui GUI_TIMEOUT="2":
     uv sync --group testing
     GUI_TIMEOUT={{ GUI_TIMEOUT }} uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing
 
+# Run tests with all QGIS versions using tox and Docker
+test-docker-all:
+    uv sync --group testing
+    uv run tox -e all
+
+# Run tests with QGIS latest using tox and Docker
+test-docker-latest:
+    uv sync --group testing
+    uv run tox -e qgis-latest
+
+# Run tests with QGIS stable using tox and Docker
+test-docker-stable:
+    uv sync --group testing
+    uv run tox -e qgis-stable
+
+# Run tests with QGIS LTR using tox and Docker
+test-docker-ltr:
+    uv sync --group testing
+    uv run tox -e qgis-ltr
+
+# Run tests with QGIS Qt6 using tox and Docker
+test-docker-qt6:
+    uv sync --group testing
+    uv run tox -e qgis-qt6
+
+# Quick test with stable QGIS version using Docker
+test-docker-quick:
+    uv sync --group testing
+    uv run tox -e quick
+
 @package VERSION:
     #!/bin/bash
     uv sync --group ci

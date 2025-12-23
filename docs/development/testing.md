@@ -6,6 +6,8 @@ The plugin uses [pytest](https://docs.pytest.org/en/stable/) with [pytest-qgis](
 - `tests/integration`: integration tests
 - `tests/e2e`: end-to-end tests
 
+For testing with different QGIS versions using Docker, see [docker-testing.md](docker-testing.md).
+
 ## Test Organization Principles
 
 ### Unit Tests (`tests/unit/`)
@@ -65,14 +67,25 @@ The gui tests can also be run in headless mode in CI environments by setting the
 # Run all tests with pytest and coverage info, without GUI display
 just test
 
-# The justfile command is equivalent to:
+# Run all tests with pytest and coverage info, with GUI display (GUI_TIMEOUT in seconds, default 2)
+just test-gui 2
+
+# Run tests with different QGIS versions using Docker (see docker-testing.md for details)
+just test-docker-quick       # Quick test with stable QGIS
+just test-docker-stable      # Test with QGIS stable (3.44)
+just test-docker-ltr         # Test with QGIS LTR (3.40)
+just test-docker-latest      # Test with latest QGIS build
+just test-docker-qt6         # Test with Qt6 QGIS build
+just test-docker-all         # Test with all QGIS versions
+```
+
+The base test command is equivalent to:
+
+```bash
 uv sync --no-group ci
 # the "--no-group ci" option might be required to avoid Qt library conflicts with qgis-plugin-ci dependencies
 uv sync --group testing
 uv run pytest --cov=mzs_tools --cov-report=term-missing --qgis_disable_gui
-
-# Run all tests with pytest and coverage info, with GUI display (GUI_TIMEOUT in seconds, default 2)
-just test-gui 2
 ```
 
 ### Using pytest directly

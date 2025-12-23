@@ -4,8 +4,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mzs_tools.tasks.access_db_connection import AccessDbConnection
-
 
 class TestAccessDbDateValidation:
     """Test date validation in AccessDbConnection."""
@@ -13,12 +11,39 @@ class TestAccessDbDateValidation:
     @pytest.fixture
     def mock_connection(self):
         """Create a mock AccessDbConnection without actually connecting to a database."""
-        with patch("mzs_tools.tasks.access_db_connection.EXT_LIBS_LOADED", True):
-            with patch("mzs_tools.tasks.access_db_connection.jaydebeapi"):
-                with patch("mzs_tools.tasks.access_db_connection.jpype"):
-                    conn = AccessDbConnection("/fake/path.mdb")
-                    conn.log = MagicMock()
-                    return conn
+        # Mock the external libraries at the module level before importing
+        mock_jaydebeapi = MagicMock()
+        mock_jpype = MagicMock()
+
+        # Mock sys.modules to provide the external dependencies
+        with patch.dict(
+            "sys.modules",
+            {
+                "jaydebeapi": mock_jaydebeapi,
+                "jpype": mock_jpype,
+                "jpype.imports": MagicMock(),
+                "jpype.types": MagicMock(),
+            },
+        ):
+            # Now import the module - it will use our mocked dependencies
+            # Reload to ensure we use the mocked dependencies
+            import importlib
+
+            from mzs_tools.tasks import access_db_connection
+
+            importlib.reload(access_db_connection)
+
+            # Create the connection object
+            conn = access_db_connection.AccessDbConnection("/fake/path.mdb")
+            conn.log = MagicMock()
+            # Mock the connection-related attributes
+            conn.connection = MagicMock()
+            conn.cursor = MagicMock()
+
+            yield conn
+
+            # Clean up by reloading the module again
+            importlib.reload(access_db_connection)
 
     def test_validate_date_iso_format(self, mock_connection):
         """Test validation of ISO format date (yyyy-MM-dd)."""
