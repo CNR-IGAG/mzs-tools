@@ -11,12 +11,32 @@ from qgis.core import (
     QgsMapRendererCustomPainterJob,
     QgsMapSettings,
 )
-from qgis.PyQt.QtCore import QSize, Qt
+from qgis.PyQt.QtCore import QCoreApplication, QSize, Qt
 from qgis.PyQt.QtGui import QImage, QPainter
 from qgis.PyQt.QtWidgets import QLabel, QMessageBox, QProgressDialog
 from qgis.utils import iface
 
 from ..plugin_utils.logging import MzSToolsLogger
+
+
+def require_mzs_project(func):
+    """Decorator to check if an MzS Tools project is opened before executing the action.
+
+    If no MzS project is opened, logs a warning message and returns without executing the function.
+    Qt5/Qt6 compatibility: accepts signal arguments but doesn't forward them since
+    decorated functions are typically action handlers that don't need them.
+    """
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not self.prj_manager.is_mzs_project:
+            msg = QCoreApplication.translate("MzSTools", "The tool must be used within an opened MS project!")
+            self.log(msg, log_level=1)
+            return
+        # Call function without signal arguments for Qt5/Qt6 compatibility
+        return func(self)
+
+    return wrapper
 
 
 def skip_file_not_found(func):

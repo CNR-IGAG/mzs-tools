@@ -101,9 +101,8 @@ class DlgExportData(QDialog, FORM_CLASS):
             # test mdb connection
             cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / self.cdi_tabelle_model_file
             connected = self.check_mdb_connection(cdi_tabelle_path)
-            if connected:
-                self.radio_button_mdb.setEnabled(True)
-                self.mdb_checked = True
+            self.radio_button_mdb.setEnabled(connected)
+            self.mdb_checked = connected
 
     def validate_input(self):
         """Validate user input and enable/disable the OK button accordingly."""

@@ -30,7 +30,7 @@ from ..plugin_utils.logging import MzSToolsLogger
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
 
-class PluginInfo(QDialog, FORM_CLASS):
+class DlgPluginInfo(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super().__init__(parent)

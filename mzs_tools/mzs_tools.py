@@ -26,7 +26,7 @@ from .gui.dlg_create_project import DlgCreateProject
 from .gui.dlg_export_data import DlgExportData
 from .gui.dlg_fix_layers import DlgFixLayers
 from .gui.dlg_import_data import DlgImportData
-from .gui.dlg_info import PluginInfo
+from .gui.dlg_info import DlgPluginInfo
 from .gui.dlg_load_ogc_services import DlgLoadOgcServices
 from .gui.dlg_manage_attachments import DlgManageAttachments
 from .gui.dlg_metadata_edit import DlgMetadataEdit
@@ -34,6 +34,7 @@ from .gui.dlg_settings import PlgOptionsFactory
 from .plugin_utils.db_utils import check_mdb_connection
 from .plugin_utils.dependency_manager import DependencyManager
 from .plugin_utils.logging import MzSToolsLogger
+from .plugin_utils.misc import require_mzs_project
 
 
 class MzSTools:
@@ -48,13 +49,19 @@ class MzSTools:
             self.translator.load(str(locale_path))
             QCoreApplication.installTranslator(self.translator)
 
+        # Plugin dialogs
         self.dlg_create_project = None
         self.dlg_metadata_edit = None
-        self.info_dlg = PluginInfo(self.iface.mainWindow())
+        self.dlg_plugin_info = None
         self.dlg_import_data = None
         self.dlg_export_data = None
+        self.dlg_fix_layers = None
+        self.dlg_load_ogc_services = None
 
         self.actions = []
+        self.always_enabled_actions = []  # Actions that remain enabled regardless of project state
+        # Keep reference to help_action as it's needed in unload()
+        self.help_action = None
         self.menu = self.tr("&MzS Tools")
         self.toolbar = self.iface.addToolBar("MzSTools")
         self.toolbar.setObjectName("MzSTools")
@@ -78,14 +85,6 @@ class MzSTools:
         # https://qgis.org/pyqgis/master/gui/QgisInterface.html#qgis.gui.QgisInterface.newProjectCreated
         self.iface.newProjectCreated.connect(self.check_project)
 
-        # TODO: check_project calls enable_plugin_actions with hardcoded list of actions to be always enabled
-        # this causes issues in tests where those actions are not created, and it should be better handled
-        self.new_project_action = None
-        self.open_standard_project_action = None
-        self.settings_action = None
-        self.help_action = None
-        self.dependency_manager_action = None
-
     def add_action(
         self,
         icon_path,
@@ -97,6 +96,7 @@ class MzSTools:
         status_tip=None,
         whats_this=None,
         parent=None,
+        always_enabled=False,
     ):
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)  # type: ignore[arg-type]
@@ -105,17 +105,16 @@ class MzSTools:
 
         if status_tip is not None:
             action.setStatusTip(status_tip)
-
         if whats_this is not None:
             action.setWhatsThis(whats_this)
-
         if add_to_toolbar:
             self.toolbar.addAction(action)
-
         if add_to_menu:
             self.iface.addPluginToDatabaseMenu(self.menu, action)  # type: ignore[arg-type]
 
         self.actions.append(action)
+        if always_enabled:
+            self.always_enabled_actions.append(action)
 
         return action
 
@@ -141,31 +140,33 @@ class MzSTools:
         menu_project = QMenu()
         self.toolbar.addWidget(project_menu_button)
 
-        self.new_project_action = self.add_action(
+        new_project_action = self.add_action(
             str(ico_nuovo_progetto),
             text=self.tr("New project"),
             status_tip=self.tr("Create a new MzS Tools project for the provided municipality"),
-            callback=self.open_dlg_create_project,
+            callback=self.on_new_project_action,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
+            always_enabled=True,
         )
-        menu_project.addAction(self.new_project_action)  # type: ignore[arg-type]
+        menu_project.addAction(new_project_action)  # type: ignore[arg-type]
 
-        self.open_standard_project_action = self.add_action(
+        open_standard_project_action = self.add_action(
             QgsApplication.getThemeIcon("mIconDataDefine.svg"),
             text=self.tr("Open a 'Standard MS' project"),
             status_tip=self.tr(
                 "Open an existing 'Standard MS' project and import the data in a new MzS Tools project"
             ),
-            callback=partial(self.open_dlg_create_project, import_data=True),
+            callback=partial(self.on_new_project_action, import_data=True),
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
+            always_enabled=True,
         )
-        menu_project.addAction(self.open_standard_project_action)  # type: ignore[arg-type]
+        menu_project.addAction(open_standard_project_action)  # type: ignore[arg-type]
 
         menu_project.addSeparator()
 
-        self.backup_db_action = self.add_action(
+        backup_db_action = self.add_action(
             QgsApplication.getThemeIcon("mActionNewFileGeodatabase.svg"),
             text=self.tr("Backup database"),
             status_tip=self.tr("Backup the current MzS Tools project database"),
@@ -173,9 +174,9 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.backup_db_action)  # type: ignore[arg-type]
+        menu_project.addAction(backup_db_action)  # type: ignore[arg-type]
 
-        self.backup_project_action = self.add_action(
+        backup_project_action = self.add_action(
             QgsApplication.getThemeIcon("mIconAuxiliaryStorage.svg"),
             text=self.tr("Backup project"),
             status_tip=self.tr("Backup the entire MzS Tools project"),
@@ -183,9 +184,9 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.backup_project_action)  # type: ignore[arg-type]
+        menu_project.addAction(backup_project_action)  # type: ignore[arg-type]
 
-        self.check_attachments_action = self.add_action(
+        check_attachments_action = self.add_action(
             QgsApplication.getThemeIcon("mActionFolder.svg"),
             text=self.tr("Check file attachments"),
             status_tip=self.tr("Check, collect and consolidate file attachments"),
@@ -193,19 +194,19 @@ class MzSTools:
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.check_attachments_action)  # type: ignore[arg-type]
+        menu_project.addAction(check_attachments_action)  # type: ignore[arg-type]
 
         menu_project.addSeparator()
 
-        self.edit_metadata_action = self.add_action(
+        edit_metadata_action = self.add_action(
             QgsApplication.getThemeIcon("/mActionEditHtml.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Edit project metadata"),
-            callback=self.open_dlg_metadata_edit,
+            callback=self.on_edit_metadata_action,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_project.addAction(self.edit_metadata_action)  # type: ignore[arg-type]
+        menu_project.addAction(edit_metadata_action)  # type: ignore[arg-type]
 
         project_menu_button.setMenu(menu_project)
 
@@ -215,70 +216,69 @@ class MzSTools:
         layers_menu_button.setToolTip(self.tr("Tools for managing MzS Tools QGIS layers"))
         menu_layers = QMenu()
         self.toolbar.addWidget(layers_menu_button)
-        self.check_project_action = self.add_action(
+        check_project_action = self.add_action(
             QgsApplication.getThemeIcon("mIconQgsProjectFile.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Check the integrity of the current MzS Tools QGIS project"),
             status_tip=self.tr("Check the current MzS Tools QGIS project for common issues"),
-            callback=self.check_project_issues,
+            callback=self.on_check_project_action,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.check_project_action)  # type: ignore[arg-type]
-        self.add_default_layers_action = self.add_action(
+        menu_layers.addAction(check_project_action)  # type: ignore[arg-type]
+        add_default_layers_action = self.add_action(
             QgsApplication.getThemeIcon("mActionAddLayer.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Replace/repair default MzS Tools project layers"),
             status_tip=self.tr("Replace or repair the default MzS Tools project layers to fix common issues"),
-            callback=self.open_dlg_fix_layers,
+            callback=self.on_add_default_layers_action,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.add_default_layers_action)  # type: ignore[arg-type]
+        menu_layers.addAction(add_default_layers_action)  # type: ignore[arg-type]
 
-        self.load_default_print_layouts_action = self.add_action(
+        load_default_print_layouts_action = self.add_action(
             QgsApplication.getThemeIcon("mIconLayout.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Load default MzS Tools print layouts"),
             status_tip=self.tr("Load the default MzS Tools print layouts, existing layouts will be preserved"),
-            callback=self.on_load_default_print_layouts,
+            callback=self.on_load_default_print_layouts_action,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.load_default_print_layouts_action)  # type: ignore[arg-type]
+        menu_layers.addAction(load_default_print_layouts_action)  # type: ignore[arg-type]
 
         menu_layers.addSeparator()
 
-        self.add_ogc_services_action = self.add_action(
+        load_ogc_services_action = self.add_action(
             QgsApplication.getThemeIcon("mActionAddWmsLayer.svg"),
             enabled_flag=enabled_flag,
             text=self.tr("Load WMS/WFS services"),
             status_tip=self.tr(
                 "Load useful OGC services (such as regional CTR and MS services) in the current project"
             ),
-            callback=self.open_dlg_load_ogc_services,
+            callback=self.on_load_ogc_services_action,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False,
         )
-        menu_layers.addAction(self.add_ogc_services_action)  # type: ignore[arg-type]
+        menu_layers.addAction(load_ogc_services_action)  # type: ignore[arg-type]
         layers_menu_button.setMenu(menu_layers)
 
         self.toolbar.addSeparator()
 
-        self.import_data_action = self.add_action(
+        self.add_action(
             str(ico_importa),
             enabled_flag=enabled_flag,
             text=self.tr("Import project folder from geodatabase"),
-            # callback=self.import_project,
-            callback=self.open_dlg_import_data,
+            callback=self.on_import_data_action,
             parent=self.iface.mainWindow(),
         )
 
-        self.export_data_action = self.add_action(
+        self.add_action(
             str(ico_esporta),
             enabled_flag=enabled_flag,
             text=self.tr("Export data to Ms standard data structure"),
-            callback=self.open_dlg_export_data,
+            callback=self.on_export_data_action,
             parent=self.iface.mainWindow(),
         )
 
@@ -292,31 +292,34 @@ class MzSTools:
         tools_menu = QMenu(tools_menu_button)  # Set button as parent for menu
         self.toolbar.addWidget(tools_menu_button)
 
-        self.settings_action = self.add_action(
+        settings_action = self.add_action(
             QgsApplication.getThemeIcon("mActionOptions.svg"),
             text=self.tr("MzS Tools Settings"),
             callback=lambda: self.iface.showOptionsDialog(currentPage="mOptionsPage{}".format(__title__)),
             # parent=self.iface.mainWindow(),
             add_to_toolbar=False,
+            always_enabled=True,
         )
-        tools_menu.addAction(self.settings_action)  # type: ignore[arg-type]
+        tools_menu.addAction(settings_action)  # type: ignore[arg-type]
 
-        self.dependency_manager_action = self.add_action(
+        dependency_manager_action = self.add_action(
             QgsApplication.getThemeIcon("mIconPythonFile.svg"),
             text=self.tr("Check Plugin Dependencies"),
             status_tip=self.tr("Check Python dependencies and Java JVM for Access database support"),
-            callback=self.open_dependency_manager,
+            callback=self.on_dependency_manager_action,
             # parent=self.iface.mainWindow(),
             add_to_toolbar=False,
+            always_enabled=True,
         )
-        tools_menu.addAction(self.dependency_manager_action)  # type: ignore[arg-type]
+        tools_menu.addAction(dependency_manager_action)  # type: ignore[arg-type]
 
         self.help_action = self.add_action(
             str(ico_info),
             text=self.tr("MzS Tools Help"),
-            callback=self.info_dlg.show,
+            callback=self.on_help_action,
             # parent=self.iface.mainWindow(),
             add_to_toolbar=False,
+            always_enabled=True,
         )
         tools_menu.addAction(self.help_action)  # type: ignore[arg-type]
 
@@ -349,20 +352,13 @@ class MzSTools:
         self.iface.newProjectCreated.disconnect(self.check_project)
 
     def enable_plugin_actions(self, enabled: bool = False):
-        always_enabled_actions = [
-            self.new_project_action,
-            self.open_standard_project_action,
-            self.settings_action,
-            self.help_action,
-            self.dependency_manager_action,
-        ]
         for action in self.actions:
-            if action not in always_enabled_actions:
+            if action not in self.always_enabled_actions:
                 action.setEnabled(enabled)
 
     # action callbacks --------------------------------------------------------
 
-    def open_dlg_create_project(self, import_data=False):
+    def on_new_project_action(self, import_data=False):
         # check if there is a project already open
         if QgsProject.instance().fileName():
             QMessageBox.warning(
@@ -423,25 +419,25 @@ class MzSTools:
                 return
 
             if import_data:
-                self.open_dlg_import_data()
+                self.on_import_data_action()
 
             elif project_path:
                 msg = self.tr("Project created successfully in:")
                 self.log(f"{msg} {project_path}", push=True, duration=0)
 
-    def open_dlg_load_ogc_services(self):
-        self.dlg_load_ogc_layers = DlgLoadOgcServices(self.iface.mainWindow())
-        self.dlg_load_ogc_layers.exec()
+    def on_load_ogc_services_action(self):
+        if self.dlg_load_ogc_services is None:
+            self.dlg_load_ogc_services = DlgLoadOgcServices(self.iface.mainWindow())
+        self.dlg_load_ogc_services.exec()
 
-    def open_dlg_fix_layers(self):
-        if not self.prj_manager.is_mzs_project:
-            self.log(self.tr("The tool must be used within an opened MS project!"), log_level=1)
-            return
-
-        self.dlg_fix_layers = DlgFixLayers(self.iface.mainWindow())
+    @require_mzs_project
+    def on_add_default_layers_action(self):
+        if self.dlg_fix_layers is None:
+            self.dlg_fix_layers = DlgFixLayers(self.iface.mainWindow())
         self.dlg_fix_layers.exec()
 
-    def check_project_issues(self):
+    @require_mzs_project
+    def on_check_project_action(self):
         self.prj_manager.check_project_structure()
         if self.prj_manager.project_issues:
             self.report_project_issues()
@@ -452,7 +448,8 @@ class MzSTools:
                 self.tr("No issues found in the current project."),
             )
 
-    def on_load_default_print_layouts(self):
+    @require_mzs_project
+    def on_load_default_print_layouts_action(self):
         button = QMessageBox.question(
             self.iface.mainWindow(),
             self.tr("MzS Tools - Load default print layouts"),
@@ -465,7 +462,8 @@ class MzSTools:
             self.prj_manager.load_print_layouts()
             self.log(self.tr("Print layouts loaded."), log_level=3, push=True, duration=0)
 
-    def open_dlg_import_data(self):
+    @require_mzs_project
+    def on_import_data_action(self):
         if self.dlg_import_data is None:
             self.dlg_import_data = DlgImportData(self.iface.mainWindow())
 
@@ -499,7 +497,8 @@ class MzSTools:
 
         self.dlg_import_data.exec()
 
-    def open_dlg_export_data(self):
+    @require_mzs_project
+    def on_export_data_action(self):
         if self.dlg_export_data is None:
             self.dlg_export_data = DlgExportData(self.iface.mainWindow())
 
@@ -510,6 +509,7 @@ class MzSTools:
 
         self.dlg_export_data.exec()
 
+    @require_mzs_project
     def on_backup_db_action(self):
         try:
             backup_path = self.prj_manager.backup_database()
@@ -524,6 +524,7 @@ class MzSTools:
             msg = self.tr("Database backup created in:")
             self.log(f"{msg} {backup_path}", log_level=3, push=True, duration=10)
 
+    @require_mzs_project
     def on_backup_project_action(self):
         backup_dir = QFileDialog.getExistingDirectory(
             self.iface.mainWindow(),
@@ -561,26 +562,21 @@ class MzSTools:
             msg = self.tr("Project backup created in:")
             self.log(f"{msg} {backup_path}", log_level=3, push=True, duration=10)
 
+    @require_mzs_project
     def on_check_attachments_action(self):
         self.dlg_manage_attachments = DlgManageAttachments(self.iface.mainWindow())
         self.dlg_manage_attachments.exec()
 
-    def open_dlg_metadata_edit(self):
-        # self.edit_metadata_dlg.run_edit_metadata_dialog()
-        if not self.prj_manager.is_mzs_project:
-            self.log(self.tr("The tool must be used within an opened MS project!"), log_level=1)
-            return
-
+    @require_mzs_project
+    def on_edit_metadata_action(self):
         if self.dlg_metadata_edit is None:
             self.dlg_metadata_edit = DlgMetadataEdit(self.iface.mainWindow())
-
-        # self.dlg_metadata_edit.set_prj_manager(self.prj_manager)
 
         result = self.dlg_metadata_edit.exec()
         if result:
             self.dlg_metadata_edit.save_data()
 
-    def open_dependency_manager(self):
+    def on_dependency_manager_action(self):
         """Open the dependency check dialog."""
 
         cdi_tabelle_model_file = "CdI_Tabelle_4.2.mdb"
@@ -619,6 +615,11 @@ class MzSTools:
 
         if not result["deps_ok"]:
             self.dependency_manager.install_python_dependencies(interactive=True)
+
+    def on_help_action(self):
+        if self.dlg_plugin_info is None:
+            self.dlg_plugin_info = DlgPluginInfo(self.iface.mainWindow())
+        self.dlg_plugin_info.exec()
 
     # end action callbacks ----------------------------------------------------
 

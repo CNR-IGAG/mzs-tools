@@ -880,10 +880,17 @@ class MzSProjectManager:
         layers = []
         for layer in self.current_project.mapLayers().values():
             if type(layer) is QgsVectorLayer:
-                uri_table = layer.dataProvider().uri().table()
+                # Check if layer is valid and has a data provider
+                if not layer.isValid():
+                    continue
+                provider = layer.dataProvider()
+                if not provider:  # type: ignore
+                    continue
+
+                uri_table = provider.uri().table()
                 if not uri_table:
                     # try to get the table name from 'layername' in dataSourceUri()...
-                    strings = layer.dataProvider().dataSourceUri().split("layername=")
+                    strings = provider.dataSourceUri().split("layername=")
                     if len(strings) > 1:
                         uri_table = strings[1]
                 if uri_table == table_name:
