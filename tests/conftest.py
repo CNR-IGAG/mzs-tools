@@ -1,5 +1,6 @@
 import importlib
 import os
+import traceback
 from unittest.mock import MagicMock
 
 import pytest
@@ -23,6 +24,39 @@ def gui_timeout(pytestconfig):
     return 0 if is_gui_disabled else (timeout_secs * 1000 if timeout_secs is not None else GUI_TIMEOUT_DEFAULT)
 
 
+# @pytest.fixture(autouse=True)
+# def patch_qgis_error_dialogs(monkeypatch):
+#     """
+#     Patch QGIS error dialogs to prevent modal dialogs from appearing during tests.
+
+#     This fixture is automatically applied to all tests and patches qgis.utils functions
+#     to print exceptions to console instead of showing modal dialogs.
+#     Based on: https://github.com/qgis/QGIS/blob/master/.docker/qgis_resources/test_runner/qgis_startup.py
+#     """
+#     try:
+#         from qgis import utils
+#         from qgis.core import Qgis
+
+#         def _showException(type, value, tb, msg, messagebar=False, level=Qgis.MessageLevel.Warning):  # type: ignore
+#             """Print exception instead of showing a dialog."""
+#             print(msg)
+#             logmessage = ""
+#             for s in traceback.format_exception(type, value, tb):
+#                 # Handle both str (Python 3) and bytes (potential legacy)
+#                 logmessage += s.decode("utf-8", "replace") if hasattr(s, "decode") else s  # type: ignore
+#             print(logmessage)
+
+#         def _open_stack_dialog(type, value, tb, msg, pop_error=True):  # type: ignore
+#             """Print exception instead of opening stack trace dialog."""
+#             print(msg)
+
+#         monkeypatch.setattr(utils, "showException", _showException)
+#         monkeypatch.setattr(utils, "open_stack_dialog", _open_stack_dialog)
+#     except ImportError:
+#         # QGIS not available, skip patching
+#         pass
+
+
 @pytest.fixture()
 def plugin(qgis_iface, monkeypatch):
     """Fixture that imports the plugin main class lazily and returns the class."""
@@ -44,6 +78,8 @@ def pytest_collection_modifyitems(session, config, items):
     - tests/unit/ → executed first
     - tests/integration/ → executed second
     - tests/e2e/ → executed last
+
+    Also applies appropriate markers to each test based on its location.
     """
     unit = []
     integration = []
@@ -55,10 +91,13 @@ def pytest_collection_modifyitems(session, config, items):
         test_path = str(item.fspath).replace("\\", "/")
 
         if "/tests/unit/" in test_path:
+            item.add_marker(pytest.mark.unit)
             unit.append(item)
         elif "/tests/integration/" in test_path:
+            item.add_marker(pytest.mark.integration)
             integration.append(item)
         elif "/tests/e2e/" in test_path:
+            item.add_marker(pytest.mark.e2e)
             e2e.append(item)
         else:
             other.append(item)

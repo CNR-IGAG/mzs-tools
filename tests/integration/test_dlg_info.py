@@ -1,13 +1,13 @@
 import pytest
 
 from mzs_tools.__about__ import __version__
-from mzs_tools.gui.dlg_info import PluginInfo
+from mzs_tools.gui.dlg_info import DlgPluginInfo
 
 
 @pytest.mark.display
 def test_dlg_info_gui(qtbot, gui_timeout):
     """Test PluginInfo dialog."""
-    dialog = PluginInfo()
+    dialog = DlgPluginInfo()
     qtbot.addWidget(dialog)
     assert dialog is not None
     assert dialog.markdown_available is not None

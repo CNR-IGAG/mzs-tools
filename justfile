@@ -130,7 +130,7 @@ test-docker-ltr:
 # Run tests with QGIS Qt6 using tox and Docker
 test-docker-qt6:
     uv sync --group testing
-    uv run tox -e qgis-qt6
+    uv run tox -e qgis-qt6-ubuntu
 
 # Quick test with stable QGIS version using Docker
 test-docker-quick:
@@ -258,6 +258,12 @@ build-image-qgis-qt6-linux-deps-only:
     cd docker
     docker build -t qgis-qt6-linux-deps-only:3_44 -f ./qgis-qt6-linux-deps-only.dockerfile .
 
+# build docker image for QGIS (master) with Qt6 on Ubuntu 25.10
+build-image-qgis-qt6-ubuntu-master:
+    #!/bin/bash
+    cd docker
+    docker build -t qgis-qt6-ubuntu:master -f ./qgis-qt6-ubuntu.dockerfile .
+
 # start QGIS 3.44 with Qt6 from docker image with compiled QGIS
 run-qgis-qt6-linux QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
     #!/bin/bash
@@ -289,3 +295,22 @@ run-qgis-qt6-linux-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/
         -v ${HOME}/temp:/home/quser/temp \
         qgis-qt6-linux-deps-only:3_44 \
         ./QGIS/build/output/bin/qgis
+
+# start latest QGIS master version with docker (Ubuntu 25.10 with Qt6)
+run-qgis-qt6-master-ubuntu VERSION="master" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
+    #!/bin/bash
+    xhost +local:
+    mkdir -p ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins
+    docker run --rm --name qgis_master \
+        -it \
+        -e DISPLAY=$DISPLAY \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins \
+        -v $(pwd)/{{ PLUGIN_SLUG }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/{{ PLUGIN_SLUG }} \
+        -v ${HOME}:/home/host \
+        -e HOME=/home/quser \
+        -e LC_ALL=C.utf8 \
+        -e LANG=C.utf8 \
+        -e PYTHONPATH=/usr/share/qgis-qt6/python \
+        --user ${USER_ID}:${GROUP_ID} \
+        qgis-qt6-ubuntu:{{ VERSION }} qgis-qt6

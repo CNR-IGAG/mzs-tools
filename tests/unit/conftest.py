@@ -3,11 +3,6 @@
 import pytest
 
 
-def pytest_collection_modifyitems(items):
-    for item in items:
-        item.add_marker("unit")
-
-
 @pytest.fixture
 def sample_comune_names():
     """Fixture providing sample comune names for testing."""

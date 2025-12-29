@@ -93,6 +93,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+# tmp_path_retention_count = "1"
 addopts = [
     "--strict-markers",
     "--strict-config",
