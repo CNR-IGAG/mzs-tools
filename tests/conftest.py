@@ -1,6 +1,8 @@
 import importlib
 import os
 import traceback
+import zipfile
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -24,37 +26,37 @@ def gui_timeout(pytestconfig):
     return 0 if is_gui_disabled else (timeout_secs * 1000 if timeout_secs is not None else GUI_TIMEOUT_DEFAULT)
 
 
-# @pytest.fixture(autouse=True)
-# def patch_qgis_error_dialogs(monkeypatch):
-#     """
-#     Patch QGIS error dialogs to prevent modal dialogs from appearing during tests.
+@pytest.fixture(autouse=True)
+def patch_qgis_error_dialogs(monkeypatch):
+    """
+    Patch QGIS error dialogs to prevent modal dialogs from appearing during tests.
 
-#     This fixture is automatically applied to all tests and patches qgis.utils functions
-#     to print exceptions to console instead of showing modal dialogs.
-#     Based on: https://github.com/qgis/QGIS/blob/master/.docker/qgis_resources/test_runner/qgis_startup.py
-#     """
-#     try:
-#         from qgis import utils
-#         from qgis.core import Qgis
+    This fixture is automatically applied to all tests and patches qgis.utils functions
+    to print exceptions to console instead of showing modal dialogs.
+    Based on: https://github.com/qgis/QGIS/blob/master/.docker/qgis_resources/test_runner/qgis_startup.py
+    """
+    try:
+        from qgis import utils
+        from qgis.core import Qgis
 
-#         def _showException(type, value, tb, msg, messagebar=False, level=Qgis.MessageLevel.Warning):  # type: ignore
-#             """Print exception instead of showing a dialog."""
-#             print(msg)
-#             logmessage = ""
-#             for s in traceback.format_exception(type, value, tb):
-#                 # Handle both str (Python 3) and bytes (potential legacy)
-#                 logmessage += s.decode("utf-8", "replace") if hasattr(s, "decode") else s  # type: ignore
-#             print(logmessage)
+        def _showException(type, value, tb, msg, messagebar=False, level=Qgis.MessageLevel.Warning):  # type: ignore
+            """Print exception instead of showing a dialog."""
+            print(msg)
+            logmessage = ""
+            for s in traceback.format_exception(type, value, tb):
+                # Handle both str (Python 3) and bytes (potential legacy)
+                logmessage += s.decode("utf-8", "replace") if hasattr(s, "decode") else s  # type: ignore
+            print(logmessage)
 
-#         def _open_stack_dialog(type, value, tb, msg, pop_error=True):  # type: ignore
-#             """Print exception instead of opening stack trace dialog."""
-#             print(msg)
+        def _open_stack_dialog(type, value, tb, msg, pop_error=True):  # type: ignore
+            """Print exception instead of opening stack trace dialog."""
+            print(msg)
 
-#         monkeypatch.setattr(utils, "showException", _showException)
-#         monkeypatch.setattr(utils, "open_stack_dialog", _open_stack_dialog)
-#     except ImportError:
-#         # QGIS not available, skip patching
-#         pass
+        monkeypatch.setattr(utils, "showException", _showException)
+        monkeypatch.setattr(utils, "open_stack_dialog", _open_stack_dialog)
+    except ImportError:
+        # QGIS not available, skip patching
+        pass
 
 
 @pytest.fixture()
@@ -69,6 +71,63 @@ def plugin(qgis_iface, monkeypatch):
 
     mod = importlib.import_module("mzs_tools.mzs_tools")
     return mod.MzSTools
+
+
+@pytest.fixture
+def prj_manager(qgis_new_project):
+    """Fixture that provides a fresh MzSProjectManager instance.
+
+    Resets the singleton instance before each test to ensure clean state.
+    Also ensures a clean QGIS project instance.
+    """
+    from mzs_tools.core.mzs_project_manager import MzSProjectManager
+
+    # Reset singleton instance
+    MzSProjectManager._instance = None
+    manager = MzSProjectManager.instance()
+    yield manager
+    # Cleanup after test - clear the QGIS project and reset manager
+    from qgis.core import QgsProject
+
+    QgsProject.instance().clear()
+    if manager.db_manager:
+        manager.db_manager.disconnect()
+    manager.db_manager = None
+    manager.is_mzs_project = False
+    manager.project_path = None
+    manager.db_path = None
+    MzSProjectManager._instance = None
+
+
+@pytest.fixture
+def base_project_path(tmp_path) -> Path:
+    """Fixture that sets up a minimal project structure with database for testing layer operations.
+
+    This extracts the test project and sets up the manager with proper paths and database connection.
+    """
+    # Extract the project from zip archive in tests/data directory
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v2.0.5_new.zip"
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+
+    project_dir = tmp_path / "057001_Accumoli"
+
+    return project_dir
+
+
+@pytest.fixture
+def standard_project_path(tmp_path) -> Path:
+    """Fixture that sets up a minimal project structure with database for testing layer operations.
+
+    This extracts the test project and sets up the manager with proper paths and database connection.
+    """
+    # Extract the project from zip archive in tests/data directory
+    project_archive = Path(__file__).parent / "data" / "standard_projects" / "Accumoli.zip"
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+
+    project_dir = tmp_path / "Accumoli"
+    return project_dir
 
 
 def pytest_collection_modifyitems(session, config, items):

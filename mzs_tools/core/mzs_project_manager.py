@@ -404,22 +404,22 @@ class MzSProjectManager:
 
         return table_layer_map
 
-    def _set_form_ui_file(self, layer: QgsVectorLayer, table_name: str):
-        form_config = layer.editFormConfig()
-        current_ui_path = form_config.uiForm()
-        if not current_ui_path:
-            return False
-        # check if the file exists
-        current_ui_path = Path(current_ui_path)
-        if not current_ui_path.exists():
-            ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
-            self.log(
-                f"UI form file '{current_ui_path}' for layer {layer.name()} does not exist. Setting new file: '{ui_path}'",
-                log_level=1,
-            )
-            form_config.setUiForm(str(ui_path.absolute()))
-            layer.setEditFormConfig(form_config)
-        return True
+    # def _set_form_ui_file(self, layer: QgsVectorLayer, table_name: str):
+    #     form_config = layer.editFormConfig()
+    #     current_ui_path = form_config.uiForm()
+    #     if not current_ui_path:
+    #         return False
+    #     # check if the file exists
+    #     current_ui_path = Path(current_ui_path)
+    #     if not current_ui_path.exists():
+    #         ui_path = DIR_PLUGIN_ROOT / "editing" / f"{table_name}.ui"
+    #         self.log(
+    #             f"UI form file '{current_ui_path}' for layer {layer.name()} does not exist. Setting new file: '{ui_path}'",
+    #             log_level=1,
+    #         )
+    #         form_config.setUiForm(str(ui_path.absolute()))
+    #         layer.setEditFormConfig(form_config)
+    #     return True
 
     @staticmethod
     def set_project_layer_capabilities(
@@ -456,36 +456,36 @@ class MzSProjectManager:
             )
             layer.setCustomProperty(f"mzs_tools/{property_name}", property_value)
 
-    def _set_custom_layer_properties(self):
-        """only for testing"""
-        self._set_custom_layer_properties_for_group(DEFAULT_BASE_LAYERS, {"layer_role": "base"})
-        self._set_custom_layer_properties_for_group(DEFAULT_EDITING_LAYERS, {"layer_role": "editing"})
+    # def _set_custom_layer_properties(self):
+    #     """only for testing"""
+    #     self._set_custom_layer_properties_for_group(DEFAULT_BASE_LAYERS, {"layer_role": "base"})
+    #     self._set_custom_layer_properties_for_group(DEFAULT_EDITING_LAYERS, {"layer_role": "editing"})
 
-        # set properties for lookup tables
-        for table_name in DEFAULT_TABLE_LAYERS_NAMES:
-            layers = self.find_layers_by_table_name(table_name)
-            for layer in layers:
-                self.set_layer_custom_property(layer, "layer_role", "editing")
+    #     # set properties for lookup tables
+    #     for table_name in DEFAULT_TABLE_LAYERS_NAMES:
+    #         layers = self.find_layers_by_table_name(table_name)
+    #         for layer in layers:
+    #             self.set_layer_custom_property(layer, "layer_role", "editing")
 
-        self._set_custom_layer_properties_for_group(DEFAULT_LAYOUT_GROUPS, {"layer_role": "layout"})
+    #     self._set_custom_layer_properties_for_group(DEFAULT_LAYOUT_GROUPS, {"layer_role": "layout"})
 
-    def _set_custom_layer_properties_for_group(self, group_dict: dict, custom_properties: dict):
-        """only for testing"""
-        for table_name, layer_data in group_dict.items():
-            if type(layer_data) is dict and layer_data["role"] not in ["group", "service_group"]:
-                layers = self.find_layers_by_table_name(table_name)
-                for layer in layers:
-                    for prop_name, prop_value in custom_properties.items():
-                        self.set_layer_custom_property(layer, prop_name, prop_value)
-            elif type(layer_data) is str:
-                group = self.current_project.layerTreeRoot().findGroup(table_name)
-                if group:
-                    for layer_node in group.findLayers():
-                        map_layer = layer_node.layer()
-                        if map_layer is None:
-                            continue  # skip missing layer
-                        for prop_name, prop_value in custom_properties.items():
-                            self.set_layer_custom_property(map_layer, prop_name, prop_value)
+    # def _set_custom_layer_properties_for_group(self, group_dict: dict, custom_properties: dict):
+    #     """only for testing"""
+    #     for table_name, layer_data in group_dict.items():
+    #         if type(layer_data) is dict and layer_data["role"] not in ["group", "service_group"]:
+    #             layers = self.find_layers_by_table_name(table_name)
+    #             for layer in layers:
+    #                 for prop_name, prop_value in custom_properties.items():
+    #                     self.set_layer_custom_property(layer, prop_name, prop_value)
+    #         elif type(layer_data) is str:
+    #             group = self.current_project.layerTreeRoot().findGroup(table_name)
+    #             if group:
+    #                 for layer_node in group.findLayers():
+    #                     map_layer = layer_node.layer()
+    #                     if map_layer is None:
+    #                         continue  # skip missing layer
+    #                     for prop_name, prop_value in custom_properties.items():
+    #                         self.set_layer_custom_property(map_layer, prop_name, prop_value)
 
     def add_default_layers(self, add_base_layers=True, add_editing_layers=True, add_layout_groups=True):
         """Add the default layers to the project, removing first any existing layers of the
@@ -531,12 +531,14 @@ class MzSProjectManager:
             layer_group = None
             if layer_data["group"]:
                 layer_group = root_layer_group.findGroup(layer_data["group"])
-                if not layer_group:
+                if layer_group is None:
                     layer_group = QgsLayerTreeGroup(layer_data["group"])
                     layer_group.setItemVisibilityChecked(False)
                     root_layer_group.addChildNode(layer_group)
             qlr_full_path = DIR_PLUGIN_ROOT / "data" / "layer_defs" / layer_data["qlr_path"]
-            layer_added = self.add_layer_from_qlr(layer_group if layer_group else root_layer_group, qlr_full_path)
+            layer_added = self.add_layer_from_qlr(
+                layer_group if layer_group is not None else root_layer_group, qlr_full_path
+            )
             if not layer_added or layer_data["group"] == "service_group":
                 continue
 
