@@ -1,6 +1,7 @@
 import importlib
 import os
 import traceback
+import warnings
 import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -62,13 +63,8 @@ def patch_qgis_error_dialogs(monkeypatch):
 @pytest.fixture()
 def plugin(qgis_iface, monkeypatch):
     """Fixture that imports the plugin main class lazily and returns the class."""
-
     # mock qgis_iface.projectRead signal
-    # Mock or MagicMock would require the use of yield and del to clean up the mock
-    # qgis_iface.projectRead = MagicMock()
-    # use monkeypatch instead to avoid side effects on other tests
     monkeypatch.setattr(qgis_iface, "projectRead", MagicMock(), raising=False)
-
     mod = importlib.import_module("mzs_tools.mzs_tools")
     return mod.MzSTools
 
@@ -100,34 +96,68 @@ def prj_manager(qgis_new_project):
 
 
 @pytest.fixture
-def base_project_path(tmp_path) -> Path:
-    """Fixture that sets up a minimal project structure with database for testing layer operations.
+def base_project_path_current(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing (current version)."""
+    from mzs_tools.__about__ import __base_version__
 
-    This extracts the test project and sets up the manager with proper paths and database connection.
-    """
-    # Extract the project from zip archive in tests/data directory
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v2.0.5_new.zip"
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / f"057001_Accumoli_v{__base_version__}_new.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
     with zipfile.ZipFile(project_archive, "r") as zip_ref:
         zip_ref.extractall(tmp_path)
-
     project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
 
+
+@pytest.fixture
+def base_project_path_2_0_5(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing."""
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v2.0.5_new.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
     return project_dir
 
 
 @pytest.fixture
 def standard_project_path(tmp_path) -> Path:
-    """Fixture that sets up a minimal project structure with database for testing layer operations.
-
-    This extracts the test project and sets up the manager with proper paths and database connection.
-    """
-    # Extract the project from zip archive in tests/data directory
+    """Fixture that extracts a sample "standard" project for testing."""
     project_archive = Path(__file__).parent / "data" / "standard_projects" / "Accumoli.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MS standard project archive not available")
     with zipfile.ZipFile(project_archive, "r") as zip_ref:
         zip_ref.extractall(tmp_path)
-
     project_dir = tmp_path / "Accumoli"
     return project_dir
+
+
+@pytest.fixture(scope="session")
+def mdb_deps_available() -> bool:
+    """Fixture that tries to create an mdb connection and returns True if successful.
+
+    Returns False when python dependencies or JRE are not available in the test environment.
+    """
+    connected = False
+    mdb_conn = None
+
+    from mzs_tools.tasks.access_db_connection import AccessDbConnection, JVMError
+
+    mdb_path = Path(__file__).parent.parent / "mzs_tools" / "data" / "CdI_Tabelle_4.2.mdb"
+    try:
+        mdb_conn = AccessDbConnection(str(mdb_path))
+        connected = mdb_conn.open()
+    except ImportError as e:
+        warnings.warn(f"!!! MDB python deps not available (jaydebeapi and/or jpype) !!!\n{e}", UserWarning)
+    except JVMError as e:
+        warnings.warn(f"!!! JVM not available for MDB access !!!\n{e}", UserWarning)
+    except Exception as e:
+        warnings.warn(f"!!! MDB connection failed !!!\n{e}", UserWarning)
+    finally:
+        if mdb_conn and connected:
+            mdb_conn.close()
+    return connected
 
 
 def pytest_collection_modifyitems(session, config, items):

@@ -200,3 +200,17 @@ If tests fail in a specific QGIS version:
    qgis --version
    python3 --version
    ```
+
+## Windows environment with Docker
+
+```bash
+# Install, configure and run Windows using a Dockur container and virtual machine
+# modify paths in the docker-compose file for the vm storage and ISO images as needed
+cd docker
+docker compose -f dockur-win11.yml up -d
+# wait for the VM to boot (check logs with "docker compose -f dockur-win11.yml logs -f")
+# use an RDP client to connect to the Windows VM
+
+# after use, stop the VM
+docker compose -f dockur-win11.yml down
+```

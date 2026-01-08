@@ -11,39 +11,31 @@ class TestAccessDbDateValidation:
     @pytest.fixture
     def mock_connection(self):
         """Create a mock AccessDbConnection without actually connecting to a database."""
-        # Mock the external libraries at the module level before importing
-        mock_jaydebeapi = MagicMock()
-        mock_jpype = MagicMock()
-
-        # Mock sys.modules to provide the external dependencies
+        # Mock the imports at import time, not in sys.modules
         with patch.dict(
             "sys.modules",
             {
-                "jaydebeapi": mock_jaydebeapi,
-                "jpype": mock_jpype,
+                "jaydebeapi": MagicMock(),
+                "jpype": MagicMock(),
                 "jpype.imports": MagicMock(),
                 "jpype.types": MagicMock(),
             },
         ):
-            # Now import the module - it will use our mocked dependencies
-            # Reload to ensure we use the mocked dependencies
-            import importlib
-
+            # Import happens inside the context manager
             from mzs_tools.tasks import access_db_connection
 
-            importlib.reload(access_db_connection)
+            # Mock the connection initialization to avoid actual DB connection
+            with patch.object(access_db_connection.AccessDbConnection, "__init__", lambda self, db_path: None):
+                conn = access_db_connection.AccessDbConnection("/fake/path.mdb")
+                conn.log = MagicMock()
+                conn.connection = MagicMock()
+                conn.cursor = MagicMock()
 
-            # Create the connection object
-            conn = access_db_connection.AccessDbConnection("/fake/path.mdb")
-            conn.log = MagicMock()
-            # Mock the connection-related attributes
-            conn.connection = MagicMock()
-            conn.cursor = MagicMock()
+                # Get the actual _validate_date method from the class
+                # and bind it to our instance
+                conn._validate_date = access_db_connection.AccessDbConnection._validate_date.__get__(conn)
 
-            yield conn
-
-            # Clean up by reloading the module again
-            importlib.reload(access_db_connection)
+                yield conn
 
     def test_validate_date_iso_format(self, mock_connection):
         """Test validation of ISO format date (yyyy-MM-dd)."""

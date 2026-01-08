@@ -54,7 +54,6 @@ These tests verify that:
 11. **`TestSetLayerCustomProperty`** & **`TestSetProjectLayerCapabilities`** - Tests for helper methods
 """
 
-import zipfile
 from pathlib import Path
 
 import pytest
@@ -74,37 +73,29 @@ from mzs_tools.core.mzs_project_manager import ComuneData, MzSProjectManager
 
 
 @pytest.fixture
-def sample_project_path(tmp_path, prj_manager) -> Path:
+def sample_project_path(base_project_path_current, prj_manager) -> Path:
     """Fixture that sets up a minimal project structure with database for testing layer operations.
 
     This extracts the test project and sets up the manager with proper paths and database connection.
     """
-    # Extract the project from zip archive in tests/data directory
-    project_archive = Path(__file__).parent.parent / "data" / "mzs_projects" / "095014_Bidonì_v2.0.5.zip"
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-
-    project_dir = tmp_path / "095014_Bidonì"
-    db_path = project_dir / "db" / "indagini.sqlite"
-
     # Setup the manager with paths
     prj_manager.current_project = QgsProject.instance()
-    prj_manager.project_path = project_dir
-    prj_manager.db_path = db_path
+    prj_manager.project_path = base_project_path_current
+    prj_manager.db_path = base_project_path_current / "db" / "indagini.sqlite"
     prj_manager._setup_db_connection()
 
     # Set minimal comune_data for tests that need it
     prj_manager.comune_data = ComuneData(
-        cod_regio="20",
-        cod_prov="095",
-        cod_com="014",
-        comune="Bidonì",
-        provincia="Oristano",
-        regione="Sardegna",
-        cod_istat="095014",
+        cod_regio="12",
+        cod_prov="057",
+        cod_com="001",
+        comune="Accumoli",
+        provincia="Rieti",
+        regione="Lazio",
+        cod_istat="057001",
     )
 
-    return project_dir
+    return base_project_path_current
 
 
 class TestAddLayerFromQlr:

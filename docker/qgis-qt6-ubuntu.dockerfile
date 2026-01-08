@@ -2,7 +2,7 @@ FROM qgis/qgis3-ubuntu-qt6-build-deps-bin-only:master
 
 # Install wget for downloading GPG key
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget libxcb-cursor0 \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Add QGIS ubuntu-nightly Qt6 repository
@@ -16,9 +16,10 @@ Components: main\n\
 Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg" \
     > /etc/apt/sources.list.d/qgis.sources
 
-# Install QGIS Qt6
+# Install QGIS Qt6 and plugin dependencies
 RUN apt-get update && apt-get install -y \
     qgis-qt6 \
+    default-jre \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user with sudo privileges

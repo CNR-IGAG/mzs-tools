@@ -512,6 +512,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
         QgsApplication.taskManager().statusChanged.connect(self.on_task_status_changed)
         QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
+        # QgsApplication.taskManager().taskAdded.connect(self.on_task_added)
 
         if len(tasks) == 1:
             QgsApplication.taskManager().addTask(tasks[0])
@@ -537,6 +538,18 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         QgsApplication.taskManager().addTask(first_task)
 
+    #     # simpler alternative using taskAdded signal to hold tasks and then unhold sequentially
+    #     for task in tasks:
+    #         QgsApplication.taskManager().addTask(task)
+    #     for task in tasks:
+    #         task.unhold()
+    #         task.waitForFinished()
+
+    # def on_task_added(self, taskid):
+    #     QgsApplication.taskManager().task(taskid).hold()
+    #     task_desc = QgsApplication.taskManager().task(taskid).description()
+    #     self.file_logger.debug(f"**************** TASK {task_desc} ADDED ****************")
+
     def on_tasks_progress(self, taskid, progress):
         # if there is only one main task with a series of subtasks, progress
         # seems to be reported as the average of all the subtasks' progress
@@ -554,10 +567,15 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.progress_bar.setValue(int(progress))
 
     def on_task_status_changed(self, taskid, status):
+        # if status == QgsTask.TaskStatus.Complete:
+        #     self.file_logger.debug(
+        #         f"**************** TASK {self.task_manager.task(taskid).description()} COMPLETED ****************"
+        #     )
         if status == QgsTask.TaskStatus.Terminated:
             self.failed_tasks.append(QgsApplication.taskManager().task(taskid).description())
 
     def on_tasks_completed(self):
+        # self.file_logger.debug("**************** ALL TASKS COMPLETED ****************")
         if QgsApplication.taskManager().countActiveTasks() > 0:
             return
 
@@ -585,6 +603,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
 
         self.file_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
 
     def cancel_tasks(self):
         self.file_logger.warning(f"{'#' * 15} Data import cancelled. Terminating all tasks")
@@ -602,6 +621,7 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.iface.mapCanvas().refreshAllLayers()
 
         self.file_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)

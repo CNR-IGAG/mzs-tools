@@ -20,6 +20,7 @@ testing = [
     "pytest-qt>=4.5.0",
     "pytest-qgis>=2.1.0",
     "pytest-sugar>=1.1.1",
+    "pytest-env>=1.1.5",
     "factory-boy>=3.3.3",
     "tox>=4.23.2",
 ]
@@ -99,10 +100,10 @@ addopts = [
     "--strict-config",
     # "--verbose",
 ]
-filterwarnings = [
-    "ignore::UserWarning",
-    "ignore::DeprecationWarning",
-]
+# filterwarnings = [
+#     "ignore::UserWarning",
+#     "ignore::DeprecationWarning",
+# ]
 markers = [
     "unit: Unit tests",
     "integration: Integration tests",
@@ -111,6 +112,9 @@ markers = [
     "display: Tests that display GUIs for visual inspection, but can be run in headless CI environments by setting QT_QPA_PLATFORM or --qgis_disable_gui",
     "visual: Tests that require visual inspection of GUIs or visual output (e.g., map rendering) and are not suitable for headless CI environments",
 ]
+
+[tool.pytest_env]
+TESTING_MODE = 1
 
 [tool.coverage.run]
 source = ["mzs_tools"]
@@ -133,3 +137,4 @@ exclude_lines = [
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
 ]
+

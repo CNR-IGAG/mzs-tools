@@ -886,7 +886,7 @@ class MzSProjectManager:
                 if not layer.isValid():
                     continue
                 provider = layer.dataProvider()
-                if not provider:  # type: ignore
+                if provider is None:
                     continue
 
                 uri_table = provider.uri().table()

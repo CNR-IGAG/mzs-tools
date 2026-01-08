@@ -99,7 +99,7 @@ docs-build-pdf:
 test:
     uv sync --no-group ci
     uv sync --group testing
-    uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --qgis_disable_gui
+    uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --qgis_disable_gui -rs
 
 # Run all tests with pytest and coverage info, with GUI display
 test-gui GUI_TIMEOUT="2":

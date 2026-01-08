@@ -109,6 +109,7 @@ class AttachmentsTaskManager:
             duration=0,
         )
         self.file_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
 
     def _on_task_terminated(self):
         msg = self.tr("Attachment check terminated. Check the log for details.")
@@ -125,6 +126,7 @@ class AttachmentsTaskManager:
             duration=0,
         )
         self.file_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
 
     def cancel_tasks(self):
         self.file_logger.warning(f"{'#' * 15} Attachment check cancelled. Terminating all tasks")
@@ -136,6 +138,7 @@ class AttachmentsTaskManager:
         )
 
         self.file_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)

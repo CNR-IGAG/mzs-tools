@@ -394,6 +394,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
 
         self.file_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
 
     def cancel_tasks(self):
         self.file_logger.warning(f"{'#' * 15} Data export cancelled. Terminating all tasks")
@@ -409,6 +410,7 @@ class DlgExportData(QDialog, FORM_CLASS):
         )
 
         self.file_logger.removeHandler(self.file_handler)
+        self.file_handler.close()
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)
