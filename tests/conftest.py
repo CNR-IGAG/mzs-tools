@@ -110,9 +110,49 @@ def base_project_path_current(tmp_path) -> Path:
 
 
 @pytest.fixture
+def base_project_path_current_imported(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing (current version)."""
+    from mzs_tools.__about__ import __base_version__
+
+    project_archive = (
+        Path(__file__).parent / "data" / "mzs_projects" / f"057001_Accumoli_v{__base_version__}_imported.zip"
+    )
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
+
+
+@pytest.fixture
 def base_project_path_2_0_5(tmp_path) -> Path:
     """Fixture that extracts a sample MzS Tools project for testing."""
     project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v2.0.5_new.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
+
+
+@pytest.fixture
+def base_project_path_1_9_4(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing."""
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.9.4_new.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
+
+
+@pytest.fixture
+def base_project_path_1_9_4_imported(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing."""
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.9.4_imported.zip"
     if not project_archive.exists():
         pytest.skip("Sample MzS Tools project archive not available")
     with zipfile.ZipFile(project_archive, "r") as zip_ref:

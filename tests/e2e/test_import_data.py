@@ -16,7 +16,7 @@ def test_import_data(
     qgis_app,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
     mdb_deps_available,
     monkeypatch,
@@ -28,14 +28,10 @@ def test_import_data(
     monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
 
     # Create a new project
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # open the project
     project.read(str(project_file))
@@ -62,7 +58,7 @@ def test_import_data(
 
     dialog.input_dir_widget.lineEdit().setText(str(standard_project_path))
 
-    # TODO: enabling MDB import tasks option seems to cause threading issues, with pytest hanging at the end:
+    # TODO: import/export from/to mdb using QGIS task manager causes threading issues in tests, with pytest hanging at the end:
     # QObject::killTimer: Timers cannot be stopped from another thread
     # QObject::~QObject: Timers cannot be stopped from another thread
     # if mdb_deps_available and mdb_connected:
@@ -118,7 +114,7 @@ def test_import_siti_puntuali_task_from_mdb(
     plugin,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
     mdb_deps_available,
 ):
@@ -133,12 +129,8 @@ def test_import_siti_puntuali_task_from_mdb(
 
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # switch to passwordless MDB
     mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
@@ -204,7 +196,7 @@ def test_import_siti_puntuali_task_from_csv(
     plugin,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
 ):
     """Test ImportSitiPuntualiTask independently using CSV files as source.
@@ -213,12 +205,8 @@ def test_import_siti_puntuali_task_from_csv(
     """
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # remove MDB
     mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
@@ -286,7 +274,7 @@ def test_import_siti_puntuali_task_from_sqlite(
     plugin,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
 ):
     """Test ImportSitiPuntualiTask independently using sqlite db as source.
@@ -295,12 +283,8 @@ def test_import_siti_puntuali_task_from_sqlite(
     """
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # remove MDB
     mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
@@ -369,7 +353,7 @@ def test_import_siti_lineari_task_from_mdb(
     plugin,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
     mdb_deps_available,
 ):
@@ -384,12 +368,8 @@ def test_import_siti_lineari_task_from_mdb(
 
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # switch to passwordless MDB
     mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
@@ -454,7 +434,7 @@ def test_import_siti_lineari_task_from_csv(
     plugin,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
 ):
     """Test ImportSitiLineariTask independently using CSV files as source.
@@ -463,12 +443,8 @@ def test_import_siti_lineari_task_from_csv(
     """
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # remove MDB
     mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
@@ -532,7 +508,7 @@ def test_import_siti_lineari_task_from_sqlite(
     plugin,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
 ):
     """Test ImportSitiLineariTask independently using sqlite db as source.
@@ -541,12 +517,8 @@ def test_import_siti_lineari_task_from_sqlite(
     """
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # remove MDB
     mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
@@ -650,7 +622,7 @@ def test_import_shapefile_task(
     plugin,
     qgis_iface,
     qgis_new_project,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
 ):
     """Test ImportShapefileTask independently.
@@ -660,12 +632,8 @@ def test_import_shapefile_task(
     # monkeypatch.setattr(QMessageBox, "exec", lambda: Mock(), raising=False)
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
-
-    # simulate already updated project by changing versione.txt
-    versione_file = project_file.parent / "progetto" / "versione.txt"
-    versione_file.write_text(__base_version__)
 
     # open the project
     project.read(str(project_file))

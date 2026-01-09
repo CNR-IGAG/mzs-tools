@@ -575,3 +575,16 @@ STANDARD_SHAPEFILES_INT_FIELDS = {
     "isosub_l1": ["ID_isosub", "Quota"],
     "isosub_l23": ["ID_isosub", "Quota"],
 }
+
+DB_MIGRATION_SCRIPTS = {
+    "0.8": "query_v08.sql",
+    "0.9": "query_v09.sql",
+    "1.2": "query_v10_12.sql",
+    "1.9": "query_v19.sql",
+    "1.9.2": "query_v192.sql",
+    "1.9.3": "query_v193.sql",
+    "2.0.0": "query_v200.sql",
+    "2.0.1": "query_v201.sql",
+    "2.0.3": "query_v202.sql",
+    "2.0.5": "query_v205.sql",
+}

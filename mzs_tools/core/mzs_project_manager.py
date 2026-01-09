@@ -35,6 +35,7 @@ from ..plugin_utils.misc import save_map_image, save_map_image_direct
 from ..plugin_utils.qt_compat import get_alignment_flag
 from ..plugin_utils.settings import PlgOptionsManager
 from .constants import (
+    DB_MIGRATION_SCRIPTS,
     DEFAULT_BASE_LAYERS,
     DEFAULT_EDITING_LAYERS,
     DEFAULT_LAYOUT_GROUPS,
@@ -1473,28 +1474,10 @@ class MzSProjectManager:
             return
 
         sql_scripts = []
-        if self.project_version < "0.8":
-            sql_scripts.append("query_v08.sql")
-        if self.project_version < "0.9":
-            sql_scripts.append("query_v09.sql")
-        if self.project_version < "1.2":
-            sql_scripts.append("query_v10_12.sql")
-        if self.project_version < "1.9":
-            sql_scripts.append("query_v19.sql")
-        if self.project_version < "1.9.2":
-            sql_scripts.append("query_v192.sql")
-        if self.project_version < "1.9.3":
-            sql_scripts.append("query_v193.sql")
-        if self.project_version < "2.0.0":
-            sql_scripts.append("query_v200.sql")
-        if self.project_version < "2.0.1":
-            sql_scripts.append("query_v201.sql")
-        # in v2.0.2 release forgot to update the db template indagini.sqlite.zip, so the query_v202.sql must be applied
-        # to projects v2.0.2 too
-        if self.project_version < "2.0.3":
-            sql_scripts.append("query_v202.sql")
-        if self.project_version < "2.0.5":
-            sql_scripts.append("query_v205.sql")
+
+        for version, script in DB_MIGRATION_SCRIPTS.items():
+            if self.project_version < version:
+                sql_scripts.append(script)
 
         for upgrade_script in sql_scripts:
             self.log(f"Executing: {upgrade_script}", log_level=1)
