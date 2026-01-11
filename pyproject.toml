@@ -115,6 +115,7 @@ markers = [
 
 [tool.pytest_env]
 TESTING_MODE = 1
+# QGIS_PREFIX_PATH = "/usr"
 
 [tool.coverage.run]
 source = ["mzs_tools"]

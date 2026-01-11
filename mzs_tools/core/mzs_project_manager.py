@@ -1443,14 +1443,25 @@ class MzSProjectManager:
         row = self.db.execute_query("SELECT * FROM comune_progetto LIMIT 1", fetch_mode="one")
 
         if row:
+            # workaround for very old projects (< 1.0)
+            provincia = ""
+            regione = ""
+            cod_istat = ""
+            try:
+                cod_istat = row[6]
+                provincia = row[7]
+                regione = row[8]
+            except IndexError:
+                cod_istat = row[5]
+
             return ComuneData(
                 cod_regio=row[1],
                 cod_prov=row[2],
                 cod_com=row[3],
                 comune=row[4],
-                provincia=row[7],
-                regione=row[8],
-                cod_istat=row[6],
+                provincia=provincia,
+                regione=regione,
+                cod_istat=cod_istat,
             )
         return None
 

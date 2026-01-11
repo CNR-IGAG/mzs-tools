@@ -8,6 +8,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+# Set QGIS prefix path from environment variable if defined
+if os.environ.get("QGIS_PREFIX_PATH"):
+    from qgis.core import QgsApplication
+
+    QgsApplication.setPrefixPath(os.environ.get("QGIS_PREFIX_PATH"), True)
+
+
 GUI_TIMEOUT_DEFAULT = 2000  # milliseconds
 
 
@@ -138,6 +145,18 @@ def base_project_path_2_0_5(tmp_path) -> Path:
 
 
 @pytest.fixture
+def base_project_path_2_0_0(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing."""
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v2.0.0_new.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
+
+
+@pytest.fixture
 def base_project_path_1_9_4(tmp_path) -> Path:
     """Fixture that extracts a sample MzS Tools project for testing."""
     project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.9.4_new.zip"
@@ -153,6 +172,42 @@ def base_project_path_1_9_4(tmp_path) -> Path:
 def base_project_path_1_9_4_imported(tmp_path) -> Path:
     """Fixture that extracts a sample MzS Tools project for testing."""
     project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.9.4_imported.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
+
+
+@pytest.fixture
+def base_project_path_1_0(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing."""
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.0_new.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
+
+
+@pytest.fixture
+def base_project_path_1_5(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing."""
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.5_new.zip"
+    if not project_archive.exists():
+        pytest.skip("Sample MzS Tools project archive not available")
+    with zipfile.ZipFile(project_archive, "r") as zip_ref:
+        zip_ref.extractall(tmp_path)
+    project_dir = tmp_path / "057001_Accumoli"
+    return project_dir
+
+
+@pytest.fixture
+def base_project_path_0_7(tmp_path) -> Path:
+    """Fixture that extracts a sample MzS Tools project for testing."""
+    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v0.7_new.zip"
     if not project_archive.exists():
         pytest.skip("Sample MzS Tools project archive not available")
     with zipfile.ZipFile(project_archive, "r") as zip_ref:

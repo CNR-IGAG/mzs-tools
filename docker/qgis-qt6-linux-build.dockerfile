@@ -1,7 +1,7 @@
 FROM qgis/qgis3-qt6-build-deps-bin-only:release-3_44
 
 # install missing runtime dependencies
-RUN dnf install --nodocs --refresh -y python-jinja2
+RUN dnf install --nodocs --refresh -y python-jinja2 java-21-openjdk
 
 # Create non-root user
 # -m -> Create the user's home directory

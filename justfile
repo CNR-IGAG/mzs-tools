@@ -1,5 +1,8 @@
 PLUGIN_SLUG:="mzs_tools"
 
+# load environment variables from .env.uv file for uv commands
+export UV_ENV_FILE:=".env.uv"
+
 # default recipe to display help information
 default:
   @just --list
@@ -95,47 +98,49 @@ docs-build-pdf:
     latexmk -pdf -dvi- -ps- -interaction=nonstopmode -halt-on-error MzSTools.tex
     popd
 
-# Run all tests with pytest and coverage info, without GUI display
-test:
+# Sync deps and run a quick check of the local QGIS test environment
+test-check-env:
     uv sync --no-group ci
     uv sync --group testing
+    uv run pytest -v tests/integration/test_qgis_env.py::test_qgis_environment
+
+# Run all tests locally with pytest and coverage info, without GUI display
+test: test-check-env
     uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --qgis_disable_gui -rs
 
-# Run all tests with pytest and coverage info, with GUI display
-test-gui GUI_TIMEOUT="2":
-    uv sync --no-group ci
-    uv sync --group testing
+# Run all tests locally with pytest and coverage info, with GUI display
+test-gui GUI_TIMEOUT="2": test-check-env
     GUI_TIMEOUT={{ GUI_TIMEOUT }} uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing
 
 # Run tests with all QGIS versions using tox and Docker
-test-docker-all:
+test-tox-all:
     uv sync --group testing
     uv run tox -e all
 
 # Run tests with QGIS latest using tox and Docker
-test-docker-latest:
+test-tox-latest:
     uv sync --group testing
     uv run tox -e qgis-latest
 
 # Run tests with QGIS stable using tox and Docker
-test-docker-stable:
+test-tox-stable:
     uv sync --group testing
     uv run tox -e qgis-stable
 
 # Run tests with QGIS LTR using tox and Docker
-test-docker-ltr:
+test-tox-ltr:
     uv sync --group testing
     uv run tox -e qgis-ltr
 
 # Run tests with QGIS Qt6 using tox and Docker
-test-docker-qt6:
+test-tox-qt6:
     uv sync --group testing
     uv run tox -e qgis-qt6-ubuntu
 
-# Quick test with stable QGIS version using Docker
-test-docker-quick:
+# Run tests with QGIS Qt6 using tox and Docker
+test-tox-qt6-gui GUI_TIMEOUT="2":
     uv sync --group testing
-    uv run tox -e quick
+    uv run tox -e qgis-qt6-ubuntu-gui
 
 @package VERSION:
     #!/bin/bash

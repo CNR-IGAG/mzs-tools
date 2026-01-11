@@ -14,7 +14,7 @@ def test_export_data(
     plugin,
     qgis_app,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current_imported,
     mdb_deps_available,
     monkeypatch,
@@ -34,8 +34,8 @@ def test_export_data(
 
     plugin_instance.check_project()
 
-    assert plugin_instance.prj_manager.is_mzs_project is True
-    assert plugin_instance.prj_manager.project_updateable is False
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
 
     dialog = DlgExportData()
 
@@ -79,13 +79,11 @@ def test_export_data(
     exported_project_dir = tmp_path / "057001_Accumoli_S42_Shapefile"
     assert exported_project_dir.exists()
 
-    project.clear()
-
 
 def test_export_siti_puntuali_task_to_mdb(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current_imported,
     mdb_deps_available,
     tmp_path,
@@ -107,12 +105,12 @@ def test_export_siti_puntuali_task_to_mdb(
 
     plugin_instance.check_project()
 
-    assert plugin_instance.prj_manager.is_mzs_project is True
-    assert plugin_instance.prj_manager.project_updateable is False
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
 
     # get current project comune
-    comune_data = plugin_instance.prj_manager.get_project_comune_data()
-    comune_name = plugin_instance.prj_manager.sanitize_comune_name(comune_data.comune)
+    comune_data = prj_manager.get_project_comune_data()
+    comune_name = prj_manager.sanitize_comune_name(comune_data.comune)
     exported_project_path = tmp_path / f"{comune_data.cod_istat}_{comune_name}_S42_Shapefile"
     mdb_path = exported_project_path / "Indagini"
     mdb_path.mkdir(parents=True)
@@ -124,5 +122,3 @@ def test_export_siti_puntuali_task_to_mdb(
     task.run()
 
     # TODO: verify exported mdb
-
-    project.clear()

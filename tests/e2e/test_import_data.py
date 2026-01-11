@@ -15,7 +15,7 @@ def test_import_data(
     plugin,
     qgis_app,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
     mdb_deps_available,
@@ -23,7 +23,7 @@ def test_import_data(
     qtbot,
 ):
     # Substitute MockMessageBar from pytest-qgis with a simple Mock as it seems to have
-    # issues with our use of pushMessage
+    # issues with our use of pushMessage: https://github.com/osgeosuomi/pytest-qgis/issues/26
     # https://github.com/GispoCoding/pytest-qgis/blob/main/src/pytest_qgis/mock_qgis_classes.py
     monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
     plugin_instance = plugin(qgis_iface)
@@ -39,8 +39,8 @@ def test_import_data(
     plugin_instance.check_project()
     # plugin_instance.prj_manager.init_manager()
 
-    assert plugin_instance.prj_manager.is_mzs_project is True
-    assert plugin_instance.prj_manager.project_updateable is False
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
 
     # monkeypatch.setattr(DlgImportData, "on_tasks_completed", Mock(), raising=False)
     dialog = DlgImportData()
@@ -65,6 +65,9 @@ def test_import_data(
     #     dialog.radio_button_mdb.setChecked(True)
     # else:
     #     warnings.warn("MDB dependencies not available, skipping MDB import option test", UserWarning)
+
+    # enable sqlite import option, siti puntuali and lineari checkboxes are automatically selected
+    dialog.radio_button_sqlite.setChecked(True)
 
     # https://pytest-qt.readthedocs.io/en/latest/signals.html
     with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:
@@ -107,13 +110,11 @@ def test_import_data(
     assert "TESTING_MODE" in log_text
     assert dialog.tr("Data imported successfully") in log_text
 
-    project.clear()
-
 
 def test_import_siti_puntuali_task_from_mdb(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
     mdb_deps_available,
@@ -176,26 +177,24 @@ def test_import_siti_puntuali_task_from_mdb(
     # assert dest_layer.featureCount() > 0
 
     # verify imported features directly in the db
-    result = plugin_instance.prj_manager.db_manager.get_row_count("sito_puntuale")
+    result = prj_manager.db_manager.get_row_count("sito_puntuale")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("indagini_puntuali")
+    result = prj_manager.db_manager.get_row_count("indagini_puntuali")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("parametri_puntuali")
+    result = prj_manager.db_manager.get_row_count("parametri_puntuali")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("curve")
+    result = prj_manager.db_manager.get_row_count("curve")
     # no curve data in sample standard project
     assert result == 0
-
-    project.clear()
 
 
 def test_import_siti_puntuali_task_from_csv(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
 ):
@@ -254,26 +253,24 @@ def test_import_siti_puntuali_task_from_csv(
     task.run()
 
     # verify imported features directly in the db
-    result = plugin_instance.prj_manager.db_manager.get_row_count("sito_puntuale")
+    result = prj_manager.db_manager.get_row_count("sito_puntuale")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("indagini_puntuali")
+    result = prj_manager.db_manager.get_row_count("indagini_puntuali")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("parametri_puntuali")
+    result = prj_manager.db_manager.get_row_count("parametri_puntuali")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("curve")
+    result = prj_manager.db_manager.get_row_count("curve")
     # dummy curve data in csv
     assert result > 0
-
-    project.clear()
 
 
 def test_import_siti_puntuali_task_from_sqlite(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
 ):
@@ -333,26 +330,24 @@ def test_import_siti_puntuali_task_from_sqlite(
     # assert dest_layer.featureCount() > 0
 
     # verify imported features directly in the db
-    result = plugin_instance.prj_manager.db_manager.get_row_count("sito_puntuale")
+    result = prj_manager.db_manager.get_row_count("sito_puntuale")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("indagini_puntuali")
+    result = prj_manager.db_manager.get_row_count("indagini_puntuali")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("parametri_puntuali")
+    result = prj_manager.db_manager.get_row_count("parametri_puntuali")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("curve")
+    result = prj_manager.db_manager.get_row_count("curve")
     # no curve data in sample standard project
     assert result == 0
-
-    project.clear()
 
 
 def test_import_siti_lineari_task_from_mdb(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
     mdb_deps_available,
@@ -418,22 +413,20 @@ def test_import_siti_lineari_task_from_mdb(
     # assert dest_layer.featureCount() > 0
 
     # verify imported features directly in the db
-    result = plugin_instance.prj_manager.db_manager.get_row_count("sito_lineare")
+    result = prj_manager.db_manager.get_row_count("sito_lineare")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("indagini_lineari")
+    result = prj_manager.db_manager.get_row_count("indagini_lineari")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("parametri_lineari")
+    result = prj_manager.db_manager.get_row_count("parametri_lineari")
     assert result > 0
-
-    project.clear()
 
 
 def test_import_siti_lineari_task_from_csv(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
 ):
@@ -492,22 +485,20 @@ def test_import_siti_lineari_task_from_csv(
     task.run()
 
     # verify imported features directly in the db
-    result = plugin_instance.prj_manager.db_manager.get_row_count("sito_lineare")
+    result = prj_manager.db_manager.get_row_count("sito_lineare")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("indagini_lineari")
+    result = prj_manager.db_manager.get_row_count("indagini_lineari")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("parametri_lineari")
+    result = prj_manager.db_manager.get_row_count("parametri_lineari")
     assert result > 0
-
-    project.clear()
 
 
 def test_import_siti_lineari_task_from_sqlite(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
 ):
@@ -567,23 +558,21 @@ def test_import_siti_lineari_task_from_sqlite(
     # assert dest_layer.featureCount() > 0
 
     # verify imported features directly in the db
-    result = plugin_instance.prj_manager.db_manager.get_row_count("sito_lineare")
+    result = prj_manager.db_manager.get_row_count("sito_lineare")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("indagini_lineari")
+    result = prj_manager.db_manager.get_row_count("indagini_lineari")
     assert result > 0
 
-    result = plugin_instance.prj_manager.db_manager.get_row_count("parametri_lineari")
+    result = prj_manager.db_manager.get_row_count("parametri_lineari")
     assert result > 0
-
-    project.clear()
 
 
 @pytest.mark.skip("Not implemented yet")
 def test_import_siti_puntuali_task_from_mdb_adapt_counters(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_2_0_5,
     standard_project_path,
     mdb_deps_available,
@@ -596,7 +585,7 @@ def test_import_siti_puntuali_task_from_mdb_adapt_counters(
 def test_import_siti_puntuali_task_from_mdb_cancelled_by_user(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_2_0_5,
     standard_project_path,
     mdb_deps_available,
@@ -609,7 +598,7 @@ def test_import_siti_puntuali_task_from_mdb_cancelled_by_user(
 def test_import_siti_puntuali_task_from_mdb_failure(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_2_0_5,
     standard_project_path,
     mdb_deps_available,
@@ -621,7 +610,7 @@ def test_import_siti_puntuali_task_from_mdb_failure(
 def test_import_shapefile_task(
     plugin,
     qgis_iface,
-    qgis_new_project,
+    prj_manager,
     base_project_path_current,
     standard_project_path,
 ):
@@ -652,8 +641,6 @@ def test_import_shapefile_task(
     task.run()
 
     # verify that features were imported
-    dest_layer_id = plugin_instance.prj_manager.find_layer_by_table_name_role("elineari", "editing")
-    dest_layer = plugin_instance.prj_manager.current_project.mapLayer(dest_layer_id)
+    dest_layer_id = prj_manager.find_layer_by_table_name_role("elineari", "editing")
+    dest_layer = prj_manager.current_project.mapLayer(dest_layer_id)
     assert dest_layer.featureCount() > 0
-
-    project.clear()
