@@ -9,10 +9,10 @@ from unittest.mock import MagicMock
 import pytest
 
 # Set QGIS prefix path from environment variable if defined
-if os.environ.get("QGIS_PREFIX_PATH"):
-    from qgis.core import QgsApplication
+# if os.environ.get("QGIS_PREFIX_PATH"):
+#     from qgis.core import QgsApplication
 
-    QgsApplication.setPrefixPath(os.environ.get("QGIS_PREFIX_PATH"), True)
+#     QgsApplication.setPrefixPath(os.environ.get("QGIS_PREFIX_PATH"), True)
 
 
 GUI_TIMEOUT_DEFAULT = 2000  # milliseconds

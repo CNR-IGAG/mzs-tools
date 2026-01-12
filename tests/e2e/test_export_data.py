@@ -7,6 +7,8 @@ from qgis.core import QgsProject
 
 from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __base_version__
 from mzs_tools.gui.dlg_export_data import DlgExportData
+from mzs_tools.tasks.export_project_files_task import ExportProjectFilesTask
+from mzs_tools.tasks.export_siti_lineari_task import ExportSitiLineariTask
 from mzs_tools.tasks.export_siti_puntuali_task import ExportSitiPuntualiTask
 
 
@@ -122,3 +124,163 @@ def test_export_siti_puntuali_task_to_mdb(
     task.run()
 
     # TODO: verify exported mdb
+
+
+def test_export_siti_puntuali_task_to_sqlite(
+    plugin,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    tmp_path,
+):
+    plugin_instance = plugin(qgis_iface)
+
+    project_file = base_project_path_current_imported / "progetto_MS.qgz"
+
+    # Create a new project
+    project = QgsProject.instance()
+
+    # open the project
+    project.read(str(project_file))
+
+    plugin_instance.check_project()
+
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
+
+    # get current project comune
+    comune_data = prj_manager.get_project_comune_data()
+    comune_name = prj_manager.sanitize_comune_name(comune_data.comune)
+    exported_project_path = tmp_path / f"{comune_data.cod_istat}_{comune_name}_S42_Shapefile"
+    db_path = exported_project_path / "Indagini"
+    db_path.mkdir(parents=True)
+
+    cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite"
+    shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.sqlite")
+
+    task = ExportSitiPuntualiTask(exported_project_path, data_source="sqlite")
+    task.run()
+
+    # TODO: verify exported mdb
+
+
+def test_export_siti_lineari_task_to_mdb(
+    plugin,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    mdb_deps_available,
+    tmp_path,
+):
+    # exit if mdb dependencies are not available
+    if not mdb_deps_available:
+        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning)
+        return
+
+    plugin_instance = plugin(qgis_iface)
+
+    project_file = base_project_path_current_imported / "progetto_MS.qgz"
+
+    # Create a new project
+    project = QgsProject.instance()
+
+    # open the project
+    project.read(str(project_file))
+
+    plugin_instance.check_project()
+
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
+
+    # get current project comune
+    comune_data = prj_manager.get_project_comune_data()
+    comune_name = prj_manager.sanitize_comune_name(comune_data.comune)
+    exported_project_path = tmp_path / f"{comune_data.cod_istat}_{comune_name}_S42_Shapefile"
+    mdb_path = exported_project_path / "Indagini"
+    mdb_path.mkdir(parents=True)
+
+    cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle_4.2.mdb"
+    shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.mdb")
+
+    task = ExportSitiLineariTask(exported_project_path, data_source="mdb")
+    task.run()
+
+    # TODO: verify exported mdb
+
+
+def test_export_siti_lineari_task_to_sqlite(
+    plugin,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    tmp_path,
+):
+    plugin_instance = plugin(qgis_iface)
+
+    project_file = base_project_path_current_imported / "progetto_MS.qgz"
+
+    # Create a new project
+    project = QgsProject.instance()
+
+    # open the project
+    project.read(str(project_file))
+
+    plugin_instance.check_project()
+
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
+
+    # get current project comune
+    comune_data = prj_manager.get_project_comune_data()
+    comune_name = prj_manager.sanitize_comune_name(comune_data.comune)
+    exported_project_path = tmp_path / f"{comune_data.cod_istat}_{comune_name}_S42_Shapefile"
+    db_path = exported_project_path / "Indagini"
+    db_path.mkdir(parents=True)
+
+    cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite"
+    shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.sqlite")
+
+    task = ExportSitiLineariTask(exported_project_path, data_source="sqlite")
+    task.run()
+
+    # TODO: verify exported mdb
+
+
+def test_export_project_files_task(
+    plugin,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    tmp_path,
+):
+    plugin_instance = plugin(qgis_iface)
+
+    project_file = base_project_path_current_imported / "progetto_MS.qgz"
+
+    # Create a new project
+    project = QgsProject.instance()
+
+    # open the project
+    project.read(str(project_file))
+
+    plugin_instance.check_project()
+
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
+
+    # get current project comune
+    comune_data = prj_manager.get_project_comune_data()
+    comune_name = prj_manager.sanitize_comune_name(comune_data.comune)
+    exported_project_path = tmp_path / f"{comune_data.cod_istat}_{comune_name}_S42_Shapefile"
+
+    task = ExportProjectFilesTask(exported_project_path)
+    task.run()
+
+    indagini_docs_path = exported_project_path / "Indagini" / "Documenti"
+    assert indagini_docs_path.exists()
+    assert any(indagini_docs_path.iterdir())
+    plot_path = exported_project_path / "Plot"
+    assert plot_path.exists()
+    spettri_path = exported_project_path / "MS23" / "Spettri"
+    assert spettri_path.exists()
+    assert any(spettri_path.iterdir())
