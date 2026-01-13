@@ -13,7 +13,7 @@ on:
     #   - 'help/**/*'
     #   - "mzs_tools/**/*.py"
     #   - "mzs_tools/metadata.txt"
-    tags: 
+    tags:
       - "*"
 
 
@@ -92,7 +92,7 @@ jobs:
       #   with:
       #     name: translations-build
       #     path: ${{ env.PROJECT_FOLDER }}
-  
+
       # - name: Amend gitignore to include compiled translations and add it to tracked files
       #   run: |
       #     # include compiled translations
@@ -135,7 +135,7 @@ jobs:
   # -- ONLY TAGS ----------------------------------------------------------------------
   release:
     name: "🚀 Release on tag"
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     # needs: [translation]
@@ -212,5 +212,4 @@ jobs:
             --allow-uncommitted-changes \
             --create-plugin-repo \
             --github-token ${{ secrets.GITHUB_TOKEN }} \
-            --osgeo-username ${{ secrets.OSGEO_USER }} \
-            --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
+            --qgis-token ${{ secrets.PLUGINS_WEBSITE_TOKEN }}

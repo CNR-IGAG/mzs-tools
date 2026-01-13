@@ -854,7 +854,7 @@ testing = [
 [package.metadata]
 
 [package.metadata.requires-dev]
-ci = [{ name = "qgis-plugin-ci", specifier = ">=2.8.10" }]
+ci = [{ name = "qgis-plugin-ci", specifier = ">=2.9.1" }]
 dev = [
     { name = "esbonio", specifier = ">=0.16.5" },
     { name = "jaydebeapi", specifier = ">=1.2.3" },
@@ -1316,7 +1316,7 @@ wheels = [
 
 [[package]]
 name = "qgis-plugin-ci"
-version = "2.8.10"
+version = "2.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "gitpython" },
@@ -1325,13 +1325,15 @@ dependencies = [
     { name = "pyqt5ac" },
     { name = "python-slugify" },
     { name = "pyyaml" },
+    { name = "requests" },
     { name = "six" },
-    { name = "toml" },
+    { name = "tomli", version = "2.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "tomli", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "transifex-python" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/dd/15/953d8f90b2fadbea75e9e1970547f407608b5d9504a0b98191005e465a86/qgis_plugin_ci-2.8.10.tar.gz", hash = "sha256:2c341caa252a2bd9aabc57023bfa86af7f5143aecf9942abc4cd9446d4fa937b", size = 63094, upload-time = "2024-12-02T19:03:04.325Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/05/08/d13da3099c347bae37e703ad81283c873089a13e60c116514a63530cf8da/qgis_plugin_ci-2.9.1.tar.gz", hash = "sha256:422290bee04f5023fca9e55fce5239edbfb4a7c6bf0222fdf01221cddc4a6a18", size = 64547, upload-time = "2026-01-12T16:44:03.831Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/31/90/239ca6c2f7bc4617da36d1265b75a12ecccc292e68f9a012f378814c6fc2/qgis_plugin_ci-2.8.10-py3-none-any.whl", hash = "sha256:ad8a10b1fe802d628136f6d12f4559c6c967f3c9ea8194c11361671c2f00f2f6", size = 37750, upload-time = "2024-12-02T19:03:02.55Z" },
+    { url = "https://files.pythonhosted.org/packages/34/7f/1bf493a69339e9286eb89583fda1a3396d87414940e8e2c8edcc59eb60c1/qgis_plugin_ci-2.9.1-py3-none-any.whl", hash = "sha256:039c2559065c420c25809596b1c2f13ef1a4e1713573b8d2bb7c9411300b3efe", size = 38617, upload-time = "2026-01-12T16:44:02.476Z" },
 ]
 
 [[package]]
@@ -1793,15 +1795,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ab/e2/e9a00f0ccb71718418230718b3d900e71a5d16e701a3dae079a21e9cd8f8/text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93", size = 76885, upload-time = "2019-08-30T21:36:45.405Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a6/a5/c0b6468d3824fe3fde30dbb5e1f687b291608f9473681bbf7dabbf5a87d7/text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8", size = 78154, upload-time = "2019-08-30T21:37:03.543Z" },
-]
-
-[[package]]
-name = "toml"
-version = "0.10.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f", size = 22253, upload-time = "2020-11-01T01:40:22.204Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/6f/7120676b6d73228c96e17f1f794d8ab046fc910d781c8d151120c3f1569e/toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b", size = 16588, upload-time = "2020-11-01T01:40:20.672Z" },
 ]
 
 [[package]]

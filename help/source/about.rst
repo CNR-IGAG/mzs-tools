@@ -26,6 +26,11 @@ Per maggiori informazioni sulla CC BY 4.0, visita: `<https://creativecommons.org
 Changelog
 =========
 
+v2.0.6
+    - Correzione per i campi interi convertiti in float negli shapefile esportati
+    - Aggiornati i layer per i layout di stampa
+    - Ristrutturazione dei test automatici
+
 v2.0.5
     - Corretta la vista HVSR per gestire il caso di utilizzo della virgola come separatore decimale nel campo testuale "valore"
     - Nuovo strumento per controllare ed installare le librerie python richieste (in alternativa a QPIP) e rilevare
