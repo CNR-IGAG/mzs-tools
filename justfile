@@ -73,7 +73,11 @@ dev-link QGIS_PLUGIN_PATH="~/.local/share/QGIS/QGIS3/profiles/default/python/plu
 
 @bootstrap-dev: create-venv dev-link
 
-@update-deps:
+@deps-update-check:
+    uv sync --all-groups
+    uv pip list --outdated
+
+@deps-update:
     uv lock --upgrade
 
 trans-update:
