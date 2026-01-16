@@ -33,7 +33,7 @@ SPDX-License-Identifier = [
 ]
 
 [[annotations]]
-path = "mzs_tools/ext_libs/ucanaccess-5.1.2-uber.jar"
+path = "mzs_tools/ext_libs/ucanaccess-5.1.5-uber.jar"
 SPDX-FileCopyrightText = "2012-2026 UCanAccess Project Authors"
 SPDX-License-Identifier = "Apache-2.0"
 

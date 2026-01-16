@@ -18,7 +18,10 @@ This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) 
 
 ## Acknowledgements
 
-- External libraries:
+- Additional tools and libraries:
+  - [QGIS Plugin Templater](https://gitlab.com/Oslandia/qgis/template-qgis-plugin)
+  - [qgis-plugin-ci](https://github.com/opengisch/qgis-plugin-ci)
+  - [pytest-qgis](https://github.com/osgeosuomi/pytest-qgis)
   - [UCanAccess](https://github.com/spannm/ucanaccess) (Apache-2.0 license)
   - [JayDeBeApi](https://github.com/baztian/jaydebeapi) (LGPL-3.0 license)
 - 'CNR' logo, 'IGAG' logo, 'LabGIS' logo, 'DPC' logo, 'Conferenza regioni e provincie autonome' logo and 'Regioni' logos belong to their respective owners who retain all rights in law;

@@ -17,7 +17,6 @@
 # -----------------------------------------------------------------------------
 
 from datetime import datetime
-from typing import Optional
 
 from ..__about__ import DIR_PLUGIN_ROOT
 from ..plugin_utils.dependency_manager import DependencyManager
@@ -25,6 +24,7 @@ from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import find_libjvm
 from ..plugin_utils.settings import PlgOptionsManager
 
+UCANACCESS_JAR_PATH = DIR_PLUGIN_ROOT / "ext_libs" / "ucanaccess-5.1.5-uber.jar"
 EXT_LIBS_LOADED = True
 
 try:
@@ -37,7 +37,7 @@ except ImportError:
 
 
 class AccessDbConnection:
-    def __init__(self, db_path: str, password: Optional[str] = None):
+    def __init__(self, db_path: str, password: str | None = None):
         global EXT_LIBS_LOADED, jaydebeapi, jpype
         self.log = MzSToolsLogger().log
         self.plg_settings = PlgOptionsManager()
@@ -66,7 +66,7 @@ class AccessDbConnection:
         self.options = {}
         if password:
             self.options["password"] = password
-        self.classpath = DIR_PLUGIN_ROOT / "ext_libs" / "ucanaccess-5.1.2-uber.jar"
+        self.classpath = UCANACCESS_JAR_PATH
         self.connection = None
         self.cursor = None
         self.java_home_override = None
@@ -104,7 +104,7 @@ class AccessDbConnection:
                 self.log(f"JVM classpath: {System.getProperty('java.class.path')}", log_level=4)
         except Exception as e:
             self.log(f"Error starting JVM: {e} ", log_level=2)
-            raise JVMError("Error starting JVM")
+            raise JVMError("Error starting JVM") from e
 
         # Connect to the database
         self.log("Opening Access Db connection", log_level=4)
@@ -119,7 +119,7 @@ class AccessDbConnection:
             # self.log(f"getErrorCode: {e.getErrorCode()}", log_level=4)
 
             if isinstance(e.getCause(), AuthenticationException):  # type: ignore
-                raise MdbAuthError("Invalid password")
+                raise MdbAuthError("Invalid password") from e
 
             raise e
 
@@ -154,7 +154,7 @@ class AccessDbConnection:
         # Rollback the transaction
         self.connection.rollback()
 
-    def _validate_date(self, date_value: Optional[str]) -> Optional[str]:
+    def _validate_date(self, date_value: str | None) -> str | None:
         """
         Validate and parse a date string. Returns None if the date is empty, None,
         or cannot be parsed in a recognizable format. If a datetime string is provided,
@@ -177,10 +177,7 @@ class AccessDbConnection:
 
         # Try to detect and strip time part
         # Look for space followed by time pattern (HH:mm:ss or HH:mm)
-        if " " in stripped_value:
-            date_part = stripped_value.split(" ")[0]
-        else:
-            date_part = stripped_value
+        date_part = stripped_value.split(" ")[0] if " " in stripped_value else stripped_value
 
         # List of common date formats to try
         date_formats = [
@@ -204,7 +201,7 @@ class AccessDbConnection:
         self.log(f"Unable to parse date value '{date_value}' - setting to NULL", log_level=1)
         return None
 
-    def _validate_float(self, float_value: Optional[str]) -> Optional[float]:
+    def _validate_float(self, float_value: str | None) -> float | None:
         """
         Validate and parse a float string. Returns None if the value is empty, None,
         or cannot be parsed as a float.
@@ -247,7 +244,8 @@ class AccessDbConnection:
         data = self.execute(query)
         return {
             row[3]: {
-                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+                field_name: str(value) if str(value) != "None" else ""
+                for field_name, value in zip(field_names, row, strict=False)
             }
             for row in data
         }
@@ -275,7 +273,8 @@ class AccessDbConnection:
         data = self.execute(query)
         return {
             row[3]: {
-                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+                field_name: str(value) if str(value) != "None" else ""
+                for field_name, value in zip(field_names, row, strict=False)
             }
             for row in data
         }
@@ -305,7 +304,8 @@ class AccessDbConnection:
         data = self.execute(query)
         return {
             (row[0], row[4]): {
-                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+                field_name: str(value) if str(value) != "None" else ""
+                for field_name, value in zip(field_names, row, strict=False)
             }
             for row in data
         }
@@ -329,7 +329,8 @@ class AccessDbConnection:
         data = self.execute(query)
         return {
             (row[0], row[4]): {
-                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+                field_name: str(value) if str(value) != "None" else ""
+                for field_name, value in zip(field_names, row, strict=False)
             }
             for row in data
         }
@@ -357,7 +358,8 @@ class AccessDbConnection:
         data = self.execute(query)
         return {
             (row[0], row[3]): {
-                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+                field_name: str(value) if str(value) != "None" else ""
+                for field_name, value in zip(field_names, row, strict=False)
             }
             for row in data
         }
@@ -384,7 +386,8 @@ class AccessDbConnection:
         data = self.execute(query)
         return {
             (row[0], row[3]): {
-                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+                field_name: str(value) if str(value) != "None" else ""
+                for field_name, value in zip(field_names, row, strict=False)
             }
             for row in data
         }
@@ -401,7 +404,8 @@ class AccessDbConnection:
         data = self.execute(query)
         return {
             (row[0], row[1]): {
-                field_name: str(value) if str(value) != "None" else "" for field_name, value in zip(field_names, row)
+                field_name: str(value) if str(value) != "None" else ""
+                for field_name, value in zip(field_names, row, strict=False)
             }
             for row in data
         }

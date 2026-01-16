@@ -59,17 +59,18 @@ This ensures tests run in the exact environment where QGIS is installed, with th
 The easiest way to run Docker-based tests is using the predefined justfile tasks:
 
 ```bash
-# Quick test with stable QGIS version
-just test-docker-quick
-
 # Test with specific QGIS version
-just test-docker-latest   # Latest development version
-just test-docker-stable   # Current stable (3.44)
-just test-docker-ltr      # Long-term release (3.40)
-just test-docker-qt6      # Qt6 version
+just test-tox-latest   # Latest development version
+just test-tox-stable   # Current stable (3.44)
+just test-tox-ltr      # Long-term release (3.40)
+just test-tox-qt6      # Qt6 version
+just test-tox-qt6-gui  # Qt6 version with GUI enabled
+
+# Qt6 tests require building the Docker image first:
+just build-image-qgis-qt6-ubuntu-master
 
 # Run tests with all QGIS versions
-just test-docker-all
+just test-tox-all
 ```
 
 ### Using tox Directly
