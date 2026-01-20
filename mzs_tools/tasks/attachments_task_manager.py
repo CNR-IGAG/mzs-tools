@@ -16,6 +16,7 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+import contextlib
 import logging
 
 from qgis.core import Qgis, QgsApplication, QgsTask
@@ -102,10 +103,8 @@ class AttachmentsTaskManager:
         QgsApplication.taskManager().addTask(self.manage_attachments_task)
 
     def _on_manage_attachments_task_progress(self, progress):
-        try:
+        with contextlib.suppress(Exception):
             self.progress_bar.setValue(int(progress))
-        except Exception:
-            pass
 
     def _on_manage_attachments_task_status_changed(self, status):
         self.log(f"Task status changed: {status}")

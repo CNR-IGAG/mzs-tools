@@ -25,7 +25,7 @@ connection management, and common database operations.
 import traceback
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, List, Literal, Optional, Tuple, Union, overload
+from typing import Any, Literal, overload
 
 from qgis.utils import spatialite_connect
 
@@ -179,22 +179,22 @@ class DatabaseManager:
 
     @overload
     def execute_query(
-        self, query: str, params: Optional[Union[Tuple, List]] = None, fetch_mode: Literal["all"] = "all"
-    ) -> List[Tuple]: ...
+        self, query: str, params: tuple | list | None = None, fetch_mode: Literal["all"] = "all"
+    ) -> list[tuple]: ...
 
     @overload
     def execute_query(
-        self, query: str, params: Optional[Union[Tuple, List]] = None, fetch_mode: Literal["one"] = "one"
-    ) -> Optional[Tuple]: ...
+        self, query: str, params: tuple | list | None = None, fetch_mode: Literal["one"] = "one"
+    ) -> tuple | None: ...
 
     @overload
     def execute_query(
-        self, query: str, params: Optional[Union[Tuple, List]] = None, fetch_mode: Literal["value"] = "value"
+        self, query: str, params: tuple | list | None = None, fetch_mode: Literal["value"] = "value"
     ) -> Any: ...
 
     def execute_query(
-        self, query: str, params: Optional[Union[Tuple, List]] = None, fetch_mode: str = "all"
-    ) -> Optional[Union[List[Tuple], Tuple, Any]]:
+        self, query: str, params: tuple | list | None = None, fetch_mode: str = "all"
+    ) -> list[tuple] | tuple | Any | None:
         """Execute a SELECT query and return results.
 
         Args:
@@ -240,7 +240,7 @@ class DatabaseManager:
                 self.log(f"Error: {e}", log_level=2)
                 raise DatabaseError(f"Query execution failed: {e}") from e
 
-    def execute_update(self, query: str, params: Optional[Union[Tuple, List]] = None, commit: bool = True) -> int:
+    def execute_update(self, query: str, params: tuple | list | None = None, commit: bool = True) -> int:
         """Execute an INSERT, UPDATE, or DELETE query.
 
         Args:
@@ -361,7 +361,7 @@ class DatabaseManager:
         )
         return result is not None
 
-    def get_row_count(self, table_name: str, where_clause: str = "", params: Optional[Tuple] = None) -> int:
+    def get_row_count(self, table_name: str, where_clause: str = "", params: tuple | None = None) -> int:
         """Get the number of rows in a table.
 
         Args:

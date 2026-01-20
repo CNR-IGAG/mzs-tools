@@ -19,7 +19,6 @@
 import re
 from functools import partial
 from pathlib import Path
-from typing import Dict
 
 try:
     import pyplugin_installer
@@ -102,7 +101,7 @@ class DlgPluginInfo(QDialog, FORM_CLASS):
                 label.setText(self.tr(f"File not found: {filename}"))
                 return
 
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 text = f.read()
                 if self.markdown_available and filename.endswith(".md"):
                     text = self.replace_headings(text)
@@ -143,7 +142,7 @@ class DlgPluginInfo(QDialog, FORM_CLASS):
             self.log(f"Error updating version label: {e}", log_level=1)
             self.label_version_warning.setVisible(False)
 
-    def get_plugin_metadata(self, plugin_name: str) -> Dict[str, str]:
+    def get_plugin_metadata(self, plugin_name: str) -> dict[str, str]:
         """Fetch plugin metadata from QGIS plugin manager.
 
         Args:

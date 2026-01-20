@@ -21,7 +21,6 @@ import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
@@ -37,8 +36,8 @@ class ImportSitiLineariTask(QgsTask):
         self,
         proj_paths: dict,
         data_source: str,
-        mdb_password: Optional[str] = None,
-        csv_files: Optional[dict] = None,
+        mdb_password: str | None = None,
+        csv_files: dict | None = None,
         adapt_counters: bool = True,
     ):
         super().__init__("Import siti lineari (siti, indagini, parametri)", QgsTask.Flag.CanCancel)
@@ -196,7 +195,7 @@ class ImportSitiLineariTask(QgsTask):
                 self.logger.warning(f"{'#' * 15} Deleting all siti_lineari!")
                 self.delete_all_siti_lineari()
 
-            for feature in features:
+            for feature in features:  # type: ignore
                 self.iterations += 1
                 self.setProgress(self.iterations * 100 / self.num_siti)
 
@@ -229,16 +228,16 @@ class ImportSitiLineariTask(QgsTask):
 
                 # avoid CHECK constraint errors
                 if not sito_lineare["Aquota"]:
-                    sito_lineare["Aquota"] = None
+                    sito_lineare["Aquota"] = None  # type: ignore
                 if not sito_lineare["Bquota"]:
-                    sito_lineare["Bquota"] = None
+                    sito_lineare["Bquota"] = None  # type: ignore
 
                 # change counters when data is already present
                 sito_lineare_source_pkey = sito_lineare["pkey_sln"]
                 if self.adapt_counters and self.sito_lineare_seq > 0:
                     new_pkey_sln = int(sito_lineare["pkey_sln"]) + self.sito_lineare_seq
                     self.logger.debug(f"pkey_sln: {sito_lineare['pkey_sln']} -> {new_pkey_sln}")
-                    sito_lineare["pkey_sln"] = new_pkey_sln
+                    sito_lineare["pkey_sln"] = new_pkey_sln  # type: ignore
                     sito_lineare["ID_SLN"] = (
                         sito_lineare["ubicazione_prov"]
                         + sito_lineare["ubicazione_com"]
@@ -271,19 +270,19 @@ class ImportSitiLineariTask(QgsTask):
                     # add ID_SPU to the data
                     value["ID_SLN"] = sito_lineare["ID_SLN"]
                     # turn empty strings into None to avoid CHECK constraint errors
-                    for k in value.keys():
+                    for k in value.keys():  # noqa: SIM118
                         if value[k] == "":
-                            value[k] = None
+                            value[k] = None  # type: ignore
                     # change counters when data is already present
                     indagine_lineare_source_pkey = value["pkey_indln"]
                     indagine_lineare_source_id_indln = value["ID_INDLN"]
                     if self.adapt_counters and self.indagini_lineari_seq > 0:
-                        value["pkey_indln"] = int(value["pkey_indln"]) + self.indagini_lineari_seq
+                        value["pkey_indln"] = int(value["pkey_indln"]) + self.indagini_lineari_seq  # type: ignore
                         value["ID_INDLN"] = value["ID_SLN"] + value["tipo_ind"] + str(value["pkey_indln"])
 
                     # copy and adapt attachments
                     try:
-                        if value["doc_ind"]:
+                        if value["doc_ind"]:  # noqa: SIM102
                             # self.log(f"Copying attachment {value['doc_ind']}")
                             if (
                                 self.proj_paths["Documenti"]["path"]
@@ -315,15 +314,15 @@ class ImportSitiLineariTask(QgsTask):
                     }
                     # self.log(f"pkey_indpu: {current_pkey_indpu} - Filtered elements: {filtered_parametri}")
 
-                    for key, value in filtered_parametri.items():
+                    for _key, value in filtered_parametri.items():
                         # self.log(f"Inserting parametro puntuale - Key: {key}, Value: {value}")
                         # add ID_INDPU to the data
                         value["ID_INDLN"] = current_idindln
 
                         # turn empty strings into None to avoid CHECK constraint errors
-                        for k in value.keys():
+                        for k in value.keys():  # noqa: SIM118
                             if value[k] == "":
-                                value[k] = None
+                                value[k] = None  # type: ignore
 
                         # amend spessore < 0
                         try:
@@ -334,19 +333,19 @@ class ImportSitiLineariTask(QgsTask):
                             ):
                                 self.logger.warning(f"prof_top > prof_bot in {value['ID_PARLN']}, check prof values!")
                                 # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
-                                value["prof_bot"] = None
+                                value["prof_bot"] = None  # type: ignore
                             if value["spessore"] and float(value["spessore"]) < 0:
                                 self.logger.warning(f"Negative spessore in {value['ID_PARLN']}, check prof values!")
-                                value["spessore"] = None
+                                value["spessore"] = None  # type: ignore
                                 # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
-                                value["prof_bot"] = None
+                                value["prof_bot"] = None  # type: ignore
                         except Exception as e:
                             self.logger.warning(f"Error checking spessore in {value['ID_PARLN']}: {e}")
 
                         # change counters when data is already present
                         # parametro_lineare_source_pkey = value["pkey_parpu"]
                         if self.adapt_counters and self.parametri_lineari_seq > 0:
-                            value["pkey_parln"] = int(value["pkey_parln"]) + self.parametri_lineari_seq
+                            value["pkey_parln"] = int(value["pkey_parln"]) + self.parametri_lineari_seq  # type: ignore
                             value["ID_PARLN"] = value["ID_PARLN"] + value["tipo_parln"] + str(value["pkey_parln"])
 
                         try:
@@ -509,7 +508,7 @@ class ImportSitiLineariTask(QgsTask):
                 self.logger.warning(f"Attachment {file_path} not found, skipping")
                 return None
         # copy in the project folder
-        dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"
+        dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"  # type: ignore
 
         # if a new ID has been assigned to the indagine or parametro, add it to the file name
         new_file_name = None
@@ -725,7 +724,7 @@ class ImportSitiLineariTask(QgsTask):
         data = {}
 
         try:
-            with open(file_path, "r", encoding="utf-8") as csvfile:
+            with open(file_path, encoding="utf-8") as csvfile:
                 # Try to auto-detect the delimiter
                 sample = csvfile.read(1024)
                 csvfile.seek(0)

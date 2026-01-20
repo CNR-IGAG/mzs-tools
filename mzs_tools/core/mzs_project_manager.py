@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 from qgis.core import (
     Qgis,
@@ -99,16 +99,16 @@ class MzSProjectManager:
 
         self.log = MzSToolsLogger().log
 
-        self.current_project: Optional[QgsProject] = None
-        self.project_path: Optional[Path] = None
-        self.project_version: Optional[str] = None
+        self.current_project: QgsProject | None = None
+        self.project_path: Path | None = None
+        self.project_version: str | None = None
         self.project_updateable = False
-        self.db_path: Optional[Path] = None
+        self.db_path: Path | None = None
 
         # Database manager
         self.db_manager = None
 
-        self.comune_data: Optional[ComuneData] = None
+        self.comune_data: ComuneData | None = None
         self.project_metadata = None
         self.required_layer_registry = {}
         self.project_issues = None
@@ -193,7 +193,7 @@ class MzSProjectManager:
         self,
         issue_type: str,
         issue: str,
-        trace: Optional[str] = None,
+        trace: str | None = None,
         log: bool = True,
     ) -> None:
         """Store a project issue in the internal registry.
@@ -546,7 +546,7 @@ class MzSProjectManager:
         root_layer_group.setItemVisibilityChecked(False)
         self.current_project.layerTreeRoot().insertChildNode(0, root_layer_group)
 
-        for table_name, layer_data in group_dict.items():
+        for _table_name, layer_data in group_dict.items():
             layer_group = None
             if layer_data["group"]:
                 layer_group = root_layer_group.findGroup(layer_data["group"])
@@ -611,10 +611,13 @@ class MzSProjectManager:
                     # set subset string if needed
                     map_layer = layer_tree_layer.layer()
                     subset_string = layer_data.get("subset_string", None)
-                    if subset_string is not None and isinstance(map_layer, QgsVectorLayer):
-                        if subset_string == "cod_regio":
-                            subset_string = f"cod_regio = '{self.comune_data.cod_regio}'"
-                            map_layer.setSubsetString(subset_string)
+                    if (
+                        subset_string is not None
+                        and subset_string == "cod_regio"
+                        and isinstance(map_layer, QgsVectorLayer)
+                    ):
+                        subset_string = f"cod_regio = '{self.comune_data.cod_regio}'"
+                        map_layer.setSubsetString(subset_string)
 
                     # set custom properties
                     # for prop_name, prop_value in custom_properties.items():
@@ -749,7 +752,7 @@ class MzSProjectManager:
         # put the layout group at the top of the tree only if the editing group does not exist
         idx = 1 if editing_group else 0
         self.current_project.layerTreeRoot().insertChildNode(idx, root_layer_group)
-        for group_name, qlr_path in DEFAULT_LAYOUT_GROUPS.items():
+        for _group_name, qlr_path in DEFAULT_LAYOUT_GROUPS.items():
             qlr_full_path = DIR_PLUGIN_ROOT / "data" / "layer_defs" / "print_layout" / qlr_path
             self.add_layer_from_qlr(root_layer_group, qlr_full_path)
 
@@ -846,7 +849,7 @@ class MzSProjectManager:
                             gp.removeChildNode(parent_node)
 
         self.log("Cleaning up editing layers...", log_level=4)
-        for table_name in DEFAULT_EDITING_LAYERS.keys():
+        for table_name in DEFAULT_EDITING_LAYERS:
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
                 if layer and layer.customProperty("mzs_tools/layer_role") == "editing":
@@ -881,7 +884,7 @@ class MzSProjectManager:
 
     def _cleanup_layout_groups(self):
         self.log("Cleaning up layout groups...", log_level=4)
-        for group_name in DEFAULT_LAYOUT_GROUPS.keys():
+        for group_name in DEFAULT_LAYOUT_GROUPS:
             group = self.current_project.layerTreeRoot().findGroup(group_name)
             if group:
                 parent_node = group.parent()
@@ -918,7 +921,7 @@ class MzSProjectManager:
                     layers.append(layer)
         return layers
 
-    def find_layer_by_table_name_role(self, table_name: str, role: str) -> Optional[str]:
+    def find_layer_by_table_name_role(self, table_name: str, role: str) -> str | None:
         """Find a single vector layer by table name and custom property mzs_tools/layer_role
 
         Args:
@@ -1263,7 +1266,7 @@ class MzSProjectManager:
         self.current_project.writeEntry("TitleLabel", "/Enabled", True)
 
     def load_print_layouts(self):
-        for layout_name, model_file_name in PRINT_LAYOUT_MODELS.items():
+        for _layout_name, model_file_name in PRINT_LAYOUT_MODELS.items():
             self.load_print_layout_model(model_file_name)
 
     def load_print_layout_model(self, model_file_name: str):
@@ -1305,7 +1308,7 @@ class MzSProjectManager:
 
     def backup_print_layouts(
         self,
-        backup_label: Optional[str] = None,
+        backup_label: str | None = None,
         backup_timestamp: bool = False,
         backup_models: bool = False,
         backup_all: bool = False,
@@ -1327,7 +1330,7 @@ class MzSProjectManager:
         return layout_file_paths
 
     def backup_print_layout(
-        self, layout: QgsPrintLayout, backup_label: Optional[str] = None, backup_model_file: bool = False
+        self, layout: QgsPrintLayout, backup_label: str | None = None, backup_model_file: bool = False
     ):
         self.log(f"Backing up layout: {layout.name()}", log_level=4)
         layout_name = layout.name()
@@ -1456,7 +1459,7 @@ class MzSProjectManager:
             self.db_manager.disconnect()
             self.db_manager = None
 
-    def get_project_comune_data(self) -> Optional[ComuneData]:
+    def get_project_comune_data(self) -> ComuneData | None:
         """Get municipality data from the project database."""
         row = self.db.execute_query("SELECT * FROM comune_progetto LIMIT 1", fetch_mode="one")
 
@@ -1524,7 +1527,7 @@ class MzSProjectManager:
         msg = self.tr("Database upgrades completed! Database upgraded to version")
         self.log(f"{msg} {__base_version__}", push=True, duration=0)
 
-    def update_history_table(self, component: str, from_version: str, to_version: str, notes: Optional[str] = None):
+    def update_history_table(self, component: str, from_version: str, to_version: str, notes: str | None = None):
         """Update the project update history table."""
         try:
             # Check if table exists
@@ -1670,7 +1673,7 @@ class MzSProjectManager:
 
         return backup_path
 
-    def backup_qgis_project(self) -> Optional[Path]:
+    def backup_qgis_project(self) -> Path | None:
         if self.project_path is None:
             self.log("Project path is not set, cannot backup QGIS project", log_level=2)
             return None

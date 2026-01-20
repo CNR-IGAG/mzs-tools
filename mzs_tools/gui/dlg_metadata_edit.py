@@ -19,7 +19,7 @@
 import webbrowser
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 from qgis.gui import QgisInterface, QgsDateTimeEdit
 from qgis.PyQt import uic
@@ -47,7 +47,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
     in the 'Standard MS'.
     """
 
-    def __init__(self, parent: Optional[QDialog] = None) -> None:
+    def __init__(self, parent: QDialog | None = None) -> None:
         """Constructor."""
         super().__init__(parent)
         self.log = MzSToolsLogger().log
@@ -104,7 +104,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
 
         # connect all required fields to the validate_input method
         for field in self.required_fields:
-            if isinstance(field, QLineEdit) and field.isEnabled():
+            if isinstance(field, QLineEdit) and field.isEnabled():  # noqa: SIM114
                 field.textChanged.connect(self.validate_input)
             elif isinstance(field, QTextEdit):
                 field.textChanged.connect(self.validate_input)

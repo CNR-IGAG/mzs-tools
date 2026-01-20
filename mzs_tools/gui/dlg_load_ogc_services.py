@@ -19,7 +19,7 @@
 from pathlib import Path
 
 from qgis.PyQt import uic
-from qgis.PyQt.QtCore import QCoreApplication, Qt
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox
 from qgis.utils import iface
 

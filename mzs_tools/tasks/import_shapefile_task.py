@@ -46,6 +46,10 @@ class ImportShapefileTask(QgsTask):
         self.shapefile_name = shapefile_name
 
     def run(self):
+        if not self.prj_manager.project_path:
+            self.logger.error("No project is currently loaded!")
+            return False
+
         self.logger.info(f"{'#' * 15} Starting task {self.description()}")
         if DEBUG_MODE:
             self.logger.warning(f"\n{'#' * 50}\n# Running in DEBUG mode! Data will be DESTROYED! #\n{'#' * 50}")
@@ -57,6 +61,9 @@ class ImportShapefileTask(QgsTask):
             db_table_name = self.proj_paths[self.shapefile_name]["table"]
             dest_layer_id = self.prj_manager.find_layer_by_table_name_role(db_table_name, "editing")
             dest_layer = self.prj_manager.current_project.mapLayer(dest_layer_id)
+
+            if not dest_layer or not isinstance(dest_layer, QgsVectorLayer):
+                raise Exception(f"Destination layer for table {db_table_name} not found in the project!")
 
             if self.shapefile_name in ["MS23-Stab.shp", "MS23-Instab.shp"]:
                 # copy spettri files to the project folder
@@ -159,13 +166,10 @@ class ImportShapefileTask(QgsTask):
                 continue
 
             # Discard polygons with area < 1
-            if geometry.type() == QgsWkbTypes.GeometryType.PolygonGeometry:
-                if geometry.area() < 1:
-                    self.logger.warning(
-                        f"Polygon with area < 1 detected in feature ID {feature.id()}, skipping feature."
-                    )
-                    continue
-
+            # TODO: should be QgsWkbTypes.Polygon for QGIS >= 3.30
+            if geometry.type() == QgsWkbTypes.GeometryType.PolygonGeometry and geometry.area() < 1:
+                self.logger.warning(f"Polygon with area < 1 detected in feature ID {feature.id()}, skipping feature.")
+                continue
             # Drop Z values if present
             if geometry.get().is3D():
                 if not features_are_3d:
@@ -199,7 +203,7 @@ class ImportShapefileTask(QgsTask):
 
             # set spettri field with relative path
             try:
-                if self.shapefile_name in ["MS23-Stab.shp", "MS23-Instab.shp"]:
+                if self.shapefile_name in ["MS23-Stab.shp", "MS23-Instab.shp"]:  # noqa: SIM102
                     if "SPETTRI" in feature.attributeMap() and feature["SPETTRI"]:
                         feature["SPETTRI"] = f"./Allegati/Spettri/{feature['SPETTRI']}"
             except Exception as e:
@@ -230,6 +234,7 @@ class ImportShapefileTask(QgsTask):
             # Use edit context manager to enable cancelling task and rollback on failure
             with edit(dest_layer):
                 # set AllowIntersections and disable digitizing geometry checks
+                # TODO: should be QgsProject.AllowIntersections for QGIS >= 3.26
                 proj.setAvoidIntersectionsMode(QgsProject.AvoidIntersectionsMode.AllowIntersections)
 
                 geom_checks = dest_layer.geometryOptions().geometryChecks()

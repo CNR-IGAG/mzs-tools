@@ -17,9 +17,11 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+import contextlib
 import logging
+from collections.abc import Callable
 from functools import partial
-from typing import Callable, Optional, cast
+from typing import cast
 
 from qgis.core import Qgis, QgsMessageLog, QgsMessageOutput
 from qgis.gui import QgisInterface, QgsMessageBar
@@ -59,15 +61,15 @@ class MzSToolsLogger(logging.Handler):
         application: str = __title__,
         log_level: int = 0,
         push: bool = False,
-        duration: Optional[int] = None,
+        duration: int | None = None,
         # additional info (showMore)
-        showmore_text: Optional[str] = None,
+        showmore_text: str | None = None,
         # widget
         button: bool = False,
-        button_text: Optional[str] = None,
-        button_connect: Optional[Callable] = None,
+        button_text: str | None = None,
+        button_connect: Callable | None = None,
         # parent
-        parent_location: Optional[QWidget] = None,
+        parent_location: QWidget | None = None,
     ):
         """Send messages to QGIS messages windows and to the user as a message bar. \
         Plugin name is used as title. If debug mode is disabled, only warnings (1) and \
@@ -138,7 +140,7 @@ class MzSToolsLogger(logging.Handler):
             try:
                 message = str(message)
             except Exception as err:
-                err_msg = "Log message must be a string, not: {}. Trace: {}".format(type(message), err)
+                err_msg = f"Log message must be a string, not: {type(message)}. Trace: {err}"
                 logging.error(err_msg)
                 message = err_msg
 
@@ -147,10 +149,9 @@ class MzSToolsLogger(logging.Handler):
 
         # if level is 2 (critical), open the message log
         if iface is not None and log_level == 2:
-            try:
+            # iface.openMessageLog() may not be available in testing
+            with contextlib.suppress(Exception):
                 iface.openMessageLog()
-            except Exception:
-                pass  # iface.openMessageLog() may not be available in testing
 
         # optionally, display message on QGIS Message bar (above the map canvas)
         if push and iface is not None:

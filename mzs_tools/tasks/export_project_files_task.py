@@ -39,8 +39,11 @@ class ExportProjectFilesTask(QgsTask):
         self.exported_project_path = exported_project_path
 
     def run(self):
-        self.logger.info(f"{'#' * 15} Starting task {self.description()}")
+        if not self.prj_manager.project_path or not self.exported_project_path:
+            self.logger.error("Project path or exported project path is not set")
+            return False
 
+        self.logger.info(f"{'#' * 15} Starting task {self.description()}")
         self.iterations = 0
 
         try:

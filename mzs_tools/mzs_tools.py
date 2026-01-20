@@ -313,7 +313,7 @@ class MzSTools:
         settings_action = self.add_action(
             QgsApplication.getThemeIcon("mActionOptions.svg"),
             text=self.tr("MzS Tools Settings"),
-            callback=lambda: self.iface.showOptionsDialog(currentPage="mOptionsPage{}".format(__title__)),
+            callback=lambda: self.iface.showOptionsDialog(currentPage=f"mOptionsPage{__title__}"),
             # parent=self.iface.mainWindow(),
             add_to_toolbar=False,
             always_enabled=True,
@@ -489,7 +489,7 @@ class MzSTools:
         # self.log(f"Indagini data count: {indagini_count}", log_level=4)
         prj_contains_indagini_data = False
         sequences_gt_0 = False
-        for tab, count in indagini_count.items():
+        for _tab, count in indagini_count.items():
             # count[0] is the table rows count, count[1] is the sequence for the primary key
             if count[0] > 0:
                 prj_contains_indagini_data = True
@@ -737,12 +737,8 @@ class MzSTools:
         try:
             self.prj_manager.update_db()
             self.prj_manager.update_project()
-            # execute check_project() again to update the detected plugin version
-            # and re-enable the plugin actions
-            # TODO: this is reduntant in case of project version < 2.0.0, because the project is completely
-            # reloaded in update_project() and the projectRead() signal will trigger check_project() anyway
+            # execute check_project() again to update the detected plugin version and re-enable the plugin actions
             self.check_project()
-            # TODO: check if the connected signals get duplicated
         except Exception as e:
             err_msg = self.tr("An error occurred during project update.")
             self.log(f"{err_msg} {e}", log_level=2)

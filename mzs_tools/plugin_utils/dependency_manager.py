@@ -16,7 +16,6 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import os
 import platform
 import site
 import sys
@@ -57,7 +56,7 @@ class DependencyManager:
 
         try:
             if requirements_file.exists():
-                with open(requirements_file, "r", encoding="utf-8") as f:
+                with open(requirements_file, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
                         # Skip empty lines and comments
@@ -95,7 +94,7 @@ class DependencyManager:
 
         try:
             if requirements_file.exists():
-                with open(requirements_file, "r", encoding="utf-8") as f:
+                with open(requirements_file, encoding="utf-8") as f:
                     for line in f:
                         line = line.strip()
                         # Skip empty lines and comments
@@ -132,7 +131,7 @@ class DependencyManager:
             # Create site-packages directory if it doesn't exist
             self.site_packages.mkdir(exist_ok=True)
 
-            # Build pip command - allow dependencies but suppress warnings
+            # Build pip command
             cmd = [
                 self.python_command(),
                 "-um",
@@ -140,7 +139,6 @@ class DependencyManager:
                 "install",
                 f"--target={self.site_packages}",
                 "--upgrade",
-                # "--quiet",
             ] + packages
 
             # Environment to suppress pip warnings
@@ -149,21 +147,6 @@ class DependencyManager:
             # env["PIP_NO_WARN_SCRIPT_LOCATION"] = "1"
 
             self.log(f"Installing dependencies: {', '.join(packages)}", log_level=0)
-
-            # result = subprocess.run(cmd, capture_output=True, text=True, env=env)
-
-            # # Check if installation was successful
-            # # Even with dependency warnings, installation often succeeds
-            # if result.returncode == 0 or "Successfully installed" in result.stdout:
-            #     self._add_to_path()
-            #     self.log(
-            #         self.tr("Successfully installed dependencies: {packages}").format(packages=", ".join(packages)),
-            #         log_level=3,  # Success
-            #     )
-            #     return True
-            # else:
-            #     self.log(f"Installation failed: {result.stderr}", log_level=1)  # Warning
-            #     return False
 
             # Use run_cmd to show progress dialog
             description = self.tr("Installing Python dependencies...")
@@ -293,30 +276,35 @@ class DependencyManager:
         Returns:
             Path to python executable as string
         """
-        if os.path.exists(os.path.join(sys.prefix, "conda-meta")):  # Conda
+        if (Path(sys.prefix) / "conda-meta").exists():  # Conda
             self.log("Attempt Conda install at 'python' shortcut")
             return "python"
 
         # python is normally found at sys.executable, but there is an issue on windows qgis: https://github.com/qgis/QGIS/issues/45646
         if platform.system() == "Windows":  # Windows
-            base_path = sys.prefix
+            base_path = Path(sys.prefix)
             for file in ["python.exe", "python3.exe"]:
-                path = os.path.join(base_path, file)
-                if os.path.isfile(path):
+                path = base_path / file
+                if path.is_file():
                     self.log(f"Attempt Windows install at {str(path)}")
-                    return path
+                    return str(path)
             path = sys.executable
             self.log(f"Attempt Windows install at {str(path)}")
             return path
 
         # Same bug on mac as windows: https://github.com/opengisch/qpip/issues/34#issuecomment-2995221985
         if platform.system() == "Darwin":  # Mac
-            base_path = os.path.join(sys.prefix, "bin")
-            for file in ["python", "python3"]:
-                path = os.path.join(base_path, file)
-                if os.path.isfile(path):
-                    self.log(f"Attempt MacOS install at {str(path)}")
-                    return path
+            base_paths = [
+                Path(sys.prefix),
+                Path(sys.prefix) / "bin",
+                Path(sys.executable).parent,
+            ]
+            for base_path in base_paths:
+                for file in ["python", "python3"]:
+                    path = base_path / file
+                    if path.is_file():
+                        self.log(f"Attempt MacOS install at {str(path)}")
+                        return str(path)
             path = sys.executable
             self.log(f"Attempt MacOS install at {str(path)}")
             return path

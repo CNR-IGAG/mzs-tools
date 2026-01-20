@@ -44,7 +44,7 @@ from ..__about__ import (
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.settings import PlgOptionsManager, PlgSettingsStructure
 
-FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / "{}.ui".format(Path(__file__).stem))
+FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
 
 class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
@@ -57,7 +57,7 @@ class ConfigOptionsPage(FORM_CLASS, QgsOptionsPageWidget):
 
         # load UI and set objectName
         self.setupUi(self)
-        self.setObjectName("mOptionsPage{}".format(__title__))
+        self.setObjectName(f"mOptionsPage{__title__}")
 
         report_context_message = quote(
             "> Reported from plugin settings\n\n"

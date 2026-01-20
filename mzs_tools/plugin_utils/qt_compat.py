@@ -24,7 +24,7 @@ This module provides a unified interface for PyQt5 and PyQt6 compatibility,
 handling the main differences between the two versions.
 """
 
-from typing import Any, Union
+from typing import Any
 
 try:
     # Try to determine PyQt version through QGIS
@@ -38,7 +38,7 @@ try:
 except ImportError:
     # Fallback: try to detect PyQt version directly
     try:
-        import PyQt6  # noqa: F401
+        import PyQt6  # type: ignore # noqa: F401
 
         IS_PYQT6 = True
         IS_PYQT5 = False
@@ -101,7 +101,7 @@ if IS_PYQT6:
         ByteArray = QMetaType.Type.QByteArray
 
         @staticmethod
-        def typeToName(type_val: Union[int, Any]) -> str:
+        def typeToName(type_val: int | Any) -> str:
             """Convert type to string name."""
             if hasattr(QMetaType, "typeName"):
                 result = QMetaType.typeName(type_val)
@@ -109,7 +109,7 @@ if IS_PYQT6:
             return str(type_val)
 
         @staticmethod
-        def nameToType(name: str) -> Union[int, Any]:
+        def nameToType(name: str) -> int | Any:
             """Convert string name to type."""
             if hasattr(QMetaType, "type"):
                 return QMetaType.type(name)
@@ -176,12 +176,12 @@ if IS_PYQT6:
         QDateTime = QMetaType.Type.QDateTime
 
         @staticmethod
-        def type(type_name: str) -> Union[int, Any]:
+        def type(type_name: str) -> int | Any:
             """Get type ID from name."""
             return QMetaType.fromName(type_name.encode()).id()
 
         @staticmethod
-        def typeName(type_id: Union[int, Any]) -> str:
+        def typeName(type_id: int | Any) -> str:
             """Get type name from ID."""
             meta_type = QMetaType(type_id)
             return meta_type.name().decode() if meta_type.isValid() else ""

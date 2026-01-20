@@ -21,7 +21,6 @@ import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 from qgis.core import QgsTask, QgsVectorLayer
 from qgis.utils import spatialite_connect
@@ -37,8 +36,8 @@ class ImportSitiPuntualiTask(QgsTask):
         self,
         proj_paths: dict,
         data_source: str,
-        mdb_password: Optional[str] = None,
-        csv_files: Optional[dict] = None,
+        mdb_password: str | None = None,
+        csv_files: dict | None = None,
         adapt_counters: bool = True,
     ):
         super().__init__("Import siti puntuali (siti, indagini, parametri, curve)", QgsTask.Flag.CanCancel)
@@ -215,7 +214,7 @@ class ImportSitiPuntualiTask(QgsTask):
                 self.logger.warning(f"{'#' * 15} Deleting all siti_puntuali!")
                 self.delete_all_siti_puntuali()
 
-            for feature in features:
+            for feature in features:  # type: ignore
                 self.iterations += 1
                 self.setProgress(self.iterations * 100 / self.num_siti)
 
@@ -261,14 +260,14 @@ class ImportSitiPuntualiTask(QgsTask):
 
                 # turn empty strings into None to avoid CHECK constraint errors
                 if sito_puntuale["quota_slm"] == "":
-                    sito_puntuale["quota_slm"] = None
+                    sito_puntuale["quota_slm"] = None  # type: ignore
 
                 # adapt counters when data is already present
                 sito_puntuale_source_pkey = sito_puntuale["pkey_spu"]
                 if self.adapt_counters and self.sito_puntuale_seq > 0:
                     new_pkey_spu = int(sito_puntuale["pkey_spu"]) + self.sito_puntuale_seq
                     self.logger.debug(f"pkey_spu: {sito_puntuale['pkey_spu']} -> {new_pkey_spu}")
-                    sito_puntuale["pkey_spu"] = new_pkey_spu
+                    sito_puntuale["pkey_spu"] = new_pkey_spu  # type: ignore
                     sito_puntuale["ID_SPU"] = (
                         sito_puntuale["ubicazione_prov"]
                         + sito_puntuale["ubicazione_com"]
@@ -301,9 +300,9 @@ class ImportSitiPuntualiTask(QgsTask):
                     # add ID_SPU to the data
                     value["ID_SPU"] = sito_puntuale["ID_SPU"]
                     # turn empty strings into None to avoid CHECK constraint errors
-                    for k in value.keys():
+                    for k in value.keys():  # noqa: SIM118
                         if value[k] == "":
-                            value[k] = None
+                            value[k] = None  # type: ignore
 
                     # amend spessore < 0
                     try:
@@ -314,12 +313,12 @@ class ImportSitiPuntualiTask(QgsTask):
                         ):
                             self.logger.warning(f"prof_top > prof_bot in {value['ID_INDPU']}, check prof values!")
                             # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
-                            value["prof_bot"] = None
+                            value["prof_bot"] = None  # type: ignore
                         if value["spessore"] and float(value["spessore"]) < 0:
                             self.logger.warning(f"Negative spessore in {value['ID_INDPU']}, check prof values!")
-                            value["spessore"] = None
+                            value["spessore"] = None  # type: ignore
                             # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
-                            value["prof_bot"] = None
+                            value["prof_bot"] = None  # type: ignore
                     except Exception as e:
                         self.logger.warning(f"Error checking spessore in {value['ID_INDPU']}: {e}")
 
@@ -327,12 +326,12 @@ class ImportSitiPuntualiTask(QgsTask):
                     indagine_puntuale_source_pkey = value["pkey_indpu"]
                     indagine_puntuale_source_id_indpu = value["ID_INDPU"]
                     if self.adapt_counters and self.indagini_puntuali_seq > 0:
-                        value["pkey_indpu"] = int(value["pkey_indpu"]) + self.indagini_puntuali_seq
+                        value["pkey_indpu"] = int(value["pkey_indpu"]) + self.indagini_puntuali_seq  # type: ignore
                         value["ID_INDPU"] = value["ID_SPU"] + value["tipo_ind"] + str(value["pkey_indpu"])
 
                     # copy and adapt attachments
                     try:
-                        if value["doc_ind"]:
+                        if value["doc_ind"]:  # noqa: SIM102
                             # self.log(f"Copying attachment {value['doc_ind']}")
                             if (
                                 self.proj_paths["Documenti"]["path"]
@@ -369,7 +368,7 @@ class ImportSitiPuntualiTask(QgsTask):
                         # add ID_INDPU to the data
                         value["ID_INDPU"] = current_idindpu
                         # add valore_appoggio if valore is not a number
-                        value["valore_appoggio"] = None
+                        value["valore_appoggio"] = None  # type: ignore
                         try:
                             int(value["valore"].strip().replace(",", "."))
                         except ValueError:
@@ -378,9 +377,9 @@ class ImportSitiPuntualiTask(QgsTask):
                             except ValueError:
                                 value["valore_appoggio"] = value["valore"]
                         # turn empty strings into None to avoid CHECK constraint errors
-                        for k in value.keys():
+                        for k in value.keys():  # noqa: SIM118
                             if value[k] == "":
-                                value[k] = None
+                                value[k] = None  # type: ignore
 
                         # amend spessore < 0
                         try:
@@ -391,12 +390,12 @@ class ImportSitiPuntualiTask(QgsTask):
                             ):
                                 self.logger.warning(f"prof_top > prof_bot in {value['ID_PARPU']}, check prof values!")
                                 # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
-                                value["prof_bot"] = None
+                                value["prof_bot"] = None  # type: ignore
                             if value["spessore"] and float(value["spessore"]) < 0:
                                 self.logger.warning(f"Negative spessore in {value['ID_PARPU']}, check prof values!")
-                                value["spessore"] = None
+                                value["spessore"] = None  # type: ignore
                                 # one of prof_bot or prof_top is probably wrong, set prof_bot to none to avoid further errors
-                                value["prof_bot"] = None
+                                value["prof_bot"] = None  # type: ignore
                         except Exception as e:
                             self.logger.warning(f"Error checking spessore in {value['ID_PARPU']}: {e}")
 
@@ -404,12 +403,12 @@ class ImportSitiPuntualiTask(QgsTask):
                         parametro_puntuale_source_pkey = value["pkey_parpu"]
                         parametro_puntuale_source_id_parpu = value["ID_PARPU"]
                         if self.adapt_counters and self.parametri_puntuali_seq > 0:
-                            value["pkey_parpu"] = int(value["pkey_parpu"]) + self.parametri_puntuali_seq
+                            value["pkey_parpu"] = int(value["pkey_parpu"]) + self.parametri_puntuali_seq  # type: ignore
                             value["ID_PARPU"] = value["ID_INDPU"] + value["tipo_parpu"] + str(value["pkey_parpu"])
 
                         # copy and adapt attachments
                         try:
-                            if value["tab_curve"]:
+                            if value["tab_curve"]:  # noqa: SIM102
                                 # self.log(f"Copying tab_curve {value['tab_curve']}")
                                 if (
                                     self.proj_paths["Documenti"]["path"]
@@ -439,18 +438,18 @@ class ImportSitiPuntualiTask(QgsTask):
                             key: value for key, value in self.curve_data.items() if str(key[0]) == current_pkey_parpu
                         }
                         # self.log(f"pkey_parpu: {current_pkey_parpu} - Filtered elements: {filtered_curve}")
-                        for key, value in filtered_curve.items():
+                        for _key, value in filtered_curve.items():
                             # self.log(f"Inserting curve - Key: {key}, Value: {value}")
                             # add ID_PARPU to the data
                             value["ID_PARPU"] = current_idparpu
                             # turn empty strings into None to avoid CHECK constraint errors
-                            for k in value.keys():
+                            for k in value.keys():  # noqa: SIM118
                                 if value[k] == "":
-                                    value[k] = None
+                                    value[k] = None  # type: ignore
 
                             # change counters when data is already present
                             if self.adapt_counters and self.curve_seq > 0:
-                                value["pkey_curve"] = int(value["pkey_curve"]) + self.curve_seq
+                                value["pkey_curve"] = int(value["pkey_curve"]) + self.curve_seq  # type: ignore
 
                             try:
                                 self.insert_curve(value)
@@ -650,7 +649,7 @@ class ImportSitiPuntualiTask(QgsTask):
                 self.logger.warning(f"Attachment {file_path} not found, skipping")
                 return None
         # copy in the project folder
-        dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"
+        dest_path = self.prj_manager.project_path / "Allegati" / "Documenti"  # type: ignore
 
         # if a new ID has been assigned to the indagine or parametro, add it to the file name
         new_file_name = None
@@ -914,7 +913,7 @@ class ImportSitiPuntualiTask(QgsTask):
         data = {}
 
         try:
-            with open(file_path, "r", encoding="utf-8") as csvfile:
+            with open(file_path, encoding="utf-8") as csvfile:
                 # Try to auto-detect the delimiter
                 sample = csvfile.read(1024)
                 csvfile.seek(0)

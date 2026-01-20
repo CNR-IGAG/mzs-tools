@@ -22,7 +22,6 @@ import time
 from functools import wraps
 from pathlib import Path
 from subprocess import PIPE, STDOUT, Popen
-from typing import Optional
 
 from qgis.core import (
     QgsApplication,
@@ -75,7 +74,7 @@ def retry_on_lock(retries=5, delay=1):
 
     def decorator(func):
         def wrapper(*args, **kwargs):
-            for attempt in range(retries):
+            for _attempt in range(retries):
                 try:
                     return func(*args, **kwargs)
                 except sqlite3.OperationalError as e:
@@ -398,7 +397,7 @@ def run_cmd(args, description="running a system command"):
         return True
 
 
-def find_libjvm(java_home: str, max_depth: int = 4, save_to_settings: bool = True) -> Optional[str]:
+def find_libjvm(java_home: str, max_depth: int = 4, save_to_settings: bool = True) -> str | None:
     """
     Recursively search for libjvm.so (Linux), libjvm.dylib (macOS), or jvm.dll (Windows)
     in the provided Java home directory.

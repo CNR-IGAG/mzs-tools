@@ -86,7 +86,10 @@ class DlgFixLayers(QDialog, FORM_CLASS):
                 "only the selected QGIS layer groups will be replaced and all data will be preserved."
             )
         )
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        buttons = QMessageBox.StandardButtons()
+        buttons |= QMessageBox.StandardButton.Yes
+        buttons |= QMessageBox.StandardButton.No
+        msg_box.setStandardButtons(buttons)
         msg_box.setDefaultButton(QMessageBox.StandardButton.Yes)
 
         response = msg_box.exec()
@@ -101,7 +104,7 @@ class DlgFixLayers(QDialog, FORM_CLASS):
                 self.prj_manager.backup_qgis_project()
                 self.log("Saving and reloading the project after replacing the editing layers.", log_level=4)
                 self.prj_manager.current_project.write()
-                iface.addProject(str(self.prj_manager.current_project.absoluteFilePath()))
+                iface.addProject(str(self.prj_manager.current_project.absoluteFilePath()))  # type: ignore
             self.log("The layer replacement process has been completed successfully.", log_level=3, push=True)
             return
         else:

@@ -132,15 +132,14 @@ class DlgImportData(QDialog, FORM_CLASS):
         else:
             self.validate_input_dir()
 
-        if self.radio_button_csv.isChecked():
-            if not self.validate_csv_dir():
-                self.log("CSV directory is not valid", log_level=1)
-                self.ok_button.setEnabled(False)
-                self.chk_siti_puntuali.setEnabled(False)
-                self.chk_siti_puntuali.setChecked(False)
-                self.chk_siti_lineari.setEnabled(False)
-                self.chk_siti_lineari.setChecked(False)
-                return False
+        if self.radio_button_csv.isChecked() and not self.validate_csv_dir():
+            self.log("CSV directory is not valid", log_level=1)
+            self.ok_button.setEnabled(False)
+            self.chk_siti_puntuali.setEnabled(False)
+            self.chk_siti_puntuali.setChecked(False)
+            self.chk_siti_lineari.setEnabled(False)
+            self.chk_siti_lineari.setChecked(False)
+            return False
 
         self.ok_button.setEnabled(True)
 
@@ -335,8 +334,8 @@ class DlgImportData(QDialog, FORM_CLASS):
             # self.log(f"{name}: {data['path']}", log_level=4)
             if data["checkbox"]:
                 # self.log(f"Enabling checkbox for {name}", log_level=4)
-                data["checkbox"].setEnabled(True if data["path"] else False)
-                data["checkbox"].setChecked(True if data["path"] else False)
+                data["checkbox"].setEnabled(bool(data["path"]))
+                data["checkbox"].setChecked(bool(data["path"]))
 
         # self.log(f"Standard project paths: {self.standard_proj_paths}", log_level=4)
 
@@ -396,15 +395,14 @@ class DlgImportData(QDialog, FORM_CLASS):
             dialog.exec()
             if dialog.result() == QDialog.DialogCode.Accepted:
                 # self.log(f"Password: {dialog.input.text()}", log_level=4)
-                if dialog.input.text():
-                    if dialog.save_password:
-                        authManager = QgsApplication.authManager()
-                        config = QgsAuthMethodConfig()
-                        config.setMethod("Basic")
-                        config.setName("MzS Tools CdI_Tabelle.mdb password")
-                        config.setConfig("password", dialog.input.text())
-                        authManager.storeAuthenticationConfig(config)
-                        self.log(f"Password saved in QGIS auth manager: {config.id()}", log_level=4)
+                if dialog.input.text() and dialog.save_password:
+                    authManager = QgsApplication.authManager()
+                    config = QgsAuthMethodConfig()
+                    config.setMethod("Basic")
+                    config.setName("MzS Tools CdI_Tabelle.mdb password")
+                    config.setConfig("password", dialog.input.text())
+                    authManager.storeAuthenticationConfig(config)
+                    self.log(f"Password saved in QGIS auth manager: {config.id()}", log_level=4)
                 return self.check_mdb_connection(mdb_path, password=dialog.input.text())
             # dialog rejected
             self.label_mdb_msg.setText(f"[{e}]")
@@ -543,30 +541,33 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         # run the tasks sequentially:
         # every task is a subtask of the previous one and the parent task is dependent on the subtask
-        task_count = 0
+        # task_count = 0
         first_task = None
         previous_task = None
-        for task in tasks:
-            task_count += 1
+        for task_count, task in enumerate(tasks, start=1):
+            # task_count += 1
             if task_count == 1:
                 first_task = previous_task = task
             else:
                 previous_task.addSubTask(task, [], QgsTask.SubTaskDependency.ParentDependsOnSubTask)
                 previous_task = task
-
         QgsApplication.taskManager().addTask(first_task)
 
-    #     # simpler alternative using taskAdded signal to hold tasks and then unhold sequentially
-    #     for task in tasks:
-    #         QgsApplication.taskManager().addTask(task)
-    #     for task in tasks:
-    #         task.unhold()
-    #         task.waitForFinished()
+        # # simpler alternative using taskAdded signal to hold tasks and then unhold sequentially
+        # # seems to cause issues with progress reporting though
+        # for task in tasks:
+        #     # tasks are added to the task manager but immediately held by the taskAdded signal
+        #     QgsApplication.taskManager().addTask(task)
+
+        # # unhold all tasks sequentially
+        # for task in tasks:
+        #     task.unhold()
+        #     task.waitForFinished()
 
     # def on_task_added(self, taskid):
     #     QgsApplication.taskManager().task(taskid).hold()
-    #     task_desc = QgsApplication.taskManager().task(taskid).description()
-    #     self.file_logger.debug(f"**************** TASK {task_desc} ADDED ****************")
+    #     # task_desc = QgsApplication.taskManager().task(taskid).description()
+    #     # self.file_logger.debug(f"**************** TASK {task_desc} ADDED ****************")
 
     def on_tasks_progress(self, taskid, progress):
         # if there is only one main task with a series of subtasks, progress

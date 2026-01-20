@@ -74,10 +74,9 @@ class DlgCreateProject(QDialog, FORM_CLASS):
                 temp_db_path = zip_ref.extract("indagini.sqlite", temp_dir)
 
             # Load comuni data from temp db
-            with closing(sqlite3.connect(temp_db_path)) as conn:
-                with closing(conn.cursor()) as cursor:
-                    cursor.execute("SELECT comune, cod_istat, provincia, regione FROM comuni")
-                    self.comuni = cursor.fetchall()
+            with closing(sqlite3.connect(temp_db_path)) as conn, closing(conn.cursor()) as cursor:
+                cursor.execute("SELECT comune, cod_istat, provincia, regione FROM comuni")
+                self.comuni = cursor.fetchall()
 
         # Create a list of comuni names for the completer
         self.comuni_names = [f"{comune[0]} ({comune[2]} - {comune[3]})" for comune in self.comuni]
