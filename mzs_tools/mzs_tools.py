@@ -603,7 +603,7 @@ class MzSTools:
 
         check_msg = f"{'✅' if result['deps_ok'] else '❌'} " + self.tr("Python dependencies") + "\n"
         if result["deps_ok"]:
-            check_msg += f"{'✅' if result['jvm_ok'] else '❌'} " + self.tr("Java JRE") + "\n"
+            check_msg += f"{'✅' if result['jvm_ok'] else '❌'} " + self.tr("Java JRE v. 11 or later") + "\n"
             if result["jvm_ok"]:
                 check_msg += (
                     f"{'✅' if result['connected'] else '❌'} "
@@ -612,7 +612,7 @@ class MzSTools:
                 )
         if not result["jvm_ok"]:
             check_msg += self.tr(
-                "\n\nJava JRE was not detected.\n"
+                "\n\nJava JRE (v. 11 or later) was not detected.\n"
                 "If you are sure it is installed, try setting up the JAVA_HOME environment variable or set the installation folder in the plugin settings.\n"
                 "Check the plugin documentation for more details.\n"
             )

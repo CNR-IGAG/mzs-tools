@@ -16,7 +16,11 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+import platform
+import re
+import subprocess
 from datetime import datetime
+from pathlib import Path
 
 from ..__about__ import DIR_PLUGIN_ROOT
 from ..plugin_utils.dependency_manager import DependencyManager
@@ -24,6 +28,7 @@ from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import find_libjvm
 from ..plugin_utils.settings import PlgOptionsManager
 
+MIN_JAVA_VERSION = 11
 UCANACCESS_JAR_PATH = DIR_PLUGIN_ROOT / "ext_libs" / "ucanaccess-5.1.5-uber.jar"
 EXT_LIBS_LOADED = True
 
@@ -71,24 +76,206 @@ class AccessDbConnection:
         self.cursor = None
         self.java_home_override = None
 
-    def open(self):
+    def _check_java_version(self, java_path: str | None = None) -> tuple[bool, str, int | None]:
+        """
+        Check Java version to ensure compatibility before starting JVM.
+        Old Java versions (< 11) can cause fatal crashes especially on Windows.
+
+        Args:
+            java_path: Optional path to Java executable or libjvm. If not provided,
+                      will attempt to find it automatically.
+
+        Returns:
+            Tuple of (is_compatible, version_string, major_version)
+            - is_compatible: True if Java version >= 11 or version couldn't be determined
+            - version_string: The Java version string
+            - major_version: The major version number (e.g., 8, 11, 17) or None if parsing failed
+        """
         try:
-            self.log(f"Detected JAVA_HOME: {jpype.getDefaultJVMPath()}", log_level=4)
-        except Exception as e:
-            self.log(f"Error detecting JAVA_HOME: {e}", log_level=1)
-            # Try setting JAVA_HOME from plugin settings
-            settings = self.plg_settings.get_plg_settings()
-            if settings.java_home_path:
-                self.log(f"Attempting to use Java home from settings: {settings.java_home_path}", log_level=4)
-                libjvm_path = find_libjvm(settings.java_home_path)
-                if libjvm_path:
-                    self.log(f"Found libjvm at: {libjvm_path}", log_level=4)
-                    self.java_home_override = libjvm_path
+            # Determine Java executable path
+            java_executable = None
+            java_executables_to_try = []
+
+            if java_path:
+                java_path_obj = Path(java_path)
+                # If a specific path is provided, try to find the java executable
+                if java_path_obj.is_file():
+                    # If it's a libjvm path, navigate to find java executable
+                    current_dir = java_path_obj.parent
+                    # Navigate up to find bin directory
+                    for _ in range(5):  # Search up to 5 levels
+                        potential_bin = current_dir / "bin"
+                        if potential_bin.is_dir():
+                            potential_exe = potential_bin / ("java.exe" if platform.system() == "Windows" else "java")
+                            if potential_exe.is_file():
+                                java_executable = str(potential_exe)
+                                break
+                        current_dir = current_dir.parent
+                elif java_path_obj.is_dir():
+                    # If it's a directory (JAVA_HOME), look for bin/java
+                    potential_exe = java_path_obj / "bin" / ("java.exe" if platform.system() == "Windows" else "java")
+                    if potential_exe.is_file():
+                        java_executable = str(potential_exe)
+
+            # Build list of java executables to try
+            if java_executable:
+                java_executables_to_try.append(java_executable)
+
+            # On Windows, search common Java installation paths as fallback
+            if platform.system() == "Windows" and not java_executables_to_try:
+                common_java_paths = [
+                    r"C:\Program Files\Java\jdk*\bin\java.exe",
+                    r"C:\Program Files\Java\jre*\bin\java.exe",
+                    r"C:\Program Files (x86)\Java\jdk*\bin\java.exe",
+                    r"C:\Program Files (x86)\Java\jre*\bin\java.exe",
+                ]
+
+                for path_pattern in common_java_paths:
+                    matches = sorted(Path().glob(path_pattern), reverse=True)
+                    for match in matches:
+                        if match.is_file():
+                            java_executables_to_try.append(str(match))
+                            self.log(f"Found Java at common installation path: {match}", log_level=4)
+                            break  # Only add the first (latest) match from each pattern
+                    if java_executables_to_try:
+                        break  # Stop searching once we find a Java installation
+
+            # Finally, try system java command as last resort
+            if not java_executables_to_try:
+                java_executables_to_try.append("java")
+
+            # Try each java executable until one works
+            result = None
+            for java_exec in java_executables_to_try:
+                try:
+                    self.log(f"Trying Java executable: {java_exec}", log_level=4)
+
+                    # On Windows, subprocess may have issues finding executables in QGIS environment
+                    # Try with shell=True which uses the system shell to locate executables
+                    if platform.system() == "Windows":
+                        result = subprocess.run(
+                            f'"{java_exec}" -version', shell=True, capture_output=True, text=True, timeout=5
+                        )
+                    else:
+                        result = subprocess.run([java_exec, "-version"], capture_output=True, text=True, timeout=5)
+
+                    # Check if command succeeded
+                    if result.returncode == 0 or result.stderr:
+                        java_executable = java_exec
+                        self.log(f"Successfully executed Java at: {java_exec}", log_level=4)
+                        break
+                    else:
+                        self.log(f"Java executable {java_exec} returned error code {result.returncode}", log_level=4)
+                        result = None
+
+                except (FileNotFoundError, OSError) as e:
+                    self.log(f"Failed to execute {java_exec}: {e}", log_level=4)
+                    continue
+                except Exception as e:
+                    self.log(f"Unexpected error executing {java_exec}: {e}", log_level=4)
+                    continue
+
+            if result is None:
+                self.log(f"Could not find or execute Java. Tried: {', '.join(java_executables_to_try)}", log_level=1)
+                raise FileNotFoundError("Could not find or execute Java")
+
+            # Java version info is typically in stderr
+            version_output = result.stderr if result.stderr else result.stdout
+            self.log(f"Java version check output: {version_output}", log_level=4)
+
+            # Parse version string (examples: "1.8.0_291", "11.0.10", "17.0.2")
+            # Format: java version "VERSION" or openjdk version "VERSION"
+            version_match = re.search(r'version "([^"]+)"', version_output)
+
+            if version_match:
+                version_string = version_match.group(1)
+                self.log(f"Detected Java version: {version_string}", log_level=4)
+
+                # Parse major version
+                # Old format: 1.8.x -> major version is 8
+                # New format: 11.x or 17.x -> major version is the first number
+                version_parts = version_string.split(".")
+                if version_parts[0] == "1" and len(version_parts) > 1:
+                    # Old Java version format (1.6, 1.7, 1.8)
+                    major_version = int(version_parts[1])
                 else:
+                    # New Java version format (9, 11, 17, etc.)
+                    major_version = int(version_parts[0])
+
+                self.log(f"Java major version: {major_version}", log_level=4)
+
+                # Check if version meets minimum requirement
+                if major_version < MIN_JAVA_VERSION:
                     self.log(
-                        f"Could not find libjvm in the provided Java home path: {settings.java_home_path}",
+                        f"Java version {major_version} is below minimum required version {MIN_JAVA_VERSION}",
                         log_level=1,
                     )
+                    return False, version_string, major_version
+                else:
+                    return True, version_string, major_version
+            else:
+                self.log("Could not parse Java version from output", log_level=1)
+                # If we can't determine version, allow to proceed (fail gracefully)
+                return True, "unknown", None
+
+        except subprocess.TimeoutExpired:
+            self.log("Java version check timed out", log_level=1)
+            return True, "timeout", None
+        except FileNotFoundError:
+            self.log("Java executable not found", log_level=1)
+            return True, "not_found", None
+        except Exception as e:
+            self.log(f"Error checking Java version: {e}", log_level=1)
+            # If we can't check version, allow to proceed (fail gracefully)
+            return True, "error", None
+
+    def open(self):
+        # Get plugin settings first
+        settings = self.plg_settings.get_plg_settings()
+
+        # Try using Java path from plugin settings first (if configured)
+        if settings.java_home_path:
+            self.log(f"Attempting to use Java home from settings: {settings.java_home_path}", log_level=4)
+            libjvm_path = find_libjvm(settings.java_home_path)
+            if libjvm_path:
+                self.log(f"Found libjvm at: {libjvm_path}", log_level=4)
+                self.java_home_override = libjvm_path
+            else:
+                self.log(
+                    f"Could not find libjvm in the provided Java home path: {settings.java_home_path}",
+                    log_level=1,
+                )
+
+        # Fall back to jpype auto-detection if plugin settings didn't work or weren't configured
+        if not self.java_home_override:
+            try:
+                detected_jvm_path = jpype.getDefaultJVMPath()
+                self.log(f"Detected JAVA_HOME from jpype: {detected_jvm_path}", log_level=4)
+                self.java_home_override = detected_jvm_path
+            except Exception as e:
+                self.log(f"Error detecting JAVA_HOME from jpype: {e}", log_level=1)
+
+        # Check Java version before starting JVM
+        # Old Java versions (< 11) can cause fatal crashes
+        self.log("Checking Java version compatibility before starting JVM", log_level=4)
+        check_path = self.java_home_override if self.java_home_override else None
+
+        is_compatible, version_str, major_version = self._check_java_version(check_path)
+
+        if not is_compatible and major_version is not None:
+            error_msg = (
+                f"Incompatible Java version detected: {version_str} (Java {major_version}). "
+                f"Java 11 or newer is required to avoid system crashes. "
+                f"Please install Java 11 or later and configure it in the plugin settings."
+            )
+            self.log(error_msg, log_level=2)
+            raise JavaVersionError(error_msg)
+        elif version_str in ("not_found", "error"):
+            self.log(
+                "Could not verify Java version. Proceeding with caution. "
+                "If QGIS crashes, please ensure Java 11 or later is installed.",
+                log_level=1,
+            )
 
         try:
             if not jpype.isJVMStarted():
@@ -710,4 +897,8 @@ class MdbAuthError(Exception):
 
 
 class JVMError(Exception):
+    pass
+
+
+class JavaVersionError(Exception):
     pass

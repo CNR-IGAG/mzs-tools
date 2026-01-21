@@ -17,7 +17,7 @@
 # -----------------------------------------------------------------------------
 
 from ..plugin_utils.logging import MzSToolsLogger
-from ..tasks.access_db_connection import AccessDbConnection, JVMError
+from ..tasks.access_db_connection import AccessDbConnection, JavaVersionError, JVMError
 
 
 def check_mdb_connection(mdb_path):
@@ -35,6 +35,10 @@ def check_mdb_connection(mdb_path):
         error_msg = f"{e}. Python dependencies missing."
         MzSToolsLogger.log(error_msg, log_level=1)
         deps_ok = False
+
+    except JavaVersionError as e:
+        MzSToolsLogger.log(f"{e}", log_level=1)
+        jvm_ok = False
 
     except JVMError as e:
         MzSToolsLogger.log(f"{e}", log_level=1)
