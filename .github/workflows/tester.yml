@@ -53,7 +53,7 @@ jobs:
         # Mount the X11 socket to allow GUI applications to run
         - /tmp/.X11-unix:/tmp/.X11-unix
         # Mount the workspace directory to the container
-        - ${{ github.workspace }}:/home/root/${{ env.PROJECT_FOLDER }}
+        - ${{ github.workspace }}:/home/root/mzs-tools
         # Use absolute path for local testing with act
         # - /path/to/mzs-tools:/home/root/mzs-tools
 
