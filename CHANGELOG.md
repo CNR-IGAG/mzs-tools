@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.7-beta1] - 2026-01-30
+
+- tester workflow with matrix strategy for different python/qgis versions
+- fix problem with QMetaType/QVariant use in export process for QGIS < 3.38
+- fix problem with Path.walk() used in import process for python < 3.12
+- bump QGIS minimum version to 3.34
+
 ## [2.0.6] - 2026-01-13
 
 - Fix for integer fields converted to float in exported shapefiles

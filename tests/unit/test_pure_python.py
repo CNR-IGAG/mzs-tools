@@ -18,10 +18,9 @@
 
 """Unit tests for pure Python functions that don't require QGIS."""
 
+import os
 import tempfile
 from pathlib import Path
-
-import pytest
 
 
 class TestPurePythonUtils:
@@ -48,10 +47,10 @@ class TestPurePythonUtils:
         def find_files_by_extension(root_path, extension):
             """Find files with given extension recursively."""
             files = []
-            for root, dirs, filenames in Path(root_path).walk():
+            for root, dirs, filenames in os.walk(root_path):
                 for filename in filenames:
                     if filename.lower().endswith(extension.lower()):
-                        files.append(root / filename)
+                        files.append(Path(root) / filename)
             return files
 
         with tempfile.TemporaryDirectory() as temp_dir:

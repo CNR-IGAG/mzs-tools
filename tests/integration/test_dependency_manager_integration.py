@@ -203,7 +203,7 @@ class TestRunCmdIntegration:
         from mzs_tools.plugin_utils.misc import run_cmd
 
         # Use a simple command that should succeed
-        result = run_cmd(["python", "-c", "print('test')"], "Testing simple command")
+        result = run_cmd([sys.executable, "-c", "print('test')"], "Testing simple command")
 
         assert result is True
 
@@ -213,7 +213,7 @@ class TestRunCmdIntegration:
         from mzs_tools.plugin_utils.misc import run_cmd
 
         # Use python --version which should always succeed
-        result = run_cmd(["python", "--version"], "Checking Python version")
+        result = run_cmd([sys.executable, "--version"], "Checking Python version")
 
         assert result is True
 
@@ -226,7 +226,7 @@ class TestRunCmdIntegration:
         mock_msgbox_instance = Mock()
         with patch("mzs_tools.plugin_utils.misc.QMessageBox", return_value=mock_msgbox_instance):
             # Use a command that should fail
-            result = run_cmd(["python", "-c", "import nonexistent_module"], "Testing failing command")
+            result = run_cmd([sys.executable, "-c", "import nonexistent_module"], "Testing failing command")
 
         assert result is False
         assert mock_msgbox_instance.exec.called

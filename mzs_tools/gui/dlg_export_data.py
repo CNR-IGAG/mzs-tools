@@ -349,7 +349,11 @@ class DlgExportData(QDialog, FORM_CLASS):
             if table_name == layer_name:
                 layer = QgsVectorLayer(str(path), str(path.stem), "ogr")
                 for field_name in fields:
-                    self.change_field_type(layer, field_name, QMetaType.Type.Int)
+                    try:
+                        self.change_field_type(layer, field_name, QMetaType.Type.Int)
+                    except TypeError:
+                        # QGIS < 3.38: use QVariant.Type
+                        self.change_field_type(layer, field_name, QtCore.QVariant.Int)
                 break
 
         # modify specific datasets
@@ -362,7 +366,15 @@ class DlgExportData(QDialog, FORM_CLASS):
         #     self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "Quota", QMetaType.Type.Int)
         elif table_name in ["stab_l1", "stab_l23", "instab_l1", "instab_l23"]:
             # for some absurd reason, the field "LIVELLO" must be a float
-            self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QMetaType.Type.Double)
+            try:
+                self.change_field_type(
+                    QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QMetaType.Type.Double
+                )
+            except TypeError:
+                # QGIS < 3.38: use QVariant.Type
+                self.change_field_type(
+                    QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QtCore.QVariant.Double
+                )
             if table_name in ["stab_l23", "instab_l23"]:
                 # extract file name from path "SPETTRI"
                 self.extract_file_name_from_path(QgsVectorLayer(str(path), str(path.stem), "ogr"), "SPETTRI")

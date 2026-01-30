@@ -259,20 +259,20 @@ def save_map_image_direct(image_path, layers, extent, crs, width=1280, height=10
 def get_subdir_path(root_dir_path, subdir_name):
     """case insensitive recursive search for a subdirectory in the provided path"""
     subdir_name = subdir_name.lower()
-    for root, dirs, _ in Path(root_dir_path).walk():
+    for root, dirs, _ in os.walk(root_dir_path):
         for d in dirs:
             if d.lower() == subdir_name:
-                return root / d
+                return Path(root) / d
     return None
 
 
 def get_file_path(root_dir_path, file_name):
     """case insensitive recursive search for a file in the provided path"""
     file_name = file_name.lower()
-    for root, _, files in Path(root_dir_path).walk():
+    for root, _, files in os.walk(root_dir_path):
         for file in files:
             if file.lower() == file_name:
-                return root / file
+                return Path(root) / file
     return None
 
 
@@ -280,13 +280,13 @@ def get_path_for_name(root_dir_path, name):
     """case insensitive recursive search for a file or subdirectory in the provided path"""
     name = name.lower()
     # MzSToolsLogger.log(f"Searching for {name} in {root_dir_path}", log_level=4)
-    for root, dirs, files in Path(root_dir_path).walk():
+    for root, dirs, files in os.walk(root_dir_path):
         for f in files:
             if f.lower() == name:
-                return root / f
+                return Path(root) / f
         for d in dirs:
             if d.lower() == name:
-                return root / d
+                return Path(root) / d
     return None
 
 

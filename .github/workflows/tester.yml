@@ -1,0 +1,93 @@
+name: "🎳 Tester"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.py'
+      - .github/workflows/tester.yml
+      - pyproject.toml
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '**.py'
+      - .github/workflows/tester.yml
+      - pyproject.toml
+
+env:
+  PROJECT_FOLDER: "mzs-tools"
+
+
+jobs:
+  test-all:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      fail-fast: true
+      matrix:
+        # bookworm = Debian 12 with Python 3.11
+        # jammy = Ubuntu 22.04 with Python 3.10
+        # noble = Ubuntu 24.04 with Python 3.12
+        qgis-version: ["3.34-bookworm", "3.40-jammy", "3.44-jammy", "3.40-noble", "3.44-noble"]
+        include:
+          - qgis-version: "latest"
+            experimental: true
+      max-parallel: 3
+
+    container:
+      image: qgis/qgis:${{ matrix.qgis-version }}
+      env:
+        CI: true
+        DISPLAY: ":1"
+        MUTE_LOGS: true
+        NO_MODALS: 1
+        PYTHONPATH: "/usr/share/qgis/python/plugins:/usr/share/qgis/python:."
+        QT_QPA_PLATFORM: "offscreen"
+        WITH_PYTHON_PEP: false
+      # be careful, things have changed since QGIS 3.40. So if you are using this setup
+      #  with a QGIS version older than 3.40, you may need to change the way you set up the container
+      volumes:
+        # Mount the X11 socket to allow GUI applications to run
+        - /tmp/.X11-unix:/tmp/.X11-unix
+        # Mount the workspace directory to the container
+        - ${{ github.workspace }}:/home/root/${{ env.PROJECT_FOLDER }}
+        # Use absolute path for local testing with act
+        # - /path/to/mzs-tools:/home/root/mzs-tools
+
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v5
+
+      - name: Print QGIS version
+        run: qgis --version
+
+      # - name: Install uv
+      #   uses: astral-sh/setup-uv@v6
+      #   with:
+      #     version: "latest"
+
+      - name: Install Python requirements
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv curl default-jre
+          # Install uv
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          # Add uv to PATH for this session
+          export PATH="$HOME/.local/bin:$PATH"
+          cd /home/root/${{ env.PROJECT_FOLDER }}
+          # Create venv in container's temp directory (unique per job)
+          export UV_PROJECT_ENVIRONMENT=/tmp/.venv-${{ matrix.qgis-version }}
+          uv venv $UV_PROJECT_ENVIRONMENT --clear --system-site-packages
+          # Install project dependencies using uv
+          uv sync --group testing
+
+      - name: Run tests
+        run: |
+          cd /home/root/${{ env.PROJECT_FOLDER }}
+          export PATH="$HOME/.local/bin:$PATH"
+          export UV_PROJECT_ENVIRONMENT=/tmp/.venv-${{ matrix.qgis-version }}
+          # Run tests
+          uv run pytest tests/ -v -rs --qgis_disable_gui
+
