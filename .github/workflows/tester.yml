@@ -24,7 +24,7 @@ env:
 jobs:
   test-all:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: true
       matrix:
