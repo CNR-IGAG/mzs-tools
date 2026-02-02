@@ -8,7 +8,7 @@
       <customproperties>
         <Option/>
       </customproperties>
-      <layer-tree-layer expanded="0" id="Valori_HVSR__Fr__c74a5088_9041_4200_9779_ab07937e54f5" providerKey="spatialite" checked="Qt::Checked" legend_exp="" patch_size="0,0" legend_split_behavior="0" name="Valori HVSR (fr)" source="dbname='./db/indagini.sqlite' table=&quot;vw_hvsr_fr&quot; (geom)">
+      <layer-tree-layer expanded="0" id="Valori_HVSR__Fr__c74a5088_9041_4200_9779_ab07937e54f5" providerKey="spatialite" checked="Qt::Checked" legend_exp="" patch_size="0,0" legend_split_behavior="0" name="Valori HVSR (fr)" source="dbname='./db/indagini.sqlite' table=&quot;vw_hvsr&quot; (geom)">
         <customproperties>
           <Option type="Map">
             <Option value="Valori HVSR (Fr)" type="QString" name="cached_name"/>
@@ -20,7 +20,7 @@
   <maplayers>
     <maplayer type="vector" simplifyDrawingHints="0" hasScaleBasedVisibilityFlag="0" refreshOnNotifyEnabled="0" simplifyDrawingTol="1" maxScale="0" geometry="Point" styleCategories="AllStyleCategories" legendPlaceholderImage="" labelsEnabled="1" minScale="100000000" simplifyLocal="1" refreshOnNotifyMessage="" simplifyMaxScale="1" wkbType="Point" simplifyAlgorithm="0" autoRefreshMode="Disabled" autoRefreshTime="0" symbologyReferenceScale="-1" readOnly="1">
       <id>Valori_HVSR__Fr__c74a5088_9041_4200_9779_ab07937e54f5</id>
-      <datasource>dbname='./db/indagini.sqlite' table="vw_hvsr_fr" (geom)</datasource>
+      <datasource>dbname='./db/indagini.sqlite' table="vw_hvsr" (geom)</datasource>
       <keywordList>
         <value></value>
       </keywordList>

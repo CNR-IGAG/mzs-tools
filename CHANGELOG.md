@@ -1,7 +1,8 @@
 # Changelog
 
-## [2.0.7-beta1] - 2026-01-30
+## [2.0.7-beta2] - 2026-02-02
 
+- fix for indagini spatial views
 - tester workflow with matrix strategy for different python/qgis versions
 - fix problem with QMetaType/QVariant use in export process for QGIS < 3.38
 - fix problem with Path.walk() used in import process for python < 3.12

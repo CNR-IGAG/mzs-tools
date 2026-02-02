@@ -605,4 +605,5 @@ DB_MIGRATION_SCRIPTS = {
     "2.0.1": "query_v201.sql",
     "2.0.3": "query_v202.sql",
     "2.0.5": "query_v205.sql",
+    "2.0.7": "query_v207.sql",
 }
