@@ -262,11 +262,13 @@ def mdb_deps_available() -> bool:
         mdb_conn = AccessDbConnection(str(mdb_path))
         connected = mdb_conn.open()
     except ImportError as e:
-        warnings.warn(f"!!! MDB python deps not available (jaydebeapi and/or jpype) !!!\n{e}", UserWarning)
+        warnings.warn(
+            f"!!! MDB python deps not available (jaydebeapi and/or jpype) !!!\n{e}", UserWarning, stacklevel=2
+        )
     except JVMError as e:
-        warnings.warn(f"!!! JVM not available for MDB access !!!\n{e}", UserWarning)
+        warnings.warn(f"!!! JVM not available for MDB access !!!\n{e}", UserWarning, stacklevel=2)
     except Exception as e:
-        warnings.warn(f"!!! MDB connection failed !!!\n{e}", UserWarning)
+        warnings.warn(f"!!! MDB connection failed !!!\n{e}", UserWarning, stacklevel=2)
     finally:
         if mdb_conn and connected:
             mdb_conn.close()

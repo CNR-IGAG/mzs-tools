@@ -3,9 +3,9 @@
 Layout di stampa
 ----------------
 
-Durante la creazione di un nuovo progetto, il plugin MzSTools genera una struttura di progetto specifica per il comune oggetto dello studio. 
+Durante la creazione di un nuovo progetto, il plugin MzSTools genera una struttura di progetto specifica per il comune oggetto dello studio.
 
-Il file di progetto QGIS, oltre ad avere memorizzati i percorsi, le etichette e gli stili di rappresentazione dei layer, presenta al suo interno una serie di **layout di stampa** preimpostati per i diversi prodotti cartografici richiesti dagli Standard MS. 
+Il file di progetto QGIS, oltre ad avere memorizzati i percorsi, le etichette e gli stili di rappresentazione dei layer, presenta al suo interno una serie di **layout di stampa** preimpostati per i diversi prodotti cartografici richiesti dagli Standard MS.
 
 .. image:: ../img/layout_stampa.png
   :width: 550
@@ -20,7 +20,7 @@ Anche questi layout vengono personalizzati sulla base delle informazioni immesse
 Per poter operare sui layout di stampa, è necessario:
 
 * **attivare i layer contenuti nel group layer “Layout”**, i quali sono specificamente impostati per la restituzione cartografica;
-* **disattivare gli altri gruppi di layer** utilizzati per l’inserimento e l’editing dei dati. 
+* **disattivare gli altri gruppi di layer** utilizzati per l’inserimento e l’editing dei dati.
 
 .. note:: In questo modo, all’interno dei layout i layer vengono organizzati e visualizzati secondo criteri specificamente indirizzati alla cartografia; ad esempio, per le indagini puntuali, viene attivata una visualizzazione secondo lo stile *“spostamento punto”*, che consente di distinguere le diverse indagini associate ad ogni sito.
 

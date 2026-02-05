@@ -18,8 +18,6 @@
 
 """Unit tests for string utilities and sanitization functions."""
 
-import pytest
-
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
 
 

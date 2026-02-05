@@ -10,7 +10,7 @@ on:
   #     - "mzs_tools/**/*.py"
   #     - "mzs_tools/metadata.txt"
   #     - help/requirements.txt
-  #   tags: 
+  #   tags:
   #     - "*"
 
   # pull_request:
@@ -114,9 +114,8 @@ jobs:
       with:
         # Upload entire repository
         path: help/_build/html/
-        
+
     - name: Deploy to GitHub Pages
       id: deployment
       if: ${{ github.event_name == 'workflow_run' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
       uses: actions/deploy-pages@v4
-

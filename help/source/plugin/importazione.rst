@@ -116,4 +116,3 @@ La procedura da eseguire per esportare le suddette tabelle in formato ``.txt``, 
         :align: center
 
 6. ripetere le operazioni 4 e 5 per tutte le tabelle elencate precedentemente.
-

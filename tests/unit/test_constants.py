@@ -18,8 +18,6 @@
 
 """Unit tests for constants and configuration validation."""
 
-import pytest
-
 from mzs_tools.core.constants import (
     DEFAULT_BASE_LAYERS,
     DEFAULT_EDITING_LAYERS,

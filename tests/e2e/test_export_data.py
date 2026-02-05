@@ -20,10 +20,9 @@ import shutil
 import warnings
 from unittest.mock import Mock
 
-import pytest
 from qgis.core import QgsProject
 
-from mzs_tools.__about__ import DIR_PLUGIN_ROOT, __base_version__
+from mzs_tools.__about__ import DIR_PLUGIN_ROOT
 from mzs_tools.gui.dlg_export_data import DlgExportData
 from mzs_tools.tasks.export_project_files_task import ExportProjectFilesTask
 from mzs_tools.tasks.export_siti_lineari_task import ExportSitiLineariTask
@@ -110,7 +109,7 @@ def test_export_siti_puntuali_task_to_mdb(
 ):
     # exit if mdb dependencies are not available
     if not mdb_deps_available:
-        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning)
+        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning, stacklevel=2)
         return
 
     plugin_instance = plugin(qgis_iface)
@@ -192,7 +191,7 @@ def test_export_siti_lineari_task_to_mdb(
 ):
     # exit if mdb dependencies are not available
     if not mdb_deps_available:
-        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning)
+        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning, stacklevel=2)
         return
 
     plugin_instance = plugin(qgis_iface)

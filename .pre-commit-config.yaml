@@ -1,0 +1,44 @@
+exclude: '.venv|__pycache__|tests/data/|mzs_tools/data/|mzs_tools/i18n/|docs/|/migrations/|devcontainer.json|.vscode/'
+default_stages: [pre-commit]
+minimum_pre_commit_version: "3.2.0"
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args:
+          - --maxkb=15000
+      - id: check-illegal-windows-names
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-yaml
+      - id: check-symlinks
+      - id: debug-statements
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: detect-private-key
+
+  # Run the Ruff linter.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.13
+    hooks:
+      # Linter
+      - id: ruff-check
+        args: [--fix, --exit-non-zero-on-fix]
+      # Formatter
+      - id: ruff-format
+
+  - repo: https://codeberg.org/fsfe/reuse-tool
+    rev: v6.2.0
+    hooks:
+      - id: reuse
+
+# sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
+ci:
+  autoupdate_schedule: monthly
+  skip: []
+  submodules: false

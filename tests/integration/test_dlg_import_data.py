@@ -16,7 +16,6 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import warnings
 from unittest.mock import Mock
 
 import pytest

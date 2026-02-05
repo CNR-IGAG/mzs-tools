@@ -323,3 +323,21 @@ run-qgis-qt6-master-ubuntu VERSION="master" QGIS_PYTHON_PATH=".local/share/QGIS/
         -e PYTHONPATH=/usr/share/qgis-qt6/python \
         --user ${USER_ID}:${GROUP_ID} \
         qgis-qt6-ubuntu:{{ VERSION }} qgis-qt6
+
+run-qgis-qt6-ubuntu-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
+    #!/bin/bash
+    xhost +local:
+    cd docker
+    docker run -it --rm \
+        -e DISPLAY=$DISPLAY \
+        -e QT_X11_NO_MITSHM=1 \
+        --network host \
+        -e LC_ALL=C.utf8 \
+        -e LANG=C.utf8 \
+        -e QGIS_PREFIX_PATH=/home/quser/QGIS/build/output \
+        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+        -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
+        -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+        -v ${HOME}/temp:/home/quser/temp \
+        qgis-qt6-ubuntu-build:master \
+        ./QGIS/build/output/bin/qgis

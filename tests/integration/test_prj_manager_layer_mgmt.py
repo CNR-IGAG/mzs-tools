@@ -263,7 +263,7 @@ class TestAddDefaultLayoutGroups:
         layout_group = root.findGroup("LAYOUT DI STAMPA")
 
         # Verify all expected layout groups exist
-        for layout_name in DEFAULT_LAYOUT_GROUPS.keys():
+        for layout_name in DEFAULT_LAYOUT_GROUPS:
             subgroup = layout_group.findGroup(layout_name)
             assert subgroup is not None, f"Layout group '{layout_name}' should exist"
 
@@ -396,7 +396,7 @@ class TestLayerTreeStructure:
         direct_children = editing_group.children()
         direct_child_names = [child.name() for child in direct_children]
 
-        for subgroup_name in expected_structure.keys():
+        for subgroup_name in expected_structure:
             if subgroup_name is not None:
                 assert subgroup_name in direct_child_names, (
                     f"Subgroup '{subgroup_name}' should be a direct child of BANCA DATI GEOGRAFICA"
@@ -518,9 +518,8 @@ class TestCleanupFunctions:
         # Note: cleanup only removes layers with 'base' role custom property
         remaining_layers = []
         for layer in prj_manager.current_project.mapLayers().values():
-            if isinstance(layer, QgsVectorLayer):
-                if layer.customProperty("mzs_tools/layer_role") == "base":
-                    remaining_layers.append(layer)
+            if isinstance(layer, QgsVectorLayer) and layer.customProperty("mzs_tools/layer_role") == "base":
+                remaining_layers.append(layer)
 
         assert len(remaining_layers) == 0, "All base layers should be removed after cleanup"
 
@@ -535,9 +534,8 @@ class TestCleanupFunctions:
         # Check that editing layers are removed
         remaining_layers = []
         for layer in prj_manager.current_project.mapLayers().values():
-            if isinstance(layer, QgsVectorLayer):
-                if layer.customProperty("mzs_tools/layer_role") == "editing":
-                    remaining_layers.append(layer)
+            if isinstance(layer, QgsVectorLayer) and layer.customProperty("mzs_tools/layer_role") == "editing":
+                remaining_layers.append(layer)
 
         assert len(remaining_layers) == 0, "All editing layers should be removed after cleanup"
 
@@ -555,7 +553,7 @@ class TestCleanupFunctions:
 
         # Verify layout groups within the main group are removed
         # The main group might remain if not empty
-        for group_name in DEFAULT_LAYOUT_GROUPS.keys():
+        for group_name in DEFAULT_LAYOUT_GROUPS:
             remaining_group = root.findGroup(group_name)
             assert remaining_group is None, f"Layout group '{group_name}' should be removed after cleanup"
 
@@ -571,7 +569,7 @@ class TestProjectRelations:
 
         rel_manager = prj_manager.current_project.relationManager()
 
-        for relation_name in DEFAULT_RELATIONS.keys():
+        for relation_name in DEFAULT_RELATIONS:
             relations = rel_manager.relationsByName(relation_name)
             assert len(relations) > 0, f"Relation '{relation_name}' should exist"
             assert relations[0].isValid(), f"Relation '{relation_name}' should be valid"

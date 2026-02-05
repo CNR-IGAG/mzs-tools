@@ -357,11 +357,11 @@ class TestPythonCommand:
             with (
                 patch("sys.prefix", str(tmp_path)),
                 patch("platform.system", return_value="Darwin"),
-                patch("sys.executable", "/usr/bin/python3"),
+                patch("sys.executable", "/nonexistent/path/to/python3"),
             ):
                 result = dm.python_command()
 
-        assert result == "/usr/bin/python3"
+        assert result == "/nonexistent/path/to/python3"
 
     def test_linux_fallback(self):
         """Test Linux/other platforms fallback."""
@@ -370,10 +370,13 @@ class TestPythonCommand:
         with patch("mzs_tools.plugin_utils.dependency_manager.iface", MagicMock()):
             dm = DependencyManager()
 
-            with patch("platform.system", return_value="Linux"), patch("sys.executable", "/usr/bin/python3"):
+            with (
+                patch("platform.system", return_value="Linux"),
+                patch("sys.executable", "/nonexistent/path/to/python3"),
+            ):
                 result = dm.python_command()
 
-        assert result == "/usr/bin/python3"
+        assert result == "/nonexistent/path/to/python3"
 
 
 @pytest.mark.no_qgis

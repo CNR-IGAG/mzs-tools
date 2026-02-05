@@ -22,7 +22,6 @@ from unittest.mock import Mock
 import pytest
 from qgis.core import QgsProject
 
-from mzs_tools.__about__ import __base_version__
 from mzs_tools.gui.dlg_import_data import DlgImportData
 from mzs_tools.tasks.import_shapefile_task import ImportShapefileTask
 from mzs_tools.tasks.import_siti_lineari_task import ImportSitiLineariTask
@@ -68,7 +67,8 @@ def test_import_data(
     mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
     (standard_project_path / "Indagini" / "CdI_Tabelle_no_pwd.mdb").rename(mdb_file)
 
-    mdb_connected = dialog.check_mdb_connection(standard_project_path / "Indagini" / "CdI_Tabelle.mdb")
+    # mdb_connected = dialog.check_mdb_connection(standard_project_path / "Indagini" / "CdI_Tabelle.mdb")
+    dialog.check_mdb_connection(standard_project_path / "Indagini" / "CdI_Tabelle.mdb")
     result = dialog.check_project_dir(str(standard_project_path))
 
     # standard project should be importable even when mdb access is not available
@@ -88,7 +88,7 @@ def test_import_data(
     dialog.radio_button_sqlite.setChecked(True)
 
     # https://pytest-qt.readthedocs.io/en/latest/signals.html
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:  # noqa: F841
         # blocker.connect(app.worker.failed)  # Can add other signals to blocker
         # accept() will run start_import_tasks
         dialog.accept()
@@ -143,7 +143,7 @@ def test_import_siti_puntuali_task_from_mdb(
     """
     # exit if mdb dependencies are not available
     if not mdb_deps_available:
-        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning)
+        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning, stacklevel=2)
         return
 
     plugin_instance = plugin(qgis_iface)
@@ -376,7 +376,7 @@ def test_import_siti_lineari_task_from_mdb(
     """
     # exit if mdb dependencies are not available
     if not mdb_deps_available:
-        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning)
+        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning, stacklevel=2)
         return
 
     plugin_instance = plugin(qgis_iface)

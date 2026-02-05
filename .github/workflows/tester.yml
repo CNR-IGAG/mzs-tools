@@ -90,4 +90,3 @@ jobs:
           export UV_PROJECT_ENVIRONMENT=/tmp/.venv-${{ matrix.qgis-version }}
           # Run tests
           uv run pytest tests/ -v -rs --qgis_disable_gui
-

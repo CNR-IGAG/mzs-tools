@@ -12,4 +12,3 @@ Il plugin MzS Tools
    plugin/esportazione.rst
    plugin/layout_stampa.rst
    plugin/altri_strumenti.rst
-

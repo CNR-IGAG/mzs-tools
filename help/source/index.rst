@@ -21,4 +21,3 @@ Il manuale è disponibile in formato PDF `cliccando su questo link <https://cnr-
 .. * :ref:`genindex`
 .. * :ref:`modindex`
 .. * :ref:`search`
-

@@ -70,7 +70,7 @@ def test_manage_attachments(
     # Run task again with prepending IDs option enabled
     dialog = DlgManageAttachments()
     dialog.chk_prepend_ids.setChecked(True)
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:  # noqa: F841
         dialog.accept()
         # save task description for later checks
         task_description = dialog.manager.manage_attachments_task.description()

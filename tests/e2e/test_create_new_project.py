@@ -255,13 +255,12 @@ class TestNewProjectCreation:
         db_path = project_path / "db" / "indagini.sqlite"
         assert db_path.exists()
 
-        with closing(sqlite3.connect(str(db_path))) as conn:
-            with closing(conn.cursor()) as cursor:
-                # Check comune_progetto table has the correct ISTAT code
-                cursor.execute("SELECT cod_istat FROM comune_progetto")
-                result = cursor.fetchone()
-                assert result is not None
-                assert result[0] == cod_istat
+        with closing(sqlite3.connect(str(db_path))) as conn, closing(conn.cursor()) as cursor:
+            # Check comune_progetto table has the correct ISTAT code
+            cursor.execute("SELECT cod_istat FROM comune_progetto")
+            result = cursor.fetchone()
+            assert result is not None
+            assert result[0] == cod_istat
 
     def _verify_project_structure(
         self, project_path: Path, cod_istat: str, comune_name: str, study_author: str, author_email: str
@@ -301,26 +300,25 @@ class TestNewProjectCreation:
         assert project_file.exists()
 
         # Verify database structure
-        with closing(sqlite3.connect(str(db_path))) as conn:
-            with closing(conn.cursor()) as cursor:
-                # Verify comune_progetto table exists and has data
-                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='comune_progetto'")
-                assert cursor.fetchone() is not None
+        with closing(sqlite3.connect(str(db_path))) as conn, closing(conn.cursor()) as cursor:
+            # Verify comune_progetto table exists and has data
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='comune_progetto'")
+            assert cursor.fetchone() is not None
 
-                cursor.execute("SELECT cod_istat FROM comune_progetto")
-                result = cursor.fetchone()
-                assert result is not None, "comune_progetto table should have data"
-                assert result[0] == cod_istat
+            cursor.execute("SELECT cod_istat FROM comune_progetto")
+            result = cursor.fetchone()
+            assert result is not None, "comune_progetto table should have data"
+            assert result[0] == cod_istat
 
-                # Verify metadati table has author info
-                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadati'")
-                assert cursor.fetchone() is not None
+            # Verify metadati table has author info
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='metadati'")
+            assert cursor.fetchone() is not None
 
-                cursor.execute("SELECT resp_metadato_nome, resp_metadato_email FROM metadati LIMIT 1")
-                result = cursor.fetchone()
-                if result:  # Metadata might not be written in all test scenarios
-                    assert result[0] == study_author, f"Expected author '{study_author}', got '{result[0]}'"
-                    assert result[1] == author_email, f"Expected email '{author_email}', got '{result[1]}'"
+            cursor.execute("SELECT resp_metadato_nome, resp_metadato_email FROM metadati LIMIT 1")
+            result = cursor.fetchone()
+            if result:  # Metadata might not be written in all test scenarios
+                assert result[0] == study_author, f"Expected author '{study_author}', got '{result[0]}'"
+                assert result[1] == author_email, f"Expected email '{author_email}', got '{result[1]}'"
 
 
 class TestProjectCreationEdgeCases:

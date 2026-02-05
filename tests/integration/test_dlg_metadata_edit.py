@@ -169,9 +169,8 @@ def test_validate_input_empty_fields(qtbot, gui_timeout):
 
     # Check that required fields have red border styling
     for field in dialog.required_fields:
-        if isinstance(field, QLineEdit) and field.isEnabled():
-            if not field.text():
-                assert "border: 1px solid red" in field.styleSheet()
+        if isinstance(field, QLineEdit) and field.isEnabled() and not field.text():
+            assert "border: 1px solid red" in field.styleSheet()
 
 
 def test_validate_input_filled_fields(qtbot, gui_timeout):

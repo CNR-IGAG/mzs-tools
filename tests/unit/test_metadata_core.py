@@ -21,8 +21,6 @@
 from configparser import ConfigParser
 from pathlib import Path
 
-import pytest
-
 
 class TestPluginMetadataCore:
     """Test plugin metadata functionality without QGIS dependencies."""

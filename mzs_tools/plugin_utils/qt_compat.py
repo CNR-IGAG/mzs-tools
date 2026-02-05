@@ -215,7 +215,7 @@ def enum_value(enum_class: Any, value_name: str) -> Any:
         # Then try nested enums (e.g., QDialog.DialogCode.Accepted)
         for attr_name in dir(enum_class):
             attr = getattr(enum_class, attr_name)
-            if hasattr(attr, "__class__") and "enum" in str(type(attr)).lower():
+            if hasattr(attr, "__class__") and "enum" in str(type(attr)).lower():  # noqa: SIM102
                 if hasattr(attr, value_name):
                     return getattr(attr, value_name)
     else:
@@ -239,7 +239,7 @@ def get_dialog_result(dialog_class: Any, result_name: str) -> int:
     if IS_PYQT6:
         # In PyQt6: QDialog.DialogCode.Accepted
         if hasattr(dialog_class, "DialogCode"):
-            dialog_code = getattr(dialog_class, "DialogCode")
+            dialog_code = dialog_class.DialogCode
             if hasattr(dialog_code, result_name):
                 return getattr(dialog_code, result_name)
     else:
@@ -295,7 +295,7 @@ def get_cursor_shape(cursor_name: str) -> Any:
         if IS_PYQT6:
             # In PyQt6: Qt.CursorShape.ArrowCursor
             if hasattr(Qt, "CursorShape"):
-                cursor_shape = getattr(Qt, "CursorShape")
+                cursor_shape = Qt.CursorShape
                 if hasattr(cursor_shape, cursor_name):
                     return getattr(cursor_shape, cursor_name)
         else:
@@ -332,7 +332,7 @@ def get_selection_behavior(behavior_name: str) -> Any:
         if IS_PYQT6:
             # In PyQt6: QAbstractItemView.SelectionBehavior.SelectRows
             if hasattr(QAbstractItemView, "SelectionBehavior"):
-                selection_behavior = getattr(QAbstractItemView, "SelectionBehavior")
+                selection_behavior = QAbstractItemView.SelectionBehavior
                 if hasattr(selection_behavior, behavior_name):
                     return getattr(selection_behavior, behavior_name)
         else:
@@ -371,7 +371,7 @@ def get_alignment_flag(*alignment_names: str) -> Any:
             if IS_PYQT6:
                 # In PyQt6: Qt.AlignmentFlag.AlignLeft
                 if hasattr(Qt, "AlignmentFlag"):
-                    alignment_flag = getattr(Qt, "AlignmentFlag")
+                    alignment_flag = Qt.AlignmentFlag
                     if hasattr(alignment_flag, alignment_name):
                         alignment_value |= getattr(alignment_flag, alignment_name)
                     else:

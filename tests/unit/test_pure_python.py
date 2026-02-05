@@ -47,7 +47,7 @@ class TestPurePythonUtils:
         def find_files_by_extension(root_path, extension):
             """Find files with given extension recursively."""
             files = []
-            for root, dirs, filenames in os.walk(root_path):
+            for root, _dirs, filenames in os.walk(root_path):
                 for filename in filenames:
                     if filename.lower().endswith(extension.lower()):
                         files.append(Path(root) / filename)

@@ -18,8 +18,6 @@
 
 """Unit tests for plugin metadata and version information."""
 
-import pytest
-
 from mzs_tools.__about__ import (
     PLG_METADATA_FILE,
     __author__,
