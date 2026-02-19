@@ -26,6 +26,13 @@ Per maggiori informazioni sulla CC BY 4.0, visita: `<https://creativecommons.org
 Changelog
 =========
 
+v2.0.7
+    - Sistemato un problema con la visualizzazione delle indagini
+    - Miglioramenti nella gestione dei test automatici
+    - Risolto un problema con l'uso di QMetaType/QVariant nel processo di esportazione per QGIS < 3.38
+    - Risolto un problema con l'uso di Path.walk() nel processo di importazione per Python < 3.12
+    - Aggiornata la versione minima di QGIS a 3.34
+
 v2.0.6
     - Correzione per i campi interi convertiti in float negli shapefile esportati
     - Aggiornati i layer per i layout di stampa

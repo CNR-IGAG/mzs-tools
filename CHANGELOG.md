@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.7-beta2] - 2026-02-02
+## [2.0.7] - 2026-02-19
 
 - fix for indagini spatial views
 - tester workflow with matrix strategy for different python/qgis versions

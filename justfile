@@ -72,6 +72,7 @@ dev-link QGIS_PLUGIN_PATH="~/.local/share/QGIS/QGIS3/profiles/default/python/plu
     echo "Plugin symlink created at {{ QGIS_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}"
 
 @bootstrap-dev: create-venv dev-link
+    pre-commit install
 
 @deps-update-check:
     uv sync --all-groups
