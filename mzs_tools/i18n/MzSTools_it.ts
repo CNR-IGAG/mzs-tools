@@ -150,17 +150,17 @@ Nota: Dovrai anche installare Java JRE sul tuo sistema per poter accedere ai dat
         <translation>Esportazione dati in corso...</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="392"/>
+        <location filename="../gui/dlg_export_data.py" line="404"/>
         <source>Data exported successfully</source>
         <translation>Esportazione dati completata</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="395"/>
+        <location filename="../gui/dlg_export_data.py" line="407"/>
         <source>Data export completed with errors. Check the log for details.</source>
         <translation>Esportazione dati completata con alcuni errori. Controlla i log per i dettagli.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="426"/>
+        <location filename="../gui/dlg_export_data.py" line="438"/>
         <source>Data export cancelled!</source>
         <translation>Esportazione dati annullata!</translation>
     </message>
@@ -303,27 +303,27 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>DlgImportData</name>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="75"/>
+        <location filename="../gui/dlg_import_data.py" line="62"/>
         <source>Start import</source>
         <translation>Inizia importazione</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="281"/>
+        <location filename="../gui/dlg_import_data.py" line="268"/>
         <source>Project folder does not exist</source>
         <translation>La cartella del progetto non esiste</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="343"/>
+        <location filename="../gui/dlg_import_data.py" line="330"/>
         <source>Project folder does not contain &apos;Indagini&apos; subfolder</source>
         <translation>Il progetto non contiene la cartella &apos;Indagini&apos;</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="348"/>
+        <location filename="../gui/dlg_import_data.py" line="335"/>
         <source>[File not found]</source>
         <translation>[File non trovato]</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="411"/>
+        <location filename="../gui/dlg_import_data.py" line="398"/>
         <source>[Connection failed]</source>
         <translation>[Connessione fallita]</translation>
     </message>
@@ -335,22 +335,22 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
     <message>
         <location filename="../gui/dlg_import_data.py" line="516"/>
         <source>Data import in progress...</source>
-        <translation>Importazione dati in corso...</translation>
+        <translation type="obsolete">Importazione dati in corso...</translation>
     </message>
     <message>
         <location filename="../gui/dlg_import_data.py" line="602"/>
         <source>Data imported successfully</source>
-        <translation>Importazione completata</translation>
+        <translation type="obsolete">Importazione completata</translation>
     </message>
     <message>
         <location filename="../gui/dlg_import_data.py" line="605"/>
         <source>Data import completed with errors. Check the log for details.</source>
-        <translation>Importazione completata con alcuni errori. Controlla i log per i dettagli.</translation>
+        <translation type="obsolete">Importazione completata con alcuni errori. Controlla i log per i dettagli.</translation>
     </message>
     <message>
         <location filename="../gui/dlg_import_data.py" line="636"/>
         <source>Data import cancelled!</source>
-        <translation>Importazione dati annullata!</translation>
+        <translation type="obsolete">Importazione dati annullata!</translation>
     </message>
     <message>
         <location filename="../gui/dlg_import_data.ui" line="14"/>
@@ -483,12 +483,12 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <translation>Log di debug</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="415"/>
+        <location filename="../gui/dlg_import_data.py" line="402"/>
         <source>Connection established</source>
         <translation>Connessione stabilita</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="416"/>
+        <location filename="../gui/dlg_import_data.py" line="403"/>
         <source> with password</source>
         <translation> con password</translation>
     </message>
@@ -577,17 +577,17 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
 <context>
     <name>DlgMdbPassword</name>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="680"/>
+        <location filename="../gui/dlg_import_data.py" line="499"/>
         <source>Enter database password</source>
         <translation>Inserire la password per il database</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="684"/>
+        <location filename="../gui/dlg_import_data.py" line="503"/>
         <source>A password is required to access CdI_Tabelle.mdb</source>
         <translation>Una password è richiesta per l&apos;accesso a CdI_Tabelle.mdb</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_import_data.py" line="691"/>
+        <location filename="../gui/dlg_import_data.py" line="510"/>
         <source>Save password in QGIS auth manager</source>
         <translation>Salva la password nel gestore di QGIS</translation>
     </message>
@@ -1052,6 +1052,34 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <location filename="../gui/dlg_metadata_edit.ui" line="211"/>
         <source>yyyy-MM-dd</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ImportDataTaskManager</name>
+    <message>
+        <location filename="../tasks/import_data_task_manager.py" line="193"/>
+        <source>Data import in progress...</source>
+        <translation>Importazione dati in corso...</translation>
+    </message>
+    <message>
+        <location filename="../tasks/import_data_task_manager.py" line="198"/>
+        <source>Cancel</source>
+        <translation>Annulla</translation>
+    </message>
+    <message>
+        <location filename="../tasks/import_data_task_manager.py" line="244"/>
+        <source>Data imported successfully</source>
+        <translation>Importazione completata</translation>
+    </message>
+    <message>
+        <location filename="../tasks/import_data_task_manager.py" line="247"/>
+        <source>Data import completed with errors. Check the log for details.</source>
+        <translation>Importazione completata con alcuni errori. Controlla i log per i dettagli.</translation>
+    </message>
+    <message>
+        <location filename="../tasks/import_data_task_manager.py" line="271"/>
+        <source>Data import cancelled!</source>
+        <translation>Importazione dati annullata!</translation>
     </message>
 </context>
 <context>

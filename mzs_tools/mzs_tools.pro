@@ -19,7 +19,8 @@ SOURCES = mzs_tools.py \
           tasks/export_siti_puntuali_task.py \
           tasks/import_shapefile_task.py \
           tasks/import_siti_lineari_task.py \
-          tasks/import_siti_puntuali_task.py
+          tasks/import_siti_puntuali_task.py \
+          tasks/import_data_task_manager.py
 
 FORMS = gui/dlg_create_project.ui \
         gui/dlg_export_data.ui \

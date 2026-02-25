@@ -123,10 +123,10 @@ def test_import_data(
     #     timeout=10000,
     # )
 
-    log_text = dialog.log_file_path.read_text(encoding="utf-8")
+    log_text = dialog.import_data_task_manager.log_file_path.read_text(encoding="utf-8")
     # Check for TESTING_MODE in log to ensure that the pytest-env environment variable was read
     assert "TESTING_MODE" in log_text
-    assert dialog.tr("Data imported successfully") in log_text
+    assert dialog.import_data_task_manager.tr("Data imported successfully") in log_text
 
 
 def test_import_siti_puntuali_task_from_mdb(

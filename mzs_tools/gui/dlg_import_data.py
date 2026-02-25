@@ -16,14 +16,13 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import logging
 from functools import partial
 from pathlib import Path
 from typing import cast
 
-from qgis.core import Qgis, QgsApplication, QgsAuthMethodConfig, QgsTask
-from qgis.gui import QgisInterface, QgsMessageBarItem
-from qgis.PyQt import QtCore, uic
+from qgis.core import QgsApplication, QgsAuthMethodConfig
+from qgis.gui import QgisInterface
+from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication, Qt, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
@@ -32,21 +31,15 @@ from qgis.PyQt.QtWidgets import (
     QDialogButtonBox,
     QLabel,
     QLineEdit,
-    QProgressBar,
-    QPushButton,
     QVBoxLayout,
 )
 from qgis.utils import iface
 
-from ..__about__ import __version__
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.misc import get_path_for_name
-from ..plugin_utils.qt_compat import get_alignment_flag
 from ..tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
-from ..tasks.import_shapefile_task import ImportShapefileTask
-from ..tasks.import_siti_lineari_task import ImportSitiLineariTask
-from ..tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
+from ..tasks.import_data_task_manager import ImportDataTaskManager
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -59,12 +52,6 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.iface: QgisInterface = cast(QgisInterface, iface)
 
         self.log = MzSToolsLogger.log
-
-        # setup proper python logger to be used in tasks with file-based logging
-        self.file_logger: logging.Logger = logging.getLogger("mzs_tools.tasks.import_data")
-        if not self.file_logger.hasHandlers():
-            handler = MzSToolsLogger()
-            self.file_logger.addHandler(handler)
 
         self.prj_manager = MzSProjectManager.instance()
 
@@ -107,7 +94,7 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         self.accepted.connect(self.start_import_tasks)
 
-        self.failed_tasks = []
+        self.import_data_task_manager: ImportDataTaskManager | None = None
 
     def showEvent(self, e):
         super().showEvent(e)
@@ -431,25 +418,7 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.log("Project path or input path not set", log_level=2)
             return
 
-        # make sure document paths exist
-        allegati_paths = ["Altro", "Documenti", "log", "Plot", "Spettri"]
-        for sub_dir in allegati_paths:
-            sub_dir_path = self.prj_manager.project_path / "Allegati" / sub_dir
-            sub_dir_path.mkdir(parents=True, exist_ok=True)
-
-        # setup file-based logging
-        timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
-        filename = f"data_import_{timestamp}.log"
-        self.log_file_path = self.prj_manager.project_path / "Allegati" / "log" / filename
-        self.file_handler = logging.FileHandler(self.log_file_path, encoding="utf-8")
-        self.file_logger.addHandler(self.file_handler)
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        self.file_handler.setFormatter(formatter)
-        self.file_logger.setLevel(logging.DEBUG if self.chk_debug_logging.isChecked() else logging.INFO)
-        self.file_logger.info(f"MzS Tools version {__version__} - Data import log")
-        self.file_logger.info(f"Log file: {self.log_file_path}")
-        self.file_logger.info("############### Data import started")
-
+        # Determine the indagini data source
         indagini_data_source = None
         if self.radio_button_mdb.isChecked():
             indagini_data_source = "mdb"
@@ -460,187 +429,37 @@ class DlgImportData(QDialog, FORM_CLASS):
         else:
             self.log("No import source selected", log_level=1)
 
-        # backup database
-        backup_path = self.prj_manager.backup_database()
-        self.file_logger.info(f"Database backup created at {backup_path}")
+        import_spu = self.chk_siti_puntuali.isEnabled() and self.chk_siti_puntuali.isChecked()
+        import_sln = self.chk_siti_lineari.isEnabled() and self.chk_siti_lineari.isChecked()
 
-        if self.reset_sequences:
-            self.file_logger.warning("Resetting Indagini sequences")
-            self.prj_manager.reset_indagini_sequences()
+        selected_shapefiles = [
+            name
+            for name, data in self.standard_proj_paths.items()
+            if ".shp" in name
+            and "table" in data
+            and data["checkbox"]
+            and data["checkbox"].isEnabled()
+            and data["checkbox"].isChecked()
+        ]
 
-        self.file_logger.info(f"Importing data from {self.input_path} using {indagini_data_source} for Indagini data")
+        # Strip widget references before passing to the task manager
+        clean_proj_paths = {
+            name: {k: v for k, v in data.items() if k != "checkbox"} for name, data in self.standard_proj_paths.items()
+        }
 
-        tasks = []
-        if self.chk_siti_puntuali.isEnabled() and self.chk_siti_puntuali.isChecked():
-            self.import_spu_task = ImportSitiPuntualiTask(
-                self.standard_proj_paths,  # type: ignore
-                data_source=indagini_data_source,  # type: ignore
-                mdb_password=self.mdb_password,
-                csv_files=self.csv_files_found,
-            )
-            # self.import_spu_task.log_msg.connect(self.log_task_msg)
-            tasks.append(self.import_spu_task)
-        if self.chk_siti_lineari.isEnabled() and self.chk_siti_lineari.isChecked():
-            self.import_sln_task = ImportSitiLineariTask(
-                self.standard_proj_paths,  # type: ignore
-                data_source=indagini_data_source,  # type: ignore
-                mdb_password=self.mdb_password,
-                csv_files=self.csv_files_found,
-            )
-            tasks.append(self.import_sln_task)
-        self.import_shapefile_tasks = {}
-        for name, data in self.standard_proj_paths.items():
-            if (
-                ".shp" in name
-                and "table" in data
-                and data["checkbox"]
-                and data["checkbox"].isEnabled()
-                and data["checkbox"].isChecked()
-            ):
-                task_name = f"import_shapefile_task_{name}"
-                self.import_shapefile_tasks[task_name] = ImportShapefileTask(self.standard_proj_paths, name)  # type: ignore
-                tasks.append(self.import_shapefile_tasks[task_name])
-
-        if not tasks:
-            self.file_logger.warning("No tasks selected for import!")
-            return
-
-        selected_tasks = []
-        for task in tasks:
-            selected_tasks = [task.description() for task in tasks]
-        self.file_logger.info(f"Selected tasks: {selected_tasks}")
-
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setMaximum(100)
-        self.progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
-        self.progress_msg: QgsMessageBarItem = self.iface.messageBar().createMessage(
-            "MzS Tools", self.tr("Data import in progress...")
+        self.import_data_task_manager = ImportDataTaskManager(
+            standard_proj_paths=clean_proj_paths,
+            input_path=self.input_path,
+            indagini_data_source=indagini_data_source,
+            mdb_password=self.mdb_password,
+            csv_files_found=self.csv_files_found,
+            reset_sequences=self.reset_sequences,
+            import_spu=import_spu,
+            import_sln=import_sln,
+            selected_shapefiles=selected_shapefiles,
+            debug_mode=self.chk_debug_logging.isChecked(),
         )
-        self.progress_msg.layout().addWidget(self.progress_bar)
-
-        cancel_button = QPushButton()
-        cancel_button.setText("Cancel")
-        cancel_button.clicked.connect(self.cancel_tasks)
-        self.progress_msg.layout().addWidget(cancel_button)
-
-        self.iface.messageBar().pushWidget(self.progress_msg, Qgis.MessageLevel.Info)
-
-        QgsApplication.taskManager().progressChanged.connect(self.on_tasks_progress)
-        QgsApplication.taskManager().statusChanged.connect(self.on_task_status_changed)
-        QgsApplication.taskManager().allTasksFinished.connect(self.on_tasks_completed)
-        # QgsApplication.taskManager().taskAdded.connect(self.on_task_added)
-
-        if len(tasks) == 1:
-            QgsApplication.taskManager().addTask(tasks[0])
-            return
-
-        # this way the tasks are independent from each other and run concurrently
-        # probably dangerous for db writes
-        # for task in tasks:
-        #     QgsApplication.taskManager().addTask(task)
-
-        # run the tasks sequentially:
-        # every task is a subtask of the previous one and the parent task is dependent on the subtask
-        # task_count = 0
-        first_task = None
-        previous_task = None
-        for task_count, task in enumerate(tasks, start=1):
-            # task_count += 1
-            if task_count == 1:
-                first_task = previous_task = task
-            else:
-                previous_task.addSubTask(task, [], QgsTask.SubTaskDependency.ParentDependsOnSubTask)
-                previous_task = task
-        QgsApplication.taskManager().addTask(first_task)
-
-        # # simpler alternative using taskAdded signal to hold tasks and then unhold sequentially
-        # # seems to cause issues with progress reporting though
-        # for task in tasks:
-        #     # tasks are added to the task manager but immediately held by the taskAdded signal
-        #     QgsApplication.taskManager().addTask(task)
-
-        # # unhold all tasks sequentially
-        # for task in tasks:
-        #     task.unhold()
-        #     task.waitForFinished()
-
-    # def on_task_added(self, taskid):
-    #     QgsApplication.taskManager().task(taskid).hold()
-    #     # task_desc = QgsApplication.taskManager().task(taskid).description()
-    #     # self.file_logger.debug(f"**************** TASK {task_desc} ADDED ****************")
-
-    def on_tasks_progress(self, taskid, progress):
-        # if there is only one main task with a series of subtasks, progress
-        # seems to be reported as the average of all the subtasks' progress
-        # task_desc = QgsApplication.taskManager().task(taskid).description()
-        # num_tasks_remaining = QgsApplication.taskManager().countActiveTasks()
-        # try:
-        #     self.progress_msg.setText(f"{task_desc} - {num_tasks_remaining} tasks remaining")
-        #     self.progress_bar.setValue(int(progress))
-        # except:  # noqa: E722
-        #     pass
-
-        # refresh layers every 20%
-        if progress % 20 == 0:
-            self.iface.mapCanvas().refreshAllLayers()
-        self.progress_bar.setValue(int(progress))
-
-    def on_task_status_changed(self, taskid, status):
-        # if status == QgsTask.TaskStatus.Complete:
-        #     self.file_logger.debug(
-        #         f"**************** TASK {self.task_manager.task(taskid).description()} COMPLETED ****************"
-        #     )
-        if status == QgsTask.TaskStatus.Terminated:
-            self.failed_tasks.append(QgsApplication.taskManager().task(taskid).description())
-
-    def on_tasks_completed(self):
-        # self.file_logger.debug("**************** ALL TASKS COMPLETED ****************")
-        if QgsApplication.taskManager().countActiveTasks() > 0:
-            return
-
-        if len(self.failed_tasks) == 0:
-            msg = self.tr("Data imported successfully")
-            level = Qgis.MessageLevel.Success
-        else:
-            msg = self.tr("Data import completed with errors. Check the log for details.")
-            level = Qgis.MessageLevel.Warning
-
-        self.file_logger.info(f"{'#' * 15} {msg}")
-        self.iface.messageBar().clearWidgets()
-        # load log file
-        log_text = self.log_file_path.read_text(encoding="utf-8")
-        self.iface.messageBar().pushMessage(
-            "MzS Tools",
-            msg,
-            log_text if log_text else "...",
-            level=level,
-            duration=0,
-        )
-
-        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
-        QgsApplication.taskManager().statusChanged.disconnect(self.on_task_status_changed)
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
-
-        self.file_logger.removeHandler(self.file_handler)
-        self.file_handler.close()
-
-    def cancel_tasks(self):
-        self.file_logger.warning(f"{'#' * 15} Data import cancelled. Terminating all tasks")
-        QgsApplication.taskManager().progressChanged.disconnect(self.on_tasks_progress)
-        QgsApplication.taskManager().statusChanged.disconnect(self.on_task_status_changed)
-        QgsApplication.taskManager().allTasksFinished.disconnect(self.on_tasks_completed)
-
-        QgsApplication.taskManager().cancelAll()
-
-        self.iface.messageBar().clearWidgets()
-        self.iface.messageBar().pushMessage(
-            "MzS Tools", self.tr("Data import cancelled!"), level=Qgis.MessageLevel.Warning
-        )
-
-        self.iface.mapCanvas().refreshAllLayers()
-
-        self.file_logger.removeHandler(self.file_handler)
-        self.file_handler.close()
+        self.import_data_task_manager.start_import_tasks()
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)
