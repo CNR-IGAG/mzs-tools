@@ -244,11 +244,15 @@ class ExportDataTaskManager:
         try:
             layer = QgsVectorLayer(str(path), str(path.stem), "ogr")
 
-            # Fix integer fields
+            # Workaround for QgsVectorLayerExporterTask always exporting integer fields as float
             for layer_name, fields in STANDARD_SHAPEFILES_INT_FIELDS.items():
                 if table_name == layer_name:
                     for field_name in fields:
-                        self._change_field_type(layer, field_name, QMetaType.Type.Int)
+                        try:
+                            self._change_field_type(layer, field_name, QMetaType.Type.Int)
+                        except TypeError:
+                            # QGIS < 3.38: use QVariant.Type
+                            self._change_field_type(layer, field_name, QtCore.QVariant.Int)
                     break
 
             # Fix specific datasets
@@ -256,9 +260,18 @@ class ExportDataTaskManager:
                 self._rename_field(layer, "id_spu", "ID_SPU")
             elif table_name == "sito_lineare":
                 self._rename_field(layer, "id_sln", "ID_SLN")
+            # elif table_name in ["isosub_l1", "isosub_l23"]:
+            #     # "Quota" from float to int
+            #     self.change_field_type(QgsVectorLayer(str(path), str(path.stem), "ogr"), "Quota", QMetaType.Type.Int)
             elif table_name in ["stab_l1", "stab_l23", "instab_l1", "instab_l23"]:
-                self._change_field_type(layer, "LIVELLO", QMetaType.Type.Double)
+                # for some absurd reason, the field "LIVELLO" must be a float
+                try:
+                    self._change_field_type(layer, "LIVELLO", QMetaType.Type.Double)
+                except TypeError:
+                    # QGIS < 3.38: use QVariant.Type
+                    self._change_field_type(layer, "LIVELLO", QtCore.QVariant.Double)
                 if table_name in ["stab_l23", "instab_l23"]:
+                    # extract file name from path "SPETTRI"
                     self._extract_file_name_from_path(layer, "SPETTRI")
 
         except Exception as e:
@@ -373,27 +386,33 @@ class ExportDataTaskManager:
         new_field.setType(field_type)
 
         with edit(layer):
+            # Create a temporary field with desired type
             layer.addAttribute(temp_field)
             layer.updateFields()
 
             temp_field_idx = layer.fields().lookupField(temp_field_name)
 
+            # Copy values to the temporary field
             for feature in layer.getFeatures():
                 layer.changeAttributeValue(feature.id(), temp_field_idx, feature[field_name])
 
         with edit(layer):
+            # Remove the original field
             layer.deleteAttribute(field_idx)
             layer.updateFields()
 
+            # Add new field with original name but new type
             layer.addAttribute(new_field)
             layer.updateFields()
 
             new_field_idx = layer.fields().lookupField(field_name)
             temp_field_idx = layer.fields().lookupField(temp_field_name)
 
+            # Copy values from temporary field to new field
             for feature in layer.getFeatures():
                 layer.changeAttributeValue(feature.id(), new_field_idx, feature[temp_field_name])
 
+            # Remove temporary field
             layer.deleteAttribute(temp_field_idx)
 
         self.file_logger.debug(f"Successfully changed field type for '{field_name}'")
@@ -402,6 +421,7 @@ class ExportDataTaskManager:
         """Extract file names from path strings in a field."""
         self.file_logger.debug(f"Extracting file name from field '{field_name}'")
 
+        # Get field index to check if it exists
         field_idx = layer.fields().lookupField(field_name)
         if field_idx == -1:
             self.file_logger.error(f"Field '{field_name}' not found in layer")
@@ -416,6 +436,7 @@ class ExportDataTaskManager:
             if not path_value:
                 continue
 
+            # Extract filename from path
             try:
                 file_name = Path(path_value).name
                 feature.setAttribute(field_idx, file_name)

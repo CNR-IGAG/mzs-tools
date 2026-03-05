@@ -125,12 +125,12 @@ Nota: Dovrai anche installare Java JRE sul tuo sistema per poter accedere ai dat
 <context>
     <name>DlgExportData</name>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="79"/>
+        <location filename="../gui/dlg_export_data.py" line="56"/>
         <source>Start export</source>
         <translation>Inizia esportazione</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="162"/>
+        <location filename="../gui/dlg_export_data.py" line="137"/>
         <source>[Connection established]</source>
         <translation>[Connessione stabilita]</translation>
     </message>
@@ -140,29 +140,29 @@ Nota: Dovrai anche installare Java JRE sul tuo sistema per poter accedere ai dat
         <translation type="obsolete">Usa il plugin per QGIS &apos;qpip&apos; per installare le dipendenze e riavvia QGIS</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="175"/>
+        <location filename="../gui/dlg_export_data.py" line="150"/>
         <source>[Connection failed]</source>
         <translation>[Connessione fallita]</translation>
     </message>
     <message>
         <location filename="../gui/dlg_export_data.py" line="271"/>
         <source>Data export in progress...</source>
-        <translation>Esportazione dati in corso...</translation>
+        <translation type="obsolete">Esportazione dati in corso...</translation>
     </message>
     <message>
         <location filename="../gui/dlg_export_data.py" line="404"/>
         <source>Data exported successfully</source>
-        <translation>Esportazione dati completata</translation>
+        <translation type="obsolete">Esportazione dati completata</translation>
     </message>
     <message>
         <location filename="../gui/dlg_export_data.py" line="407"/>
         <source>Data export completed with errors. Check the log for details.</source>
-        <translation>Esportazione dati completata con alcuni errori. Controlla i log per i dettagli.</translation>
+        <translation type="obsolete">Esportazione dati completata con alcuni errori. Controlla i log per i dettagli.</translation>
     </message>
     <message>
         <location filename="../gui/dlg_export_data.py" line="438"/>
         <source>Data export cancelled!</source>
-        <translation>Esportazione dati annullata!</translation>
+        <translation type="obsolete">Esportazione dati annullata!</translation>
     </message>
     <message>
         <location filename="../gui/dlg_export_data.ui" line="14"/>
@@ -215,9 +215,9 @@ Nota: Dovrai anche installare Java JRE sul tuo sistema per poter accedere ai dat
         <translation>Attenzione: è raccomandato eseguire un controllo dei file allegati con il tool dedicato prima di eseguire l&apos;esportazione dati.</translation>
     </message>
     <message>
-        <location filename="../gui/dlg_export_data.py" line="166"/>
+        <location filename="../gui/dlg_export_data.py" line="141"/>
         <source>Use the dependency check tool or &apos;qpip&apos; QGIS plugin to install dependencies.</source>
-        <translation type="unfinished"></translation>
+        <translation>Usare lo strumento di controllo delle dipendenze o il plugin &apos;qpip&apos; per installare le dipendenze.</translation>
     </message>
 </context>
 <context>
@@ -1052,6 +1052,34 @@ Il processo non modificherà in alcun modo i dati memorizzati nel database, solt
         <location filename="../gui/dlg_metadata_edit.ui" line="211"/>
         <source>yyyy-MM-dd</source>
         <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>ExportDataTaskManager</name>
+    <message>
+        <location filename="../tasks/export_data_task_manager.py" line="169"/>
+        <source>Data export in progress...</source>
+        <translation>Esportazione dati in corso...</translation>
+    </message>
+    <message>
+        <location filename="../tasks/export_data_task_manager.py" line="175"/>
+        <source>Cancel</source>
+        <translation>Annulla</translation>
+    </message>
+    <message>
+        <location filename="../tasks/export_data_task_manager.py" line="308"/>
+        <source>Data exported successfully</source>
+        <translation>Esportazione dati completata</translation>
+    </message>
+    <message>
+        <location filename="../tasks/export_data_task_manager.py" line="311"/>
+        <source>Data export completed with errors. Check the log for details.</source>
+        <translation>Esportazione dati completata con alcuni errori. Controlla i log per i dettagli.</translation>
+    </message>
+    <message>
+        <location filename="../tasks/export_data_task_manager.py" line="338"/>
+        <source>Data export cancelled!</source>
+        <translation>Esportazione dati annullata!</translation>
     </message>
 </context>
 <context>
