@@ -301,3 +301,211 @@ def test_export_project_files_task(
     spettri_path = exported_project_path / "MS23" / "Spettri"
     assert spettri_path.exists()
     assert any(spettri_path.iterdir())
+
+
+# ---------------------------------------------------------------------------
+# ExportDataTaskManager - E2E tests (full project required)
+# ---------------------------------------------------------------------------
+
+
+def _load_project_and_check(plugin_instance, prj_manager, base_project_path_current_imported):
+    """Helper: open the sample project and verify it is a valid MzS project."""
+    from qgis.core import QgsProject
+
+    project = QgsProject.instance()
+    project.read(str(base_project_path_current_imported / "progetto_MS.qgz"))
+    plugin_instance.check_project()
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
+
+
+def test_export_output_directory_structure(
+    plugin,
+    qgis_app,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    monkeypatch,
+    qtbot,
+    tmp_path,
+):
+    """Full sqlite export creates all required subdirectories."""
+    from unittest.mock import Mock
+
+    from mzs_tools.gui.dlg_export_data import DlgExportData
+
+    monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
+    plugin_instance = plugin(qgis_iface)
+    _load_project_and_check(plugin_instance, prj_manager, base_project_path_current_imported)
+
+    dialog = DlgExportData()
+    qtbot.addWidget(dialog)
+    dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
+    dialog.radio_button_sqlite.setChecked(True)
+
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
+        dialog.accept()
+        qtbot.wait(500)
+        while qgis_app.taskManager().countActiveTasks() > 0:
+            qtbot.wait(500)
+
+    base = tmp_path / "057001_Accumoli_S42_Shapefile"
+    for sub in [
+        "BasiDati",
+        "GeoTec",
+        "Indagini",
+        "Indagini/Documenti",
+        "MS1",
+        "MS23",
+        "MS23/Spettri",
+        "Plot",
+        "Progetti",
+        "Vestiture",
+    ]:
+        assert (base / sub).is_dir(), f"Missing subdirectory: {sub}"
+
+
+def test_export_sqlite_db_template_copied(
+    plugin,
+    qgis_app,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    monkeypatch,
+    qtbot,
+    tmp_path,
+):
+    """Full sqlite export copies CdI_Tabelle.sqlite into the Indagini subfolder."""
+    from unittest.mock import Mock
+
+    from mzs_tools.gui.dlg_export_data import DlgExportData
+
+    monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
+    plugin_instance = plugin(qgis_iface)
+    _load_project_and_check(plugin_instance, prj_manager, base_project_path_current_imported)
+
+    dialog = DlgExportData()
+    qtbot.addWidget(dialog)
+    dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
+    dialog.radio_button_sqlite.setChecked(True)
+
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
+        dialog.accept()
+        qtbot.wait(500)
+        while qgis_app.taskManager().countActiveTasks() > 0:
+            qtbot.wait(500)
+
+    db_file = tmp_path / "057001_Accumoli_S42_Shapefile" / "Indagini" / "CdI_Tabelle.sqlite"
+    assert db_file.is_file(), "CdI_Tabelle.sqlite not found in exported Indagini folder"
+    assert db_file.stat().st_size > 0
+
+
+def test_export_log_file_created(
+    plugin,
+    qgis_app,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    monkeypatch,
+    qtbot,
+    tmp_path,
+):
+    """Export creates a timestamped log file under Allegati/log/."""
+    from unittest.mock import Mock
+
+    from mzs_tools.gui.dlg_export_data import DlgExportData
+
+    monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
+    plugin_instance = plugin(qgis_iface)
+    _load_project_and_check(plugin_instance, prj_manager, base_project_path_current_imported)
+
+    dialog = DlgExportData()
+    qtbot.addWidget(dialog)
+    dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
+    dialog.radio_button_sqlite.setChecked(True)
+
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
+        dialog.accept()
+        qtbot.wait(500)
+        while qgis_app.taskManager().countActiveTasks() > 0:
+            qtbot.wait(500)
+
+    log_dir = prj_manager.project_path / "Allegati" / "log"
+    log_files = list(log_dir.glob("data_export_*.log"))
+    assert len(log_files) >= 1, "No export log file found under Allegati/log/"
+    assert log_files[0].stat().st_size > 0
+
+
+def test_export_duplicate_output_dir_gets_timestamp(
+    plugin,
+    qgis_app,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    monkeypatch,
+    qtbot,
+    tmp_path,
+):
+    """When the expected output directory already exists a timestamped one is created."""
+    from unittest.mock import Mock
+
+    from mzs_tools.gui.dlg_export_data import DlgExportData
+
+    monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
+    plugin_instance = plugin(qgis_iface)
+    _load_project_and_check(plugin_instance, prj_manager, base_project_path_current_imported)
+
+    # Pre-create the expected output directory so the manager must pick a different name
+    (tmp_path / "057001_Accumoli_S42_Shapefile").mkdir()
+
+    dialog = DlgExportData()
+    qtbot.addWidget(dialog)
+    dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
+    dialog.radio_button_sqlite.setChecked(True)
+
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
+        dialog.accept()
+        qtbot.wait(500)
+        while qgis_app.taskManager().countActiveTasks() > 0:
+            qtbot.wait(500)
+
+    # A timestamped sibling directory should have been created
+    siblings = [d for d in tmp_path.iterdir() if d.is_dir() and d.name.startswith("057001_Accumoli_S42_Shapefile_")]
+    assert len(siblings) == 1, "Expected exactly one timestamped export directory"
+
+
+def test_export_data_task_failure(
+    plugin,
+    qgis_app,
+    qgis_iface,
+    prj_manager,
+    base_project_path_current_imported,
+    monkeypatch,
+    qtbot,
+    tmp_path,
+):
+    """When ExportSitiPuntualiTask.run returns False the manager records a failure."""
+    from unittest.mock import Mock
+
+    from mzs_tools.gui.dlg_export_data import DlgExportData
+    from mzs_tools.tasks.export_siti_puntuali_task import ExportSitiPuntualiTask
+
+    monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
+    monkeypatch.setattr(ExportSitiPuntualiTask, "run", lambda self: False)
+
+    plugin_instance = plugin(qgis_iface)
+    _load_project_and_check(plugin_instance, prj_manager, base_project_path_current_imported)
+
+    dialog = DlgExportData()
+    qtbot.addWidget(dialog)
+    dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
+    dialog.radio_button_sqlite.setChecked(True)
+
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
+        dialog.accept()
+        qtbot.wait(500)
+        while qgis_app.taskManager().countActiveTasks() > 0:
+            qtbot.wait(500)
+
+    assert dialog.export_data_task_manager is not None
+    assert dialog.export_data_task_manager._task_failed is True

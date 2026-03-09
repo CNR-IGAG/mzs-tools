@@ -20,7 +20,7 @@ import warnings
 from unittest.mock import Mock
 
 import pytest
-from qgis.core import QgsProject
+from qgis.core import Qgis, QgsProject
 
 from mzs_tools.gui.dlg_import_data import DlgImportData
 from mzs_tools.tasks.import_shapefile_task import ImportShapefileTask
@@ -586,6 +586,15 @@ def test_import_siti_lineari_task_from_sqlite(
     assert result > 0
 
 
+def _load_project_and_check(plugin_instance, prj_manager, base_project_path):
+    """Helper: open the sample project and verify it is a valid MzS project."""
+    project = QgsProject.instance()
+    project.read(str(base_project_path / "progetto_MS.qgz"))
+    plugin_instance.check_project()
+    assert prj_manager.is_mzs_project is True
+    assert prj_manager.project_updateable is False
+
+
 @pytest.mark.skip("Not implemented yet")
 def test_import_siti_puntuali_task_from_mdb_adapt_counters(
     plugin,
@@ -599,30 +608,100 @@ def test_import_siti_puntuali_task_from_mdb_adapt_counters(
     pass
 
 
-@pytest.mark.skip("Not implemented yet")
 def test_import_siti_puntuali_task_from_mdb_cancelled_by_user(
     plugin,
+    qgis_app,
     qgis_iface,
     prj_manager,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
-    mdb_deps_available,
+    monkeypatch,
+    qtbot,
 ):
-    # simulate user cancelling the task
-    pass
+    """cancel_tasks() stops the import and pushes a Warning to the message bar.
+
+    All task run() methods are monkeypatched to return True immediately so the
+    test is deterministic and avoids side-effects from the real import logic.
+    """
+    mock_bar = Mock()
+    monkeypatch.setattr(qgis_iface, "messageBar", lambda: mock_bar, raising=False)
+    # Patch all tasks so run() returns True instantly (no real import, no exceptions)
+    monkeypatch.setattr(ImportSitiPuntualiTask, "run", lambda self: True)
+    monkeypatch.setattr(ImportSitiLineariTask, "run", lambda self: True)
+    monkeypatch.setattr(ImportShapefileTask, "run", lambda self: True)
+
+    plugin_instance = plugin(qgis_iface)
+    _load_project_and_check(plugin_instance, prj_manager, base_project_path_current)
+
+    dialog = DlgImportData()
+    qtbot.addWidget(dialog)
+    # Switch to passwordless MDB to avoid a blocking password dialog during check_project_dir
+    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
+    mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
+    (standard_project_path / "Indagini" / "CdI_Tabelle_no_pwd.mdb").rename(mdb_file)
+    dialog.check_project_dir(str(standard_project_path))
+    dialog.input_dir_widget.lineEdit().setText(str(standard_project_path))
+    dialog.radio_button_sqlite.setChecked(True)
+
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
+        dialog.accept()
+        # Cancel immediately after accept() - import_data_task_manager is already set
+        dialog.import_data_task_manager.cancel_tasks()
+        while qgis_app.taskManager().countActiveTasks() > 0:
+            qtbot.wait(500)
+
+    assert dialog.import_data_task_manager is not None
+    # cancel_tasks() always pushes a Warning regardless of task state
+    call_levels = [c.kwargs.get("level") for c in mock_bar.pushMessage.call_args_list]
+    assert Qgis.MessageLevel.Warning in call_levels
 
 
-@pytest.mark.skip("Not implemented yet")
 def test_import_siti_puntuali_task_from_mdb_failure(
     plugin,
+    qgis_app,
     qgis_iface,
     prj_manager,
-    base_project_path_2_0_5,
+    base_project_path_current,
     standard_project_path,
-    mdb_deps_available,
+    monkeypatch,
+    qtbot,
 ):
-    # simulate a failure during import
-    pass
+    """When ImportSitiPuntualiTask.run returns False the manager records task_failed=True.
+
+    Returning False without setting self.exception is the "cancelled" path: finished()
+    logs a warning but does not re-raise, so no exception propagates into Qt's event
+    loop and there is no risk of a SIGSEGV.
+    Shapefile and siti-lineari tasks are patched to succeed so that the only failure
+    is the one we deliberately inject.
+    """
+    monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
+    # Patch shapefile and sln tasks so they do not fail on their own
+    monkeypatch.setattr(ImportShapefileTask, "run", lambda self: True)
+    monkeypatch.setattr(ImportSitiLineariTask, "run", lambda self: True)
+    # Patch spu to fail (returns False, no exception → finished() path is safe)
+    monkeypatch.setattr(ImportSitiPuntualiTask, "run", lambda self: False)
+
+    plugin_instance = plugin(qgis_iface)
+    _load_project_and_check(plugin_instance, prj_manager, base_project_path_current)
+
+    dialog = DlgImportData()
+    qtbot.addWidget(dialog)
+    # Switch to passwordless MDB to avoid a blocking password dialog during check_project_dir
+    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
+    mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
+    (standard_project_path / "Indagini" / "CdI_Tabelle_no_pwd.mdb").rename(mdb_file)
+    dialog.check_project_dir(str(standard_project_path))
+    dialog.input_dir_widget.lineEdit().setText(str(standard_project_path))
+    dialog.radio_button_sqlite.setChecked(True)
+
+    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
+        dialog.accept()
+        qtbot.wait(500)
+        while qgis_app.taskManager().countActiveTasks() > 0:
+            qtbot.wait(500)
+
+    assert dialog.import_data_task_manager is not None
+    assert dialog.import_data_task_manager.task_failed is True
 
 
 def test_import_shapefile_task(

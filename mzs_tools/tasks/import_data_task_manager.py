@@ -276,15 +276,15 @@ class ImportDataTaskManager:
 
     def _disconnect_signals(self):
         """Safely disconnect from the global progress signal and all per-task signals."""
-        with contextlib.suppress(RuntimeError):
+        with contextlib.suppress(RuntimeError, TypeError):
             QgsApplication.taskManager().progressChanged.disconnect(self._on_tasks_progress)
         for task in self._tasks:
-            with contextlib.suppress(RuntimeError):
+            with contextlib.suppress(RuntimeError, TypeError):
                 task.taskTerminated.disconnect(self._on_any_task_terminated)
         if self._first_task:
-            with contextlib.suppress(RuntimeError):
+            with contextlib.suppress(RuntimeError, TypeError):
                 self._first_task.taskCompleted.disconnect(self._on_tasks_completed)
-            with contextlib.suppress(RuntimeError):
+            with contextlib.suppress(RuntimeError, TypeError):
                 self._first_task.taskTerminated.disconnect(self._on_tasks_completed)
 
     def _cleanup_logger(self):

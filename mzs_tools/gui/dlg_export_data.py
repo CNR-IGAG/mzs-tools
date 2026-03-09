@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import cast
 
 from qgis.gui import QgisInterface
-from qgis.PyQt import QtCore, uic
+from qgis.PyQt import uic
 from qgis.PyQt.QtCore import QCoreApplication, QUrl
 from qgis.PyQt.QtGui import QDesktopServices
 from qgis.PyQt.QtWidgets import (
@@ -70,15 +70,12 @@ class DlgExportData(QDialog, FORM_CLASS):
         )
 
         self.output_path = None
-        self.standard_proj_paths = None
 
         self.accepted.connect(self.start_export_tasks)
 
-        self.indagini_output_format = None
-
         self.mdb_checked = False
 
-        self.export_task_manager: ExportDataTaskManager | None = None
+        self.export_data_task_manager: ExportDataTaskManager | None = None
 
         # Exported project standard version, used to select CdI_Tabelle.mdb model and for naming the output folder
         # TODO: should be centralized and could be selectable by the user
@@ -160,54 +157,22 @@ class DlgExportData(QDialog, FORM_CLASS):
             self.log("Project path or output path not set", log_level=2)
             return
 
-        # Determine output format
         if self.radio_button_mdb.isChecked():
-            self.indagini_output_format = "mdb"
+            indagini_output_format = "mdb"
         elif self.radio_button_sqlite.isChecked():
-            self.indagini_output_format = "sqlite"
+            indagini_output_format = "sqlite"
         else:
             self.log("No output format selected", log_level=1)
             return
 
-        # get current project comune
-        comune_data = self.prj_manager.get_project_comune_data()
-        comune_name = self.prj_manager.sanitize_comune_name(comune_data.comune)
-        exported_project_path = (
-            self.output_path / f"{comune_data.cod_istat}_{comune_name}_{self.standard_version_string}_Shapefile"
-        )
-
-        if exported_project_path.exists():
-            timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
-            exported_project_path = (
-                self.output_path
-                / f"{comune_data.cod_istat}_{comune_name}_{self.standard_version_string}_Shapefile_{timestamp}"
-            )
-
-        exported_project_path.mkdir(parents=True, exist_ok=False)
-
-        # Create and start the task manager
-        self.export_task_manager = ExportDataTaskManager(
-            exported_project_path=exported_project_path,
-            indagini_output_format=self.indagini_output_format,
-            standard_proj_paths=self.standard_proj_paths,
+        self.export_data_task_manager = ExportDataTaskManager(
+            output_path=self.output_path,
+            indagini_output_format=indagini_output_format,
+            standard_version_string=self.standard_version_string,
+            cdi_tabelle_model_file=self.cdi_tabelle_model_file,
             debug_mode=self.chk_debug_logging.isChecked(),
         )
-        self.export_task_manager.start_export_tasks()
+        self.export_data_task_manager.start_export_tasks()
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)
-
-    # def rename_field(self, layer: QgsVectorLayer, field_name: str, new_name: str):
-    #     """Delegate to ExportDataTaskManager's helper method."""
-    #     if self.export_task_manager:
-    #         self.export_task_manager._rename_field(layer, field_name, new_name)
-
-    # def change_field_type(self, layer, field_name, field_type):
-    #     """Delegate to ExportDataTaskManager's helper method."""
-    #     if self.export_task_manager:
-    #         self.export_task_manager._change_field_type(layer, field_name, field_type)
-
-    # def extract_file_name_from_path(self, layer, field_name):
-    #     """Delegate to ExportDataTaskManager's helper method."""
-    #     if self.export_task_manager:
-    #         self.export_task_manager._extract_file_name_from_path(layer, field_name)
