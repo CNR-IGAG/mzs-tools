@@ -16,6 +16,7 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+import contextlib
 import os
 import shutil
 import zipfile
@@ -41,7 +42,7 @@ from qgis.core import (
     QgsVectorLayer,
 )
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, QTimer
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.utils import iface as _iface
@@ -163,6 +164,9 @@ class MzSProjectManager:
             self.db_manager = None
             self.project_updateable = False
             self.project_issues = None
+            # Disconnect layersAdded if it was connected from a previous project
+            with contextlib.suppress(RuntimeError, TypeError):
+                self.current_project.layersAdded.disconnect(self._on_layers_added)
             return False
 
         self.is_mzs_project = True
@@ -177,6 +181,12 @@ class MzSProjectManager:
 
         # cleanup db connection on project close
         self.current_project.cleared.connect(self.cleanup_db_connection)
+
+        # detect and remove any duplicate MzS-managed layers added by the user
+        # (disconnect first since QgsProject is a singleton and init_manager is called multiple times)
+        with contextlib.suppress(RuntimeError, TypeError):
+            self.current_project.layersAdded.disconnect(self._on_layers_added)
+        self.current_project.layersAdded.connect(self._on_layers_added)
 
         # load metadata from db if exists
         # self.sm_project_metadata = self.get_sm_project_metadata()
@@ -250,6 +260,43 @@ class MzSProjectManager:
 
         # check relations
         self._check_default_project_relations()
+
+    def _on_layers_added(self, layers: list) -> None:
+        """Detect and schedule removal of any MzS-managed layer that was duplicated by the user."""
+        for layer in layers:
+            if not isinstance(layer, QgsVectorLayer):
+                continue
+            role = layer.customProperty("mzs_tools/layer_role")
+            if not role:
+                continue
+            provider = layer.dataProvider()
+            if provider is None:
+                continue
+            # Resolve the table name from the URI, same logic as find_layers_by_table_name().
+            uri_table = provider.uri().table()
+            if not uri_table:
+                strings = provider.dataSourceUri().split("layername=")
+                if len(strings) > 1:
+                    uri_table = strings[1]
+            if not uri_table:
+                continue
+            # If more than one layer with this table name and role exists, the
+            # newly added layer is the duplicate (the original is already in the project).
+            all_matching = [
+                lyr
+                for lyr in self.find_layers_by_table_name(uri_table)
+                if lyr.customProperty("mzs_tools/layer_role") == role
+            ]
+            if len(all_matching) > 1:
+                new_id = layer.id()
+                QTimer.singleShot(0, lambda lid=new_id: self._remove_duplicate_mzs_layer(lid))
+
+    def _remove_duplicate_mzs_layer(self, layer_id: str) -> None:
+        self.current_project.removeMapLayer(layer_id)
+        iface.messageBar().pushWarning(
+            "MzS Tools",
+            self.tr("Required MzS Tools layers cannot be duplicated."),
+        )
 
     def connect_editing_signals(self):
         """connect editing signals to automatically set advanced overlap config for configured layer groups"""
