@@ -114,3 +114,28 @@ Il terzo gruppo di layer (**"Cartografia di base"**) contiene i layer di tipo ra
    * non modificare nome della cartella di progetto, delle sue sotto-cartelle, del database e/o dei file che costituiscono il progetto;
    * non modificare il nome dei layer del progetto QGIS;
    * non modificare il nome dei layout di stampa del progetto QGIS.
+
+Sistema di riferimento del progetto
+###################################
+
+Il *sistema di riferimento* del **progetto QGIS** e di tutti i dati presenti nel database generato da MzS Tools è
+**WGS84 UTM Zona 33N (EPSG:32633)**, che è il sistema di riferimento richiesto dagli Standard per i progetti di MS in
+Italia.
+
+Tuttavia, è possibile modificare il *sistema di riferimento del progetto QGIS* in base alle esigenze specifiche del
+proprio studio, tramite il menu **Progetto - Proprietà del progetto - SR**. Questa impostazione modifica il sistema di
+riferimento del progetto QGIS, ma non modifica il sistema di riferimento dei dati presenti nel database, che rimangono
+in WGS84 UTM Zona 33N e vengono proiettati dinamicamente nel sistema di riferimento del progetto durante la
+visualizzazione.
+
+.. figure:: ../img/qgis_sr.png
+  :width: 800
+  :align: center
+
+.. tip:: Dopo aver modificato il sistema di riferimento del progetto QGIS, sarà probabilmente necessario riposizionare gli
+   elementi "mappa" dei layout di stampa; è possibile inoltre impostare esplicitamente un sistema di riferimento diverso da
+   quello di progetto, oppure utilizzare l'opzione ``Usa il SR del Progetto`` per mantenere la coerenza con il progetto.
+
+   .. figure:: ../img/layout_sr.png
+      :width: 400
+      :align: center
