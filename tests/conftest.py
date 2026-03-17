@@ -85,6 +85,47 @@ def patch_qgis_error_dialogs(monkeypatch):
         pass
 
 
+@pytest.fixture(autouse=True)
+def disable_layers_added_handler(monkeypatch):
+    """Disconnect _on_layers_added from layersAdded signal for all tests.
+
+    The duplicate-layer detection handler must not run during tests: project reads and
+    internal layer additions would fire the signal and erroneously try to remove layers
+    (or call iface.messageBar().pushWarning() which the mock does not support).
+
+    PyQt captures the bound method at connect() time, so patching the class or instance
+    after connection does not help. Instead we replace _on_layers_added on the class
+    *before* it is connected (covering resets/new instances), and also wrap init_manager
+    so the signal is immediately disconnected after each call inside a test.
+    """
+    try:
+        import contextlib
+
+        from qgis.core import QgsProject
+
+        from mzs_tools.core.mzs_project_manager import MzSProjectManager
+
+        noop = lambda *args, **kwargs: None  # noqa: E731
+
+        # Replace on the class so any future lookup or new instance gets the no-op.
+        monkeypatch.setattr(MzSProjectManager, "_on_layers_added", noop)
+
+        # Wrap init_manager so that after every call the (possibly already-connected)
+        # bound method pointing to the real function is disconnected.
+        original_init_manager = MzSProjectManager.init_manager
+
+        def _patched_init_manager(self):
+            result = original_init_manager(self)
+            with contextlib.suppress(RuntimeError, TypeError):
+                QgsProject.instance().layersAdded.disconnect(self._on_layers_added)
+            return result
+
+        monkeypatch.setattr(MzSProjectManager, "init_manager", _patched_init_manager)
+
+    except ImportError:
+        pass
+
+
 @pytest.fixture()
 def plugin(qgis_iface, monkeypatch):
     """Fixture that imports the plugin main class lazily and returns the class."""

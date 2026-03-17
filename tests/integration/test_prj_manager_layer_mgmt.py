@@ -89,6 +89,11 @@ from mzs_tools.core.constants import (
 )
 from mzs_tools.core.mzs_project_manager import ComuneData, MzSProjectManager
 
+# Capture real (unpatched) methods at module import time, before the autouse
+# disable_layers_added_handler fixture can replace them on the class.
+_REAL_ON_LAYERS_ADDED = MzSProjectManager.__dict__["_on_layers_added"]
+_REAL_REMOVE_DUPLICATE_MZS_LAYER = MzSProjectManager.__dict__["_remove_duplicate_mzs_layer"]
+
 
 @pytest.fixture
 def sample_project_path(base_project_path_current, prj_manager) -> Path:
@@ -705,3 +710,184 @@ class TestSetProjectLayerCapabilities:
         flags = layer.flags()
         assert flags & QgsMapLayer.LayerFlag.Private
         assert not (flags & QgsMapLayer.LayerFlag.Identifiable)
+
+
+class TestDuplicateLayerDetection:
+    """Test suite for the duplicate-layer detection handler (_on_layers_added)
+    and the removal helper (_remove_duplicate_mzs_layer).
+
+    _on_layers_added tests exercise the real method (bypassing the autouse
+    fixture) by calling it directly and flushing the deferred QTimer via
+    QCoreApplication.processEvents().
+
+    For the removal side effects (layer removal and warning message), we test
+    _remove_duplicate_mzs_layer directly, which avoids the need to create
+    spatialite layers whose provider.uri().table() returns the table name.
+    """
+
+    @staticmethod
+    def _real_handler():
+        """Return the unpatched _on_layers_added captured at module import time."""
+        return _REAL_ON_LAYERS_ADDED
+
+    @staticmethod
+    def _real_remove_duplicate():
+        """Return the unpatched _remove_duplicate_mzs_layer captured at module import time."""
+        return _REAL_REMOVE_DUPLICATE_MZS_LAYER
+
+    def test_no_removal_when_only_one_layer(self, prj_manager, sample_project_path):
+        """Handler does nothing when a layer is added and no pre-existing copy exists."""
+
+        from qgis.PyQt.QtCore import QCoreApplication
+
+        project = prj_manager.current_project
+
+        # Use a plain memory layer — without mzs_tools/layer_role, the handler exits
+        # before any URI resolution even occurs.
+        plain_layer = QgsVectorLayer("Point?crs=EPSG:4326", "plain", "memory")
+        assert plain_layer.isValid()
+        project.addMapLayer(plain_layer)
+        layer_id = plain_layer.id()
+
+        self._real_handler()(prj_manager, [plain_layer])
+        QCoreApplication.processEvents()
+
+        assert project.mapLayer(layer_id) is not None
+
+    def test_duplicate_layer_is_removed(self, prj_manager, sample_project_path):
+        """_remove_duplicate_mzs_layer removes the layer from the project."""
+        from unittest.mock import MagicMock, patch
+
+        project = prj_manager.current_project
+
+        layer = QgsVectorLayer("Point?crs=EPSG:4326", "dup_layer", "memory")
+        assert layer.isValid()
+        project.addMapLayer(layer)
+        layer_id = layer.id()
+
+        assert project.mapLayer(layer_id) is not None
+
+        with patch("mzs_tools.core.mzs_project_manager.iface") as mock_iface:
+            mock_iface.messageBar.return_value = MagicMock()
+            self._real_remove_duplicate()(prj_manager, layer_id)
+
+        assert project.mapLayer(layer_id) is None
+
+    def test_remove_duplicate_keeps_other_layers(self, prj_manager, sample_project_path):
+        """_remove_duplicate_mzs_layer only removes the targeted layer, not others."""
+        from unittest.mock import MagicMock, patch
+
+        project = prj_manager.current_project
+
+        original = QgsVectorLayer("Point?crs=EPSG:4326", "original", "memory")
+        duplicate = QgsVectorLayer("Point?crs=EPSG:4326", "duplicate", "memory")
+        assert original.isValid() and duplicate.isValid()
+        project.addMapLayer(original)
+        project.addMapLayer(duplicate)
+        original_id = original.id()
+        dup_id = duplicate.id()
+
+        with patch("mzs_tools.core.mzs_project_manager.iface") as mock_iface:
+            mock_iface.messageBar.return_value = MagicMock()
+            self._real_remove_duplicate()(prj_manager, dup_id)
+
+        assert project.mapLayer(dup_id) is None
+        assert project.mapLayer(original_id) is not None
+
+    def test_warning_message_shown_on_remove_duplicate(self, prj_manager, sample_project_path):
+        """_remove_duplicate_mzs_layer calls pushWarning exactly once."""
+        from unittest.mock import MagicMock, patch
+
+        project = prj_manager.current_project
+
+        layer = QgsVectorLayer("Point?crs=EPSG:4326", "dup_layer", "memory")
+        assert layer.isValid()
+        project.addMapLayer(layer)
+        layer_id = layer.id()
+
+        with patch("mzs_tools.core.mzs_project_manager.iface") as mock_iface:
+            mock_bar = MagicMock()
+            mock_iface.messageBar.return_value = mock_bar
+            self._real_remove_duplicate()(prj_manager, layer_id)
+
+        mock_bar.pushWarning.assert_called_once()
+
+    def test_non_mzs_layer_ignored(self, prj_manager, sample_project_path):
+        """Layers without mzs_tools/layer_role custom property are ignored by the handler."""
+        from qgis.PyQt.QtCore import QCoreApplication
+
+        project = prj_manager.current_project
+        plain_layer = QgsVectorLayer("Point?crs=EPSG:4326", "plain", "memory")
+        assert plain_layer.isValid()
+        project.addMapLayer(plain_layer)
+        layer_id = plain_layer.id()
+
+        layers_before = set(project.mapLayers().keys())
+        self._real_handler()(prj_manager, [plain_layer])
+        QCoreApplication.processEvents()
+
+        assert set(project.mapLayers().keys()) == layers_before
+        assert project.mapLayer(layer_id) is not None
+
+    def test_non_vector_layer_ignored(self, prj_manager, sample_project_path):
+        """Non-QgsVectorLayer types are skipped without error."""
+        from qgis.PyQt.QtCore import QCoreApplication
+
+        project = prj_manager.current_project
+        layers_before = set(project.mapLayers().keys())
+
+        # Pass a non-vector object to the handler
+        self._real_handler()(prj_manager, [object()])
+        QCoreApplication.processEvents()
+
+        assert set(project.mapLayers().keys()) == layers_before
+
+    def test_handler_schedules_removal_when_duplicates_found(self, prj_manager, sample_project_path):
+        """_on_layers_added schedules _remove_duplicate_mzs_layer when find_layers_by_table_name
+        returns more than one layer with the same role.
+
+        Two OGR-based layers are loaded from the same SQLite table.  The spatialite
+        provider is not available in the headless test environment, but OGR can open
+        the same .sqlite file and produces a valid layer whose dataSourceUri() contains
+        the ``layername=`` token that both ``_on_layers_added`` and
+        ``find_layers_by_table_name`` use as a fallback to identify the table name.
+        """
+        from unittest.mock import patch
+
+        from qgis.PyQt.QtCore import QCoreApplication
+
+        project = prj_manager.current_project
+        db_path = sample_project_path / "db" / "indagini.sqlite"
+        assert db_path.exists(), f"Test DB not found: {db_path}"
+
+        # Build valid OGR layers from the SQLite file using the |layername= syntax.
+        ogr_uri = f"{db_path}|layername=comune_progetto"
+        role = "comune_progetto"
+
+        original = QgsVectorLayer(ogr_uri, "Comune del progetto", "ogr")
+        assert original.isValid(), f"OGR layer must be valid (db={db_path})"
+        original.setCustomProperty("mzs_tools/layer_role", role)
+        project.addMapLayer(original)
+        original_id = original.id()
+
+        duplicate = QgsVectorLayer(ogr_uri, "Comune del progetto", "ogr")
+        assert duplicate.isValid(), "Duplicate OGR layer must be valid"
+        duplicate.setCustomProperty("mzs_tools/layer_role", role)
+        project.addMapLayer(duplicate)
+        dup_id = duplicate.id()
+        assert dup_id != original_id
+
+        # Confirm find_layers_by_table_name sees both layers via the layername= fallback.
+        matching = prj_manager.find_layers_by_table_name("comune_progetto")
+        assert len(matching) >= 2, f"Expected >=2 comune_progetto layers, got {len(matching)}"
+
+        scheduled_ids: list[str] = []
+
+        def fake_remove(layer_id: str):
+            scheduled_ids.append(layer_id)
+
+        with patch.object(prj_manager, "_remove_duplicate_mzs_layer", side_effect=fake_remove):
+            self._real_handler()(prj_manager, [duplicate])
+            QCoreApplication.processEvents()
+
+        assert dup_id in scheduled_ids
