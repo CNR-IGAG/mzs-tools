@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.8-beta1] - 2026-03-23
+
+- avoid plugin-managed layers being duplicated
+- decouple data import/export task management from GUI
+
 ## [2.0.7] - 2026-02-19
 
 - fix for indagini spatial views

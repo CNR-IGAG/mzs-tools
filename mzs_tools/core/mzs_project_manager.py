@@ -1148,8 +1148,8 @@ class MzSProjectManager:
                 self.add_default_layers(add_base_layers=False, add_editing_layers=True, add_layout_groups=True)
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 
-            elif old_version >= "2.0.1" and old_version < __base_version__:
-                # update from 2.0.1 to current __base_version__: update only the layout groups
+            elif old_version >= "2.0.1" and old_version < "2.0.7":
+                # update the layout groups if project is between 2.0.1 and 2.0.6
                 self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
                 self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
 

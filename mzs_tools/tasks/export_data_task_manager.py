@@ -343,7 +343,7 @@ class ExportDataTaskManager:
                         self._change_field_type(layer, field_name, QMetaType.Type.Int)
                     except TypeError:
                         # QGIS < 3.38: use QVariant.Type
-                        self._change_field_type(layer, field_name, QtCore.QVariant.Int)
+                        self._change_field_type(layer, field_name, QtCore.QVariant.Int)  # type: ignore
                 break
 
         # modify specific datasets
@@ -360,7 +360,9 @@ class ExportDataTaskManager:
             except TypeError:
                 # QGIS < 3.38: use QVariant.Type
                 self._change_field_type(
-                    QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QtCore.QVariant.Double
+                    QgsVectorLayer(str(path), str(path.stem), "ogr"),
+                    "LIVELLO",
+                    QtCore.QVariant.Double,  # type: ignore
                 )
             if table_name in ["stab_l23", "instab_l23"]:
                 # extract file name from path "SPETTRI"

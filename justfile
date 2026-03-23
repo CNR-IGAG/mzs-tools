@@ -47,16 +47,22 @@ create-venv-manual PYTHON_VERSION QGIS_PYTHON_LIB_PATH:
     uv run qgis-plugin-ci changelog latest
 
 # create symbolic links for development
-dev-link QGIS_PLUGIN_PATH="~/.local/share/QGIS/QGIS3/profiles/default/python/plugins":
+dev-link QGIS_PLUGIN_PATH="~/.local/share/QGIS/QGIS3/profiles/default/python/plugins" QGIS4_PLUGIN_PATH="~/.local/share/QGIS/QGIS4/profiles/default/python/plugins":
     #!/bin/bash
     # Ensure the target directory exists
     mkdir -p {{ QGIS_PLUGIN_PATH }}
+    mkdir -p {{ QGIS4_PLUGIN_PATH }}
     rm -rf {{ QGIS_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}
+    rm -rf {{ QGIS4_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}
 
     # Create a relative path symlink
     PLUGIN_SOURCE=$(pwd)/{{ PLUGIN_SLUG }}
     cd {{ QGIS_PLUGIN_PATH }}
     ln -sf $(python3 -c "import os; print(os.path.relpath('$PLUGIN_SOURCE', os.getcwd()))")
+
+    cd {{ QGIS4_PLUGIN_PATH }}
+    ln -sf $(python3 -c "import os; print(os.path.relpath('$PLUGIN_SOURCE', os.getcwd()))")
+
     cd -
 
     # Create symlinks for supporting files
@@ -70,6 +76,7 @@ dev-link QGIS_PLUGIN_PATH="~/.local/share/QGIS/QGIS3/profiles/default/python/plu
 
     # Show success message
     echo "Plugin symlink created at {{ QGIS_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}"
+    echo "Plugin symlink created at {{ QGIS4_PLUGIN_PATH }}/{{ PLUGIN_SLUG }}"
 
 @bootstrap-dev: create-venv dev-link
     pre-commit install
@@ -193,122 +200,12 @@ test-tox-qt6-gui GUI_TIMEOUT="2":
     just dev-link
     git add .
 
-qgis-ltr-pull:
-    docker pull qgis/qgis:ltr
+pull-docker-qgis VERSION="ltr":
+    docker pull qgis/qgis:{{ VERSION }}
 
-# start latest QGIS LTR version with docker on Linux
-qgis-docker VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
+run-docker-qgis VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
     #!/bin/bash
-    # Allow local X server connections
-    xhost +local:
-
-    # Define paths and variables
-    USER_ID=$(id -u)
-    GROUP_ID=$(id -g)
-
-    # Create necessary directories with correct permissions
-    TEMP_DIR=$(mktemp -d)
-    mkdir -p ${TEMP_DIR}/certificates
-    mkdir -p ${TEMP_DIR}/qgis_config/{processing,profile,cache,data/expressions}
-    mkdir -p ${TEMP_DIR}/qgis_config/python/expressions
-
-    # Copy and set permissions for certificates
-    cp -L /etc/ssl/certs/ca-certificates.crt ${TEMP_DIR}/certificates/
-    chmod 644 ${TEMP_DIR}/certificates/ca-certificates.crt
-
-    # Set permissions for QGIS config directories
-    chmod -R 777 ${TEMP_DIR}/qgis_config
-
-    # Create an empty qgis.db file that QGIS can write to
-    touch ${TEMP_DIR}/qgis_config/data/qgis.db
-    chmod 666 ${TEMP_DIR}/qgis_config/data/qgis.db
-
-    # Ensure plugin directory exists in host
-    mkdir -p ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins
-
-    # Run QGIS in container with proper mounts and environment
-    docker run --rm --name qgis_ltr \
-        -it \
-        -e DISPLAY=unix$DISPLAY \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/python/plugins \
-        -v $(pwd)/{{ PLUGIN_SLUG }}:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/python/plugins/{{ PLUGIN_SLUG }} \
-        -v ${HOME}:/home/host \
-        -v ${TEMP_DIR}/certificates:/etc/ssl/certs:ro \
-        -v ${TEMP_DIR}/qgis_config/processing:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/processing \
-        -v ${TEMP_DIR}/qgis_config/profile:/home/qgis/.config/QGIS \
-        -v ${TEMP_DIR}/qgis_config/cache:/home/qgis/.cache/QGIS \
-        -v ${TEMP_DIR}/qgis_config/data:/home/qgis/.local/share/QGIS/QGIS3/profiles/default \
-        -v ${TEMP_DIR}/qgis_config/python/expressions:/home/qgis/.local/share/QGIS/QGIS3/profiles/default/python/expressions \
-        -e HOME=/home/qgis \
-        -e QT_X11_NO_MITSHM=1 \
-        -e SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
-        -e PYTHONHOME= \
-        --user ${USER_ID}:${GROUP_ID} \
-        qgis/qgis:{{ VERSION }} qgis
-
-    # Clean up temporary directory
-    rm -rf ${TEMP_DIR}
-
-# run pyqt6 migration script: https://github.com/qgis/QGIS/wiki/Plugin-migration-to-be-compatible-with-Qt5-and-Qt6
-pyqt5-to-pyqt6:
-    #!/bin/bash
-    docker pull registry.gitlab.com/oslandia/qgis/pyqgis-4-checker/pyqgis-qt-checker:latest
-    docker run --rm -v "$(pwd):/home/pyqgisdev/" registry.gitlab.com/oslandia/qgis/pyqgis-4-checker/pyqgis-qt-checker:latest pyqt5_to_pyqt6.py --logfile /home/pyqgisdev/pyqt6_checker.log .
-
-# build docker image for QGIS 3.44 with Qt6 on Linux, compiling QGIS from source
-build-image-qgis-qt6-linux-build:
-    #!/bin/bash
-    cd docker
-    docker build -t qgis-qt6-linux:3_44 -f ./qgis-qt6-linux-build.dockerfile .
-
-# build docker image for QGIS 3.44 with Qt6 on Linux, without compiling QGIS from source, for use with mounted QGIS build
-build-image-qgis-qt6-linux-deps-only:
-    #!/bin/bash
-    cd docker
-    docker build -t qgis-qt6-linux-deps-only:3_44 -f ./qgis-qt6-linux-deps-only.dockerfile .
-
-# build docker image for QGIS (master) with Qt6 on Ubuntu 25.10
-build-image-qgis-qt6-ubuntu-master:
-    #!/bin/bash
-    cd docker
-    docker build -t qgis-qt6-ubuntu:master -f ./qgis-qt6-ubuntu.dockerfile .
-
-# start QGIS 3.44 with Qt6 from docker image with compiled QGIS
-run-qgis-qt6-linux QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
-    #!/bin/bash
-    xhost +local:
-    cd docker
-    docker run -it --rm \
-        -e DISPLAY=$DISPLAY \
-        -e LC_ALL=C.utf8 \
-        -e LANG=C.utf8 \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
-        -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
-        qgis-qt6-linux:3_44 \
-        ./QGIS/build/output/bin/qgis
-
-# start QGIS 3.44 with Qt6 from docker image with mounted QGIS build directory
-run-qgis-qt6-linux-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
-    #!/bin/bash
-    xhost +local:
-    cd docker
-    docker run -it --rm \
-        -e DISPLAY=$DISPLAY \
-        -e LC_ALL=C.utf8 \
-        -e LANG=C.utf8 \
-        -v /tmp/.X11-unix:/tmp/.X11-unix \
-        -v ${HOME}/QGIS:/home/quser/QGIS \
-        -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
-        -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
-        -v ${HOME}/temp:/home/quser/temp \
-        qgis-qt6-linux-deps-only:3_44 \
-        ./QGIS/build/output/bin/qgis
-
-# start latest QGIS master version with docker (Ubuntu 25.10 with Qt6)
-run-qgis-qt6-master-ubuntu VERSION="master" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
-    #!/bin/bash
+    just pull-docker-qgis {{ VERSION }}
     xhost +local:
     mkdir -p ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins
     docker run --rm --name qgis_master \
@@ -321,24 +218,112 @@ run-qgis-qt6-master-ubuntu VERSION="master" QGIS_PYTHON_PATH=".local/share/QGIS/
         -e HOME=/home/quser \
         -e LC_ALL=C.utf8 \
         -e LANG=C.utf8 \
-        -e PYTHONPATH=/usr/share/qgis-qt6/python \
+        -e PYTHONPATH=/usr/share/qgis/python \
         --user ${USER_ID}:${GROUP_ID} \
-        qgis-qt6-ubuntu:{{ VERSION }} qgis-qt6
+        qgis/qgis:{{ VERSION }} bash -c "apt update && apt install -y --no-install-recommends default-jre && qgis"
 
-run-qgis-qt6-ubuntu-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
+# build docker image for QGIS 4 (latest)
+# until an official docker image for QGIS 4 is available,
+# this is using qgis/qgis3-ubuntu-qt6-build-deps-bin-only (Ubuntu 25.10)
+# use VERSION="nightly" to build with latest QGIS master branch (4.1), or VERSION="latest" to build with latest QGIS 4.0 release
+build-docker-qgis4 VERSION="latest":
+    #!/bin/bash
+    cd docker
+    # use sed to replace line in Dockerfile URIs: https://qgis.org/ubuntu\n\ with URIs: https://qgis.org/ubuntu-nightly\n\ if VERSION is "nightly", to build with latest QGIS master branch (4.1)
+    if [ "{{ VERSION }}" = "nightly" ]; then
+        sed -i 's/URIs: https:\/\/qgis.org\/ubuntu/URIs: https:\/\/qgis.org\/ubuntu-nightly/g' qgis-qt6-ubuntu.dockerfile
+    fi
+    docker build -t qgis4-ubuntu:{{ VERSION }} -f ./qgis-qt6-ubuntu.dockerfile .
+    # restore original Dockerfile if it was modified
+    if [ "{{ VERSION }}" = "nightly" ]; then
+        sed -i 's/URIs: https:\/\/qgis.org\/ubuntu-nightly/URIs: https:\/\/qgis.org\/ubuntu/g' qgis-qt6-ubuntu.dockerfile
+    fi
+    # git checkout -- docker/qgis-qt6-ubuntu.dockerfile
+
+# start QGIS 4 version with docker on Linux, mounting plugin and host home directory for config and data persistence
+# use VERSION="nightly" to run with latest QGIS master branch (4.1), or VERSION="latest" to run with latest QGIS release
+run-docker-qgis4 VERSION="latest" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS4/profiles/default/python":
     #!/bin/bash
     xhost +local:
-    cd docker
-    docker run -it --rm \
+    mkdir -p ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins
+    docker run --rm --name qgis_master \
+        -it \
         -e DISPLAY=$DISPLAY \
-        -e QT_X11_NO_MITSHM=1 \
-        --network host \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        -v ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins:/home/quser/.local/share/QGIS/QGIS4/profiles/default/python/plugins \
+        -v $(pwd)/{{ PLUGIN_SLUG }}:/home/quser/.local/share/QGIS/QGIS4/profiles/default/python/plugins/{{ PLUGIN_SLUG }} \
+        -v ${HOME}:/home/host \
+        -e HOME=/home/quser \
         -e LC_ALL=C.utf8 \
         -e LANG=C.utf8 \
-        -e QGIS_PREFIX_PATH=/home/quser/QGIS/build/output \
-        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-        -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
-        -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
-        -v ${HOME}/temp:/home/quser/temp \
-        qgis-qt6-ubuntu-build:master \
-        ./QGIS/build/output/bin/qgis
+        -e PYTHONPATH=/usr/share/qgis/python \
+        --user ${USER_ID}:${GROUP_ID} \
+        qgis4-ubuntu:{{ VERSION }} qgis
+
+# build docker image for QGIS 3.44 with Qt6 on Linux, compiling QGIS from source
+# build-image-qgis-qt6-linux-build:
+#     #!/bin/bash
+#     cd docker
+#     docker build -t qgis-qt6-linux:3_44 -f ./qgis-qt6-linux-build.dockerfile .
+
+# build docker image for QGIS 3.44 with Qt6 on Linux, without compiling QGIS from source, for use with mounted QGIS build
+# build-image-qgis-qt6-linux-deps-only:
+#     #!/bin/bash
+#     cd docker
+#     docker build -t qgis-qt6-linux-deps-only:3_44 -f ./qgis-qt6-linux-deps-only.dockerfile .
+
+# start QGIS 3.44 with Qt6 from docker image with compiled QGIS
+# run-qgis-qt6-linux QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
+#     #!/bin/bash
+#     xhost +local:
+#     cd docker
+#     docker run -it --rm \
+#         -e DISPLAY=$DISPLAY \
+#         -e LC_ALL=C.utf8 \
+#         -e LANG=C.utf8 \
+#         -v /tmp/.X11-unix:/tmp/.X11-unix \
+#         -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
+#         -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+#         qgis-qt6-linux:3_44 \
+#         ./QGIS/build/output/bin/qgis
+
+# start QGIS 3.44 with Qt6 from docker image with mounted QGIS build directory
+# run-qgis-qt6-linux-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
+#     #!/bin/bash
+#     xhost +local:
+#     cd docker
+#     docker run -it --rm \
+#         -e DISPLAY=$DISPLAY \
+#         -e LC_ALL=C.utf8 \
+#         -e LANG=C.utf8 \
+#         -v /tmp/.X11-unix:/tmp/.X11-unix \
+#         -v ${HOME}/QGIS:/home/quser/QGIS \
+#         -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
+#         -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+#         -v ${HOME}/temp:/home/quser/temp \
+#         qgis-qt6-linux-deps-only:3_44 \
+#         ./QGIS/build/output/bin/qgis
+
+# run-qgis-qt6-ubuntu-binmount QGIS_PROFILE_PATH=".local/share/QGIS/QGIS3/profiles/default":
+#     #!/bin/bash
+#     xhost +local:
+#     cd docker
+#     docker run -it --rm \
+#         -e DISPLAY=$DISPLAY \
+#         -e QT_X11_NO_MITSHM=1 \
+#         --network host \
+#         -e LC_ALL=C.utf8 \
+#         -e LANG=C.utf8 \
+#         -e QGIS_PREFIX_PATH=/home/quser/QGIS/build/output \
+#         -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+#         -v ${HOME}/{{ QGIS_PROFILE_PATH }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default \
+#         -v ${HOME}/GIT/mzs-tools/mzs_tools:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/mzs_tools \
+#         -v ${HOME}/temp:/home/quser/temp \
+#         qgis-qt6-ubuntu-build:master \
+#         ./QGIS/build/output/bin/qgis
+
+# run pyqt6 migration script: https://github.com/qgis/QGIS/wiki/Plugin-migration-to-be-compatible-with-Qt5-and-Qt6
+# pyqt5-to-pyqt6:
+#     #!/bin/bash
+#     docker pull registry.gitlab.com/oslandia/qgis/pyqgis-4-checker/pyqgis-qt-checker:latest
+#     docker run --rm -v "$(pwd):/home/pyqgisdev/" registry.gitlab.com/oslandia/qgis/pyqgis-4-checker/pyqgis-qt-checker:latest pyqt5_to_pyqt6.py --logfile /home/pyqgisdev/pyqt6_checker.log .

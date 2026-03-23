@@ -6,11 +6,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     default-jre \
     && rm -rf /var/lib/apt/lists/*
 
-# Add QGIS ubuntu-nightly Qt6 repository
+# Add QGIS ubuntu Qt6 repository
 RUN wget -qO /etc/apt/keyrings/qgis-archive-keyring.gpg \
     https://download.qgis.org/downloads/qgis-archive-keyring.gpg \
     && echo "Types: deb deb-src\n\
-URIs: https://qgis.org/ubuntu-nightly\n\
+URIs: https://qgis.org/ubuntu\n\
 Suites: questing\n\
 Architectures: amd64\n\
 Components: main\n\
@@ -19,7 +19,7 @@ Signed-By: /etc/apt/keyrings/qgis-archive-keyring.gpg" \
 
 # Install QGIS Qt6
 RUN apt-get update && apt-get install -y \
-    qgis-qt6 \
+    qgis \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user with sudo privileges
