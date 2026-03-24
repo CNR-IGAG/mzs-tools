@@ -18,9 +18,13 @@
 
 """Unit tests for constants and configuration validation."""
 
+from packaging.version import parse as parse_version
+
 from mzs_tools.core.constants import (
     DEFAULT_BASE_LAYERS,
     DEFAULT_EDITING_LAYERS,
+    PROJECT_MIGRATION_STEPS,
+    ProjectMigrationStep,
 )
 
 
@@ -140,3 +144,97 @@ class TestConstants:
                 geom_name = layer_config["geom_name"]
                 assert isinstance(geom_name, str)
                 assert len(geom_name.strip()) > 0, f"Geometry name is empty for layer '{layer_name}'"
+
+
+# ---------------------------------------------------------------------------
+# Helper function extracted from MzSProjectManager._get_incremental_migration_flags
+# tested here as pure Python (no QGIS dependency)
+# ---------------------------------------------------------------------------
+
+
+def _compute_migration_flags(old_version: str, steps) -> dict:
+    """Pure-Python replica of MzSProjectManager._get_incremental_migration_flags."""
+    flags = {"add_base_layers": False, "add_editing_layers": False, "add_layout_groups": False}
+    parsed_old = parse_version(old_version)
+    for step in steps:
+        if parsed_old < parse_version(step.version):
+            flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
+            flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
+            flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
+    return flags
+
+
+class TestProjectMigrationSteps:
+    """Tests for the PROJECT_MIGRATION_STEPS registry and migration flag logic."""
+
+    def test_steps_are_ordered_ascending(self):
+        """Migration steps must be ordered from oldest to newest version."""
+        versions = [parse_version(s.version) for s in PROJECT_MIGRATION_STEPS]
+        assert versions == sorted(versions), "PROJECT_MIGRATION_STEPS must be ordered by version ascending"
+
+    def test_steps_have_at_least_one_flag(self):
+        """Every migration step must set at least one add_* flag."""
+        for step in PROJECT_MIGRATION_STEPS:
+            assert step.add_base_layers or step.add_editing_layers or step.add_layout_groups, (
+                f"Step '{step.version}' sets no flags — it would be a no-op"
+            )
+
+    def test_flags_for_version_2_0_0(self):
+        """Project at 2.0.0 should get editing + layout update (both steps apply)."""
+        flags = _compute_migration_flags("2.0.0", PROJECT_MIGRATION_STEPS)
+        assert flags["add_base_layers"] is False
+        assert flags["add_editing_layers"] is True
+        assert flags["add_layout_groups"] is True
+
+    def test_flags_for_version_2_0_1(self):
+        """Project at 2.0.1 should get layout-only update (only 2.0.2 step applies)."""
+        flags = _compute_migration_flags("2.0.1", PROJECT_MIGRATION_STEPS)
+        assert flags["add_base_layers"] is False
+        assert flags["add_editing_layers"] is False
+        assert flags["add_layout_groups"] is True
+
+    def test_flags_for_version_2_0_2(self):
+        """Project at 2.0.2 should require no update (no steps apply)."""
+        flags = _compute_migration_flags("2.0.2", PROJECT_MIGRATION_STEPS)
+        assert not any(flags.values()), "No migration should be needed for version 2.0.2"
+
+    def test_flags_for_current_version_no_action(self):
+        """A project at the latest registered version should require no update."""
+        latest_threshold = max(parse_version(s.version) for s in PROJECT_MIGRATION_STEPS)
+        flags = _compute_migration_flags(str(latest_threshold), PROJECT_MIGRATION_STEPS)
+        assert not any(flags.values()), "No migration should be needed for the latest threshold version"
+
+    def test_custom_steps_union_of_flags(self):
+        """Flag union: two applicable steps should OR their flags correctly."""
+        custom_steps = [
+            ProjectMigrationStep(version="1.0.0", description="base only", add_base_layers=True),
+            ProjectMigrationStep(version="2.0.0", description="editing only", add_editing_layers=True),
+        ]
+        flags = _compute_migration_flags("0.9.0", custom_steps)
+        assert flags["add_base_layers"] is True
+        assert flags["add_editing_layers"] is True
+        assert flags["add_layout_groups"] is False
+
+    def test_custom_steps_partial_match(self):
+        """Only steps with version > old_version contribute their flags."""
+        custom_steps = [
+            ProjectMigrationStep(version="1.0.0", description="base only", add_base_layers=True),
+            ProjectMigrationStep(version="2.0.0", description="editing only", add_editing_layers=True),
+        ]
+        flags = _compute_migration_flags("1.5.0", custom_steps)
+        assert flags["add_base_layers"] is False
+        assert flags["add_editing_layers"] is True
+        assert flags["add_layout_groups"] is False
+
+    def test_semantic_version_comparison_not_lexicographic(self):
+        """parse_version must handle '2.0.10' > '2.0.9' correctly (not lexicographic)."""
+        custom_steps = [
+            ProjectMigrationStep(version="2.0.10", description="layout update", add_layout_groups=True),
+        ]
+        # 2.0.9 < 2.0.10 → step should apply
+        flags_old = _compute_migration_flags("2.0.9", custom_steps)
+        assert flags_old["add_layout_groups"] is True
+
+        # 2.0.10 is NOT < 2.0.10 → step should NOT apply
+        flags_exact = _compute_migration_flags("2.0.10", custom_steps)
+        assert flags_exact["add_layout_groups"] is False

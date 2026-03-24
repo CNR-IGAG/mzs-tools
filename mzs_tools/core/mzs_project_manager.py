@@ -26,6 +26,7 @@ from functools import partial
 from pathlib import Path
 from typing import cast
 
+from packaging.version import parse as parse_version
 from qgis.core import (
     Qgis,
     QgsCoordinateReferenceSystem,
@@ -62,6 +63,7 @@ from .constants import (
     DEFAULT_TABLE_LAYERS_NAMES,
     NO_OVERLAPS_LAYER_GROUPS,
     PRINT_LAYOUT_MODELS,
+    PROJECT_MIGRATION_STEPS,
     REMOVED_EDITING_LAYERS,
 )
 
@@ -292,10 +294,13 @@ class MzSProjectManager:
                 QTimer.singleShot(0, lambda lid=new_id: self._remove_duplicate_mzs_layer(lid))
 
     def _remove_duplicate_mzs_layer(self, layer_id: str) -> None:
+        # get name for logging before removing the layer
+        layer = self.current_project.mapLayer(layer_id)
+        layer_name = layer.name() if layer else "Unknown"
         self.current_project.removeMapLayer(layer_id)
         iface.messageBar().pushWarning(
             "MzS Tools",
-            self.tr("Required MzS Tools layers cannot be duplicated."),
+            self.tr(f"Required MzS Tools layers cannot be duplicated: layer '{layer_name}' has been removed"),
         )
 
     def connect_editing_signals(self):
@@ -564,6 +569,10 @@ class MzSProjectManager:
         """
         if not add_base_layers and not add_editing_layers and not add_layout_groups:
             return
+        # disconnect layersAdded signal to avoid triggering unwanted behavior during layer manipulation
+        with contextlib.suppress(RuntimeError, TypeError):
+            self.current_project.layersAdded.disconnect(self._on_layers_added)
+
         if add_base_layers:
             self._cleanup_base_layers()
             self.log("Adding default base layers")
@@ -586,6 +595,9 @@ class MzSProjectManager:
         empty_groups = [group for group in self.current_project.layerTreeRoot().children() if group.children() == []]
         for group in empty_groups:
             self.current_project.layerTreeRoot().removeChildNode(group)
+
+        # reconnect layersAdded signal
+        self.current_project.layersAdded.connect(self._on_layers_added)
 
     def _add_default_layer_group(self, group_dict: dict, group_name: str):
         # create new group layer
@@ -1051,6 +1063,27 @@ class MzSProjectManager:
 
         return new_project_path
 
+    def _get_incremental_migration_flags(self, old_version: str) -> dict:
+        """Return the union of add_default_layers flags for all applicable migration steps.
+
+        A step is applicable when ``parse(old_version) < parse(step.version)``.
+        The returned dict can be unpacked directly into ``add_default_layers(**flags)``.
+
+        Args:
+            old_version: Version string of the project to be upgraded (e.g. ``"2.0.1"``).
+
+        Returns:
+            dict with keys ``add_base_layers``, ``add_editing_layers``, ``add_layout_groups``.
+        """
+        flags = {"add_base_layers": False, "add_editing_layers": False, "add_layout_groups": False}
+        parsed_old = parse_version(old_version)
+        for step in PROJECT_MIGRATION_STEPS:
+            if parsed_old < parse_version(step.version):
+                flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
+                flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
+                flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
+        return flags
+
     def update_project(self):
         """Update the project without loading the project template.
         The database structure should be already updated.
@@ -1133,30 +1166,54 @@ class MzSProjectManager:
                 with open(self.project_path / "progetto" / "versione.txt", "w") as f:
                     f.write(__base_version__)
 
+                # Disconnect layersAdded before reloading to prevent the duplicate-detection handler
+                # from firing while all project layers are being loaded at once.
+                # init_manager() will reconnect it properly once the project is fully read.
+                with contextlib.suppress(RuntimeError, TypeError):
+                    self.current_project.layersAdded.disconnect(self._on_layers_added)
                 # completely reload the project
                 # this will trigger projectRead() signal, the main module will execute check_project() and finally
                 # init_project() here, thus updating the detected plugin version
                 iface.addProject(os.path.join(self.project_path, "progetto_MS.qgz"))
 
             # for versions >= 2.0.0 update only what's needed without clearing the project
-            elif old_version == "2.0.0":
-                # update from 2.0.0 to current __base_version__: update both the editing and the layout groups
-                # - in 2.0.1 the hvsr layer for MOPS layout was updated to point to the new vw_hvsr_punti_misura view
-                #   and the geotec editing layer had a small update
-                # - in 2.0.2 "Cono o edificio vulcanico..." symbol in Carta Geologico-Tecnica and Carta delle MOPS
-                #   was updated to use an embedded SVG symbol
-                self.add_default_layers(add_base_layers=False, add_editing_layers=True, add_layout_groups=True)
-                self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
-
-            elif old_version >= "2.0.1" and old_version < "2.0.7":
-                # update the layout groups if project is between 2.0.1 and 2.0.6
-                self.add_default_layers(add_base_layers=False, add_editing_layers=False, add_layout_groups=True)
-                self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
-
             else:
-                self.log(
-                    f"No actions needed to update MzSTools QGIS project from version {old_version} to {__base_version__}."
-                )
+                flags = self._get_incremental_migration_flags(old_version)
+                if any(flags.values()):
+                    # log the actions to be performed on the QGIS project
+                    actions = []
+                    if flags["add_base_layers"]:
+                        actions.append("base layers")
+                    if flags["add_editing_layers"]:
+                        actions.append("editing layers")
+                    if flags["add_layout_groups"]:
+                        actions.append("layout groups")
+                    self.log(
+                        f"Updating MzSTools QGIS project from version {old_version} to {__base_version__} by updating: [{', '.join(actions)}]"
+                    )
+
+                    self.add_default_layers(**flags)
+                    self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+
+                    if flags["add_editing_layers"]:
+                        # the project must be reloaded after adding the default relations to refresh the relation editor widgets
+                        self.log("Saving and reloading the project after replacing the editing layers.", log_level=4)
+
+                        # write the version file (must be done *before* addProject())
+                        with open(self.project_path / "progetto" / "versione.txt", "w") as f:
+                            f.write(__base_version__)
+
+                        # Disconnect layersAdded before reloading to prevent the duplicate-detection handler
+                        # from firing while all project layers are being loaded at once.
+                        # init_manager() will reconnect it properly once the project is fully read.
+                        with contextlib.suppress(RuntimeError, TypeError):
+                            self.current_project.layersAdded.disconnect(self._on_layers_added)
+                        iface.addProject(str(self.current_project.absoluteFilePath()))  # type: ignore
+
+                else:
+                    self.log(
+                        f"No actions needed to update MzSTools QGIS project from version {old_version} to {__base_version__}."
+                    )
 
             # Resize the overview municipality map image used in print layouts if it's too large (applies to all version updates)
             # In versions < 2.0.2 the generated overview map was too large and causing slowdown during project loading

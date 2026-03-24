@@ -129,11 +129,6 @@ test-tox-all:
     uv sync --group testing
     uv run tox -e all
 
-# Run tests with QGIS latest using tox and Docker
-test-tox-latest:
-    uv sync --group testing
-    uv run tox -e qgis-latest
-
 # Run tests with QGIS stable using tox and Docker
 test-tox-stable:
     uv sync --group testing
@@ -144,15 +139,15 @@ test-tox-ltr:
     uv sync --group testing
     uv run tox -e qgis-ltr
 
-# Run tests with QGIS Qt6 using tox and Docker
-test-tox-qt6:
+# Run tests with QGIS LTR (python 3.10) using tox and Docker
+test-tox-ltr-jammy:
     uv sync --group testing
-    uv run tox -e qgis-qt6-ubuntu
+    uv run tox -e qgis-ltr-jammy
 
-# Run tests with QGIS Qt6 using tox and Docker
-test-tox-qt6-gui GUI_TIMEOUT="2":
+# Run tests with QGIS old using tox and Docker
+test-tox-old:
     uv sync --group testing
-    uv run tox -e qgis-qt6-ubuntu-gui
+    uv run tox -e qgis-old
 
 @package VERSION:
     #!/bin/bash
@@ -203,17 +198,22 @@ test-tox-qt6-gui GUI_TIMEOUT="2":
 pull-docker-qgis VERSION="ltr":
     docker pull qgis/qgis:{{ VERSION }}
 
-run-docker-qgis VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python":
+# set VERSION to an available tag (https://hub.docker.com/r/qgis/qgis/tags)
+# eg. "stable-questing" (4.0), "ltr" (3.44.xx), "3.34-bookworm"
+run-docker-qgis VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python" QGIS4_PYTHON_PATH=".local/share/QGIS/QGIS4/profiles/default/python":
     #!/bin/bash
     just pull-docker-qgis {{ VERSION }}
     xhost +local:
     mkdir -p ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins
+    mkdir -p ${HOME}/{{ QGIS4_PYTHON_PATH }}/plugins
     docker run --rm --name qgis_master \
         -it \
         -e DISPLAY=$DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         -v ${HOME}/{{ QGIS_PYTHON_PATH }}/plugins:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins \
+        -v ${HOME}/{{ QGIS4_PYTHON_PATH }}/plugins:/home/quser/.local/share/QGIS/QGIS4/profiles/default/python/plugins \
         -v $(pwd)/{{ PLUGIN_SLUG }}:/home/quser/.local/share/QGIS/QGIS3/profiles/default/python/plugins/{{ PLUGIN_SLUG }} \
+        -v $(pwd)/{{ PLUGIN_SLUG }}:/home/quser/.local/share/QGIS/QGIS4/profiles/default/python/plugins/{{ PLUGIN_SLUG }} \
         -v ${HOME}:/home/host \
         -e HOME=/home/quser \
         -e LC_ALL=C.utf8 \
@@ -229,16 +229,13 @@ run-docker-qgis VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles
 build-docker-qgis4 VERSION="latest":
     #!/bin/bash
     cd docker
-    # use sed to replace line in Dockerfile URIs: https://qgis.org/ubuntu\n\ with URIs: https://qgis.org/ubuntu-nightly\n\ if VERSION is "nightly", to build with latest QGIS master branch (4.1)
     if [ "{{ VERSION }}" = "nightly" ]; then
         sed -i 's/URIs: https:\/\/qgis.org\/ubuntu/URIs: https:\/\/qgis.org\/ubuntu-nightly/g' qgis-qt6-ubuntu.dockerfile
     fi
     docker build -t qgis4-ubuntu:{{ VERSION }} -f ./qgis-qt6-ubuntu.dockerfile .
-    # restore original Dockerfile if it was modified
     if [ "{{ VERSION }}" = "nightly" ]; then
         sed -i 's/URIs: https:\/\/qgis.org\/ubuntu-nightly/URIs: https:\/\/qgis.org\/ubuntu/g' qgis-qt6-ubuntu.dockerfile
     fi
-    # git checkout -- docker/qgis-qt6-ubuntu.dockerfile
 
 # start QGIS 4 version with docker on Linux, mounting plugin and host home directory for config and data persistence
 # use VERSION="nightly" to run with latest QGIS master branch (4.1), or VERSION="latest" to run with latest QGIS release

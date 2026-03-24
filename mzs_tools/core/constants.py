@@ -16,6 +16,60 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+from dataclasses import dataclass
+
+
+@dataclass
+class ProjectMigrationStep:
+    """Declarative descriptor for a QGIS project migration step.
+
+    ``version`` is the plugin version that introduced the change.
+    A step is applied to any project whose version is older (``project_version < step.version``).
+    The flags mirror the keyword arguments of ``add_default_layers()``.
+    """
+
+    version: str
+    description: str
+    add_base_layers: bool = False
+    add_editing_layers: bool = False
+    add_layout_groups: bool = False
+
+
+# Ordered list of incremental QGIS project migration steps (oldest first).
+# For each plugin version that changed layers or layout groups, add an entry here.
+# A project needs the step applied when its version is older than ``step.version``.
+# No changes to ``update_project()`` are required when adding new entries.
+PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
+    ProjectMigrationStep(
+        version="2.0.1",
+        description=(
+            "Editing and layout groups updated: hvsr layer now points to vw_hvsr_punti_misura "
+            "view; geotec editing layer updated"
+        ),
+        add_editing_layers=True,
+        add_layout_groups=True,
+    ),
+    ProjectMigrationStep(
+        version="2.0.2",
+        description=(
+            "'Cono o edificio vulcanico...' symbol in Carta Geologico-Tecnica and Carta delle MOPS "
+            "updated to use embedded SVG symbol"
+        ),
+        add_layout_groups=True,
+    ),
+    ProjectMigrationStep(
+        version="2.0.4",
+        description=("Multiple layout groups updated"),
+        add_layout_groups=True,
+    ),
+    ProjectMigrationStep(
+        version="2.0.6",
+        description=("Multiple layout groups updated"),
+        add_layout_groups=True,
+    ),
+]
+
+
 DEFAULT_BASE_LAYERS = {
     "comune_progetto": {
         "role": "base",

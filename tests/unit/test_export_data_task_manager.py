@@ -152,7 +152,15 @@ def test_change_field_type_double_to_int(tmp_path, qgis_app):
     assert layer.isValid()
 
     manager = _make_manager(tmp_path)
-    result = manager._change_field_type(layer, "score", QMetaType.Type.Int)
+
+    try:
+        result = manager._change_field_type(layer, "score", QMetaType.Type.Int)
+    except TypeError:
+        # QGIS < 3.38: use QVariant.Type
+        from qgis.PyQt import QtCore
+
+        result = manager._change_field_type(layer, "score", QtCore.QVariant.Int)
+
     assert result is True
 
     layer2 = QgsVectorLayer(str(shp_path), "test", "ogr")
@@ -175,7 +183,15 @@ def test_change_field_type_int_to_double(tmp_path, qgis_app):
     assert layer.isValid()
 
     manager = _make_manager(tmp_path)
-    result = manager._change_field_type(layer, "LIVELLO", QMetaType.Type.Double)
+
+    try:
+        result = manager._change_field_type(layer, "LIVELLO", QMetaType.Type.Double)
+    except TypeError:
+        # QGIS < 3.38: use QVariant.Type
+        from qgis.PyQt import QtCore
+
+        result = manager._change_field_type(layer, "LIVELLO", QtCore.QVariant.Double)
+
     assert result is True
 
     layer2 = QgsVectorLayer(str(shp_path), "test", "ogr")

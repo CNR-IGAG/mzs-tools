@@ -16,6 +16,7 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+import contextlib
 from pathlib import Path
 
 from qgis.PyQt import uic
@@ -104,6 +105,11 @@ class DlgFixLayers(QDialog, FORM_CLASS):
                 self.prj_manager.backup_qgis_project()
                 self.log("Saving and reloading the project after replacing the editing layers.", log_level=4)
                 self.prj_manager.current_project.write()
+                # Disconnect layersAdded before reloading to prevent the duplicate-detection handler
+                # from firing while all project layers are being loaded at once.
+                # init_manager() will reconnect it properly once the project is fully read.
+                with contextlib.suppress(RuntimeError, TypeError):
+                    self.prj_manager.current_project.layersAdded.disconnect(self.prj_manager._on_layers_added)
                 iface.addProject(str(self.prj_manager.current_project.absoluteFilePath()))  # type: ignore
             self.log("The layer replacement process has been completed successfully.", log_level=3, push=True)
             return

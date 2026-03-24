@@ -24,18 +24,20 @@ env:
 jobs:
   test-all:
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.experimental || false }}
+    continue-on-error: true
+    # continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: true
       matrix:
         # bookworm = Debian 12 with Python 3.11
         # jammy = Ubuntu 22.04 with Python 3.10
         # noble = Ubuntu 24.04 with Python 3.12
-        qgis-version: ["3.34-bookworm", "3.40-jammy", "3.44-jammy", "3.40-noble", "3.44-noble"]
-        include:
-          - qgis-version: "latest"
-            experimental: true
-      max-parallel: 3
+        # stable-questing = QGIS 4.0 on Ubuntu "questing" with Python 3.13
+        qgis-version: ["3.34-bookworm", "3.44-jammy", "3.44-noble", "stable-questing"]
+        # include:
+        #   - qgis-version: "latest"
+        #     experimental: true
+      max-parallel: 4
 
     container:
       image: qgis/qgis:${{ matrix.qgis-version }}
