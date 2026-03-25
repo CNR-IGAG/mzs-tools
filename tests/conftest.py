@@ -316,6 +316,19 @@ def mdb_deps_available() -> bool:
     return connected
 
 
+def pytest_sessionfinish(session, exitstatus):
+    """Force immediate process exit in CI to avoid QGIS teardown segfaults (exit code 139).
+
+    QGIS cleanup during Python shutdown can crash with SIGSEGV, causing the Docker
+    container to exit with code 139 even when all tests passed. Using os._exit()
+    bypasses the teardown entirely and preserves pytest's actual exit code.
+    Only active when the CI environment variable is set to avoid suppressing local
+    output such as warnings, coverage reports, and the summary.
+    """
+    if os.environ.get("CI"):
+        os._exit(int(exitstatus))
+
+
 def pytest_collection_modifyitems(session, config, items):
     """Modify the order of collected tests to run unit tests first, then integration, then e2e.
 
