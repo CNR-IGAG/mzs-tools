@@ -39,6 +39,7 @@ from qgis.PyQt.QtWidgets import (
 )
 
 from .__about__ import DIR_PLUGIN_ROOT, __title__, __version__
+from .core.constants import PROJECT_MIGRATION_STEPS
 from .core.mzs_project_manager import MzSProjectManager
 from .gui.dlg_create_project import DlgCreateProject
 from .gui.dlg_export_data import DlgExportData
@@ -674,8 +675,29 @@ class MzSTools:
         msg_upd2 = self.tr("to version")
         msg_box.setText(f"{msg_upd1} {self.prj_manager.project_version} {msg_upd2} {__version__}.")
         msg_box.setInformativeText(self.tr("Do you want to proceed?"))
+        # Build changelog entries from applicable migration steps
+        old_version = self.prj_manager.project_version or ""
+        try:
+            from packaging.version import parse as _parse_version
+
+            applicable_steps = [
+                s for s in PROJECT_MIGRATION_STEPS if _parse_version(old_version) < _parse_version(s.version)
+            ]
+        except Exception:
+            applicable_steps = [s for s in PROJECT_MIGRATION_STEPS if old_version < s.version]
+        if applicable_steps:
+            changelog_lines = [self.tr("Changes to be applied:")]
+            if old_version < "2.0.0":
+                changelog_lines.append(self.tr("  Project version < 2.0.0 will be completely cleared and rebuilt!"))
+            for step in applicable_steps:
+                changelog_lines.append(f"  [{step.version}] {step.description}")
+            changelog = "\n".join(changelog_lines) + "\n\n"
+        else:
+            changelog = ""
+
         msg_box.setDetailedText(
-            self.tr(
+            changelog
+            + self.tr(
                 "It is possible to cancel the update process and continue using the current project version, "
                 "but it is highly recommended to proceed with the update to avoid possible issues.\n"
                 "The QGIS project content (layers, styles, symbols, print layout) will be updated to the latest plugin version.\n"

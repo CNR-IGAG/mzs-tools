@@ -569,9 +569,17 @@ class MzSProjectManager:
         """
         if not add_base_layers and not add_editing_layers and not add_layout_groups:
             return
-        # disconnect layersAdded signal to avoid triggering unwanted behavior during layer manipulation
-        with contextlib.suppress(RuntimeError, TypeError):
+        # Disconnect layersAdded signal to avoid triggering unwanted behaviour during bulk layer
+        # manipulation. Track whether it was connected so we can restore the exact same state
+        # afterwards: callers that follow up with iface.addProject() (which fires layersAdded
+        # for all loaded layers at once) must not have the handler active at that point, while
+        # callers that keep working in the same project session do need it reconnected.
+        signal_was_connected = False
+        try:
             self.current_project.layersAdded.disconnect(self._on_layers_added)
+            signal_was_connected = True
+        except (RuntimeError, TypeError):
+            pass
 
         if add_base_layers:
             self._cleanup_base_layers()
@@ -596,8 +604,9 @@ class MzSProjectManager:
         for group in empty_groups:
             self.current_project.layerTreeRoot().removeChildNode(group)
 
-        # reconnect layersAdded signal
-        self.current_project.layersAdded.connect(self._on_layers_added)
+        # Restore signal connection to its previous state.
+        if signal_was_connected:
+            self.current_project.layersAdded.connect(self._on_layers_added)
 
     def _add_default_layer_group(self, group_dict: dict, group_name: str):
         # create new group layer
@@ -1058,6 +1067,11 @@ class MzSProjectManager:
         # Save the project
         self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgz"))
 
+        # Disconnect layersAdded before reloading to prevent the duplicate-detection handler
+        # from firing while all project layers are being loaded at once.
+        # init_manager() will reconnect it properly once the project is fully read.
+        with contextlib.suppress(RuntimeError, TypeError):
+            self.current_project.layersAdded.disconnect(self._on_layers_added)
         # completely reload the project
         iface.addProject(os.path.join(new_project_path, "progetto_MS.qgz"))
 
@@ -1067,21 +1081,32 @@ class MzSProjectManager:
         """Return the union of add_default_layers flags for all applicable migration steps.
 
         A step is applicable when ``parse(old_version) < parse(step.version)``.
-        The returned dict can be unpacked directly into ``add_default_layers(**flags)``.
+        The boolean flags can be unpacked directly into ``add_default_layers(**flags)`` after
+        popping ``print_layouts``.
 
         Args:
             old_version: Version string of the project to be upgraded (e.g. ``"2.0.1"``).
 
         Returns:
-            dict with keys ``add_base_layers``, ``add_editing_layers``, ``add_layout_groups``.
+            dict with keys ``add_base_layers``, ``add_editing_layers``, ``add_layout_groups``
+            (all bool) and ``print_layouts`` (list[str] of .qpt file names, deduplicated,
+            preserving first-occurrence order).
         """
-        flags = {"add_base_layers": False, "add_editing_layers": False, "add_layout_groups": False}
+        flags: dict = {
+            "add_base_layers": False,
+            "add_editing_layers": False,
+            "add_layout_groups": False,
+            "print_layouts": [],
+        }
         parsed_old = parse_version(old_version)
         for step in PROJECT_MIGRATION_STEPS:
             if parsed_old < parse_version(step.version):
                 flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
                 flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
                 flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
+                for layout_file in step.add_print_layouts:
+                    if layout_file not in flags["print_layouts"]:
+                        flags["print_layouts"].append(layout_file)
         return flags
 
     def update_project(self):
@@ -1179,7 +1204,10 @@ class MzSProjectManager:
             # for versions >= 2.0.0 update only what's needed without clearing the project
             else:
                 flags = self._get_incremental_migration_flags(old_version)
-                if any(flags.values()):
+                print_layouts_to_add = flags.pop("print_layouts")
+                need_update = any(flags.values()) or bool(print_layouts_to_add)
+
+                if need_update:
                     # log the actions to be performed on the QGIS project
                     actions = []
                     if flags["add_base_layers"]:
@@ -1188,12 +1216,20 @@ class MzSProjectManager:
                         actions.append("editing layers")
                     if flags["add_layout_groups"]:
                         actions.append("layout groups")
+                    if print_layouts_to_add:
+                        actions.append(f"print layouts ({', '.join(print_layouts_to_add)})")
                     self.log(
                         f"Updating MzSTools QGIS project from version {old_version} to {__base_version__} by updating: [{', '.join(actions)}]"
                     )
 
-                    self.add_default_layers(**flags)
-                    self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+                    if any(flags.values()):
+                        self.add_default_layers(**flags)
+
+                    for layout_file in print_layouts_to_add:
+                        self.load_print_layout_model(layout_file)
+
+                    # self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+                    iface.actionSaveProject().trigger()
 
                     if flags["add_editing_layers"]:
                         # the project must be reloaded after adding the default relations to refresh the relation editor widgets
@@ -1224,12 +1260,30 @@ class MzSProjectManager:
             with open(self.project_path / "progetto" / "versione.txt", "w") as f:
                 f.write(__base_version__)
 
-            self.update_history_table("project", old_version, __version__, "project updated successfully")
+            msg = self.tr("Project upgrades completed! Project upgraded to version")
+            applied_steps = [
+                s for s in PROJECT_MIGRATION_STEPS if parse_version(old_version) < parse_version(s.version)
+            ]
+            if applied_steps:
+                changelog_lines = ["Changes applied:"]
+                if old_version < "2.0.0":
+                    changelog_lines.append(self.tr("  Project version < 2.0.0 was completely cleared and rebuilt!"))
+                for step in applied_steps:
+                    changelog_lines.append(f"  [{step.version}] {step.description}")
+                changelog = "\n".join(changelog_lines)
+            else:
+                changelog = None
+
+            self.update_history_table(
+                "project",
+                old_version,
+                __version__,
+                f"project updated successfully\n{changelog if changelog else ''}".strip(),
+            )
             # update mzs_tools_version table
             self.update_db_version_info()
 
-            msg = self.tr("Project upgrades completed! Project upgraded to version")
-            self.log(f"{msg} {__base_version__}", push=True, duration=0)
+            self.log(f"{msg} {__base_version__}", push=True, log_level=3, duration=0, showmore_text=changelog)
         finally:
             # Clear the message bar once the operation is complete
             iface.messageBar().popWidget(message_item)
@@ -1391,6 +1445,11 @@ class MzSProjectManager:
         doc = QDomDocument()
         doc.setContent(layout_model)
         layout.loadFromTemplate(doc, QgsReadWriteContext())
+
+        # skip if a layout with this name already exists (idempotency guard)
+        if layout_manager.layoutByName(layout.name()):
+            self.log(f"Print layout '{layout.name()}' already exists, skipping.", log_level=4)
+            return
 
         # set layout elements for the current project if it's a default model
         if is_default_model:

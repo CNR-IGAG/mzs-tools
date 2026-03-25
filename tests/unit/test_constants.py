@@ -154,13 +154,21 @@ class TestConstants:
 
 def _compute_migration_flags(old_version: str, steps) -> dict:
     """Pure-Python replica of MzSProjectManager._get_incremental_migration_flags."""
-    flags = {"add_base_layers": False, "add_editing_layers": False, "add_layout_groups": False}
+    flags: dict = {
+        "add_base_layers": False,
+        "add_editing_layers": False,
+        "add_layout_groups": False,
+        "print_layouts": [],
+    }
     parsed_old = parse_version(old_version)
     for step in steps:
         if parsed_old < parse_version(step.version):
             flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
             flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
             flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
+            for layout_file in step.add_print_layouts:
+                if layout_file not in flags["print_layouts"]:
+                    flags["print_layouts"].append(layout_file)
     return flags
 
 
@@ -172,37 +180,58 @@ class TestProjectMigrationSteps:
         versions = [parse_version(s.version) for s in PROJECT_MIGRATION_STEPS]
         assert versions == sorted(versions), "PROJECT_MIGRATION_STEPS must be ordered by version ascending"
 
-    def test_steps_have_at_least_one_flag(self):
-        """Every migration step must set at least one add_* flag."""
+    def test_steps_have_description(self):
+        """Every migration step must have a non-empty description (used for changelog)."""
         for step in PROJECT_MIGRATION_STEPS:
-            assert step.add_base_layers or step.add_editing_layers or step.add_layout_groups, (
-                f"Step '{step.version}' sets no flags — it would be a no-op"
-            )
+            assert step.description and step.description.strip(), f"Step '{step.version}' has an empty description"
 
     def test_flags_for_version_2_0_0(self):
-        """Project at 2.0.0 should get editing + layout update (both steps apply)."""
+        """Project at 2.0.0 should get editing + layout update (all steps apply)."""
         flags = _compute_migration_flags("2.0.0", PROJECT_MIGRATION_STEPS)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is True
         assert flags["add_layout_groups"] is True
+        assert flags["print_layouts"] == ["carta_ms_fa.qpt"]
 
     def test_flags_for_version_2_0_1(self):
-        """Project at 2.0.1 should get layout-only update (only 2.0.2 step applies)."""
+        """Project at 2.0.1 should get layout-only update (2.0.2, 2.0.4, 2.0.6, 2.0.8 steps apply)."""
         flags = _compute_migration_flags("2.0.1", PROJECT_MIGRATION_STEPS)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is False
         assert flags["add_layout_groups"] is True
+        assert flags["print_layouts"] == ["carta_ms_fa.qpt"]
 
     def test_flags_for_version_2_0_2(self):
-        """Project at 2.0.2 should require no update (no steps apply)."""
+        """Project at 2.0.2 should get layout-only update (2.0.4, 2.0.6, 2.0.8 steps apply)."""
         flags = _compute_migration_flags("2.0.2", PROJECT_MIGRATION_STEPS)
-        assert not any(flags.values()), "No migration should be needed for version 2.0.2"
+        assert flags["add_base_layers"] is False
+        assert flags["add_editing_layers"] is False
+        assert flags["add_layout_groups"] is True
+        assert flags["print_layouts"] == ["carta_ms_fa.qpt"]
+
+    def test_flags_for_version_2_0_6(self):
+        """Project at 2.0.6 should get layout update + new FA print layout (2.0.8 step applies)."""
+        flags = _compute_migration_flags("2.0.6", PROJECT_MIGRATION_STEPS)
+        assert flags["add_base_layers"] is False
+        assert flags["add_editing_layers"] is False
+        assert flags["add_layout_groups"] is True
+        assert flags["print_layouts"] == ["carta_ms_fa.qpt"]
+
+    def test_flags_for_version_2_0_7(self):
+        """Project at 2.0.7 should get layout update + new FA print layout (2.0.8 step applies)."""
+        flags = _compute_migration_flags("2.0.7", PROJECT_MIGRATION_STEPS)
+        assert flags["add_base_layers"] is False
+        assert flags["add_editing_layers"] is False
+        assert flags["add_layout_groups"] is True
+        assert flags["print_layouts"] == ["carta_ms_fa.qpt"]
 
     def test_flags_for_current_version_no_action(self):
         """A project at the latest registered version should require no update."""
         latest_threshold = max(parse_version(s.version) for s in PROJECT_MIGRATION_STEPS)
         flags = _compute_migration_flags(str(latest_threshold), PROJECT_MIGRATION_STEPS)
-        assert not any(flags.values()), "No migration should be needed for the latest threshold version"
+        bool_flags = {k: v for k, v in flags.items() if k != "print_layouts"}
+        assert not any(bool_flags.values()), "No migration should be needed for the latest threshold version"
+        assert flags["print_layouts"] == [], "No print layouts should be added for the latest threshold version"
 
     def test_custom_steps_union_of_flags(self):
         """Flag union: two applicable steps should OR their flags correctly."""
@@ -214,6 +243,7 @@ class TestProjectMigrationSteps:
         assert flags["add_base_layers"] is True
         assert flags["add_editing_layers"] is True
         assert flags["add_layout_groups"] is False
+        assert flags["print_layouts"] == []
 
     def test_custom_steps_partial_match(self):
         """Only steps with version > old_version contribute their flags."""
@@ -225,6 +255,7 @@ class TestProjectMigrationSteps:
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is True
         assert flags["add_layout_groups"] is False
+        assert flags["print_layouts"] == []
 
     def test_semantic_version_comparison_not_lexicographic(self):
         """parse_version must handle '2.0.10' > '2.0.9' correctly (not lexicographic)."""

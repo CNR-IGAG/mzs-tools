@@ -1,7 +1,10 @@
 # Changelog
 
-## [2.0.8-beta1] - 2026-03-23
+## [2.0.8-beta2] - 2026-03-25
 
+- 'Carta delle indagini' layout group updated
+- added new 'Carta di microzonazione sismica (FA)' layout group and print layout
+- refactor project migration code and add more detailed changelog for each migration step
 - avoid plugin-managed layers being duplicated
 - decouple data import/export task management from GUI
 

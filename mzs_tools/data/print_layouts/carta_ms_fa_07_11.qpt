@@ -1,4 +1,4 @@
-<Layout units="mm" name="06 - MS23 carta di microzonazione sismica liv2-3 FA 07-11s" worldFileMap="{3982f625-0475-431f-a248-729e6f46bb60}" printResolution="300">
+<Layout units="mm" name="07 - MS23 carta di microzonazione sismica liv2-3 FA 07-11s" worldFileMap="{3982f625-0475-431f-a248-729e6f46bb60}" printResolution="300">
  <Snapper snapToGrid="0" tolerance="5" snapToGuides="1" snapToItems="1"/>
  <Grid resolution="10" resUnits="mm" offsetX="0" offsetY="0" offsetUnits="mm"/>
  <PageCollection>

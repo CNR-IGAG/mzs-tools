@@ -16,7 +16,7 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -26,6 +26,8 @@ class ProjectMigrationStep:
     ``version`` is the plugin version that introduced the change.
     A step is applied to any project whose version is older (``project_version < step.version``).
     The flags mirror the keyword arguments of ``add_default_layers()``.
+    ``add_print_layouts`` lists ``.qpt`` model file names (relative to ``data/print_layouts/``)
+    that should be loaded into the project print layout manager during the update.
     """
 
     version: str
@@ -33,6 +35,7 @@ class ProjectMigrationStep:
     add_base_layers: bool = False
     add_editing_layers: bool = False
     add_layout_groups: bool = False
+    add_print_layouts: list[str] = field(default_factory=list)
 
 
 # Ordered list of incremental QGIS project migration steps (oldest first).
@@ -44,7 +47,7 @@ PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
         version="2.0.1",
         description=(
             "Editing and layout groups updated: hvsr layer now points to vw_hvsr_punti_misura "
-            "view; geotec editing layer updated"
+            "view; geotec editing layer updated - DB: fixes for hvsr view and lithology codes"
         ),
         add_editing_layers=True,
         add_layout_groups=True,
@@ -53,7 +56,7 @@ PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
         version="2.0.2",
         description=(
             "'Cono o edificio vulcanico...' symbol in Carta Geologico-Tecnica and Carta delle MOPS "
-            "updated to use embedded SVG symbol"
+            "updated to use embedded SVG symbol - DB: fixes for hvsr views"
         ),
         add_layout_groups=True,
     ),
@@ -63,12 +66,42 @@ PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
         add_layout_groups=True,
     ),
     ProjectMigrationStep(
+        version="2.0.5",
+        description=("DB: hvsr view - handle comma as decimal separator in parametri_puntuali.valore"),
+    ),
+    ProjectMigrationStep(
         version="2.0.6",
         description=("Multiple layout groups updated"),
         add_layout_groups=True,
     ),
+    ProjectMigrationStep(
+        version="2.0.7",
+        description=("DB: fixes for hvsr and indagini views"),
+    ),
+    ProjectMigrationStep(
+        version="2.0.8",
+        description=(
+            "'Carta delle indagini' layout group updated; added new 'Carta di microzonazione sismica (FA)' layout group "
+            "and print layout"
+        ),
+        add_layout_groups=True,
+        add_print_layouts=["carta_ms_fa.qpt"],
+    ),
 ]
 
+DB_MIGRATION_SCRIPTS = {
+    "0.8": "query_v08.sql",
+    "0.9": "query_v09.sql",
+    "1.2": "query_v10_12.sql",
+    "1.9": "query_v19.sql",
+    "1.9.2": "query_v192.sql",
+    "1.9.3": "query_v193.sql",
+    "2.0.0": "query_v200.sql",
+    "2.0.1": "query_v201.sql",
+    "2.0.3": "query_v202.sql",
+    "2.0.5": "query_v205.sql",
+    "2.0.7": "query_v207.sql",
+}
 
 DEFAULT_BASE_LAYERS = {
     "comune_progetto": {
@@ -572,6 +605,7 @@ DEFAULT_LAYOUT_GROUPS = {
     "Carta delle Indagini": "carta_delle_indagini.qlr",
     "Carta geologico-tecnica": "carta_geologico_tecnica.qlr",
     "Carta delle microzone omogenee in prospettiva sismica (MOPS)": "carta_mops.qlr",
+    "Carta di microzonazione sismica (FA)": "carta_fa.qlr",
     "Carta di microzonazione sismica (FA 0.1-0.5 s)": "carta_fa_01_05.qlr",
     "Carta di microzonazione sismica (FA 0.4-0.8 s)": "carta_fa_04_08.qlr",
     "Carta di microzonazione sismica (FA 0.7-1.1 s)": "carta_fa_07_11.qlr",
@@ -619,14 +653,15 @@ DEFAULT_RELATIONS = {
 }
 
 PRINT_LAYOUT_MODELS = {
-    "01 - CdI carta delle indagini": "carta_delle_indagini.qpt",
-    "02 - CGT carta geologico tecnica": "carta_geologico_tecnica.qpt",
-    "03 - MOPS carta di microzonazione sismica liv1": "carta_delle_mops.qpt",
-    "04 - MS23 carta di microzonazione sismica liv2-3 FA 01-05s": "carta_ms_fa_01_05.qpt",
-    "05 - MS23 carta di microzonazione sismica liv2-3 FA 04-08s": "carta_ms_fa_04_08.qpt",
-    "06 - MS23 carta di microzonazione sismica liv2-3 FA 07-11s": "carta_ms_fa_07_11.qpt",
-    "07 - Carta delle frequenze naturali dei terreni f0": "carta_frequenze_f0.qpt",
-    "08 - Carta delle frequenze naturali dei terreni fr": "carta_frequenze_fr.qpt",
+    "CdI carta delle indagini": "carta_delle_indagini.qpt",
+    "CGT carta geologico tecnica": "carta_geologico_tecnica.qpt",
+    "MOPS carta di microzonazione sismica liv1": "carta_delle_mops.qpt",
+    "MS23 carta di microzonazione sismica liv2-3 FA": "carta_ms_fa.qpt",
+    "MS23 carta di microzonazione sismica liv2-3 FA 01-05s": "carta_ms_fa_01_05.qpt",
+    "MS23 carta di microzonazione sismica liv2-3 FA 04-08s": "carta_ms_fa_04_08.qpt",
+    "MS23 carta di microzonazione sismica liv2-3 FA 07-11s": "carta_ms_fa_07_11.qpt",
+    "Carta delle frequenze naturali dei terreni f0": "carta_frequenze_f0.qpt",
+    "Carta delle frequenze naturali dei terreni fr": "carta_frequenze_fr.qpt",
 }
 
 NO_OVERLAPS_LAYER_GROUPS = [
@@ -646,18 +681,4 @@ STANDARD_SHAPEFILES_INT_FIELDS = {
     "stab_l23": ["ID_z", "Tipo_z"],
     "isosub_l1": ["ID_isosub", "Quota"],
     "isosub_l23": ["ID_isosub", "Quota"],
-}
-
-DB_MIGRATION_SCRIPTS = {
-    "0.8": "query_v08.sql",
-    "0.9": "query_v09.sql",
-    "1.2": "query_v10_12.sql",
-    "1.9": "query_v19.sql",
-    "1.9.2": "query_v192.sql",
-    "1.9.3": "query_v193.sql",
-    "2.0.0": "query_v200.sql",
-    "2.0.1": "query_v201.sql",
-    "2.0.3": "query_v202.sql",
-    "2.0.5": "query_v205.sql",
-    "2.0.7": "query_v207.sql",
 }
