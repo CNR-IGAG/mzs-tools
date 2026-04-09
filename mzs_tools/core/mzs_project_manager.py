@@ -1228,8 +1228,8 @@ class MzSProjectManager:
                     for layout_file in print_layouts_to_add:
                         self.load_print_layout_model(layout_file)
 
-                    # self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
-                    iface.actionSaveProject().trigger()
+                    self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
+                    # iface.actionSaveProject().trigger()
 
                     if flags["add_editing_layers"]:
                         # the project must be reloaded after adding the default relations to refresh the relation editor widgets
