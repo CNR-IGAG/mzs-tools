@@ -12,6 +12,9 @@ dev = [
     "ruff>=0.14.11",
     "esbonio>=1.0.0",
     "JayDeBeApi>=1.2.3",
+    "bandit>=1.9.4",
+    "detect-secrets>=1.5.0",
+    "flake8>=7.3.0",
 ]
 testing = [
     "pytest>=9.0.2",
