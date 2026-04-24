@@ -150,14 +150,7 @@ class AccessDbConnection:
                 try:
                     self.log(f"Trying Java executable: {java_exec}", log_level=4)
 
-                    # On Windows, subprocess may have issues finding executables in QGIS environment
-                    # Try with shell=True which uses the system shell to locate executables
-                    if platform.system() == "Windows":
-                        result = subprocess.run(
-                            f'"{java_exec}" -version', shell=True, capture_output=True, text=True, timeout=5
-                        )
-                    else:
-                        result = subprocess.run([java_exec, "-version"], capture_output=True, text=True, timeout=5)
+                    result = subprocess.run([java_exec, "-version"], capture_output=True, text=True, timeout=5)
 
                     # Check if command succeeded
                     if result.returncode == 0 or result.stderr:

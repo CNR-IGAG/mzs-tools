@@ -4,7 +4,7 @@
     <customproperties>
       <Option/>
     </customproperties>
-    <layer-tree-layer source="dbname='./db/indagini.sqlite' table=&quot;hvsr&quot;" patch_size="0,0" checked="Qt::Unchecked" expanded="1" providerKey="spatialite" legend_exp="" name="Indagine stazione singola (HVSR)" legend_split_behavior="0" id="Indagine_stazione_singola__HVSR__fab5c6f2_5374_4dc4_8097_803f60542559">
+    <layer-tree-layer source="dbname='./db/indagini.sqlite' table=&quot;hvsr&quot;" patch_size="0,0" checked="Qt::Unchecked" expanded="1" providerKey="spatialite" legend_exp="" name="Indagine stazione singola (HVSR)" legend_split_behavior="0" id="Indagine_stazione_singola__HVSR__fab5c6f2">
       <customproperties>
         <Option type="Map">
           <Option value="Indagine stazione singola (HVSR)" type="QString" name="cached_name"/>
@@ -14,7 +14,7 @@
   </layer-tree-group>
   <maplayers>
     <maplayer readOnly="0" legendPlaceholderImage="" type="vector" minScale="1e+08" wkbType="NoGeometry" refreshOnNotifyMessage="" refreshOnNotifyEnabled="0" geometry="No geometry" maxScale="0" autoRefreshMode="Disabled" autoRefreshTime="0" styleCategories="AllStyleCategories" hasScaleBasedVisibilityFlag="0">
-      <id>Indagine_stazione_singola__HVSR__fab5c6f2_5374_4dc4_8097_803f60542559</id>
+      <id>Indagine_stazione_singola__HVSR__fab5c6f2</id>
       <datasource>dbname='./db/indagini.sqlite' table="hvsr"</datasource>
       <keywordList>
         <value></value>
@@ -267,7 +267,7 @@
       </geometryOptions>
       <legend type="default-vector" showLabelLegend="0"/>
       <referencedLayers>
-        <relation referencedLayer="Indagini_puntuali_da93fd38_23c3_46ac_9e82_066a31833e52" layerId="Indagini_puntuali_da93fd38_23c3_46ac_9e82_066a31833e52" providerKey="spatialite" referencingLayer="Indagine_stazione_singola__HVSR__fab5c6f2_5374_4dc4_8097_803f60542559" dataSource="dbname='/mnt/KS1/TestMzS1.9.2/057001_Accumoli/db/indagini.sqlite' table=&quot;indagini_puntuali&quot;" strength="Association" name="indagini_hvsr_puntuali" id="indagini_hvsr_puntuali" layerName="Indagini puntuali">
+        <relation referencedLayer="Indagini_puntuali_da93fd38_23c3_46ac_9e82_066a31833e52" layerId="Indagini_puntuali_da93fd38_23c3_46ac_9e82_066a31833e52" providerKey="spatialite" referencingLayer="Indagine_stazione_singola__HVSR__fab5c6f2" dataSource="dbname='/mnt/KS1/TestMzS1.9.2/057001_Accumoli/db/indagini.sqlite' table=&quot;indagini_puntuali&quot;" strength="Association" name="indagini_hvsr_puntuali" id="indagini_hvsr_puntuali" layerName="Indagini puntuali">
           <fieldRef referencedField="id_indpu" referencingField="id_indpu"/>
         </relation>
       </referencedLayers>

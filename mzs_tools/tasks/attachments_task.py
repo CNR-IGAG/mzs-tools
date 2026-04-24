@@ -17,6 +17,7 @@
 # -----------------------------------------------------------------------------
 
 import logging
+import re
 import shutil
 
 from qgis.core import QgsTask
@@ -232,7 +233,14 @@ class AttachmentsTask(QgsTask):
             elif table_name in ["instab_l23", "stab_l23"]:
                 field_name = "SPETTRI"
 
-            cursor.execute(f"""UPDATE {table_name} SET {field_name} = '{new_path}' WHERE pkuid = {pkuid}""")
+            if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
+                raise ValueError(f"Invalid table name: {table_name!r}")
+            if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", field_name):
+                raise ValueError(f"Invalid field name: {field_name!r}")
+            cursor.execute(
+                f"UPDATE {table_name} SET {field_name} = ? WHERE pkuid = ?",  # nosec B608
+                (str(new_path), int(pkuid)),
+            )
             conn.commit()
         finally:
             cursor.close()

@@ -22,6 +22,7 @@ This module provides a centralized database management layer with automatic erro
 connection management, and common database operations.
 """
 
+import re
 import traceback
 from contextlib import contextmanager
 from pathlib import Path
@@ -361,6 +362,23 @@ class DatabaseManager:
         )
         return result is not None
 
+    @staticmethod
+    def _validate_identifier(name: str) -> str:
+        """Validate a SQL identifier (table or column name) to prevent SQL injection.
+
+        Args:
+            name: The identifier to validate
+
+        Returns:
+            The validated identifier
+
+        Raises:
+            ValueError: If the identifier contains invalid characters
+        """
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", name):
+            raise ValueError(f"Invalid SQL identifier: {name!r}")
+        return name
+
     def get_row_count(self, table_name: str, where_clause: str = "", params: tuple | None = None) -> int:
         """Get the number of rows in a table.
 
@@ -379,7 +397,7 @@ class DatabaseManager:
             # Count with condition
             active = db.get_row_count("sito_puntuale", "stato = ?", ("active",))
         """
-        query = f"SELECT COUNT(*) FROM {table_name}"
+        query = f"SELECT COUNT(*) FROM {self._validate_identifier(table_name)}"  # nosec B608
         if where_clause:
             query += f" WHERE {where_clause}"
 
