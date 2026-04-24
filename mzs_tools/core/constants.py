@@ -82,7 +82,7 @@ PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
         version="2.0.8",
         description=(
             "'Carta delle indagini' layout group updated; added new 'Carta di microzonazione sismica (FA)' layout group "
-            "and print layout"
+            "and print layout; DB: fix for Indagini deletion failing when related hvsr extended data is present"
         ),
         add_layout_groups=True,
         add_print_layouts=["carta_ms_fa.qpt"],
@@ -101,6 +101,7 @@ DB_MIGRATION_SCRIPTS = {
     "2.0.3": "query_v202.sql",
     "2.0.5": "query_v205.sql",
     "2.0.7": "query_v207.sql",
+    "2.0.8": "query_v208.sql",
 }
 
 DEFAULT_BASE_LAYERS = {
