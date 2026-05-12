@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.8-beta3] - 2026-04-24
+## [2.0.8] - 2026-05-12
 
 - Fix for Indagini deletion failing when related hvsr extended data is present
 - 'Carta delle indagini' layout group updated

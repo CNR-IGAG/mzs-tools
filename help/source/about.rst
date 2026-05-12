@@ -26,6 +26,15 @@ Per maggiori informazioni sulla CC BY 4.0, visita: `<https://creativecommons.org
 Changelog
 =========
 
+v2.0.8
+    - Sistemato un problema con l'eliminazione di un'indagine quando sono presenti dati estesi HVSR correlati
+    - Gruppo dei layout 'Carta delle indagini' aggiornato
+    - Aggiunto un nuovo gruppo di layout 'Carta di microzonazione sismica (FA)' e relativo layout di stampa
+    - Refactor del codice di migrazione del progetto e aggiunta di un changelog più dettagliato
+    - Blocco della duplicazione dei layer gestiti dal plugin
+    - Decoupling della gestione delle attività di importazione/esportazione dei dati dalla GUI
+    - Correzioni e strumenti per i nuovi requisiti di sicurezza del repository dei plugin QGIS
+
 v2.0.7
     - Sistemato un problema con la visualizzazione delle indagini
     - Miglioramenti nella gestione dei test automatici
