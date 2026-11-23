@@ -97,6 +97,8 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+# keep temporary directories only for failed tests (e2e tests write several GB, see docs/development/testing.md)
+tmp_path_retention_policy = "failed"
 # tmp_path_retention_count = "1"
 addopts = [
     "--strict-markers",

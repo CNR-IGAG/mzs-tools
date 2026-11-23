@@ -48,12 +48,14 @@ from .gui.dlg_import_data import DlgImportData
 from .gui.dlg_info import DlgPluginInfo
 from .gui.dlg_load_ogc_services import DlgLoadOgcServices
 from .gui.dlg_manage_attachments import DlgManageAttachments
+from .gui.dlg_merge_projects import DlgMergeProjects
 from .gui.dlg_metadata_edit import DlgMetadataEdit
 from .gui.dlg_settings import PlgOptionsFactory
 from .plugin_utils.db_utils import check_mdb_connection
 from .plugin_utils.dependency_manager import DependencyManager
 from .plugin_utils.logging import MzSToolsLogger
 from .plugin_utils.misc import require_mzs_project
+from .tasks.merge_projects_task_manager import MergeProjectsTaskManager
 
 
 class MzSTools:
@@ -76,6 +78,8 @@ class MzSTools:
         self.dlg_export_data = None
         self.dlg_fix_layers = None
         self.dlg_load_ogc_services = None
+        self.dlg_merge_projects = None
+        self.merge_task_manager = None
 
         self.actions = []
         self.always_enabled_actions = []  # Actions that remain enabled regardless of project state
@@ -182,6 +186,17 @@ class MzSTools:
             always_enabled=True,
         )
         menu_project.addAction(open_standard_project_action)  # type: ignore[arg-type]
+
+        merge_projects_action = self.add_action(
+            QgsApplication.getThemeIcon("mActionMergeFeatures.svg"),
+            text=self.tr("Merge MzS Tools projects"),
+            status_tip=self.tr("Create a new multi-municipality MzS Tools project by merging existing projects"),
+            callback=self.on_merge_projects_action,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False,
+            always_enabled=True,
+        )
+        menu_project.addAction(merge_projects_action)  # type: ignore[arg-type]
 
         menu_project.addSeparator()
 
@@ -444,6 +459,46 @@ class MzSTools:
                 msg = self.tr("Project created successfully in:")
                 self.log(f"{msg} {project_path}", push=True, duration=0)
 
+    def on_merge_projects_action(self):
+        # check if there is a project already open
+        if QgsProject.instance().fileName():
+            QMessageBox.warning(
+                self.iface.mainWindow(),
+                self.tr("MzS Tools"),
+                self.tr("Close the current project before creating a new one."),
+            )
+            return
+
+        if self.dlg_merge_projects is None:
+            self.dlg_merge_projects = DlgMergeProjects(self.iface.mainWindow())
+
+        if not self.dlg_merge_projects.exec():
+            return
+
+        sources = self.dlg_merge_projects.selected_projects()
+        dir_out = self.dlg_merge_projects.output_dir()
+        project_name = self.dlg_merge_projects.project_name()
+        self.log(
+            f"Creating merged MzS Tools project '{project_name}' in {dir_out} from: {[str(s.path) for s in sources]}"
+        )
+        try:
+            self.prj_manager.create_merged_project(project_name, [s.cod_istat for s in sources], dir_out)
+        except Exception as e:
+            err_msg = self.tr("Error during project creation")
+            self.log(f"{err_msg}: {e} ", log_level=2)
+            self.log(traceback.format_exc(), log_level=2)
+            QMessageBox.critical(None, self.tr("MzS Tools error"), f'{err_msg}:\n"{str(e)}"')
+            # cleanup
+            QgsProject.instance().clear()
+            prj_path = Path(dir_out) / self.prj_manager.sanitize_comune_name(project_name)
+            if prj_path.exists():
+                self.log(f"Removing incomplete project in {prj_path}")
+                shutil.rmtree(prj_path)
+            return
+
+        self.merge_task_manager = MergeProjectsTaskManager(sources)
+        self.merge_task_manager.start_merge_tasks()
+
     def on_load_ogc_services_action(self):
         if self.dlg_load_ogc_services is None:
             self.dlg_load_ogc_services = DlgLoadOgcServices(self.iface.mainWindow())
@@ -483,6 +538,9 @@ class MzSTools:
 
     @require_mzs_project
     def on_import_data_action(self):
+        if self.prj_manager.is_multi_comune:
+            self._show_not_available_for_multi_comune()
+            return
         if self.dlg_import_data is None:
             self.dlg_import_data = DlgImportData(self.iface.mainWindow())
 
@@ -518,6 +576,9 @@ class MzSTools:
 
     @require_mzs_project
     def on_export_data_action(self):
+        if self.prj_manager.is_multi_comune:
+            self._show_not_available_for_multi_comune()
+            return
         if self.dlg_export_data is None:
             self.dlg_export_data = DlgExportData(self.iface.mainWindow())
 
@@ -527,6 +588,13 @@ class MzSTools:
                 return False
 
         self.dlg_export_data.exec()
+
+    def _show_not_available_for_multi_comune(self):
+        QMessageBox.information(
+            self.iface.mainWindow(),
+            self.tr("MzS Tools"),
+            self.tr("This tool is not available for multi-municipality projects."),
+        )
 
     @require_mzs_project
     def on_backup_db_action(self):

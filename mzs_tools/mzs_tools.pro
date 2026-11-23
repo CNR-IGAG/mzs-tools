@@ -8,6 +8,7 @@ SOURCES = mzs_tools.py \
           gui/dlg_load_ogc_services.py \
           gui/dlg_manage_attachments.py \
           gui/dlg_metadata_edit.py \
+          gui/dlg_merge_projects.py \
           gui/dlg_settings.py \
           plugin_utils/dependency_manager.py \
           tasks/access_db_connection.py \
@@ -21,7 +22,9 @@ SOURCES = mzs_tools.py \
           tasks/import_siti_lineari_task.py \
           tasks/import_siti_puntuali_task.py \
           tasks/import_data_task_manager.py \
-          tasks/export_data_task_manager.py
+          tasks/export_data_task_manager.py \
+          tasks/merge_projects_task.py \
+          tasks/merge_projects_task_manager.py
 
 FORMS = gui/dlg_create_project.ui \
         gui/dlg_export_data.ui \
@@ -31,6 +34,7 @@ FORMS = gui/dlg_create_project.ui \
         gui/dlg_load_ogc_services.ui \
         gui/dlg_manage_attachments.ui \
         gui/dlg_metadata_edit.ui \
+        gui/dlg_merge_projects.ui \
         gui/dlg_settings.ui
 
 

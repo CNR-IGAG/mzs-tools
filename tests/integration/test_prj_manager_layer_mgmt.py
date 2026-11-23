@@ -108,7 +108,7 @@ def sample_project_path(base_project_path_current, prj_manager) -> Path:
     prj_manager._setup_db_connection()
 
     # Set minimal comune_data for tests that need it
-    prj_manager.comune_data = ComuneData(
+    comune_data = ComuneData(
         cod_regio="12",
         cod_prov="057",
         cod_com="001",
@@ -117,6 +117,8 @@ def sample_project_path(base_project_path_current, prj_manager) -> Path:
         regione="Lazio",
         cod_istat="057001",
     )
+    prj_manager.comune_data = comune_data
+    prj_manager.comuni_progetto = [comune_data]
 
     return base_project_path_current
 

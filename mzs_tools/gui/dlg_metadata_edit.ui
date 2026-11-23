@@ -128,15 +128,9 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLabel" name="comune_info">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string/>
+        <widget class="QComboBox" name="comune_combo_box">
+         <property name="enabled">
+          <bool>false</bool>
          </property>
         </widget>
        </item>

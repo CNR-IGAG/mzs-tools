@@ -44,6 +44,7 @@ from qgis.core import (
 )
 from qgis.gui import QgisInterface
 from qgis.PyQt.QtCore import QCoreApplication, QTimer
+from qgis.PyQt.QtGui import QImage
 from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.PyQt.QtXml import QDomDocument
 from qgis.utils import iface as _iface
@@ -61,6 +62,7 @@ from .constants import (
     DEFAULT_LAYOUT_GROUPS,
     DEFAULT_RELATIONS,
     DEFAULT_TABLE_LAYERS_NAMES,
+    MULTI_COMUNE_TRIGGERS_SCRIPT,
     NO_OVERLAPS_LAYER_GROUPS,
     PRINT_LAYOUT_MODELS,
     PROJECT_MIGRATION_STEPS,
@@ -112,6 +114,7 @@ class MzSProjectManager:
         self.db_manager = None
 
         self.comune_data: ComuneData | None = None
+        self.comuni_progetto: list[ComuneData] = []
         self.project_metadata = None
         self.required_layer_registry = {}
         self.project_issues = None
@@ -144,6 +147,11 @@ class MzSProjectManager:
             raise RuntimeError("Database is not connected")
         return self.db_manager
 
+    @property
+    def is_multi_comune(self) -> bool:
+        """True when the project contains more than one municipality (merged project)."""
+        return len(self.comuni_progetto) > 1
+
     def init_manager(self):
         """Detect if the current project is a MzS Tools project and setup the manager."""
         self.current_project = QgsProject.instance()
@@ -160,6 +168,7 @@ class MzSProjectManager:
         if not project_path_str or not db_path.exists():
             self.log("No MzS Tools project detected", log_level=4)
             self.is_mzs_project = False
+            self.comuni_progetto = []
             self.project_path = None
             self.db_path = None
             # self.db_connection = None
@@ -253,7 +262,8 @@ class MzSProjectManager:
             )
 
         # get comune data from db
-        self.comune_data = self.get_project_comune_data()
+        self.comuni_progetto = self.get_project_comuni_data()
+        self.comune_data = self.comuni_progetto[0] if self.comuni_progetto else None
         if not self.comune_data:
             self._add_project_issue("db", "Error reading comune data from project db")
 
@@ -684,7 +694,7 @@ class MzSProjectManager:
                         and subset_string == "cod_regio"
                         and isinstance(map_layer, QgsVectorLayer)
                     ):
-                        subset_string = f"cod_regio = '{self.comune_data.cod_regio}'"
+                        subset_string = self._comuni_subset_string()
                         map_layer.setSubsetString(subset_string)
 
                     # set custom properties
@@ -1027,6 +1037,43 @@ class MzSProjectManager:
             self.log(f"Project directory '{new_project_path}' already exists!", log_level=1)
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             new_project_path = Path(dir_out) / f"{cod_istat}_{comune_name}_{timestamp}"
+
+        self._build_new_project(new_project_path, [cod_istat])
+        self.create_basic_project_metadata(cod_istat, study_author, author_email)
+        self._save_and_reload_project(new_project_path)
+
+        return new_project_path
+
+    def create_merged_project(self, project_name: str, cod_istat_list: list[str], dir_out: str) -> Path:
+        """Create a new, empty multi-municipality MzS Tools project.
+
+        The survey data of the source projects is copied afterwards by ``MergeProjectsTask``,
+        together with their metadata records.
+
+        Args:
+            project_name (str): Name of the merged project (used for the project folder)
+            cod_istat_list (list[str]): ISTAT codes of the municipalities
+            dir_out (str): Output directory
+
+        Returns:
+            Path: Path to the created project directory
+
+        Raises:
+            FileExistsError: If the project directory already exists
+        """
+        new_project_path = Path(dir_out) / self.sanitize_comune_name(project_name)
+        if new_project_path.exists():
+            raise FileExistsError(f"Project directory '{new_project_path}' already exists")
+
+        self._build_new_project(new_project_path, cod_istat_list)
+        self.db.execute_script_file(DIR_PLUGIN_ROOT / "data" / "sql_scripts" / MULTI_COMUNE_TRIGGERS_SCRIPT)
+        self._save_and_reload_project(new_project_path)
+
+        return new_project_path
+
+    def _build_new_project(self, new_project_path: Path, cod_istat_list: list[str]) -> None:
+        """Create the project folder structure and database, insert the municipalities and set up the
+        QGIS project (layers, layouts, customizations)."""
         # create the project directory
         new_project_path.mkdir(parents=True, exist_ok=False)
 
@@ -1052,16 +1099,20 @@ class MzSProjectManager:
 
         self.update_db_version_info()
 
-        self._insert_comune_progetto(cod_istat)
-        self.comune_data = self.get_project_comune_data()
+        for cod_istat in cod_istat_list:
+            self._insert_comune_progetto(cod_istat)
+        self.comuni_progetto = self.get_project_comuni_data()
+        self.comune_data = self.comuni_progetto[0] if self.comuni_progetto else None
 
         self.add_default_layers()
         self.customize_project()
-        self.create_basic_project_metadata(cod_istat, study_author, author_email)
+
+    def _save_and_reload_project(self, new_project_path: Path) -> None:
+        """Refresh layouts, write version file and project file, then reload the project in QGIS."""
         self.refresh_project_layouts()
 
         # write the version file
-        with open(os.path.join(self.project_path, "progetto", "versione.txt"), "w") as f:
+        with open(os.path.join(new_project_path, "progetto", "versione.txt"), "w") as f:
             f.write(__base_version__)
 
         # Save the project
@@ -1074,8 +1125,6 @@ class MzSProjectManager:
             self.current_project.layersAdded.disconnect(self._on_layers_added)
         # completely reload the project
         iface.addProject(os.path.join(new_project_path, "progetto_MS.qgz"))
-
-        return new_project_path
 
     def _get_incremental_migration_flags(self, old_version: str) -> dict:
         """Return the union of add_default_layers flags for all applicable migration steps.
@@ -1288,6 +1337,24 @@ class MzSProjectManager:
             # Clear the message bar once the operation is complete
             iface.messageBar().popWidget(message_item)
 
+    def _comuni_subset_string(self) -> str:
+        """Subset string for the 'comuni' layer, filtering the regions of the project municipalities."""
+        regioni = sorted({c.cod_regio for c in self.comuni_progetto})
+        if len(regioni) == 1:
+            return f"cod_regio = '{regioni[0]}'"
+        return "cod_regio IN ({})".format(", ".join(f"'{r}'" for r in regioni))
+
+    def _layout_regione_text(self) -> str:
+        regioni = sorted({c.regione for c in self.comuni_progetto})
+        if len(regioni) == 1:
+            return "Regione " + regioni[0]
+        return "Regioni " + ", ".join(regioni)
+
+    def _layout_comune_text(self) -> str:
+        if len(self.comuni_progetto) == 1:
+            return "Comune di " + self.comuni_progetto[0].comune
+        return "Comuni di " + ", ".join(c.comune for c in self.comuni_progetto)
+
     def customize_project(self):
         """Customize the project with the selected comune data."""
         if self.project_path is None:
@@ -1297,9 +1364,14 @@ class MzSProjectManager:
         crs = QgsCoordinateReferenceSystem("EPSG:32633")
         self.current_project.setCrs(crs)
 
-        logo_regio_in = DIR_PLUGIN_ROOT / "resources" / "logo_regioni" / f"{self.comune_data.cod_regio}.png"
         logo_regio_out = self.project_path / "progetto" / "loghi" / "logo_regio.png"
-        shutil.copyfile(logo_regio_in, logo_regio_out)
+        if len({c.cod_regio for c in self.comuni_progetto}) == 1:
+            logo_regio_in = DIR_PLUGIN_ROOT / "resources" / "logo_regioni" / f"{self.comune_data.cod_regio}.png"
+            shutil.copyfile(logo_regio_in, logo_regio_out)
+        else:
+            # municipalities in several regions: use the "Conferenza delle Regioni" logo
+            logo_src = DIR_PLUGIN_ROOT / "resources" / "img" / "logo_conferenza_regioni_province_autonome.jpg"
+            QImage(str(logo_src)).save(str(logo_regio_out), "PNG")
 
         # TODO: define a resource list for a project
         logo_regioni_path = DIR_PLUGIN_ROOT / "resources" / "img" / "logo_conferenza_regioni_province_autonome.jpg"
@@ -1402,7 +1474,11 @@ class MzSProjectManager:
         self.load_print_layouts()
 
         # set project title
-        project_title = f"MzS Tools - Comune di {self.comune_data.comune} ({self.comune_data.provincia}, {self.comune_data.regione}) - Studio di Microzonazione Sismica"
+        if self.is_multi_comune:
+            regioni = ", ".join(sorted({c.regione for c in self.comuni_progetto}))
+            project_title = f"MzS Tools - Progetto multicomunale ({len(self.comuni_progetto)} comuni, {regioni}) - Studio di Microzonazione Sismica"
+        else:
+            project_title = f"MzS Tools - Comune di {self.comune_data.comune} ({self.comune_data.provincia}, {self.comune_data.regione}) - Studio di Microzonazione Sismica"
         self.current_project.setTitle(project_title)
 
         # enable map decorations
@@ -1459,9 +1535,9 @@ class MzSProjectManager:
             # TODO: properly check map item types
             map_item.zoomToExtent(canvas.extent())  # type: ignore
             map_item_2 = layout.itemById("regio_title")
-            map_item_2.setText("Regione " + self.comune_data.regione)  # type: ignore
+            map_item_2.setText(self._layout_regione_text())  # type: ignore
             map_item_3 = layout.itemById("com_title")
-            map_item_3.setText("Comune di " + self.comune_data.comune)  # type: ignore
+            map_item_3.setText(self._layout_comune_text())  # type: ignore
             map_item_4 = layout.itemById("logo")
             map_item_4.refreshPicture()  # type: ignore
             map_item_5 = layout.itemById("mappa_1")
@@ -1622,32 +1698,38 @@ class MzSProjectManager:
             self.db_manager.disconnect()
             self.db_manager = None
 
+    @staticmethod
+    def _row_to_comune_data(row) -> ComuneData:
+        # workaround for very old projects (< 1.0)
+        provincia = ""
+        regione = ""
+        cod_istat = ""
+        try:
+            cod_istat = row[6]
+            provincia = row[7]
+            regione = row[8]
+        except IndexError:
+            cod_istat = row[5]
+
+        return ComuneData(
+            cod_regio=row[1],
+            cod_prov=row[2],
+            cod_com=row[3],
+            comune=row[4],
+            provincia=provincia,
+            regione=regione,
+            cod_istat=cod_istat,
+        )
+
+    def get_project_comuni_data(self) -> list[ComuneData]:
+        """Get data of all the municipalities in the project database, ordered by pkuid."""
+        rows = self.db.execute_query("SELECT * FROM comune_progetto ORDER BY pkuid", fetch_mode="all")
+        return [self._row_to_comune_data(row) for row in rows or []]
+
     def get_project_comune_data(self) -> ComuneData | None:
-        """Get municipality data from the project database."""
-        row = self.db.execute_query("SELECT * FROM comune_progetto LIMIT 1", fetch_mode="one")
-
-        if row:
-            # workaround for very old projects (< 1.0)
-            provincia = ""
-            regione = ""
-            cod_istat = ""
-            try:
-                cod_istat = row[6]
-                provincia = row[7]
-                regione = row[8]
-            except IndexError:
-                cod_istat = row[5]
-
-            return ComuneData(
-                cod_regio=row[1],
-                cod_prov=row[2],
-                cod_com=row[3],
-                comune=row[4],
-                provincia=provincia,
-                regione=regione,
-                cod_istat=cod_istat,
-            )
-        return None
+        """Get data of the (first) municipality from the project database."""
+        comuni = self.get_project_comuni_data()
+        return comuni[0] if comuni else None
 
     def _insert_comune_progetto(self, cod_istat):
         """Insert municipality data into the project database."""
@@ -1684,6 +1766,11 @@ class MzSProjectManager:
             # doing this in a separate loop because the mzs_tools_update_history table was created only in v2.0.0
             self.update_history_table("db", self.project_version, __version__, f"executed script {upgrade_script}")
 
+        # migration scripts may recreate the template triggers: restore the multi-municipality ones
+        if self.is_multi_comune:
+            self.log(f"Executing: {MULTI_COMUNE_TRIGGERS_SCRIPT}", log_level=1)
+            self.db.execute_script_file(DIR_PLUGIN_ROOT / "data" / "sql_scripts" / MULTI_COMUNE_TRIGGERS_SCRIPT)
+
         # update mzs_tools_version table
         self.update_db_version_info()
 
@@ -1714,8 +1801,12 @@ class MzSProjectManager:
     def create_basic_project_metadata(self, cod_istat, study_author=None, author_email=None):
         """Create a basic metadata record for an MzS Tools project."""
         date_now = datetime.now().strftime(r"%Y-%m-%d")
-        layer_comune_id = self.find_layer_by_table_name_role("comune_progetto", "base")
-        extent = self.current_project.layerTreeRoot().findLayer(layer_comune_id).layer().extent()
+        extent = self.db.execute_query(
+            "SELECT MbrMinX(geom), MbrMaxX(geom), MbrMinY(geom), MbrMaxY(geom) FROM comune_progetto WHERE cod_istat = ?",
+            (cod_istat,),
+            fetch_mode="one",
+        )
+        x_min, x_max, y_min, y_max = extent
 
         values = {
             "id_metadato": f"{cod_istat}M1",
@@ -1734,10 +1825,10 @@ class MzSProjectManager:
             "vincoli_fruibilita": "nessuno",
             "vincoli_sicurezza": "nessuno",
             "categoria_iso": "geoscientificInformation",
-            "estensione_ovest": str(extent.xMinimum()),
-            "estensione_est": str(extent.xMaximum()),
-            "estensione_sud": str(extent.yMinimum()),
-            "estensione_nord": str(extent.yMaximum()),
+            "estensione_ovest": str(x_min),
+            "estensione_est": str(x_max),
+            "estensione_sud": str(y_min),
+            "estensione_nord": str(y_max),
         }
 
         # Note: execute_update doesn't support named parameters yet

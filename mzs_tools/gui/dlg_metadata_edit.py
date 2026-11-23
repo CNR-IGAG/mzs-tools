@@ -112,19 +112,38 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
                 field.valueChanged.connect(self.validate_input)
 
         self.prj_manager: MzSProjectManager = MzSProjectManager.instance()
+        self.comune_combo_box.currentIndexChanged.connect(self._on_comune_changed)
 
     def showEvent(self, e):
         if not self.prj_manager:
             self.show_error(self.tr("The tool must be used within an opened MS project!"))
             return
 
-        cod_istat = self.prj_manager.comune_data.cod_istat
-        comune = self.prj_manager.comune_data.comune
-        provincia = self.prj_manager.comune_data.provincia
-        regione = self.prj_manager.comune_data.regione
+        self.comune_combo_box.blockSignals(True)
+        self.comune_combo_box.clear()
+        for comune_data in self.prj_manager.comuni_progetto:
+            self.comune_combo_box.addItem(
+                f"{comune_data.comune} ({comune_data.provincia}, {comune_data.regione})",
+                comune_data.cod_istat,
+            )
+        self.comune_combo_box.setEnabled(self.comune_combo_box.count() > 1)
+        self.comune_combo_box.setCurrentIndex(0)
+        self.comune_combo_box.blockSignals(False)
 
+        if self.comune_combo_box.count() == 0:
+            return
+
+        self._load_comune(self.comune_combo_box.itemData(0))
+
+    def _on_comune_changed(self, index: int) -> None:
+        """Load the metadata of the selected municipality, discarding unsaved edits."""
+        if index < 0:
+            return
+        self._load_comune(self.comune_combo_box.itemData(index))
+
+    def _load_comune(self, cod_istat: str) -> None:
+        """Ensure the metadata record for the municipality exists and load it in the form."""
         expected_id = f"{cod_istat}M1"
-        comune_info = f"{comune} ({provincia}, {regione})"
 
         # check if "metadati" table contains a single record with expected id
         count = self.prj_manager.db.execute_query(
@@ -143,7 +162,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
             )
             return
 
-        self.load_data(expected_id, comune_info)
+        self.load_data(expected_id)
         self.validate_input()
 
     def parse_date(self, date_str):
@@ -154,7 +173,7 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
                 pass
         return None
 
-    def load_data(self, record_id, comune_info):
+    def load_data(self, record_id):
         """Load data from the SQLite table and populate the form fields."""
         record = self.prj_manager.db.execute_query(
             "SELECT * FROM metadati WHERE id_metadato = ?", (record_id,), fetch_mode="one"
@@ -164,7 +183,6 @@ class DlgMetadataEdit(QDialog, FORM_CLASS):
             data_metadato = self.parse_date(record[5])
             data_dato = self.parse_date(record[10])
 
-            self.comune_info.setText(comune_info)
             self.id_metadato.setText(record[0])
             self.liv_gerarchico.setText(record[1] or "series")
             self.resp_metadato_nome.setText(record[2])

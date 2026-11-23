@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.9-beta1] - 2026-11-23
+
+- Experimental tool "Merge MzS Tools projects" to create a multi-municipality project from existing projects
+
 ## [2.0.8] - 2026-05-12
 
 - Fix for Indagini deletion failing when related hvsr extended data is present

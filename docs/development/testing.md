@@ -85,7 +85,7 @@ The base test command is equivalent to:
 uv sync --no-group ci
 # the "--no-group ci" option might be required to avoid Qt library conflicts with qgis-plugin-ci dependencies
 uv sync --group testing
-uv run pytest --cov=mzs_tools --cov-report=term-missing --qgis_disable_gui
+uv run pytest --cov=mzs_tools --cov-report=term-missing --qgis_disable_gui --basetemp=.pytest_tmp
 ```
 
 ### Using pytest directly
@@ -119,6 +119,26 @@ uv run pytest -m "not e2e"
 uv run pytest tests/unit/          # Run only unit tests
 uv run pytest tests/integration/   # Run only integration tests
 ```
+
+### Temporary files and disk space
+
+The e2e tests copy complete project structures (QGIS project, SQLite databases, attachments) into pytest's `tmp_path` directories, and a single full run writes **about 21 GB**. By default pytest creates these under the system temporary directory and keeps the directories of the last 3 runs. On systems where `/tmp` is a RAM-backed `tmpfs` (e.g. Arch Linux, Fedora; often limited to half of the RAM) the disk fills up after a few runs, and runs that crashed or were killed leave their directories behind.
+
+Symptoms are misleading and not always an explicit "disk full" message:
+
+- `OSError: [Errno 28] No space left on device`, typically raised while setting up the `tmp_path` fixture (all subsequent tests error at setup);
+- **segmentation faults** inside QGIS calls such as `QgsProject.read()` / `iface.addProject()` (observed in `test_update_project_from_2_0_0`), with the pytest output truncated and no traceback.
+
+Check with `df -h /tmp` and `du -sh /tmp/pytest-of-$USER` if a run fails in this way.
+
+Workarounds:
+
+- Use `just test` / `just test-gui`: they already pass `--basetemp=.pytest_tmp`, so test data is written inside the repository directory (git-ignored) on the regular disk. pytest empties this directory at the start of each run, so only the last run is kept.
+- When calling pytest directly, pass the same option: `uv run pytest --basetemp=.pytest_tmp ...`.
+- Alternatively, point the temporary directory to a disk-backed location for the whole shell session: `export TMPDIR=$HOME/.cache/pytest-tmp` (the directory must exist).
+- Remove leftovers manually: `rm -rf /tmp/pytest-of-$USER` and `rm -rf .pytest_tmp`.
+- `pyproject.toml` sets `tmp_path_retention_policy = "failed"`, so the temporary directories of passed tests are removed at the end of the run and only those of failed tests are kept for inspection. To keep everything (e.g. to inspect the output of passing tests) override it with `-o tmp_path_retention_policy=all`; `-o tmp_path_retention_count=N` controls how many old run directories are kept.
+- Run only the subset of tests you need (for example `tests/unit` and `tests/integration` produce very little data compared to `tests/e2e`).
 
 ## Coverage
 

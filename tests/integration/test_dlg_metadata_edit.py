@@ -56,7 +56,7 @@ def mock_project_manager(monkeypatch):
 
     # Create mock project manager instance
     mock_manager = Mock(spec=MzSProjectManager)
-    mock_manager.comune_data = mock_comune_data
+    mock_manager.comuni_progetto = [mock_comune_data]
     mock_manager.db = mock_db
     mock_manager.create_basic_project_metadata = Mock()
 
@@ -301,6 +301,27 @@ def test_show_event_multiple_records_error(qtbot, monkeypatch, mock_project_mana
     assert "Multiple" in error_called[0] or "metadati" in error_called[0]
 
 
+def test_show_event_fills_comune_combo(qtbot, monkeypatch, mock_project_manager, gui_timeout):
+    """Test that showEvent fills the municipality combo and loads the first municipality."""
+    dialog = DlgMetadataEdit()
+    qtbot.addWidget(dialog)
+
+    mock_project_manager.db.execute_query.return_value = 1
+    load_data_mock = Mock()
+    monkeypatch.setattr(dialog, "load_data", load_data_mock)
+    monkeypatch.setattr(dialog, "validate_input", Mock())
+
+    from qgis.PyQt.QtGui import QShowEvent
+
+    dialog.showEvent(QShowEvent())
+
+    assert dialog.comune_combo_box.count() == 1
+    assert dialog.comune_combo_box.currentText() == "Roma (Roma, Lazio)"
+    assert dialog.comune_combo_box.itemData(0) == "058091"
+    assert not dialog.comune_combo_box.isEnabled()
+    load_data_mock.assert_called_once_with("058091M1")
+
+
 def test_load_data_populates_fields(monkeypatch, mock_project_manager):
     """Test that load_data correctly populates form fields from database record."""
     dialog = DlgMetadataEdit()
@@ -352,10 +373,9 @@ def test_load_data_populates_fields(monkeypatch, mock_project_manager):
     mock_project_manager.db.execute_query.return_value = mock_record
 
     # Call load_data
-    dialog.load_data("058091M1", "Roma (Roma, Lazio)")
+    dialog.load_data("058091M1")
 
     # Verify fields are populated correctly
-    assert dialog.comune_info.text() == "Roma (Roma, Lazio)"
     assert dialog.id_metadato.text() == "058091M1"
     assert dialog.liv_gerarchico.text() == "series"
     assert dialog.resp_metadato_nome.text() == "Mario Rossi"
@@ -408,7 +428,7 @@ def test_load_data_with_null_dates(monkeypatch, mock_project_manager):
     mock_project_manager.db.execute_query.return_value = mock_record
 
     # Call load_data
-    dialog.load_data("058091M1", "Test Comune")
+    dialog.load_data("058091M1")
 
     # Verify date fields are set to empty (not raising errors)
     # The method should call setEmpty() for NULL dates

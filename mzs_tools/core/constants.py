@@ -104,6 +104,9 @@ DB_MIGRATION_SCRIPTS = {
     "2.0.8": "query_v208.sql",
 }
 
+# Trigger set applied only to multi-municipality (merged) project databases; not a migration script
+MULTI_COMUNE_TRIGGERS_SCRIPT = "multi_comune_triggers.sql"
+
 DEFAULT_BASE_LAYERS = {
     "comune_progetto": {
         "role": "base",

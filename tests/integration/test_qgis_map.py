@@ -19,8 +19,7 @@
 import os
 
 import pytest
-from pytest_qgis import QgsVectorLayer
-from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsRasterLayer
+from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsRasterLayer, QgsVectorLayer
 
 DEFAULT_TIMEOUT_SECS = 2
 

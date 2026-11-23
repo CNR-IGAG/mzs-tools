@@ -118,11 +118,11 @@ test-check-env:
 
 # Run all tests locally with pytest and coverage info, without GUI display
 test TESTS_TO_RUN="tests": test-check-env
-    uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --qgis_disable_gui -rs -v {{ TESTS_TO_RUN }}
+    uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --qgis_disable_gui --basetemp=.pytest_tmp -rs -v {{ TESTS_TO_RUN }}
 
 # Run all tests locally with pytest and coverage info, with GUI display
 test-gui TESTS_TO_RUN="tests" GUI_TIMEOUT="2": test-check-env
-    GUI_TIMEOUT={{ GUI_TIMEOUT }} uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing -rs -v {{ TESTS_TO_RUN }}
+    GUI_TIMEOUT={{ GUI_TIMEOUT }} uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --basetemp=.pytest_tmp -rs -v {{ TESTS_TO_RUN }}
 
 # Run tests with all QGIS versions using tox and Docker
 test-tox-all:
