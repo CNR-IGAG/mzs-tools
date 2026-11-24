@@ -256,10 +256,11 @@ class ExportSitiPuntualiTask(QgsTask):
                         row[12],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[1], e))
                 continue
+        # single commit per table: committing every row forces an fsync each time, which is very slow on some filesystems
+        self.sqlite_db_connection.commit()
         return insert_errors
 
     def get_indagini_puntuali_data(self):
@@ -311,10 +312,10 @@ class ExportSitiPuntualiTask(QgsTask):
                         row[16],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[4], e))
                 continue
+        self.sqlite_db_connection.commit()
         return insert_errors
 
     def get_parametri_puntuali_data(self):
@@ -364,10 +365,10 @@ class ExportSitiPuntualiTask(QgsTask):
                         row[14],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[3], e))
                 continue
+        self.sqlite_db_connection.commit()
         return insert_errors
 
     def get_curve_data(self):
@@ -401,10 +402,10 @@ class ExportSitiPuntualiTask(QgsTask):
                         row[5],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[1], e))
                 continue
+        self.sqlite_db_connection.commit()
         return insert_errors
 
     def get_metadata_data(self):
@@ -483,8 +484,8 @@ class ExportSitiPuntualiTask(QgsTask):
                         row[38],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[0], e))
                 continue
+        self.sqlite_db_connection.commit()
         return insert_errors

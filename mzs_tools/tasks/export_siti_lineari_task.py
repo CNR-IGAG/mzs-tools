@@ -222,10 +222,11 @@ class ExportSitiLineariTask(QgsTask):
                         row[13],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[1], e))
                 continue
+        # single commit per table: committing every row forces an fsync each time, which is very slow on some filesystems
+        self.sqlite_db_connection.commit()
         return insert_errors
 
     def get_indagini_lineari_data(self):
@@ -272,10 +273,10 @@ class ExportSitiLineariTask(QgsTask):
                         row[11],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[4], e))
                 continue
+        self.sqlite_db_connection.commit()
         return insert_errors
 
     def get_parametri_lineari_data(self):
@@ -319,8 +320,8 @@ class ExportSitiLineariTask(QgsTask):
                         row[13],
                     ),
                 )
-                self.sqlite_db_connection.commit()
             except Exception as e:
                 insert_errors.append((row[3], e))
                 continue
+        self.sqlite_db_connection.commit()
         return insert_errors

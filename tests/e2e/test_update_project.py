@@ -22,7 +22,7 @@ from typing import Any
 from unittest.mock import Mock
 
 from pytest_qgis import MockMessageBar
-from qgis.core import QgsProject
+from qgis.core import QgsProject, QgsVectorLayer
 
 from mzs_tools.__about__ import __base_version__, __version__
 from mzs_tools.core.constants import DB_MIGRATION_SCRIPTS
@@ -114,6 +114,17 @@ def perform_update(
         project.read(str(project_file))
 
     plugin_instance.check_project()
+
+
+def assert_no_layers_outside_layer_tree(project: QgsProject) -> None:
+    """Every project layer must have a node in the layer tree.
+
+    Layers removed only from the layer tree stay in the project until the event loop runs, are saved as
+    hidden layers and are deleted during the next project read, crashing QGIS.
+    """
+    root = project.layerTreeRoot()
+    hidden = [layer.name() for layer_id, layer in project.mapLayers().items() if root.findLayer(layer_id) is None]
+    assert hidden == []
 
 
 def verify_update_history(prj_manager: Any, project_version: str, check_history_table_before: bool = True) -> list:
@@ -340,6 +351,7 @@ def test_update_project_from_2_0_0(plugin, qgis_iface, prj_manager, base_project
     # Verify update history and SQL scripts
     sql_scripts_applied = verify_update_history(prj_manager, project_version, check_history_table_before=False)
     verify_sql_scripts_applied(sql_scripts_applied, project_version)
+    assert_no_layers_outside_layer_tree(project)
 
 
 def test_update_project_from_2_0_5(plugin, qgis_iface, prj_manager, base_project_path_2_0_5, monkeypatch):
@@ -372,3 +384,37 @@ def test_update_project_from_2_0_5(plugin, qgis_iface, prj_manager, base_project
     # Verify update history and SQL scripts
     sql_scripts_applied = verify_update_history(prj_manager, project_version, check_history_table_before=False)
     verify_sql_scripts_applied(sql_scripts_applied, project_version)
+
+
+def test_update_project_removes_hidden_db_layers(
+    plugin, qgis_iface, prj_manager, base_project_path_2_0_5, monkeypatch
+):
+    """Hidden layers saved by layout group updates of versions < 2.0.9 are removed; other hidden layers are kept."""
+    plugin_instance = plugin(qgis_iface)
+    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    db_file = base_project_path_2_0_5 / "db" / "indagini.sqlite"
+    project = QgsProject.instance()
+    monkeypatch.setattr(plugin_instance, "show_project_update_dialog", lambda: None, raising=False)
+    disable_rendering(project, qgis_iface)
+    project.read(str(project_file))
+    plugin_instance.check_project()
+
+    # the same providers used by the layout group layers
+    hidden_db_layers = [
+        QgsVectorLayer(f"dbname='{db_file}' table=\"stab_l1\" (geom)", "Zone stabili", "spatialite"),
+        QgsVectorLayer(f"{db_file}|layername=stab_l23", "Zone stabili", "ogr"),
+    ]
+    other_hidden_layer = QgsVectorLayer("Point?crs=EPSG:32633", "other hidden layer", "memory")
+    for layer in [*hidden_db_layers, other_hidden_layer]:
+        assert layer.isValid()
+        project.addMapLayer(layer, False)
+    hidden_db_layer_ids = [layer.id() for layer in hidden_db_layers]
+    other_hidden_layer_id = other_hidden_layer.id()
+
+    perform_update(plugin_instance, project, project_file, qgis_iface, monkeypatch, reload_project=False)
+
+    assert prj_manager.project_version == __base_version__
+    assert all(project.mapLayer(layer_id) is None for layer_id in hidden_db_layer_ids)
+    assert project.mapLayer(other_hidden_layer_id) is not None
+    project.removeMapLayer(other_hidden_layer_id)
+    assert_no_layers_outside_layer_tree(project)

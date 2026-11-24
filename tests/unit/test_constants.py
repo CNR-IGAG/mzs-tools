@@ -158,6 +158,7 @@ def _compute_migration_flags(old_version: str, steps) -> dict:
         "add_base_layers": False,
         "add_editing_layers": False,
         "add_layout_groups": False,
+        "remove_hidden_layers": False,
         "print_layouts": [],
     }
     parsed_old = parse_version(old_version)
@@ -166,6 +167,7 @@ def _compute_migration_flags(old_version: str, steps) -> dict:
             flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
             flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
             flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
+            flags["remove_hidden_layers"] = flags["remove_hidden_layers"] or step.remove_hidden_layers
             for layout_file in step.add_print_layouts:
                 if layout_file not in flags["print_layouts"]:
                     flags["print_layouts"].append(layout_file)
@@ -191,6 +193,7 @@ class TestProjectMigrationSteps:
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is True
         assert flags["add_layout_groups"] is True
+        assert flags["remove_hidden_layers"] is True
         assert flags["print_layouts"] == ["carta_ms_fa.qpt"]
 
     def test_flags_for_version_2_0_1(self):
@@ -223,6 +226,7 @@ class TestProjectMigrationSteps:
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is False
         assert flags["add_layout_groups"] is True
+        assert flags["remove_hidden_layers"] is True
         assert flags["print_layouts"] == ["carta_ms_fa.qpt"]
 
     def test_flags_for_current_version_no_action(self):

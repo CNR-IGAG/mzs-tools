@@ -29,11 +29,14 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # bookworm = Debian 12 with Python 3.11
+        # bookworm = Debian 12 with Python 3.11 (3.34 image is frozen, no longer rebuilt upstream)
         # jammy = Ubuntu 22.04 with Python 3.10
         # noble = Ubuntu 24.04 with Python 3.12
-        # stable-questing = QGIS 4.0 on Ubuntu "questing" with Python 3.13
-        qgis-version: ["3.34-bookworm", "3.44-jammy", "3.44-noble", "stable-questing"]
+        # trixie = Debian 13 with Python 3.13
+        # resolute = Ubuntu 26.04 with Python 3.14
+        # 3.44 = current LTR (Qt5), supported until the 4.x LTR (4.4.4, ~March 2027) is released
+        # stable-* = QGIS 4.4 (Qt6); "stable-questing" is no longer rebuilt (stuck at 4.2.3)
+        qgis-version: ["3.34-bookworm", "3.44-jammy", "3.44-noble", "stable-trixie", "stable-resolute"]
         # include:
         #   - qgis-version: "latest"
         #     experimental: true
@@ -41,6 +44,9 @@ jobs:
 
     container:
       image: qgis/qgis:${{ matrix.qgis-version }}
+      # keep /tmp in RAM: tests create many temporary projects/databases and fsync on the container overlay filesystem is slow.
+      # "exec" is required because the uv virtualenv is created in /tmp (tmpfs is noexec by default)
+      options: --tmpfs /tmp:exec
       env:
         CI: true
         DISPLAY: ":1"

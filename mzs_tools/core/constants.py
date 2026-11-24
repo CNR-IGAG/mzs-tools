@@ -25,9 +25,11 @@ class ProjectMigrationStep:
 
     ``version`` is the plugin version that introduced the change.
     A step is applied to any project whose version is older (``project_version < step.version``).
-    The flags mirror the keyword arguments of ``add_default_layers()``.
+    The layer flags mirror the keyword arguments of ``add_default_layers()``.
     ``add_print_layouts`` lists ``.qpt`` model file names (relative to ``data/print_layouts/``)
     that should be loaded into the project print layout manager during the update.
+    ``remove_hidden_layers`` removes the project layers stored in the project database that have no
+    node in the layer tree (left behind by layout group updates of plugin versions < 2.0.9).
     """
 
     version: str
@@ -36,6 +38,7 @@ class ProjectMigrationStep:
     add_editing_layers: bool = False
     add_layout_groups: bool = False
     add_print_layouts: list[str] = field(default_factory=list)
+    remove_hidden_layers: bool = False
 
 
 # Ordered list of incremental QGIS project migration steps (oldest first).
@@ -86,6 +89,15 @@ PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
         ),
         add_layout_groups=True,
         add_print_layouts=["carta_ms_fa.qpt"],
+    ),
+    ProjectMigrationStep(
+        version="2.0.9",
+        description=(
+            "'Carta FA 07-11' layout group updated; removed hidden layers left in the project by previous "
+            "layout group updates"
+        ),
+        add_layout_groups=True,
+        remove_hidden_layers=True,
     ),
 ]
 

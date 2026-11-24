@@ -149,6 +149,50 @@ test-tox-old:
     uv sync --group testing
     uv run tox -e qgis-old
 
+# Run the GitHub "Tester" workflow locally with act, for one matrix entry (e.g. "stable-resolute", "3.44-noble") or "all"
+test-act QGIS_VERSION="stable-resolute":
+    #!/bin/bash
+    # The workflow is run from a temporary copy with the workspace volume replaced by an absolute path (needed by act),
+    # and the repo is copied to /tmp so that root-owned files created by the container don't end up in the working tree.
+    set -uo pipefail
+    WORKFLOW=".github/workflows/tester.yml"
+    WORK_DIR=$(mktemp -d /tmp/mzs-tools-act.XXXXXX)
+    SRC_DIR="$WORK_DIR/src"
+    mkdir -p "$SRC_DIR"
+
+    if [ "{{ QGIS_VERSION }}" = "all" ]; then
+        VERSIONS=$(sed -n 's/^ *qgis-version: \[\(.*\)\].*/\1/p' "$WORKFLOW" | tr -d '"' | tr ',' ' ')
+    else
+        VERSIONS="{{ QGIS_VERSION }}"
+    fi
+
+    # files created by the containers are owned by root: remove them using docker
+    cleanup() {
+        docker run --rm -v /tmp:/t "qgis/qgis:${VERSIONS%% *}" rm -rf "/t/$(basename "$WORK_DIR")" >/dev/null 2>&1 || rm -rf "$WORK_DIR"
+    }
+    trap cleanup EXIT
+
+    rsync -a --exclude .venv --exclude .git --exclude .pytest_tmp --exclude .pytest_cache \
+        --exclude .qgis-settings --exclude __pycache__ ./ "$SRC_DIR/"
+    sed -E "s|^(\s*- ).*github\.workspace.*:/home/root/mzs-tools|\1$SRC_DIR:/home/root/mzs-tools|" "$WORKFLOW" > "$WORK_DIR/tester.yml"
+
+    FAILED=""
+    for VERSION in $VERSIONS; do
+        echo ">>> act: qgis/qgis:$VERSION"
+        docker rm -f $(docker ps -aq --filter name=act--) >/dev/null 2>&1
+        # act ignores "container.env" of the workflow, so the same variables are passed explicitly (keep in sync with tester.yml)
+        act push -W "$WORK_DIR/tester.yml" -j test-all --matrix "qgis-version:$VERSION" \
+            --env CI=true --env DISPLAY=:1 --env NO_MODALS=1 --env QT_QPA_PLATFORM=offscreen \
+            --env PYTHONPATH=/usr/share/qgis/python/plugins:/usr/share/qgis/python:. || FAILED="$FAILED $VERSION"
+    done
+    docker rm -f $(docker ps -aq --filter name=act--) >/dev/null 2>&1
+
+    if [ -n "$FAILED" ]; then
+        echo "act run FAILED for:$FAILED"
+        exit 1
+    fi
+    echo "act run succeeded for: $VERSIONS"
+
 @package VERSION:
     #!/bin/bash
     uv sync --group ci
@@ -199,7 +243,7 @@ pull-docker-qgis VERSION="ltr":
     docker pull qgis/qgis:{{ VERSION }}
 
 # set VERSION to an available tag (https://hub.docker.com/r/qgis/qgis/tags)
-# eg. "stable-questing" (4.0), "ltr" (3.44.xx), "3.34-bookworm"
+# eg. "stable-resolute" (4.4), "ltr" (3.44.xx), "3.34-bookworm"
 run-docker-qgis VERSION="ltr" QGIS_PYTHON_PATH=".local/share/QGIS/QGIS3/profiles/default/python" QGIS4_PYTHON_PATH=".local/share/QGIS/QGIS4/profiles/default/python":
     #!/bin/bash
     just pull-docker-qgis {{ VERSION }}

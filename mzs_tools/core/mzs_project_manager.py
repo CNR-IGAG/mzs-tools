@@ -33,9 +33,11 @@ from qgis.core import (
     QgsEditorWidgetSetup,
     QgsLayerDefinition,
     QgsLayerTreeGroup,
+    QgsLayerTreeNode,
     QgsMapLayer,
     QgsPrintLayout,
     QgsProject,
+    QgsProviderRegistry,
     QgsReadWriteContext,
     QgsRelation,
     QgsSnappingConfig,
@@ -869,11 +871,17 @@ class MzSProjectManager:
 
         # copy .qlr file in project folder
         shutil.copy(qlr_full_path, self.project_path)
-        success, error_msg = QgsLayerDefinition.loadLayerDefinition(
-            str(self.project_path / qlr_full_path.name),
-            self.current_project,
-            layer_group,
-        )
+        # QgsLayerDefinition.loadLayerDefinition changes the process working directory to the
+        # .qlr folder and does not restore it, so we do it here
+        cwd = os.getcwd()
+        try:
+            success, error_msg = QgsLayerDefinition.loadLayerDefinition(
+                str(self.project_path / qlr_full_path.name),
+                self.current_project,
+                layer_group,
+            )
+        finally:
+            os.chdir(cwd)
         # remove the copied qlr file
         os.remove(self.project_path / qlr_full_path.name)
         if not success:
@@ -889,7 +897,7 @@ class MzSProjectManager:
                     self.log(f"Removing group '{table_name}'", log_level=4)
                     parent_node = group.parent()
                     if parent_node and isinstance(parent_node, QgsLayerTreeGroup):
-                        parent_node.removeChildNode(group)
+                        self._remove_group_with_layers(parent_node, group)
                 continue
             layers = self.find_layers_by_table_name(table_name)
             for layer in layers:
@@ -970,12 +978,43 @@ class MzSProjectManager:
                     continue
                 self.log(f"Removing layout group '{group_name}'", log_level=4)
                 if isinstance(parent_node, QgsLayerTreeGroup):
-                    parent_node.removeChildNode(group)
+                    self._remove_group_with_layers(parent_node, group)
                     # remove parent group if empty
                     if parent_node and isinstance(parent_node, QgsLayerTreeGroup) and len(parent_node.children()) == 0:
                         gp = parent_node.parent()
                         if gp and isinstance(gp, QgsLayerTreeGroup):
                             gp.removeChildNode(parent_node)
+
+    def _remove_group_with_layers(self, parent_node: QgsLayerTreeGroup, group: QgsLayerTreeGroup):
+        """Remove a layer tree group together with the map layers it contains.
+
+        Removing a group node alone only *queues* the removal of its layers from the project
+        (QgsLayerTreeRegistryBridge uses a queued call). Until the event loop runs, the layers stay in
+        the project without a tree node: a project write saves them as hidden layers, and the pending
+        removal later deletes the layers with the same ids loaded by the next project read (use-after-free
+        crash in QgsProject::addMapLayers when events are processed during the read).
+        Layers that also appear in the layer tree outside the group are kept.
+        """
+        group_layer_ids = set(group.findLayerIds())
+        layer_ids_elsewhere = {
+            node.layerId()
+            for node in self.current_project.layerTreeRoot().findLayers()
+            if node.layerId() in group_layer_ids and not self._is_in_group(node, group)
+        }
+        to_remove = list(group_layer_ids - layer_ids_elsewhere)
+        if to_remove:
+            # the layer tree bridge removes the corresponding tree nodes synchronously
+            self.current_project.removeMapLayers(to_remove)
+        parent_node.removeChildNode(group)
+
+    @staticmethod
+    def _is_in_group(node: QgsLayerTreeNode, group: QgsLayerTreeGroup) -> bool:
+        parent = node.parent()
+        while parent is not None:
+            if parent == group:
+                return True
+            parent = parent.parent()
+        return False
 
     def find_layers_by_table_name(self, table_name: str) -> list:
         """Find all vector layers in the currrent project with the given table name in datasource uri."""
@@ -1127,24 +1166,25 @@ class MzSProjectManager:
         iface.addProject(os.path.join(new_project_path, "progetto_MS.qgz"))
 
     def _get_incremental_migration_flags(self, old_version: str) -> dict:
-        """Return the union of add_default_layers flags for all applicable migration steps.
+        """Return the union of the flags of all applicable migration steps.
 
         A step is applicable when ``parse(old_version) < parse(step.version)``.
-        The boolean flags can be unpacked directly into ``add_default_layers(**flags)`` after
-        popping ``print_layouts``.
+        The boolean layer flags can be unpacked directly into ``add_default_layers(**flags)`` after
+        popping ``print_layouts`` and ``remove_hidden_layers``.
 
         Args:
             old_version: Version string of the project to be upgraded (e.g. ``"2.0.1"``).
 
         Returns:
-            dict with keys ``add_base_layers``, ``add_editing_layers``, ``add_layout_groups``
-            (all bool) and ``print_layouts`` (list[str] of .qpt file names, deduplicated,
-            preserving first-occurrence order).
+            dict with keys ``add_base_layers``, ``add_editing_layers``, ``add_layout_groups``,
+            ``remove_hidden_layers`` (all bool) and ``print_layouts`` (list[str] of .qpt file names,
+            deduplicated, preserving first-occurrence order).
         """
         flags: dict = {
             "add_base_layers": False,
             "add_editing_layers": False,
             "add_layout_groups": False,
+            "remove_hidden_layers": False,
             "print_layouts": [],
         }
         parsed_old = parse_version(old_version)
@@ -1153,10 +1193,32 @@ class MzSProjectManager:
                 flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
                 flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
                 flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
+                flags["remove_hidden_layers"] = flags["remove_hidden_layers"] or step.remove_hidden_layers
                 for layout_file in step.add_print_layouts:
                     if layout_file not in flags["print_layouts"]:
                         flags["print_layouts"].append(layout_file)
         return flags
+
+    def _remove_hidden_layers(self):
+        """Remove the project layers stored in the project database that have no node in the layer tree.
+
+        Layout group updates of plugin versions < 2.0.9 saved the layers of the replaced groups as hidden
+        layers (see ``_remove_group_with_layers``). Hidden layers with other sources are kept.
+        """
+        if self.db_path is None:
+            return
+        db_path = self.db_path.resolve()
+        root = self.current_project.layerTreeRoot()
+        to_remove = []
+        for layer_id, layer in self.current_project.mapLayers().items():
+            if root.findLayer(layer_id) is not None:
+                continue
+            layer_path = QgsProviderRegistry.instance().decodeUri(layer.providerType(), layer.source()).get("path")
+            if layer_path and Path(layer_path).resolve() == db_path:
+                to_remove.append(layer_id)
+        if to_remove:
+            self.log(f"Removing {len(to_remove)} hidden layers from the project", log_level=4)
+            self.current_project.removeMapLayers(to_remove)
 
     def update_project(self):
         """Update the project without loading the project template.
@@ -1254,7 +1316,8 @@ class MzSProjectManager:
             else:
                 flags = self._get_incremental_migration_flags(old_version)
                 print_layouts_to_add = flags.pop("print_layouts")
-                need_update = any(flags.values()) or bool(print_layouts_to_add)
+                remove_hidden_layers = flags.pop("remove_hidden_layers")
+                need_update = any(flags.values()) or bool(print_layouts_to_add) or remove_hidden_layers
 
                 if need_update:
                     # log the actions to be performed on the QGIS project
@@ -1267,9 +1330,14 @@ class MzSProjectManager:
                         actions.append("layout groups")
                     if print_layouts_to_add:
                         actions.append(f"print layouts ({', '.join(print_layouts_to_add)})")
+                    if remove_hidden_layers:
+                        actions.append("hidden layers removal")
                     self.log(
                         f"Updating MzSTools QGIS project from version {old_version} to {__base_version__} by updating: [{', '.join(actions)}]"
                     )
+
+                    if remove_hidden_layers:
+                        self._remove_hidden_layers()
 
                     if any(flags.values()):
                         self.add_default_layers(**flags)
