@@ -41,7 +41,8 @@ MIN_DETACHED_UPDATE_VERSION = "2.0.0"
 
 
 def tr(message: str) -> str:
-    return QCoreApplication.translate("ProjectUpdate", message)
+    # pylupdate5 files module-level tr() calls under the "@default" context
+    return QCoreApplication.translate("@default", message)
 
 
 @dataclass

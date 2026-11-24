@@ -62,7 +62,13 @@ class _MzSToolsAlgorithmBase(QgsProcessingAlgorithm):
         return self.__class__()
 
     def tr(self, message: str) -> str:
-        return QCoreApplication.translate(self.__class__.__name__, message)
+        # pylupdate5 files self.tr() calls under the class that contains them: strings defined in the
+        # base classes are looked up through the MRO
+        for cls in type(self).__mro__:
+            translated = QCoreApplication.translate(cls.__name__, message)
+            if translated != message:
+                return translated
+        return message
 
 
 class _MzSProjectUpdateAlgorithmBase(_MzSToolsAlgorithmBase):

@@ -27,13 +27,31 @@ from qgis.core import (
     QgsApplication,
     QgsMapRendererCustomPainterJob,
     QgsMapSettings,
+    QgsSettings,
 )
-from qgis.PyQt.QtCore import QCoreApplication, QSize, Qt
+from qgis.PyQt.QtCore import QCoreApplication, QLocale, QSize, Qt, QTranslator
 from qgis.PyQt.QtGui import QImage, QPainter
 from qgis.PyQt.QtWidgets import QLabel, QMessageBox, QProgressDialog
 from qgis.utils import iface
 
+from ..__about__ import DIR_PLUGIN_ROOT
 from ..plugin_utils.logging import MzSToolsLogger
+
+
+def install_translator() -> QTranslator | None:
+    """Install the plugin translator for the QGIS user locale.
+
+    Returns the translator (the caller must keep a reference to it), or None if there is no translation
+    for the locale.
+    """
+    locale: str = QgsSettings().value("locale/userLocale", QLocale().name())[0:2]
+    qm_path = DIR_PLUGIN_ROOT / "i18n" / f"MzSTools_{locale}.qm"
+    if not qm_path.exists():
+        return None
+    translator = QTranslator()
+    translator.load(str(qm_path))
+    QCoreApplication.installTranslator(translator)
+    return translator
 
 
 def require_mzs_project(func):

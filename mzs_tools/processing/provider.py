@@ -20,6 +20,7 @@ from qgis.core import QgsApplication, QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
 from ..__about__ import DIR_PLUGIN_ROOT
+from ..plugin_utils.misc import install_translator
 from .algorithms import (
     ExportProjectsInFolderToStandardAlgorithm,
     ExportProjectToStandardAlgorithm,
@@ -54,6 +55,7 @@ class MzSToolsProcessingPlugin:
 
     def __init__(self):
         self.provider = None
+        self.translator = install_translator()
 
     def initProcessing(self):
         self.provider = MzSToolsProvider()

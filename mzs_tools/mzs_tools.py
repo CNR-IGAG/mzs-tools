@@ -25,10 +25,9 @@ from pathlib import Path
 from qgis.core import (
     QgsApplication,
     QgsProject,
-    QgsSettings,
 )
 from qgis.gui import QgisInterface
-from qgis.PyQt.QtCore import QCoreApplication, QLocale, QTimer, QTranslator
+from qgis.PyQt.QtCore import QCoreApplication, QTimer
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import (
     QAction,
@@ -54,7 +53,7 @@ from .gui.dlg_settings import PlgOptionsFactory
 from .plugin_utils.db_utils import check_mdb_connection
 from .plugin_utils.dependency_manager import DependencyManager
 from .plugin_utils.logging import MzSToolsLogger
-from .plugin_utils.misc import require_mzs_project
+from .plugin_utils.misc import install_translator, require_mzs_project
 from .processing.provider import MzSToolsProvider
 from .tasks.merge_projects_task_manager import MergeProjectsTaskManager
 
@@ -64,12 +63,7 @@ class MzSTools:
         self.iface: QgisInterface = iface
         self.log = MzSToolsLogger.log
 
-        locale: str = QgsSettings().value("locale/userLocale", QLocale().name())[0:2]
-        locale_path = DIR_PLUGIN_ROOT / "i18n" / f"MzSTools_{locale}.qm"
-        if locale_path.exists():
-            self.translator = QTranslator()
-            self.translator.load(str(locale_path))
-            QCoreApplication.installTranslator(self.translator)
+        self.translator = install_translator()
 
         # Plugin dialogs
         self.dlg_create_project = None

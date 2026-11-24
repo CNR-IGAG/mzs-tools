@@ -53,7 +53,8 @@ INDAGINI_FORMATS = ("sqlite", "mdb")
 
 
 def tr(message: str) -> str:
-    return QCoreApplication.translate("StandardProjectExport", message)
+    # pylupdate5 files module-level tr() calls under the "@default" context
+    return QCoreApplication.translate("@default", message)
 
 
 @dataclass

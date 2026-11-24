@@ -55,7 +55,8 @@ IMPORT_LOGGER_NAME = "mzs_tools.tasks.import_data"
 
 
 def tr(message: str) -> str:
-    return QCoreApplication.translate("StandardProjectImport", message)
+    # pylupdate5 files module-level tr() calls under the "@default" context
+    return QCoreApplication.translate("@default", message)
 
 
 @dataclass
