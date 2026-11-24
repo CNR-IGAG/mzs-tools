@@ -16,16 +16,14 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-"""Unit tests for ExportDataTaskManager shapefile post-processing utilities.
+"""Unit tests for the standard project export shapefile post-processing utilities (mzs_tools.tasks.standard_project).
 
-These tests exercise _rename_field, _change_field_type and
-_extract_file_name_from_path in isolation using on-disk shapefiles written
+These tests exercise rename_field, change_field_type and
+extract_file_name_from_path in isolation using on-disk shapefiles written
 to a temporary directory.
 """
 
-import logging
 from pathlib import Path
-from unittest.mock import MagicMock
 
 from osgeo import ogr, osr
 from qgis.core import (
@@ -33,32 +31,11 @@ from qgis.core import (
 )
 from qgis.PyQt.QtCore import QMetaType
 
-from mzs_tools.tasks.export_data_task_manager import ExportDataTaskManager
+from mzs_tools.tasks.standard_project import change_field_type, extract_file_name_from_path, rename_field
 
 # ---------------------------------------------------------------------------
 # Helpers / Fixtures
 # ---------------------------------------------------------------------------
-
-
-def _make_manager(tmp_path: Path) -> ExportDataTaskManager:
-    """Build a minimal ExportDataTaskManager with mocked QGIS dependencies."""
-    manager = object.__new__(ExportDataTaskManager)
-    manager.file_logger = logging.getLogger("test_export_data_task_manager")
-    manager.file_logger.setLevel(logging.DEBUG)
-    manager.iface = MagicMock()
-    manager.prj_manager = MagicMock()
-    manager.output_path = tmp_path
-    manager.indagini_output_format = "sqlite"
-    manager.standard_version_string = "S42"
-    manager.cdi_tabelle_model_file = "CdI_Tabelle_4.2.mdb"
-    manager.debug_mode = False
-    manager._tasks = []
-    manager._task_failed = False
-    manager._completed_count = 0
-    manager.progress_bar = None
-    manager.log_file_path = None
-    manager.file_handler = None
-    return manager
 
 
 def _write_shapefile(tmp_path: Path, name: str, fields: list[tuple[str, QMetaType.Type]], rows: list[dict]) -> Path:
@@ -90,12 +67,12 @@ def _write_shapefile(tmp_path: Path, name: str, fields: list[tuple[str, QMetaTyp
 
 
 # ---------------------------------------------------------------------------
-# _rename_field
+# rename_field
 # ---------------------------------------------------------------------------
 
 
 def test_rename_field_success(tmp_path, qgis_app):
-    """_rename_field renames an existing field to the new name."""
+    """rename_field renames an existing field to the new name."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_rename",
@@ -105,8 +82,7 @@ def test_rename_field_success(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
-    manager._rename_field(layer, "old_name", "new_name")
+    rename_field(layer, "old_name", "new_name")
 
     # Re-open layer to confirm persistence
     layer2 = QgsVectorLayer(str(shp_path), "test", "ogr")
@@ -116,7 +92,7 @@ def test_rename_field_success(tmp_path, qgis_app):
 
 
 def test_rename_field_nonexistent_is_noop(tmp_path, qgis_app):
-    """_rename_field silently ignores a field that doesn't exist."""
+    """rename_field silently ignores a field that doesn't exist."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_rename_noop",
@@ -126,9 +102,8 @@ def test_rename_field_nonexistent_is_noop(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
     # Should not raise
-    manager._rename_field(layer, "missing_field", "whatever")
+    rename_field(layer, "missing_field", "whatever")
 
     layer2 = QgsVectorLayer(str(shp_path), "test", "ogr")
     field_names = [f.name() for f in layer2.fields()]
@@ -136,12 +111,12 @@ def test_rename_field_nonexistent_is_noop(tmp_path, qgis_app):
 
 
 # ---------------------------------------------------------------------------
-# _change_field_type
+# change_field_type
 # ---------------------------------------------------------------------------
 
 
 def test_change_field_type_double_to_int(tmp_path, qgis_app):
-    """_change_field_type converts a Double field to Int, preserving values."""
+    """change_field_type converts a Double field to Int, preserving values."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_change_type",
@@ -151,15 +126,13 @@ def test_change_field_type_double_to_int(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
-
     try:
-        result = manager._change_field_type(layer, "score", QMetaType.Type.Int)
+        result = change_field_type(layer, "score", QMetaType.Type.Int)
     except TypeError:
         # QGIS < 3.38: use QVariant.Type
         from qgis.PyQt import QtCore
 
-        result = manager._change_field_type(layer, "score", QtCore.QVariant.Int)
+        result = change_field_type(layer, "score", QtCore.QVariant.Int)
 
     assert result is True
 
@@ -172,7 +145,7 @@ def test_change_field_type_double_to_int(tmp_path, qgis_app):
 
 
 def test_change_field_type_int_to_double(tmp_path, qgis_app):
-    """_change_field_type converts an Int field to Double, preserving values."""
+    """change_field_type converts an Int field to Double, preserving values."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_int_to_double",
@@ -182,15 +155,13 @@ def test_change_field_type_int_to_double(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
-
     try:
-        result = manager._change_field_type(layer, "LIVELLO", QMetaType.Type.Double)
+        result = change_field_type(layer, "LIVELLO", QMetaType.Type.Double)
     except TypeError:
         # QGIS < 3.38: use QVariant.Type
         from qgis.PyQt import QtCore
 
-        result = manager._change_field_type(layer, "LIVELLO", QtCore.QVariant.Double)
+        result = change_field_type(layer, "LIVELLO", QtCore.QVariant.Double)
 
     assert result is True
 
@@ -203,7 +174,7 @@ def test_change_field_type_int_to_double(tmp_path, qgis_app):
 
 
 def test_change_field_type_nonexistent_returns_false(tmp_path, qgis_app):
-    """_change_field_type returns False for a missing field and does not raise."""
+    """change_field_type returns False for a missing field and does not raise."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_change_missing",
@@ -213,18 +184,17 @@ def test_change_field_type_nonexistent_returns_false(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
-    result = manager._change_field_type(layer, "nonexistent", QMetaType.Type.Double)
+    result = change_field_type(layer, "nonexistent", QMetaType.Type.Double)
     assert result is False
 
 
 # ---------------------------------------------------------------------------
-# _extract_file_name_from_path
+# extract_file_name_from_path
 # ---------------------------------------------------------------------------
 
 
 def test_extract_file_name_from_path(tmp_path, qgis_app):
-    """_extract_file_name_from_path replaces full paths with filenames only."""
+    """extract_file_name_from_path replaces full paths with filenames only."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_extract",
@@ -237,8 +207,7 @@ def test_extract_file_name_from_path(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
-    manager._extract_file_name_from_path(layer, "SPETTRI")
+    extract_file_name_from_path(layer, "SPETTRI")
 
     layer2 = QgsVectorLayer(str(shp_path), "test", "ogr")
     values = [feat["SPETTRI"] for feat in layer2.getFeatures()]  # type: ignore
@@ -249,7 +218,7 @@ def test_extract_file_name_from_path(tmp_path, qgis_app):
 
 
 def test_extract_file_name_from_path_empty_values(tmp_path, qgis_app):
-    """_extract_file_name_from_path skips NULL/empty values without error."""
+    """extract_file_name_from_path skips NULL/empty values without error."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_extract_empty",
@@ -259,9 +228,8 @@ def test_extract_file_name_from_path_empty_values(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
     # Should not raise even with NULL/empty values
-    manager._extract_file_name_from_path(layer, "SPETTRI")
+    extract_file_name_from_path(layer, "SPETTRI")
 
     layer2 = QgsVectorLayer(str(shp_path), "test", "ogr")
     non_empty = [feat["SPETTRI"] for feat in layer2.getFeatures() if feat["SPETTRI"]]  # type: ignore
@@ -269,7 +237,7 @@ def test_extract_file_name_from_path_empty_values(tmp_path, qgis_app):
 
 
 def test_extract_file_name_from_path_nonexistent_field(tmp_path, qgis_app):
-    """_extract_file_name_from_path returns early when field doesn't exist."""
+    """extract_file_name_from_path returns early when field doesn't exist."""
     shp_path = _write_shapefile(
         tmp_path,
         "test_extract_missing_field",
@@ -279,9 +247,8 @@ def test_extract_file_name_from_path_nonexistent_field(tmp_path, qgis_app):
     layer = QgsVectorLayer(str(shp_path), "test", "ogr")
     assert layer.isValid()
 
-    manager = _make_manager(tmp_path)
     # Should not raise
-    manager._extract_file_name_from_path(layer, "SPETTRI")
+    extract_file_name_from_path(layer, "SPETTRI")
 
     # Original data untouched
     layer2 = QgsVectorLayer(str(shp_path), "test", "ogr")

@@ -35,6 +35,7 @@ from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
 from ..tasks.access_db_connection import AccessDbConnection, JVMError
 from ..tasks.export_data_task_manager import ExportDataTaskManager
+from ..tasks.standard_project import CDI_TABELLE_MDB_TEMPLATE, STANDARD_EXPORT_VERSION
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -78,10 +79,8 @@ class DlgExportData(QDialog, FORM_CLASS):
         self.export_data_task_manager: ExportDataTaskManager | None = None
 
         # Exported project standard version, used to select CdI_Tabelle.mdb model and for naming the output folder
-        # TODO: should be centralized and could be selectable by the user
-        self.standard_version_string = "S42"
-        # TODO: the file(s) should be renamed to f"CdI_Tabelle_{self.standard_version_string}.mdb"
-        self.cdi_tabelle_model_file = "CdI_Tabelle_4.2.mdb"
+        self.standard_version_string = STANDARD_EXPORT_VERSION
+        self.cdi_tabelle_model_file = CDI_TABELLE_MDB_TEMPLATE
 
     def showEvent(self, e):
         super().showEvent(e)

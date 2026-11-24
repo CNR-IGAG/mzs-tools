@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from packaging.version import InvalidVersion
+from packaging.version import InvalidVersion, Version
 from packaging.version import parse as parse_version
 from qgis.core import QgsProcessingException, QgsProcessingFeedback, QgsProject
 from qgis.PyQt.QtCore import QCoreApplication
@@ -68,6 +68,23 @@ def find_mzs_projects(root: Path) -> list[Path]:
     return sorted(projects.values())
 
 
+def read_project_version(project_dir: Path) -> tuple[str, Version]:
+    """Read the version of a MzS Tools project from progetto/versione.txt, without loading the project.
+
+    Raises:
+        QgsProcessingException: if the file cannot be read or the version is invalid.
+    """
+    try:
+        version = (project_dir / "progetto" / "versione.txt").read_text().strip()
+    except OSError as e:
+        raise QgsProcessingException(tr("Cannot read project version") + f": {e}") from e
+
+    try:
+        return version, parse_version(version)
+    except InvalidVersion as e:
+        raise QgsProcessingException(tr("Invalid project version") + f": '{version}'") from e
+
+
 def update_project_file(project_file: Path, backup: bool, feedback: QgsProcessingFeedback) -> ProjectUpdateResult:
     """Update a MzS Tools project file to the current plugin version, without loading it in QGIS.
 
@@ -89,15 +106,8 @@ def update_project_file(project_file: Path, backup: bool, feedback: QgsProcessin
 
     # pre-check the version (same as MzSProjectManager.check_project_structure()) so that legacy projects are
     # never loaded
-    try:
-        version = (project_dir / "progetto" / "versione.txt").read_text().strip()
-    except OSError as e:
-        raise QgsProcessingException(tr("Cannot read project version") + f": {e}") from e
-
-    try:
-        too_old = parse_version(version) < parse_version(MIN_DETACHED_UPDATE_VERSION)
-    except InvalidVersion as e:
-        raise QgsProcessingException(tr("Invalid project version") + f": '{version}'") from e
+    version, parsed = read_project_version(project_dir)
+    too_old = parsed < parse_version(MIN_DETACHED_UPDATE_VERSION)
     if too_old:
         return skipped(
             tr("Projects older than 2.0.0 must be updated by opening them in QGIS with MzS Tools."),

@@ -18,33 +18,33 @@
 
 import contextlib
 import logging
-import shutil
 from functools import partial
 from pathlib import Path
 
 from qgis.core import (
     Qgis,
     QgsApplication,
-    QgsField,
     QgsTask,
-    QgsVectorLayer,
     QgsVectorLayerExporterTask,
-    edit,
 )
 from qgis.gui import QgsMessageBarItem
 from qgis.PyQt import QtCore
-from qgis.PyQt.QtCore import QCoreApplication, QMetaType
+from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QProgressBar, QPushButton
 from qgis.utils import iface
 
-from ..__about__ import DIR_PLUGIN_ROOT, __version__
-from ..core.constants import STANDARD_SHAPEFILES_INT_FIELDS
+from ..__about__ import __version__
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
 from ..plugin_utils.qt_compat import get_alignment_flag
 from .export_project_files_task import ExportProjectFilesTask
 from .export_siti_lineari_task import ExportSitiLineariTask
 from .export_siti_puntuali_task import ExportSitiPuntualiTask
+from .standard_project import (
+    STANDARD_SHAPEFILE_EXPORTS,
+    create_standard_export_folder,
+    postprocess_exported_shapefile,
+)
 
 
 class ExportDataTaskManager:
@@ -121,45 +121,16 @@ class ExportDataTaskManager:
         if not self.output_path.exists():
             self.output_path.mkdir(parents=True)
 
-        # get current project comune
         comune_data = self.prj_manager.get_project_comune_data()
-        comune_name = self.prj_manager.sanitize_comune_name(comune_data.comune)
-        exported_project_path = (
-            self.output_path / f"{comune_data.cod_istat}_{comune_name}_{self.standard_version_string}_Shapefile"
+        exported_project_path = create_standard_export_folder(
+            self.output_path,
+            comune_data.cod_istat,
+            comune_data.comune,
+            self.indagini_output_format,
+            self.standard_version_string,
+            self.cdi_tabelle_model_file,
         )
-
-        if exported_project_path.exists():
-            timestamp = QtCore.QDateTime.currentDateTime().toString("yyyy-MM-dd_hh-mm-ss")
-            exported_project_path = (
-                self.output_path
-                / f"{comune_data.cod_istat}_{comune_name}_{self.standard_version_string}_Shapefile_{timestamp}"
-            )
-
-        exported_project_path.mkdir(parents=True, exist_ok=False)
         self.file_logger.info(f"Exported project path: {exported_project_path}")
-
-        ms_paths = [
-            "BasiDati",
-            "GeoTec",
-            "Indagini",
-            "Indagini/Documenti",
-            "MS1",
-            "MS23",
-            "MS23/Spettri",
-            "Plot",
-            "Progetti",
-            "Vestiture",
-        ]
-        for ms_path in ms_paths:
-            (exported_project_path / ms_path).mkdir(parents=True)
-
-        # copy the db template file to the output directory
-        if self.indagini_output_format == "mdb":
-            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / self.cdi_tabelle_model_file
-            shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.mdb")
-        elif self.indagini_output_format == "sqlite":
-            cdi_tabelle_path = DIR_PLUGIN_ROOT / "data" / "CdI_Tabelle.sqlite"
-            shutil.copy(cdi_tabelle_path, exported_project_path / "Indagini" / "CdI_Tabelle.sqlite")
 
         # Progress bar in the message bar
         self.progress_bar = QProgressBar()
@@ -179,27 +150,7 @@ class ExportDataTaskManager:
         # Global progress signal — used only for the visual progress bar
         QgsApplication.taskManager().progressChanged.connect(self._on_tasks_progress)
 
-        # table → shapefile mapping
-        shapefile_mapping = {
-            "comuni": ("BasiDati/comuni_istat.shp", "base"),
-            "comune_progetto": ("BasiDati/comune_progetto.shp", "base"),
-            "elineari": ("GeoTec/Elineari.shp", "editing"),
-            "epuntuali": ("GeoTec/Epuntuali.shp", "editing"),
-            "forme": ("GeoTec/Forme.shp", "editing"),
-            "geoidr": ("GeoTec/Geoidr.shp", "editing"),
-            "geotec": ("GeoTec/Geotec.shp", "editing"),
-            "instab_geotec": ("GeoTec/Instab_geotec.shp", "editing"),
-            "sito_puntuale": ("Indagini/Ind_pu.shp", "editing"),
-            "sito_lineare": ("Indagini/Ind_ln.shp", "editing"),
-            "instab_l1": ("MS1/Instab.shp", "editing"),
-            "isosub_l1": ("MS1/Isosub.shp", "editing"),
-            "stab_l1": ("MS1/Stab.shp", "editing"),
-            "instab_l23": ("MS23/Instab.shp", "editing"),
-            "isosub_l23": ("MS23/Isosub.shp", "editing"),
-            "stab_l23": ("MS23/Stab.shp", "editing"),
-        }
-
-        for table_name, (shapefile_name, role) in shapefile_mapping.items():
+        for table_name, (shapefile_name, role) in STANDARD_SHAPEFILE_EXPORTS.items():
             layer_id = self.prj_manager.find_layer_by_table_name_role(table_name, role)
             if layer_id:
                 layer = self.prj_manager.current_project.mapLayer(layer_id)
@@ -211,7 +162,7 @@ class ExportDataTaskManager:
                     layer.crs(),
                     options={"driverName": "ESRI Shapefile"},
                 )
-                task.exportComplete.connect(partial(self._on_shapefile_export_complete, table_name, path))
+                task.exportComplete.connect(partial(postprocess_exported_shapefile, table_name, path))
                 task.errorOccurred.connect(self._on_shapefile_export_error)
                 task.taskCompleted.connect(self._on_single_task_done)
                 task.taskTerminated.connect(self._on_single_task_terminated)
@@ -331,124 +282,8 @@ class ExportDataTaskManager:
             self.file_handler.close()
             self.file_handler = None
 
-    def _on_shapefile_export_complete(self, table_name: str, path: Path):
-        self.file_logger.info(f"Exported {table_name} to {path}")
-
-        # workaround for QgsVectorLayerExporterTask always exporting integer fields as float
-        for layer_name, fields in STANDARD_SHAPEFILES_INT_FIELDS.items():
-            if table_name == layer_name:
-                layer = QgsVectorLayer(str(path), str(path.stem), "ogr")
-                for field_name in fields:
-                    try:
-                        self._change_field_type(layer, field_name, QMetaType.Type.Int)
-                    except TypeError:
-                        # QGIS < 3.38: use QVariant.Type
-                        self._change_field_type(layer, field_name, QtCore.QVariant.Int)  # type: ignore
-                break
-
-        # modify specific datasets
-        if table_name == "sito_puntuale":
-            self._rename_field(QgsVectorLayer(str(path), str(path.stem), "ogr"), "id_spu", "ID_SPU")
-        elif table_name == "sito_lineare":
-            self._rename_field(QgsVectorLayer(str(path), str(path.stem), "ogr"), "id_sln", "ID_SLN")
-        elif table_name in ["stab_l1", "stab_l23", "instab_l1", "instab_l23"]:
-            # for some absurd reason, the field "LIVELLO" must be a float
-            try:
-                self._change_field_type(
-                    QgsVectorLayer(str(path), str(path.stem), "ogr"), "LIVELLO", QMetaType.Type.Double
-                )
-            except TypeError:
-                # QGIS < 3.38: use QVariant.Type
-                self._change_field_type(
-                    QgsVectorLayer(str(path), str(path.stem), "ogr"),
-                    "LIVELLO",
-                    QtCore.QVariant.Double,  # type: ignore
-                )
-            if table_name in ["stab_l23", "instab_l23"]:
-                # extract file name from path "SPETTRI"
-                self._extract_file_name_from_path(QgsVectorLayer(str(path), str(path.stem), "ogr"), "SPETTRI")
-
     def _on_shapefile_export_error(self, result, msg):
         self.file_logger.error(f"Error during export: {msg} - {result}")
-
-    def _rename_field(self, layer: QgsVectorLayer, field_name: str, new_name: str):
-        for field in layer.fields():
-            if field.name() == field_name:
-                self.file_logger.debug(f"Renaming {field.name()} to {new_name}")
-                with edit(layer):
-                    layer.renameAttribute(layer.fields().lookupField(field_name), new_name)
-                break
-
-    def _change_field_type(self, layer, field_name, field_type):
-        """Change the data type of a field in a vector layer."""
-        self.file_logger.debug(f"Changing field type for field '{field_name}'")
-
-        field_idx = layer.fields().lookupField(field_name)
-        if field_idx == -1:
-            self.file_logger.error(f"Field '{field_name}' not found in layer")
-            return False
-
-        temp_field_name = "temp"
-
-        temp_field = QgsField()
-        temp_field.setName(temp_field_name)
-        temp_field.setType(field_type)
-
-        new_field = QgsField()
-        new_field.setName(field_name)
-        new_field.setType(field_type)
-
-        with edit(layer):
-            layer.addAttribute(temp_field)
-            layer.updateFields()
-            temp_field_idx = layer.fields().lookupField(temp_field_name)
-            for feature in layer.getFeatures():
-                layer.changeAttributeValue(feature.id(), temp_field_idx, feature[field_name])
-
-        with edit(layer):
-            layer.deleteAttribute(field_idx)
-            layer.updateFields()
-            layer.addAttribute(new_field)
-            layer.updateFields()
-            new_field_idx = layer.fields().lookupField(field_name)
-            temp_field_idx = layer.fields().lookupField(temp_field_name)
-            for feature in layer.getFeatures():
-                layer.changeAttributeValue(feature.id(), new_field_idx, feature[temp_field_name])
-            layer.deleteAttribute(temp_field_idx)
-
-        self.file_logger.debug(f"Successfully changed field type for '{field_name}'")
-        return True
-
-    def _extract_file_name_from_path(self, layer, field_name):
-        """Extract file names from path strings stored in a specified field and
-        replace the full paths with just the file names."""
-        self.file_logger.debug(f"Extracting file name from field '{field_name}'")
-
-        field_idx = layer.fields().lookupField(field_name)
-        if field_idx == -1:
-            self.file_logger.error(f"Field '{field_name}' not found in layer")
-            return
-
-        layer.startEditing()
-        features_updated = 0
-        for feature in layer.getFeatures():
-            path_value = feature[field_name]
-            if not path_value:
-                continue
-            try:
-                file_name = Path(path_value).name
-                feature.setAttribute(field_idx, file_name)
-                layer.updateFeature(feature)
-                features_updated += 1
-            except Exception as e:
-                self.file_logger.error(f"Error extracting filename from '{path_value}': {str(e)}")
-
-        success = layer.commitChanges()
-        if success:
-            self.file_logger.info(f"Successfully updated {features_updated} features in field '{field_name}'")
-        else:
-            self.file_logger.error(f"Failed to commit changes to layer: {layer.commitErrors()}")
-            layer.rollBack()
 
     def tr(self, message: str) -> str:
         return QCoreApplication.translate(self.__class__.__name__, message)

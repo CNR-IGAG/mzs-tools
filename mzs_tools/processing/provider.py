@@ -21,6 +21,8 @@ from qgis.PyQt.QtGui import QIcon
 
 from ..__about__ import DIR_PLUGIN_ROOT
 from .algorithms import (
+    ExportProjectsInFolderToStandardAlgorithm,
+    ExportProjectToStandardAlgorithm,
     ImportStandardProjectAlgorithm,
     ImportStandardProjectsInFolderAlgorithm,
     UpdateProjectAlgorithm,
@@ -43,6 +45,8 @@ class MzSToolsProvider(QgsProcessingProvider):
         self.addAlgorithm(UpdateProjectsInFolderAlgorithm())
         self.addAlgorithm(ImportStandardProjectAlgorithm())
         self.addAlgorithm(ImportStandardProjectsInFolderAlgorithm())
+        self.addAlgorithm(ExportProjectToStandardAlgorithm())
+        self.addAlgorithm(ExportProjectsInFolderToStandardAlgorithm())
 
 
 class MzSToolsProcessingPlugin:

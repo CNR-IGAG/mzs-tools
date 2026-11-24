@@ -28,7 +28,7 @@ from ..tasks.common_functions import setup_mdb_connection
 
 
 class ExportSitiLineariTask(QgsTask):
-    def __init__(self, exported_project_path: Path, data_source: str):
+    def __init__(self, exported_project_path: Path, data_source: str, prj_manager: MzSProjectManager | None = None):
         super().__init__("Export siti lineari (siti, indagini, parametri)", QgsTask.Flag.CanCancel)
 
         self.iterations = 0
@@ -39,7 +39,7 @@ class ExportSitiLineariTask(QgsTask):
 
         self.data_source = data_source
 
-        self.prj_manager = MzSProjectManager.instance()
+        self.prj_manager = prj_manager if prj_manager is not None else MzSProjectManager.instance()
         self.spatialite_db_connection = None
         self.mdb_connection = None
         self.sqlite_db_connection = None

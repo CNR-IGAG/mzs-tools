@@ -42,6 +42,7 @@ from ..tasks.import_shapefile_task import ImportShapefileTask
 from ..tasks.import_siti_lineari_task import ImportSitiLineariTask
 from ..tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
 from ..tasks.standard_project import build_standard_project_paths, find_csv_files
+from .feedback_log import feedback_file_log
 
 IMPORT_STATUS_CREATED = "created"
 IMPORT_STATUS_SKIPPED = "skipped"
@@ -195,48 +196,23 @@ def resolve_indagini_source(
     return requested, csv_files
 
 
-class _FeedbackLogHandler(logging.Handler):
-    """Forward the import log records to the processing feedback."""
-
-    def __init__(self, feedback: QgsProcessingFeedback):
-        super().__init__()
-        self.feedback = feedback
-
-    def emit(self, record: logging.LogRecord) -> None:
-        msg = self.format(record)
-        if record.levelno >= logging.ERROR:
-            self.feedback.reportError(msg, fatalError=False)
-        elif record.levelno >= logging.WARNING:
-            self.feedback.pushWarning(msg)
-        else:
-            self.feedback.pushInfo(msg)
-
-
 @contextmanager
 def _import_log(
     project_dir: Path, feedback: QgsProcessingFeedback, standard_project: Path, source: str | None
 ) -> Iterator[Path]:
     """Log the import tasks to Allegati/log/data_import_<timestamp>.log and to the processing feedback."""
-    logger = logging.getLogger(IMPORT_LOGGER_NAME)
     log_file = project_dir / "Allegati" / "log" / f"data_import_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
-    file_handler = logging.FileHandler(log_file, encoding="utf-8")
-    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
-    feedback_handler = _FeedbackLogHandler(feedback)
-    old_level = logger.level
-
-    logger.addHandler(file_handler)
-    logger.addHandler(feedback_handler)
-    logger.setLevel(logging.INFO)
-    try:
-        logger.info(f"MzS Tools version {__version__} - Data import log")
-        logger.info(f"Importing data from {standard_project} using {source} for Indagini data")
-        logger.info("############### Data import started")
-        yield log_file
-    finally:
-        for handler in (file_handler, feedback_handler):
-            logger.removeHandler(handler)
-            handler.close()
-        logger.setLevel(old_level)
+    with feedback_file_log(
+        IMPORT_LOGGER_NAME,
+        log_file,
+        feedback,
+        [
+            f"MzS Tools version {__version__} - Data import log",
+            f"Importing data from {standard_project} using {source} for Indagini data",
+            "############### Data import started",
+        ],
+    ) as f:
+        yield f
 
 
 def import_standard_project(

@@ -36,6 +36,13 @@ from .project_update import (
     find_mzs_projects,
     update_project_file,
 )
+from .standard_project_export import (
+    EXPORT_STATUS_EXPORTED,
+    EXPORT_STATUS_SKIPPED,
+    INDAGINI_FORMATS,
+    check_mdb_available,
+    export_project_to_standard,
+)
 from .standard_project_import import (
     IMPORT_STATUS_CREATED,
     IMPORT_STATUS_SKIPPED,
@@ -428,5 +435,178 @@ class ImportStandardProjectsInFolderAlgorithm(_StandardProjectImportAlgorithmBas
             "SKIPPED_COUNT": skipped,
             "FAILED_COUNT": len(failed),
             "CREATED_PROJECTS": "\n".join(created),
+            "FAILED_PROJECTS": "\n".join(failed),
+        }
+
+
+class _StandardProjectExportAlgorithmBase(_MzSToolsAlgorithmBase):
+    def group(self):
+        return self.tr("Standard project export")
+
+    def groupId(self):
+        return "standard_project_export"
+
+    def _add_common_parameters(self):
+        self.addParameter(
+            QgsProcessingParameterFile(
+                "OUTPUT_FOLDER",
+                self.tr("Output folder for the exported standard projects"),
+                behavior=QgsProcessingParameterFile.Folder,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterEnum(
+                "OUTPUT_FORMAT",
+                self.tr("Survey data output format"),
+                options=["SQLite (CdI_Tabelle.sqlite)", "Access (CdI_Tabelle.mdb)"],
+                defaultValue=0,
+            )
+        )
+
+    def _indagini_format(self, parameters, context) -> str:
+        fmt = INDAGINI_FORMATS[self.parameterAsEnum(parameters, "OUTPUT_FORMAT", context)]
+        if fmt == "mdb":
+            # raises before anything is written
+            check_mdb_available()
+        return fmt
+
+    def _common_help(self) -> str:
+        return self.tr(
+            "The project is exported in a folder named <ISTAT code>_<Comune>_S42_Shapefile inside the output folder "
+            "(a timestamp is appended if the folder already exists), with the shapefiles, the CdI_Tabelle survey "
+            "database and the attachments required by the SM Standards. Projects that must be updated to the current "
+            "MzS Tools version are skipped. Exporting survey data to the Access database (CdI_Tabelle.mdb) requires "
+            "Java and the MzS Tools Python dependencies. The export log is saved in the Allegati/log folder of each "
+            "project."
+        )
+
+
+class ExportProjectToStandardAlgorithm(_StandardProjectExportAlgorithmBase):
+    def name(self):
+        return "export_project_to_standard"
+
+    def displayName(self):
+        return self.tr("Export MzS Tools project to standard project")
+
+    def shortHelpString(self):
+        return (
+            self.tr(
+                "Export a MzS Tools project (progetto_MS.qgz) to the standard SM project structure. "
+                "Use batch mode to export several projects."
+            )
+            + " "
+            + self._common_help()
+        )
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(
+            QgsProcessingParameterFile(
+                "INPUT",
+                self.tr("MzS Tools project file (progetto_MS.qgz)"),
+                behavior=QgsProcessingParameterFile.File,
+                fileFilter="QGIS project (*.qgz *.qgs)",
+            )
+        )
+        self._add_common_parameters()
+        self.addOutput(QgsProcessingOutputString("STATUS", self.tr("Export status")))
+        self.addOutput(QgsProcessingOutputString("EXPORT_PATH", self.tr("Exported standard project folder")))
+        self.addOutput(QgsProcessingOutputString("COD_ISTAT", self.tr("ISTAT code")))
+        self.addOutput(QgsProcessingOutputString("LOG_FILE", self.tr("Export log file")))
+
+    def processAlgorithm(self, parameters, context, feedback):
+        # failures propagate as QgsProcessingException
+        result = export_project_to_standard(
+            Path(self.parameterAsFile(parameters, "INPUT", context)),
+            Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context)),
+            indagini_format=self._indagini_format(parameters, context),
+            feedback=feedback,
+        )
+        if result.status == EXPORT_STATUS_SKIPPED:
+            feedback.reportError(result.message, fatalError=False)
+        else:
+            feedback.pushInfo(result.message)
+
+        return {
+            "STATUS": result.status,
+            "EXPORT_PATH": str(result.export_path) if result.export_path else "",
+            "COD_ISTAT": result.cod_istat,
+            "LOG_FILE": str(result.log_file) if result.log_file else "",
+        }
+
+
+class ExportProjectsInFolderToStandardAlgorithm(_StandardProjectExportAlgorithmBase):
+    def name(self):
+        return "export_projects_in_folder_to_standard"
+
+    def displayName(self):
+        return self.tr("Export MzS Tools projects in folder to standard projects")
+
+    def shortHelpString(self):
+        return (
+            self.tr(
+                "Recursively scan a folder for MzS Tools projects and export each of them to the standard SM project "
+                "structure. Backup folders created by project updates are ignored."
+            )
+            + " "
+            + self._common_help()
+        )
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(
+            QgsProcessingParameterFile(
+                "INPUT_FOLDER",
+                self.tr("Root folder to scan for MzS Tools projects"),
+                behavior=QgsProcessingParameterFile.Folder,
+            )
+        )
+        self._add_common_parameters()
+        self.addOutput(QgsProcessingOutputNumber("EXPORTED_COUNT", self.tr("Exported projects")))
+        self.addOutput(QgsProcessingOutputNumber("SKIPPED_COUNT", self.tr("Skipped projects")))
+        self.addOutput(QgsProcessingOutputNumber("FAILED_COUNT", self.tr("Failed projects")))
+        self.addOutput(QgsProcessingOutputString("EXPORTED_PATHS", self.tr("Exported standard project folders")))
+        self.addOutput(QgsProcessingOutputString("FAILED_PROJECTS", self.tr("Failed project files")))
+
+    def processAlgorithm(self, parameters, context, feedback):
+        folder = Path(self.parameterAsFile(parameters, "INPUT_FOLDER", context))
+        output_folder = Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context))
+        fmt = self._indagini_format(parameters, context)
+
+        exported: list[str] = []
+        skipped = 0
+        failed: list[str] = []
+
+        # the exported standard projects contain no progetto_MS.qgz, so the output folder needs no exclusion
+        projects = find_mzs_projects(folder)
+        if not projects:
+            feedback.pushWarning(self.tr("No MzS Tools projects found."))
+
+        for i, p in enumerate(projects):
+            if feedback.isCanceled():
+                break
+            feedback.pushInfo(f"[{i + 1}/{len(projects)}] {p}")
+            try:
+                result = export_project_to_standard(p, output_folder, indagini_format=fmt, feedback=feedback)
+            except Exception as e:
+                failed.append(str(p))
+                feedback.reportError(f"{p}: {e}", fatalError=False)
+            else:
+                if result.status == EXPORT_STATUS_EXPORTED:
+                    exported.append(str(result.export_path))
+                    feedback.pushInfo(result.message)
+                else:
+                    skipped += 1
+                    feedback.reportError(f"{p}: {result.message}", fatalError=False)
+            feedback.setProgress(100 * (i + 1) / len(projects))
+
+        if projects:
+            feedback.pushInfo(
+                self.tr("Exported: {0}, skipped: {1}, failed: {2}").format(len(exported), skipped, len(failed))
+            )
+
+        return {
+            "EXPORTED_COUNT": len(exported),
+            "SKIPPED_COUNT": skipped,
+            "FAILED_COUNT": len(failed),
+            "EXPORTED_PATHS": "\n".join(exported),
             "FAILED_PROJECTS": "\n".join(failed),
         }

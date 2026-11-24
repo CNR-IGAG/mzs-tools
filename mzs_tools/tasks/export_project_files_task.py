@@ -26,7 +26,7 @@ from ..core.mzs_project_manager import MzSProjectManager
 
 
 class ExportProjectFilesTask(QgsTask):
-    def __init__(self, exported_project_path: Path):
+    def __init__(self, exported_project_path: Path, prj_manager: MzSProjectManager | None = None):
         super().__init__("Export project files (attachments, plots, etc.)", QgsTask.Flag.CanCancel)
 
         self.iterations = 0
@@ -35,7 +35,7 @@ class ExportProjectFilesTask(QgsTask):
         # the logger is configured in the import data dialog module
         self.logger = logging.getLogger("mzs_tools.tasks.export_data")
 
-        self.prj_manager = MzSProjectManager.instance()
+        self.prj_manager = prj_manager if prj_manager is not None else MzSProjectManager.instance()
         self.exported_project_path = exported_project_path
 
     def run(self):
