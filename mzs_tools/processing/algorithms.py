@@ -23,7 +23,9 @@ from qgis.core import (
     QgsProcessingOutputNumber,
     QgsProcessingOutputString,
     QgsProcessingParameterBoolean,
+    QgsProcessingParameterEnum,
     QgsProcessingParameterFile,
+    QgsProcessingParameterString,
 )
 from qgis.PyQt.QtCore import QCoreApplication
 
@@ -34,21 +36,34 @@ from .project_update import (
     find_mzs_projects,
     update_project_file,
 )
+from .standard_project_import import (
+    IMPORT_STATUS_CREATED,
+    IMPORT_STATUS_SKIPPED,
+    INDAGINI_SOURCES,
+    find_standard_projects,
+    import_standard_project,
+    load_comuni_names,
+)
 
 
-class _MzSProjectUpdateAlgorithmBase(QgsProcessingAlgorithm):
+class _MzSToolsAlgorithmBase(QgsProcessingAlgorithm):
+    def flags(self):
+        # the algorithms write QGIS projects, layouts and images: they must run on the main thread
+        return super().flags() | QgsProcessingAlgorithm.FlagNoThreading
+
+    def createInstance(self):
+        return self.__class__()
+
+    def tr(self, message: str) -> str:
+        return QCoreApplication.translate(self.__class__.__name__, message)
+
+
+class _MzSProjectUpdateAlgorithmBase(_MzSToolsAlgorithmBase):
     def group(self):
         return self.tr("Project management")
 
     def groupId(self):
         return "project_management"
-
-    def flags(self):
-        # the update writes QGIS projects, layouts and images: it must run on the main thread
-        return super().flags() | QgsProcessingAlgorithm.FlagNoThreading
-
-    def createInstance(self):
-        return self.__class__()
 
     def _add_backup_parameter(self):
         self.addParameter(
@@ -63,9 +78,6 @@ class _MzSProjectUpdateAlgorithmBase(QgsProcessingAlgorithm):
             "project. Projects older than 2.0.0 are skipped and must be updated by opening them in QGIS. "
             "The project currently open in QGIS is skipped."
         )
-
-    def tr(self, message: str) -> str:
-        return QCoreApplication.translate(self.__class__.__name__, message)
 
 
 class UpdateProjectAlgorithm(_MzSProjectUpdateAlgorithmBase):
@@ -195,5 +207,226 @@ class UpdateProjectsInFolderAlgorithm(_MzSProjectUpdateAlgorithmBase):
             "UP_TO_DATE_COUNT": counts[UPDATE_STATUS_UP_TO_DATE],
             "SKIPPED_COUNT": counts[UPDATE_STATUS_SKIPPED],
             "FAILED_COUNT": len(failed),
+            "FAILED_PROJECTS": "\n".join(failed),
+        }
+
+
+class _StandardProjectImportAlgorithmBase(_MzSToolsAlgorithmBase):
+    def group(self):
+        return self.tr("Standard project import")
+
+    def groupId(self):
+        return "standard_project_import"
+
+    def _add_common_parameters(self):
+        self.addParameter(
+            QgsProcessingParameterFile(
+                "OUTPUT_FOLDER",
+                self.tr("Output folder for the new MzS Tools projects"),
+                behavior=QgsProcessingParameterFile.Folder,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterEnum(
+                "INDAGINI_SOURCE",
+                self.tr("Survey data source"),
+                options=[
+                    self.tr("Auto (SQLite, then Access, then CSV)"),
+                    "SQLite (CdI_Tabelle.sqlite)",
+                    "Access (CdI_Tabelle.mdb)",
+                    "CSV",
+                ],
+                defaultValue=0,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterString(
+                "MDB_PASSWORD", self.tr("Access database password"), defaultValue="", optional=True
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterString("STUDY_AUTHOR", self.tr("Study author"), defaultValue="", optional=True)
+        )
+        self.addParameter(
+            QgsProcessingParameterString("AUTHOR_EMAIL", self.tr("Author email"), defaultValue="", optional=True)
+        )
+
+    def _common_parameter_values(self, parameters, context) -> dict:
+        return {
+            "indagini_source": INDAGINI_SOURCES[self.parameterAsEnum(parameters, "INDAGINI_SOURCE", context)],
+            "mdb_password": self.parameterAsString(parameters, "MDB_PASSWORD", context) or None,
+            "study_author": self.parameterAsString(parameters, "STUDY_AUTHOR", context) or None,
+            "author_email": self.parameterAsString(parameters, "AUTHOR_EMAIL", context) or None,
+        }
+
+    def _common_help(self) -> str:
+        return self.tr(
+            "The new project is named <ISTAT code>_<Comune>: if a folder with that name already exists in the output "
+            "folder, the standard project is skipped. All the shapefiles and survey sites found are imported. "
+            "Importing survey data from the Access database (CdI_Tabelle.mdb) requires Java and the MzS Tools Python "
+            "dependencies. If the data import fails, the created project is kept and the import log is saved in its "
+            "Allegati/log folder."
+        )
+
+
+class ImportStandardProjectAlgorithm(_StandardProjectImportAlgorithmBase):
+    def name(self):
+        return "import_standard_project"
+
+    def displayName(self):
+        return self.tr("Create MzS Tools project from standard project")
+
+    def shortHelpString(self):
+        return (
+            self.tr(
+                "Create a new MzS Tools project from a standard SM project (shapefiles and CdI_Tabelle survey data). "
+                "The ISTAT code is detected from the survey site IDs, unless set explicitly. "
+                "Use batch mode to import several projects."
+            )
+            + " "
+            + self._common_help()
+        )
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(
+            QgsProcessingParameterFile(
+                "INPUT_FOLDER", self.tr("Standard project folder"), behavior=QgsProcessingParameterFile.Folder
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterString(
+                "COD_ISTAT",
+                self.tr("ISTAT code of the municipality (empty: detect from the survey sites)"),
+                defaultValue="",
+                optional=True,
+            )
+        )
+        self.addParameter(
+            QgsProcessingParameterFile(
+                "CSV_FOLDER",
+                self.tr("Folder with the survey data CSV files (empty: 'CSV' subfolder of the standard project)"),
+                behavior=QgsProcessingParameterFile.Folder,
+                optional=True,
+            )
+        )
+        self._add_common_parameters()
+        self.addOutput(QgsProcessingOutputString("STATUS", self.tr("Import status")))
+        self.addOutput(QgsProcessingOutputString("PROJECT_PATH", self.tr("New project folder")))
+        self.addOutput(QgsProcessingOutputString("COD_ISTAT", self.tr("ISTAT code")))
+        self.addOutput(QgsProcessingOutputString("INDAGINI_SOURCE", self.tr("Survey data source")))
+        self.addOutput(QgsProcessingOutputString("LOG_FILE", self.tr("Import log file")))
+
+    def processAlgorithm(self, parameters, context, feedback):
+        csv_folder = self.parameterAsFile(parameters, "CSV_FOLDER", context)
+
+        # failures propagate as QgsProcessingException
+        result = import_standard_project(
+            Path(self.parameterAsFile(parameters, "INPUT_FOLDER", context)),
+            Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context)),
+            cod_istat=self.parameterAsString(parameters, "COD_ISTAT", context) or None,
+            csv_dir=Path(csv_folder) if csv_folder else None,
+            comuni_names=load_comuni_names(),
+            feedback=feedback,
+            **self._common_parameter_values(parameters, context),
+        )
+        if result.status == IMPORT_STATUS_SKIPPED:
+            feedback.reportError(result.message, fatalError=False)
+        else:
+            feedback.pushInfo(result.message)
+
+        return {
+            "STATUS": result.status,
+            "PROJECT_PATH": str(result.project_path) if result.project_path else "",
+            "COD_ISTAT": result.cod_istat,
+            "INDAGINI_SOURCE": result.indagini_source,
+            "LOG_FILE": str(result.log_file) if result.log_file else "",
+        }
+
+
+class ImportStandardProjectsInFolderAlgorithm(_StandardProjectImportAlgorithmBase):
+    def name(self):
+        return "import_standard_projects_in_folder"
+
+    def displayName(self):
+        return self.tr("Create MzS Tools projects from standard projects in folder")
+
+    def shortHelpString(self):
+        return (
+            self.tr(
+                "Recursively scan a folder for standard SM projects (folders containing an 'Indagini' subfolder) and "
+                "create a new MzS Tools project from each of them. The ISTAT code is detected from the survey site "
+                "IDs and the survey data CSV files are searched in the 'CSV' subfolder of each standard project. "
+                "The output folder and MzS Tools projects are not scanned."
+            )
+            + " "
+            + self._common_help()
+        )
+
+    def initAlgorithm(self, config=None):
+        self.addParameter(
+            QgsProcessingParameterFile(
+                "INPUT_FOLDER",
+                self.tr("Root folder to scan for standard projects"),
+                behavior=QgsProcessingParameterFile.Folder,
+            )
+        )
+        self._add_common_parameters()
+        self.addOutput(QgsProcessingOutputNumber("CREATED_COUNT", self.tr("Created projects")))
+        self.addOutput(QgsProcessingOutputNumber("SKIPPED_COUNT", self.tr("Skipped projects")))
+        self.addOutput(QgsProcessingOutputNumber("FAILED_COUNT", self.tr("Failed projects")))
+        self.addOutput(QgsProcessingOutputString("CREATED_PROJECTS", self.tr("New project folders")))
+        self.addOutput(QgsProcessingOutputString("FAILED_PROJECTS", self.tr("Failed standard project folders")))
+
+    def processAlgorithm(self, parameters, context, feedback):
+        folder = Path(self.parameterAsFile(parameters, "INPUT_FOLDER", context))
+        output_folder = Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context))
+        common_values = self._common_parameter_values(parameters, context)
+
+        created: list[str] = []
+        skipped = 0
+        failed: list[str] = []
+
+        # collected before any creation, so that the new projects are never visited
+        projects = find_standard_projects(folder, exclude=output_folder)
+        if not projects:
+            feedback.pushWarning(self.tr("No standard projects found."))
+
+        comuni_names = load_comuni_names()
+        for i, p in enumerate(projects):
+            if feedback.isCanceled():
+                break
+            feedback.pushInfo(f"[{i + 1}/{len(projects)}] {p}")
+            try:
+                result = import_standard_project(
+                    p,
+                    output_folder,
+                    cod_istat=None,
+                    csv_dir=None,
+                    comuni_names=comuni_names,
+                    feedback=feedback,
+                    **common_values,
+                )
+            except Exception as e:
+                failed.append(str(p))
+                feedback.reportError(f"{p}: {e}", fatalError=False)
+            else:
+                if result.status == IMPORT_STATUS_CREATED:
+                    created.append(str(result.project_path))
+                    feedback.pushInfo(result.message)
+                else:
+                    skipped += 1
+                    feedback.reportError(f"{p}: {result.message}", fatalError=False)
+            feedback.setProgress(100 * (i + 1) / len(projects))
+
+        if projects:
+            feedback.pushInfo(
+                self.tr("Created: {0}, skipped: {1}, failed: {2}").format(len(created), skipped, len(failed))
+            )
+
+        return {
+            "CREATED_COUNT": len(created),
+            "SKIPPED_COUNT": skipped,
+            "FAILED_COUNT": len(failed),
+            "CREATED_PROJECTS": "\n".join(created),
             "FAILED_PROJECTS": "\n".join(failed),
         }

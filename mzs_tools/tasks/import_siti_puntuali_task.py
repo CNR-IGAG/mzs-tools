@@ -39,6 +39,7 @@ class ImportSitiPuntualiTask(QgsTask):
         mdb_password: str | None = None,
         csv_files: dict | None = None,
         adapt_counters: bool = True,
+        prj_manager: MzSProjectManager | None = None,
     ):
         super().__init__("Import siti puntuali (siti, indagini, parametri, curve)", QgsTask.Flag.CanCancel)
 
@@ -52,7 +53,7 @@ class ImportSitiPuntualiTask(QgsTask):
         self.mdb_password = mdb_password
         self.csv_files = csv_files
 
-        self.prj_manager = MzSProjectManager.instance()
+        self.prj_manager = prj_manager if prj_manager is not None else MzSProjectManager.instance()
         self.spatialite_db_connection = None
         self.sqlite_db_connection = None
         self.mdb_connection = None

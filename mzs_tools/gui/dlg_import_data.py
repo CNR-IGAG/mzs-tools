@@ -37,9 +37,14 @@ from qgis.utils import iface
 
 from ..core.mzs_project_manager import MzSProjectManager
 from ..plugin_utils.logging import MzSToolsLogger
-from ..plugin_utils.misc import get_path_for_name
 from ..tasks.access_db_connection import AccessDbConnection, JVMError, MdbAuthError
 from ..tasks.import_data_task_manager import ImportDataTaskManager
+from ..tasks.standard_project import (
+    LINEARI_CSV_SERIES,
+    PUNTUALI_CSV_SERIES,
+    build_standard_project_paths,
+    find_csv_files,
+)
 
 FORM_CLASS, _ = uic.loadUiType(Path(__file__).parent / f"{Path(__file__).stem}.ui")
 
@@ -89,6 +94,22 @@ class DlgImportData(QDialog, FORM_CLASS):
         self.input_path = None
         self.reset_sequences = False
         self.standard_proj_paths = None
+        self.shapefile_checkboxes: dict[str, QCheckBox] = {
+            "Elineari.shp": self.chk_elineari,
+            "Epuntuali.shp": self.chk_epuntuali,
+            "Forme.shp": self.chk_forme,
+            "Geotec.shp": self.chk_geotec,
+            "Geoidr.shp": self.chk_geoidr,
+            "Instab_geotec.shp": self.chk_instab_geotec,
+            "Ind_pu.shp": self.chk_siti_puntuali,
+            "Ind_ln.shp": self.chk_siti_lineari,
+            "MS1-Instab.shp": self.chk_ms1_instab,
+            "MS1-Isosub.shp": self.chk_ms1_isosub,
+            "MS1-Stab.shp": self.chk_ms1_stab,
+            "MS23-Instab.shp": self.chk_ms23_instab,
+            "MS23-Isosub.shp": self.chk_ms23_isosub,
+            "MS23-Stab.shp": self.chk_ms23_stab,
+        }
 
         self.mdb_password = None
 
@@ -177,60 +198,9 @@ class DlgImportData(QDialog, FORM_CLASS):
         if not csv_dir or not Path(csv_dir).exists():
             return False
 
-        # Check if the CSV directory contains the required files
-        csv_dir_path = Path(csv_dir)
-
-        # Get all CSV and TXT files in the directory
-        all_files = []
-        all_file_paths = {}
-        for ext in ["*.csv", "*.txt"]:
-            for file_path in csv_dir_path.glob(ext):
-                lowercase_name = file_path.name.lower()
-                all_files.append(lowercase_name)
-                all_file_paths[lowercase_name] = file_path
-
-        self.log(f"Files found in CSV directory: {all_files}", log_level=4)
-
-        # Define the two series of files to check (in order of dependency)
-        puntuale_series = ["sito_puntuale", "indagini_puntuali", "parametri_puntuali", "curve"]
-        lineare_series = ["sito_lineare", "indagini_lineari", "parametri_lineari"]
-
-        # Check for the required files
-        found_files = {"puntuali": {}, "lineari": {}}
-
-        # Check for puntuale files
-        has_sito_puntuale = False
-        sito_puntuale_file = next((f for f in all_files if f.startswith("sito_puntuale")), None)
-        if sito_puntuale_file:
-            has_sito_puntuale = True
-            found_files["puntuali"]["sito_puntuale"] = all_file_paths[sito_puntuale_file]
-
-            # Check for dependent files in order
-            for file_prefix in puntuale_series[1:]:
-                found_file = next((f for f in all_files if f.startswith(file_prefix)), None)
-                if found_file:
-                    found_files["puntuali"][file_prefix] = all_file_paths[found_file]
-                else:
-                    self.log(f"Missing file: {file_prefix}", log_level=1)
-                    break  # Stop when a file in the dependency chain is missing
-
-        # Check for lineare files
-        has_sito_lineare = False
-        sito_lineare_file = next((f for f in all_files if f.startswith("sito_lineare")), None)
-        if sito_lineare_file:
-            has_sito_lineare = True
-            found_files["lineari"]["sito_lineare"] = all_file_paths[sito_lineare_file]
-
-            # Check for dependent files in order
-            for file_prefix in lineare_series[1:]:
-                found_file = next((f for f in all_files if f.startswith(file_prefix)), None)
-                if found_file:
-                    found_files["lineari"][file_prefix] = all_file_paths[found_file]
-                else:
-                    break  # Stop when a file in the dependency chain is missing
-
-        # Store the found files information for later use
-        self.csv_files_found = found_files
+        self.csv_files_found = find_csv_files(Path(csv_dir))
+        has_sito_puntuale = "sito_puntuale" in self.csv_files_found["puntuali"]
+        has_sito_lineare = "sito_lineare" in self.csv_files_found["lineari"]
 
         # Enable/disable checkboxes based on what was found
         if has_sito_puntuale:
@@ -252,10 +222,14 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         if has_required_files:
             status_msg = []
-            if "sito_puntuale" in found_files["puntuali"]:
-                status_msg.append(f"Found {len(found_files['puntuali'])}/{len(puntuale_series)} puntuali files")
-            if "sito_lineare" in found_files["lineari"]:
-                status_msg.append(f"Found {len(found_files['lineari'])}/{len(lineare_series)} lineari files")
+            if "sito_puntuale" in self.csv_files_found["puntuali"]:
+                status_msg.append(
+                    f"Found {len(self.csv_files_found['puntuali'])}/{len(PUNTUALI_CSV_SERIES)} puntuali files"
+                )
+            if "sito_lineare" in self.csv_files_found["lineari"]:
+                status_msg.append(
+                    f"Found {len(self.csv_files_found['lineari'])}/{len(LINEARI_CSV_SERIES)} lineari files"
+                )
 
             self.log(f"CSV validation: {', '.join(status_msg)}", log_level=4)
         else:
@@ -269,62 +243,10 @@ class DlgImportData(QDialog, FORM_CLASS):
             self.standard_proj_paths = None
             return False
 
-        self.standard_proj_paths = {
-            "GeoTec": {"parent": None, "path": None, "checkbox": None},
-            "Elineari.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_elineari, "table": "elineari"},
-            "Epuntuali.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_epuntuali, "table": "epuntuali"},
-            "Forme.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_forme, "table": "forme"},
-            "Geotec.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_geotec, "table": "geotec"},
-            "Geoidr.shp": {"parent": "GeoTec", "path": None, "checkbox": self.chk_geoidr, "table": "geoidr"},
-            "Instab_geotec.shp": {
-                "parent": "GeoTec",
-                "path": None,
-                "checkbox": self.chk_instab_geotec,
-                "table": "instab_geotec",
-            },
-            "Indagini": {"parent": None, "path": None, "checkbox": None},
-            "Documenti": {"parent": "Indagini", "path": None, "checkbox": None},
-            "CdI_Tabelle.mdb": {"parent": "Indagini", "path": None, "checkbox": None},
-            "CdI_Tabelle.sqlite": {"parent": "Indagini", "path": None, "checkbox": None},
-            "Ind_pu.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_puntuali},
-            "Ind_ln.shp": {"parent": "Indagini", "path": None, "checkbox": self.chk_siti_lineari},
-            "MS1": {"parent": None, "path": None, "checkbox": None},
-            "MS1-Instab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_instab, "table": "instab_l1"},
-            "MS1-Isosub.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_isosub, "table": "isosub_l1"},
-            "MS1-Stab.shp": {"parent": "MS1", "path": None, "checkbox": self.chk_ms1_stab, "table": "stab_l1"},
-            "MS23": {"parent": None, "path": None, "checkbox": None},
-            "MS23-Instab.shp": {
-                "parent": "MS23",
-                "path": None,
-                "checkbox": self.chk_ms23_instab,
-                "table": "instab_l23",
-            },
-            "MS23-Isosub.shp": {
-                "parent": "MS23",
-                "path": None,
-                "checkbox": self.chk_ms23_isosub,
-                "table": "isosub_l23",
-            },
-            "MS23-Stab.shp": {"parent": "MS23", "path": None, "checkbox": self.chk_ms23_stab, "table": "stab_l23"},
-            "Spettri": {"parent": "MS23", "path": None, "checkbox": None},
-            "Plot": {"parent": None, "path": None, "checkbox": None},
-        }
-
-        for name, data in self.standard_proj_paths.items():
-            parent_path = Path(input_dir) if not data["parent"] else Path(input_dir) / data["parent"]
-
-            # if parent_path does not exist check for lower case name
-            if not parent_path.exists():
-                parent_path = parent_path.parent / str(parent_path.name).lower()
-
-            data["path"] = get_path_for_name(parent_path, name.split("-")[1] if "-" in name else name)
-            # self.log(f"{name}: {data['path']}", log_level=4)
-            if data["checkbox"]:
-                # self.log(f"Enabling checkbox for {name}", log_level=4)
-                data["checkbox"].setEnabled(bool(data["path"]))
-                data["checkbox"].setChecked(bool(data["path"]))
-
-        # self.log(f"Standard project paths: {self.standard_proj_paths}", log_level=4)
+        self.standard_proj_paths = build_standard_project_paths(Path(input_dir))
+        for name, checkbox in self.shapefile_checkboxes.items():
+            checkbox.setEnabled(bool(self.standard_proj_paths[name]["path"]))
+            checkbox.setChecked(bool(self.standard_proj_paths[name]["path"]))
 
         if not self.standard_proj_paths["Indagini"]["path"]:
             self.log(self.tr("Project folder does not contain 'Indagini' subfolder"), log_level=1)
@@ -434,21 +356,12 @@ class DlgImportData(QDialog, FORM_CLASS):
 
         selected_shapefiles = [
             name
-            for name, data in self.standard_proj_paths.items()
-            if ".shp" in name
-            and "table" in data
-            and data["checkbox"]
-            and data["checkbox"].isEnabled()
-            and data["checkbox"].isChecked()
+            for name, checkbox in self.shapefile_checkboxes.items()
+            if "table" in self.standard_proj_paths[name] and checkbox.isEnabled() and checkbox.isChecked()
         ]
 
-        # Strip widget references before passing to the task manager
-        clean_proj_paths = {
-            name: {k: v for k, v in data.items() if k != "checkbox"} for name, data in self.standard_proj_paths.items()
-        }
-
         self.import_data_task_manager = ImportDataTaskManager(
-            standard_proj_paths=clean_proj_paths,
+            standard_proj_paths=self.standard_proj_paths,
             input_path=self.input_path,
             indagini_data_source=indagini_data_source,
             mdb_password=self.mdb_password,

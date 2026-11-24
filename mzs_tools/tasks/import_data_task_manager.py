@@ -47,9 +47,8 @@ class ImportDataTaskManager:
     Parameters
     ----------
     standard_proj_paths:
-        Path information for each layer/file in the source project directory.
-        Must be a *clean* copy with no Qt-widget references (i.e. the
-        ``"checkbox"`` key must have been removed by the caller).
+        Path information for each layer/file in the source project directory,
+        as returned by ``build_standard_project_paths()``.
     input_path:
         Root directory of the source project being imported.
     indagini_data_source:

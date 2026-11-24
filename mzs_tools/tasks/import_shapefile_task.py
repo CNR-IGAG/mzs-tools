@@ -31,6 +31,7 @@ class ImportShapefileTask(QgsTask):
         self,
         proj_paths: dict,
         shapefile_name: str,
+        prj_manager: MzSProjectManager | None = None,
     ):
         super().__init__(f"Import shapefile {shapefile_name}", QgsTask.Flag.CanCancel)
 
@@ -40,7 +41,7 @@ class ImportShapefileTask(QgsTask):
         # the logger is configured in the import data dialog module
         self.logger = logging.getLogger("mzs_tools.tasks.import_data")
 
-        self.prj_manager = MzSProjectManager.instance()
+        self.prj_manager = prj_manager if prj_manager is not None else MzSProjectManager.instance()
 
         self.proj_paths = proj_paths
         self.shapefile_name = shapefile_name

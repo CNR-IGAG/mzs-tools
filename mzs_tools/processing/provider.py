@@ -20,7 +20,12 @@ from qgis.core import QgsApplication, QgsProcessingProvider
 from qgis.PyQt.QtGui import QIcon
 
 from ..__about__ import DIR_PLUGIN_ROOT
-from .algorithms import UpdateProjectAlgorithm, UpdateProjectsInFolderAlgorithm
+from .algorithms import (
+    ImportStandardProjectAlgorithm,
+    ImportStandardProjectsInFolderAlgorithm,
+    UpdateProjectAlgorithm,
+    UpdateProjectsInFolderAlgorithm,
+)
 
 
 class MzSToolsProvider(QgsProcessingProvider):
@@ -36,6 +41,8 @@ class MzSToolsProvider(QgsProcessingProvider):
     def loadAlgorithms(self):
         self.addAlgorithm(UpdateProjectAlgorithm())
         self.addAlgorithm(UpdateProjectsInFolderAlgorithm())
+        self.addAlgorithm(ImportStandardProjectAlgorithm())
+        self.addAlgorithm(ImportStandardProjectsInFolderAlgorithm())
 
 
 class MzSToolsProcessingPlugin:

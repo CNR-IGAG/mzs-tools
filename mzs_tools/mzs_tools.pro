@@ -25,9 +25,11 @@ SOURCES = mzs_tools.py \
           tasks/export_data_task_manager.py \
           tasks/merge_projects_task.py \
           tasks/merge_projects_task_manager.py \
+          tasks/standard_project.py \
           processing/algorithms.py \
           processing/project_update.py \
-          processing/provider.py
+          processing/provider.py \
+          processing/standard_project_import.py
 
 FORMS = gui/dlg_create_project.ui \
         gui/dlg_export_data.ui \

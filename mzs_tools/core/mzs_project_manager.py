@@ -39,7 +39,9 @@ from qgis.core import (
     QgsProject,
     QgsProviderRegistry,
     QgsReadWriteContext,
+    QgsReferencedRectangle,
     QgsRelation,
+    QgsRelationContext,
     QgsSnappingConfig,
     QgsTolerance,
     QgsVectorLayer,
@@ -815,7 +817,8 @@ class MzSProjectManager:
                 self._add_project_issue("project", msg)
                 continue
 
-            rel = QgsRelation()
+            # without a context the layers are resolved in QgsProject.instance(), not in a detached project
+            rel = QgsRelation(QgsRelationContext(self.current_project))
             rel.setId(relation_name)
             rel.setName(relation_name)
             rel.setReferencedLayer(parent_layer_id)
@@ -1061,7 +1064,13 @@ class MzSProjectManager:
         return valid_layers[0].id()
 
     def create_project(
-        self, comune_name: str, cod_istat: str, study_author: str, author_email: str, dir_out: str
+        self,
+        comune_name: str,
+        cod_istat: str,
+        study_author: str,
+        author_email: str,
+        dir_out: str,
+        project: QgsProject | None = None,
     ) -> Path:
         """Create a new MzS Tools project for a municipality in the specified directory.
 
@@ -1071,6 +1080,8 @@ class MzSProjectManager:
             study_author (str): Name of the study author
             author_email (str): Email of the study author
             dir_out (str): Output directory
+            project: a detached project to build instead of QgsProject.instance() (the project is saved but
+                not loaded in QGIS, the caller must call cleanup_db_connection() when done).
 
         Returns:
             Path: Path to the created project directory
@@ -1083,6 +1094,8 @@ class MzSProjectManager:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             new_project_path = Path(dir_out) / f"{cod_istat}_{comune_name}_{timestamp}"
 
+        self.current_project = project if project is not None else QgsProject.instance()
+        self.is_detached = project is not None
         self._build_new_project(new_project_path, [cod_istat])
         self.create_basic_project_metadata(cod_istat, study_author, author_email)
         self._save_and_reload_project(new_project_path)
@@ -1110,6 +1123,8 @@ class MzSProjectManager:
         if new_project_path.exists():
             raise FileExistsError(f"Project directory '{new_project_path}' already exists")
 
+        self.current_project = QgsProject.instance()
+        self.is_detached = False
         self._build_new_project(new_project_path, cod_istat_list)
         self.db.execute_script_file(DIR_PLUGIN_ROOT / "data" / "sql_scripts" / MULTI_COMUNE_TRIGGERS_SCRIPT)
         self._save_and_reload_project(new_project_path)
@@ -1136,8 +1151,6 @@ class MzSProjectManager:
         db_path.mkdir(parents=True, exist_ok=False)
         self.extract_database_template(db_path)
 
-        self.current_project = QgsProject.instance()
-
         self.project_path = new_project_path
         self.db_path = new_project_path / "db" / "indagini.sqlite"
         self._setup_db_connection()
@@ -1162,6 +1175,8 @@ class MzSProjectManager:
 
         # Save the project
         self.current_project.write(os.path.join(new_project_path, "progetto_MS.qgz"))
+        if self.is_detached:
+            return
 
         # Disconnect layersAdded before reloading to prevent the duplicate-detection handler
         # from firing while all project layers are being loaded at once.
@@ -1466,10 +1481,7 @@ class MzSProjectManager:
         legenda_hvsr_path = DIR_PLUGIN_ROOT / "resources" / "img" / "Legenda_valori_HVSR_rev01.svg"
         shutil.copy(legenda_hvsr_path, self.project_path / "progetto" / "loghi")
 
-        mainPath = QgsProject.instance().homePath()
-        canvas = iface.mapCanvas()
-
-        image_file_path = os.path.join(mainPath, "progetto", "loghi", "mappa_reg.png")
+        image_file_path = str(self.project_path / "progetto" / "loghi" / "mappa_reg.png")
         layer_limiti_comunali_id = self.find_layer_by_table_name_role("comuni", "base")
         layer_limiti_comunali_node = self.current_project.layerTreeRoot().findLayer(layer_limiti_comunali_id)
         # layer_limiti_comunali = layer_limiti_comunali_node.layer()  # Only needed for visibility
@@ -1511,9 +1523,6 @@ class MzSProjectManager:
             zoom_layer_for_image = layer_comune_progetto
             self.log("Fallback: using layer_comune_progetto extent for map image")
 
-        # Set canvas extent to the project municipality (for canvas display)
-        canvas.setExtent(extent)
-
         # Ensure both layers are visible for the map image
         if layer_limiti_comunali_node:
             layer_limiti_comunali_node.setItemVisibilityCheckedParentRecursive(True)
@@ -1535,26 +1544,23 @@ class MzSProjectManager:
             self.log("Error: No valid layers found for rendering", log_level=1)
             return
 
-        canvas.setLayers(layers_to_render)
-
-        # Refresh canvas to ensure layers are rendered
-        canvas.refresh()
-
-        # self.log(f"Canvas layers set to: {[layer.name() for layer in layers_to_render]}")
-        # self.log(f"Canvas extent: {canvas.extent()}")
-        # self.log(f"Map image extent: {map_extent}")
-        # self.log(f"Canvas scale: {canvas.scale()}")
-
-        # Try the canvas-based approach first
-        try:
-            # Use layer_limiti_comunali extent for the map image (broader regional view)
-            save_map_image(image_file_path, zoom_layer_for_image, canvas)
-        except Exception as e:
-            self.log(f"Canvas-based image generation failed: {e}, trying direct approach", log_level=1)
-            # Fallback to direct rendering with the broader extent
+        if self.is_detached:
             save_map_image_direct(image_file_path, layers_to_render, map_extent, zoom_layer_for_image.crs())
-
-        canvas.setExtent(extent)
+            # no map canvas is saved with a detached project: QGIS opens it on the default view extent
+            self.current_project.viewSettings().setDefaultViewExtent(
+                QgsReferencedRectangle(extent, layer_comune_progetto.crs())
+            )
+        else:
+            canvas = iface.mapCanvas()
+            canvas.setExtent(extent)
+            canvas.setLayers(layers_to_render)
+            canvas.refresh()
+            try:
+                save_map_image(image_file_path, zoom_layer_for_image, canvas)
+            except Exception as e:
+                self.log(f"Canvas-based image generation failed: {e}, trying direct approach", log_level=1)
+                save_map_image_direct(image_file_path, layers_to_render, map_extent, zoom_layer_for_image.crs())
+            canvas.setExtent(extent)
 
         self.load_print_layouts()
 

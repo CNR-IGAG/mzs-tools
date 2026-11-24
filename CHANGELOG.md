@@ -8,6 +8,7 @@
 - project migration step removing the hidden layers left in projects updated with previous versions
 - fix empty legends in print layouts: the legends of the default print layouts now follow the layers shown in the map (#50)
 - Processing provider with "Update MzS Tools project" and "Update MzS Tools projects in folder" algorithms to update projects >= 2.0.0 without opening them (also in batch mode and `qgis_process`)
+- Processing algorithms "Create MzS Tools project from standard project" and "Create MzS Tools projects from standard projects in folder" to create new projects and import all the data of standard projects (shapefiles, survey data from CdI_Tabelle.sqlite, CdI_Tabelle.mdb or CSV) without opening them (also in batch mode and `qgis_process`)
 
 ## [2.0.8] - 2026-05-12
 

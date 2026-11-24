@@ -21,22 +21,12 @@ import sqlite3
 import zipfile
 from pathlib import Path
 
-import pytest
 from qgis.core import QgsApplication, QgsProcessingContext, QgsProcessingFeedback, QgsProject
 
 from mzs_tools.__about__ import __base_version__
 from mzs_tools.core.mzs_project_manager import MzSProjectManager
-from mzs_tools.processing.provider import MzSToolsProvider
 
 FA_LAYOUT_NAME = "04 - MS23 carta di microzonazione sismica liv2-3 FA"
-
-
-@pytest.fixture
-def mzs_provider(qgis_app):
-    provider = MzSToolsProvider()
-    QgsApplication.processingRegistry().addProvider(provider)
-    yield provider
-    QgsApplication.processingRegistry().removeProvider(provider)
 
 
 def run_algorithm(alg_id: str, params: dict) -> dict:
