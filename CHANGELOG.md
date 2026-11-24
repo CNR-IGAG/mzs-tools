@@ -3,6 +3,7 @@
 ## [2.0.9-beta1] - 2026-11-23
 
 - Experimental tool "Merge MzS Tools projects" to create a multi-municipality project from existing projects
+- Update "Carta di microzonazione sismica (FA)" layout group (#49)
 - fix hidden layers saved in projects by layout group updates (since 2.0.1)
 - project migration step removing the hidden layers left in projects updated with previous versions
 - fix empty legends in print layouts: the legends of the default print layouts now follow the layers shown in the map (#50)
