@@ -67,13 +67,13 @@ jobs:
 
     steps:
       - name: Get source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Print QGIS version
         run: qgis --version
 
       # - name: Install uv
-      #   uses: astral-sh/setup-uv@v6
+      #   uses: astral-sh/setup-uv@v10.4.0
       #   with:
       #     version: "latest"
 

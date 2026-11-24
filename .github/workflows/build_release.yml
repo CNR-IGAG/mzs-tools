@@ -24,10 +24,10 @@ jobs:
 
   #   steps:
   #     - name: Get source code
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v7
 
   #     - name: Setup Python
-  #       uses: actions/setup-python@v5
+  #       uses: actions/setup-python@v7
   #       with:
   #         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -43,7 +43,7 @@ jobs:
   #     - name: Compile translations
   #       run: lrelease ${{ env.PROJECT_FOLDER }}/resources/i18n/*.ts
 
-  #     - uses: actions/upload-artifact@v4
+  #     - uses: actions/upload-artifact@v7
   #       with:
   #         name: translations-build
   #         path: ${{ env.PROJECT_FOLDER }}/**/*.qm
@@ -59,20 +59,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # - name: Setup Python
-      #   uses: actions/setup-python@v5
+      #   uses: actions/setup-python@v7
       #   with:
       #     # cache: "pip"
       #     # cache-dependency-path: "requirements/packaging.txt"
       #     python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.4.0
 
       # - name: Setup Just
-      #   uses: extractions/setup-just@v2
+      #   uses: extractions/setup-just@v4
 
       - name: Install dependencies
         # run: |
@@ -88,7 +88,7 @@ jobs:
           uv pip install -U qgis-plugin-ci
 
       # - name: Download translations
-      #   uses: actions/download-artifact@v4
+      #   uses: actions/download-artifact@v8
       #   with:
       #     name: translations-build
       #     path: ${{ env.PROJECT_FOLDER }}
@@ -124,7 +124,7 @@ jobs:
           mv "$(find . -name 'mzs_tools.*.zip')" "$(find . -name 'mzs_tools.*.zip' | sed 's/mzs_tools/MzSTools/')"
           sed -i 's/mzs_tools/MzSTools/g' plugins.xml
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ env.PROJECT_FOLDER }}-latest
           path: |
@@ -143,22 +143,18 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
 
     steps:
-      - name: Get tag name as version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # - name: Setup Python
-      #   uses: actions/setup-python@v5
+      #   uses: actions/setup-python@v7
       #   with:
       #     cache: "pip"
       #     cache-dependency-path: "requirements/packaging.txt"
       #     python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install the latest version of uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.4.0
 
       - name: Install project requirements
         # run: |
@@ -172,7 +168,7 @@ jobs:
           uv pip install -U qgis-plugin-ci
 
       # - name: Download translations
-      #   uses: actions/download-artifact@v4
+      #   uses: actions/download-artifact@v8
       #   with:
       #     name: translations-build
       #     path: ${{ env.PROJECT_FOLDER }}
@@ -191,7 +187,7 @@ jobs:
           qgis-plugin-ci changelog ${GITHUB_REF/refs\/tags\//} > RELEASE-CHANGELOG.txt
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           # fail_on_unmatched_files: true
           # generate_release_notes: true
