@@ -50,17 +50,17 @@ jobs:
 
     steps:
     - name: Get source code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
           cache: "pip"
           cache-dependency-path: "help/requirements.txt"
           python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Cache Sphinx cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: help/_build/cache
         key: ${{ runner.os }}-sphinx-${{ hashFiles('help/**/*') }}
@@ -83,7 +83,7 @@ jobs:
         cp MzSTools.pdf ../html/
 
     - name: Save build doc as artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: documentation
         path: help/_build/html/*
@@ -92,7 +92,7 @@ jobs:
 
     - name: Download artifact from build workflow
       if: github.event_name == 'workflow_run' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master')
-      uses: dawidd6/action-download-artifact@v7
+      uses: dawidd6/action-download-artifact@v28
       with:
         allow_forks: false
         branch: master
@@ -105,11 +105,11 @@ jobs:
         workflow: build_release.yml
 
     - name: Setup Pages
-      uses: actions/configure-pages@v4
+      uses: actions/configure-pages@v6
       if: ${{ github.event_name == 'workflow_run' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
 
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v5
       if: ${{ github.event_name == 'workflow_run' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
       with:
         # Upload entire repository
@@ -118,4 +118,4 @@ jobs:
     - name: Deploy to GitHub Pages
       id: deployment
       if: ${{ github.event_name == 'workflow_run' && ( startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/master' ) }}
-      uses: actions/deploy-pages@v4
+      uses: actions/deploy-pages@v5
