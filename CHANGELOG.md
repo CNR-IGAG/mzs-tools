@@ -7,6 +7,7 @@
 - fix hidden layers saved in projects by layout group updates (since 2.0.1)
 - project migration step removing the hidden layers left in projects updated with previous versions
 - fix empty legends in print layouts: the legends of the default print layouts now follow the layers shown in the map (#50)
+- Processing provider with "Update MzS Tools project" and "Update MzS Tools projects in folder" algorithms to update projects >= 2.0.0 without opening them (also in batch mode and `qgis_process`)
 
 ## [2.0.8] - 2026-05-12
 

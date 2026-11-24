@@ -23,6 +23,11 @@ def classFactory(iface):
     :param iface: A QGIS interface instance.
     :type iface: QgisInterface
     """
+    if iface is None:
+        # headless (qgis_process): only the processing provider is loaded
+        from .processing.provider import MzSToolsProcessingPlugin
+
+        return MzSToolsProcessingPlugin()
 
     from .mzs_tools import MzSTools
 

@@ -99,11 +99,6 @@ class MzSProjectManager:
         return cls._instance
 
     def __init__(self):
-        if MzSProjectManager._instance is not None:
-            raise Exception("This class is a singleton!")
-        else:
-            MzSProjectManager._instance = self
-
         self.log = MzSToolsLogger().log
 
         self.current_project: QgsProject | None = None
@@ -122,6 +117,9 @@ class MzSProjectManager:
         self.project_issues = None
 
         self.is_mzs_project: bool = False
+        # True when managing a project not loaded in QGIS (e.g. from processing algorithms):
+        # no signals are connected and no GUI (iface) interaction is performed
+        self.is_detached: bool = False
 
     @property
     def db(self) -> DatabaseManager:
@@ -154,9 +152,15 @@ class MzSProjectManager:
         """True when the project contains more than one municipality (merged project)."""
         return len(self.comuni_progetto) > 1
 
-    def init_manager(self):
-        """Detect if the current project is a MzS Tools project and setup the manager."""
-        self.current_project = QgsProject.instance()
+    def init_manager(self, project: QgsProject | None = None):
+        """Detect if the project is a MzS Tools project and setup the manager.
+
+        Args:
+            project: a detached project to manage instead of QgsProject.instance() (no signals connected,
+                the caller must call cleanup_db_connection() when done).
+        """
+        self.current_project = project if project is not None else QgsProject.instance()
+        self.is_detached = project is not None
 
         # be careful using Path with QgsProject functions such as absolutePath(), fileName(), baseName(), etc.
         # when clicking on New Project these functions will return empty strings but Path.resolve() will return
@@ -178,8 +182,9 @@ class MzSProjectManager:
             self.project_updateable = False
             self.project_issues = None
             # Disconnect layersAdded if it was connected from a previous project
-            with contextlib.suppress(RuntimeError, TypeError):
-                self.current_project.layersAdded.disconnect(self._on_layers_added)
+            if not self.is_detached:
+                with contextlib.suppress(RuntimeError, TypeError):
+                    self.current_project.layersAdded.disconnect(self._on_layers_added)
             return False
 
         self.is_mzs_project = True
@@ -192,14 +197,15 @@ class MzSProjectManager:
         if not connected:
             return False
 
-        # cleanup db connection on project close
-        self.current_project.cleared.connect(self.cleanup_db_connection)
+        if not self.is_detached:
+            # cleanup db connection on project close
+            self.current_project.cleared.connect(self.cleanup_db_connection)
 
-        # detect and remove any duplicate MzS-managed layers added by the user
-        # (disconnect first since QgsProject is a singleton and init_manager is called multiple times)
-        with contextlib.suppress(RuntimeError, TypeError):
-            self.current_project.layersAdded.disconnect(self._on_layers_added)
-        self.current_project.layersAdded.connect(self._on_layers_added)
+            # detect and remove any duplicate MzS-managed layers added by the user
+            # (disconnect first since QgsProject is a singleton and init_manager is called multiple times)
+            with contextlib.suppress(RuntimeError, TypeError):
+                self.current_project.layersAdded.disconnect(self._on_layers_added)
+            self.current_project.layersAdded.connect(self._on_layers_added)
 
         # load metadata from db if exists
         # self.sm_project_metadata = self.get_sm_project_metadata()
@@ -828,7 +834,7 @@ class MzSProjectManager:
         root_layer_group.setIsMutuallyExclusive(True)
         root_layer_group.setItemVisibilityChecked(False)
         # check if the editing group exists
-        editing_group = QgsProject.instance().layerTreeRoot().findGroup("BANCA DATI GEOGRAFICA")
+        editing_group = self.current_project.layerTreeRoot().findGroup("BANCA DATI GEOGRAFICA")
         # put the layout group at the top of the tree only if the editing group does not exist
         idx = 1 if editing_group else 0
         self.current_project.layerTreeRoot().insertChildNode(idx, root_layer_group)
@@ -1238,25 +1244,29 @@ class MzSProjectManager:
 
         old_version = self.project_version
 
-        # Create a progress message that will stay visible during operations
-        progress_msg = iface.messageBar().createMessage(
-            "MzS Tools", self.tr("Project update in progress. Please wait...")
-        )
+        message_item = None
+        if not self.is_detached:
+            # Create a progress message that will stay visible during operations
+            progress_msg = iface.messageBar().createMessage(
+                "MzS Tools", self.tr("Project update in progress. Please wait...")
+            )
 
-        # Add a progress bar to show activity
-        progress_bar = QProgressBar()
-        progress_bar.setRange(0, 0)  # Indeterminate progress bar
-        progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
-        progress_msg.layout().addWidget(progress_bar)
+            # Add a progress bar to show activity
+            progress_bar = QProgressBar()
+            progress_bar.setRange(0, 0)  # Indeterminate progress bar
+            progress_bar.setAlignment(get_alignment_flag("AlignLeft", "AlignVCenter"))
+            progress_msg.layout().addWidget(progress_bar)
 
-        # Push the message to the message bar
-        message_item = iface.messageBar().pushWidget(progress_msg, Qgis.MessageLevel.Info)
+            # Push the message to the message bar
+            message_item = iface.messageBar().pushWidget(progress_msg, Qgis.MessageLevel.Info)
 
-        # Update the UI to ensure the message is visible
-        iface.mainWindow().repaint()
+            # Update the UI to ensure the message is visible
+            iface.mainWindow().repaint()
 
         try:
             if old_version < "2.0.0":
+                if self.is_detached:
+                    raise RuntimeError("Projects older than 2.0.0 cannot be updated without opening them in QGIS")
                 # version is too old, clear the project and start from scratch
                 self.update_history_table("project", old_version, __version__, "clearing and rebuilding project")
 
@@ -1348,7 +1358,7 @@ class MzSProjectManager:
                     self.current_project.write(str(self.project_path / "progetto_MS.qgz"))
                     # iface.actionSaveProject().trigger()
 
-                    if flags["add_editing_layers"]:
+                    if flags["add_editing_layers"] and not self.is_detached:
                         # the project must be reloaded after adding the default relations to refresh the relation editor widgets
                         self.log("Saving and reloading the project after replacing the editing layers.", log_level=4)
 
@@ -1400,10 +1410,17 @@ class MzSProjectManager:
             # update mzs_tools_version table
             self.update_db_version_info()
 
-            self.log(f"{msg} {__base_version__}", push=True, log_level=3, duration=0, showmore_text=changelog)
+            self.log(
+                f"{msg} {__base_version__}",
+                push=not self.is_detached,
+                log_level=3,
+                duration=0,
+                showmore_text=changelog,
+            )
         finally:
             # Clear the message bar once the operation is complete
-            iface.messageBar().popWidget(message_item)
+            if message_item is not None:
+                iface.messageBar().popWidget(message_item)
 
     def _comuni_subset_string(self) -> str:
         """Subset string for the 'comuni' layer, filtering the regions of the project municipalities."""
@@ -1597,11 +1614,18 @@ class MzSProjectManager:
 
         # set layout elements for the current project if it's a default model
         if is_default_model:
-            canvas = iface.mapCanvas()
             map_item = layout.itemById("mappa_0")
-            # TODO: get extent from comune_progetto table
             # TODO: properly check map item types
-            map_item.zoomToExtent(canvas.extent())  # type: ignore
+            if not self.is_detached:
+                canvas = iface.mapCanvas()
+                map_item.zoomToExtent(canvas.extent())  # type: ignore
+            else:
+                layer_id = self.find_layer_by_table_name_role("comune_progetto", "base")
+                comune_layer = self.current_project.mapLayer(layer_id) if layer_id else None
+                if comune_layer is not None and not comune_layer.extent().isEmpty():
+                    map_item.zoomToExtent(comune_layer.extent())  # type: ignore
+                else:
+                    self.log("comune_progetto layer not found, print layout map extent not set", log_level=1)
             map_item_2 = layout.itemById("regio_title")
             map_item_2.setText(self._layout_regione_text())  # type: ignore
             map_item_3 = layout.itemById("com_title")
@@ -1681,16 +1705,15 @@ class MzSProjectManager:
             return
 
         try:
-            from qgis.PyQt.QtGui import QPixmap
-
+            # QImage (unlike QPixmap) does not require a GUI application
             # Load the image to check its dimensions
-            pixmap = QPixmap(str(map_image_path))
-            if pixmap.isNull():
+            image = QImage(str(map_image_path))
+            if image.isNull():
                 self.log("Failed to load map image for size check", log_level=1)
                 return
 
-            original_width = pixmap.width()
-            original_height = pixmap.height()
+            original_width = image.width()
+            original_height = image.height()
 
             self.log(f"Map image current size: {original_width}x{original_height}")
 
@@ -1709,7 +1732,7 @@ class MzSProjectManager:
                 # PyQt6:
                 #   aspectRatioMode=Qt.AspectRatioMode.KeepAspectRatio,
                 #   transformMode=Qt.TransformationMode.SmoothTransformation,
-                scaled_pixmap = pixmap.scaled(
+                scaled_image = image.scaled(
                     new_width,
                     new_height,
                     aspectRatioMode=1,  # type: ignore
@@ -1725,7 +1748,7 @@ class MzSProjectManager:
                     self.log(f"Created backup of original map image: {backup_path}")
 
                 # Save the resized image
-                success = scaled_pixmap.save(str(map_image_path), "PNG")
+                success = scaled_image.save(str(map_image_path), "PNG")
                 if success:
                     self.log(f"Successfully resized map image to {new_width}x{new_height}")
                 else:
@@ -1843,7 +1866,7 @@ class MzSProjectManager:
         self.update_db_version_info()
 
         msg = self.tr("Database upgrades completed! Database upgraded to version")
-        self.log(f"{msg} {__base_version__}", push=True, duration=0)
+        self.log(f"{msg} {__base_version__}", push=not self.is_detached, duration=0)
 
     def update_history_table(self, component: str, from_version: str, to_version: str, notes: str | None = None):
         """Update the project update history table."""

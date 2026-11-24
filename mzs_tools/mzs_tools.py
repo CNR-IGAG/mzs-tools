@@ -55,6 +55,7 @@ from .plugin_utils.db_utils import check_mdb_connection
 from .plugin_utils.dependency_manager import DependencyManager
 from .plugin_utils.logging import MzSToolsLogger
 from .plugin_utils.misc import require_mzs_project
+from .processing.provider import MzSToolsProvider
 from .tasks.merge_projects_task_manager import MergeProjectsTaskManager
 
 
@@ -80,6 +81,7 @@ class MzSTools:
         self.dlg_load_ogc_services = None
         self.dlg_merge_projects = None
         self.merge_task_manager = None
+        self.provider = None
 
         self.actions = []
         self.always_enabled_actions = []  # Actions that remain enabled regardless of project state
@@ -141,7 +143,13 @@ class MzSTools:
 
         return action
 
+    def initProcessing(self):
+        self.provider = MzSToolsProvider()
+        QgsApplication.processingRegistry().addProvider(self.provider)
+
     def initGui(self):
+        self.initProcessing()
+
         # Check and ensure Python dependencies are available at startup
         self._check_python_dependencies()
 
@@ -365,6 +373,9 @@ class MzSTools:
         self.check_project()
 
     def unload(self):
+        if self.provider:
+            QgsApplication.processingRegistry().removeProvider(self.provider)
+
         # close db connections
         if self.prj_manager:
             self.prj_manager.cleanup_db_connection()

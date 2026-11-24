@@ -114,8 +114,8 @@ def disable_layers_added_handler(monkeypatch):
         # bound method pointing to the real function is disconnected.
         original_init_manager = MzSProjectManager.init_manager
 
-        def _patched_init_manager(self):
-            result = original_init_manager(self)
+        def _patched_init_manager(self, *args, **kwargs):
+            result = original_init_manager(self, *args, **kwargs)
             with contextlib.suppress(RuntimeError, TypeError):
                 QgsProject.instance().layersAdded.disconnect(self._on_layers_added)
             return result
