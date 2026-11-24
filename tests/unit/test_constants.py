@@ -18,11 +18,16 @@
 
 """Unit tests for constants and configuration validation."""
 
+import xml.etree.ElementTree as ET
+
+import pytest
 from packaging.version import parse as parse_version
 
+from mzs_tools.__about__ import DIR_PLUGIN_ROOT
 from mzs_tools.core.constants import (
     DEFAULT_BASE_LAYERS,
     DEFAULT_EDITING_LAYERS,
+    PRINT_LAYOUT_MODELS,
     PROJECT_MIGRATION_STEPS,
     ProjectMigrationStep,
 )
@@ -144,6 +149,19 @@ class TestConstants:
                 geom_name = layer_config["geom_name"]
                 assert isinstance(geom_name, str)
                 assert len(geom_name.strip()) > 0, f"Geometry name is empty for layer '{layer_name}'"
+
+    @pytest.mark.parametrize("model_file_name", PRINT_LAYOUT_MODELS.values())
+    def test_print_layout_model_legends_auto_update(self, model_file_name):
+        """Legends of the print layout models must follow the project layers.
+
+        A legend with a fixed layer list references layers by id, and the ids of the layout group
+        layers change every time the groups are loaded: the legend would be empty.
+        """
+        root = ET.parse(DIR_PLUGIN_ROOT / "data" / "print_layouts" / model_file_name).getroot()
+        legends = [item for item in root.iter("LayoutItem") if item.get("type") == "65642"]  # QgsLayoutItemLegend
+        assert legends
+        for legend in legends:
+            assert legend.find("layer-tree") is None and legend.find("layer-tree-group") is None
 
 
 # ---------------------------------------------------------------------------
