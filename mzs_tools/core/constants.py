@@ -93,8 +93,8 @@ PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
     ProjectMigrationStep(
         version="2.0.9",
         description=(
-            "'Carta FA 07-11' layout group updated; removed hidden layers left in the project by previous "
-            "layout group updates"
+            "'Carta di microzonazione sismica (FA)' and 'Carta delle indagini' layout groups updated; "
+            "removed hidden layers left in the project by previous layout group updates"
         ),
         add_layout_groups=True,
         remove_hidden_layers=True,
