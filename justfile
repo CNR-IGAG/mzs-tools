@@ -110,44 +110,43 @@ docs-build-pdf:
     latexmk -pdf -dvi- -ps- -interaction=nonstopmode -halt-on-error MzSTools.tex
     popd
 
+# Sync the testing dependency group from uv.lock
+test-sync:
+    uv sync --group testing
+
 # Sync deps and run a quick check of the local QGIS test environment
 test-check-env:
-    uv sync --no-group ci
     uv sync --group testing
     uv run pytest -v tests/integration/test_qgis_env.py::test_qgis_environment
 
 # Run all tests locally with pytest and coverage info, without GUI display
-test TESTS_TO_RUN="tests": test-check-env
+test TESTS_TO_RUN="tests": test-sync
     uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --qgis_disable_gui --basetemp=.pytest_tmp -rs -v {{ TESTS_TO_RUN }}
 
 # Run all tests locally with pytest and coverage info, with GUI display
-test-gui TESTS_TO_RUN="tests" GUI_TIMEOUT="2": test-check-env
+test-gui TESTS_TO_RUN="tests" GUI_TIMEOUT="2": test-sync
     GUI_TIMEOUT={{ GUI_TIMEOUT }} uv run pytest --cov={{ PLUGIN_SLUG }} --cov-report=term-missing --basetemp=.pytest_tmp -rs -v {{ TESTS_TO_RUN }}
 
-# Run tests with all QGIS versions using tox and Docker
-test-tox-all:
-    uv sync --group testing
-    uv run tox -e all
-
-# Run tests with QGIS stable using tox and Docker
-test-tox-stable:
-    uv sync --group testing
-    uv run tox -e qgis-stable
-
-# Run tests with QGIS LTR using tox and Docker
-test-tox-ltr:
-    uv sync --group testing
-    uv run tox -e qgis-ltr
-
-# Run tests with QGIS LTR (python 3.10) using tox and Docker
-test-tox-ltr-jammy:
-    uv sync --group testing
-    uv run tox -e qgis-ltr-jammy
-
-# Run tests with QGIS old using tox and Docker
-test-tox-old:
-    uv sync --group testing
-    uv run tox -e qgis-old
+# Run the test suite in official QGIS Docker images: a matrix entry of the Tester workflow (e.g. "stable-resolute", "3.44-jammy") or "all"
+test-docker IMAGE="stable-resolute" *PYTEST_ARGS:
+    #!/bin/bash
+    set -uo pipefail
+    if [ "{{ IMAGE }}" = "all" ]; then
+        IMAGES=$(sed -n 's/^ *qgis-version: \[\(.*\)\].*/\1/p' .github/workflows/tester.yml | tr -d '"' | tr ',' ' ')
+    else
+        IMAGES="{{ IMAGE }}"
+    fi
+    FAILED=""
+    for IMG in $IMAGES; do
+        echo ">>> qgis/qgis:$IMG"
+        docker pull "qgis/qgis:$IMG" && \
+        docker run --rm -t --tmpfs /tmp:exec -v "$PWD":/tests_directory "qgis/qgis:$IMG" \
+            bash /tests_directory/tests/run_docker_tests.sh {{ PYTEST_ARGS }} || FAILED="$FAILED $IMG"
+    done
+    if [ -n "$FAILED" ]; then
+        echo "test-docker FAILED for:$FAILED"
+        exit 1
+    fi
 
 # Run the GitHub "Tester" workflow locally with act, for one matrix entry (e.g. "stable-resolute", "3.44-noble") or "all"
 test-act QGIS_VERSION="stable-resolute":
@@ -192,6 +191,10 @@ test-act QGIS_VERSION="stable-resolute":
         exit 1
     fi
     echo "act run succeeded for: $VERSIONS"
+
+# Regenerate the reduced "imported" test project for the current plugin version (run after a version bump)
+test-data-imported:
+    uv run python tests/tools/build_test_data.py imported
 
 @package VERSION:
     #!/bin/bash

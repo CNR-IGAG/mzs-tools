@@ -18,6 +18,7 @@
 
 import shutil
 import warnings
+from pathlib import Path
 from unittest.mock import Mock
 
 from qgis.core import QgsProject
@@ -29,9 +30,19 @@ from mzs_tools.tasks.export_siti_lineari_task import ExportSitiLineariTask
 from mzs_tools.tasks.export_siti_puntuali_task import ExportSitiPuntualiTask
 
 
+def _log_has(path: Path | None, text: str) -> bool:
+    return path is not None and path.exists() and text in path.read_text(encoding="utf-8")
+
+
+def _export_done(dialog) -> bool:
+    """True when the export manager has written its final (success or error) log line."""
+    log_path = dialog.export_data_task_manager.log_file_path
+    return _log_has(log_path, "Data exported") or _log_has(log_path, "Data export completed")
+
+
 def test_export_data(
     plugin,
-    qgis_app,
+    wait_tasks_done,
     qgis_iface,
     prj_manager,
     base_project_path_current_imported,
@@ -80,19 +91,9 @@ def test_export_data(
 
     assert dialog.ok_button.isEnabled() is True
 
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:
-        # blocker.connect(app.worker.failed)  # Can add other signals to blocker
-        # accept() will run start_import_tasks
-        dialog.accept()
-        # Test will block at this point until either the signal is emitted.
-        # If 10 seconds passed without a signal, qtbot.TimeoutError will be raised.
-        # The allTasksFinished signal is bugged or unreliable though, so we make sure
-        # all tasks are really done by checking the active task count
-        # warnings.warn(f"Total tasks: {qgis_app.taskManager().countActiveTasks()}", UserWarning)
-        qtbot.wait(1000)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(1000)
-    assert blocker.signal_triggered is True
+    # accept() will run start_export_tasks
+    dialog.accept()
+    wait_tasks_done(lambda: _export_done(dialog))
 
     # TODO: verify exported data
     exported_project_dir = tmp_path / "057001_Accumoli_S42_Shapefile"
@@ -321,7 +322,7 @@ def _load_project_and_check(plugin_instance, prj_manager, base_project_path_curr
 
 def test_export_output_directory_structure(
     plugin,
-    qgis_app,
+    wait_tasks_done,
     qgis_iface,
     prj_manager,
     base_project_path_current_imported,
@@ -343,11 +344,8 @@ def test_export_output_directory_structure(
     dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
     dialog.radio_button_sqlite.setChecked(True)
 
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
-        dialog.accept()
-        qtbot.wait(500)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(500)
+    dialog.accept()
+    wait_tasks_done(lambda: _export_done(dialog))
 
     base = tmp_path / "057001_Accumoli_S42_Shapefile"
     for sub in [
@@ -367,7 +365,7 @@ def test_export_output_directory_structure(
 
 def test_export_sqlite_db_template_copied(
     plugin,
-    qgis_app,
+    wait_tasks_done,
     qgis_iface,
     prj_manager,
     base_project_path_current_imported,
@@ -389,11 +387,8 @@ def test_export_sqlite_db_template_copied(
     dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
     dialog.radio_button_sqlite.setChecked(True)
 
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
-        dialog.accept()
-        qtbot.wait(500)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(500)
+    dialog.accept()
+    wait_tasks_done(lambda: _export_done(dialog))
 
     db_file = tmp_path / "057001_Accumoli_S42_Shapefile" / "Indagini" / "CdI_Tabelle.sqlite"
     assert db_file.is_file(), "CdI_Tabelle.sqlite not found in exported Indagini folder"
@@ -402,7 +397,7 @@ def test_export_sqlite_db_template_copied(
 
 def test_export_log_file_created(
     plugin,
-    qgis_app,
+    wait_tasks_done,
     qgis_iface,
     prj_manager,
     base_project_path_current_imported,
@@ -424,11 +419,8 @@ def test_export_log_file_created(
     dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
     dialog.radio_button_sqlite.setChecked(True)
 
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
-        dialog.accept()
-        qtbot.wait(500)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(500)
+    dialog.accept()
+    wait_tasks_done(lambda: _export_done(dialog))
 
     log_dir = prj_manager.project_path / "Allegati" / "log"
     log_files = list(log_dir.glob("data_export_*.log"))
@@ -438,7 +430,7 @@ def test_export_log_file_created(
 
 def test_export_duplicate_output_dir_gets_timestamp(
     plugin,
-    qgis_app,
+    wait_tasks_done,
     qgis_iface,
     prj_manager,
     base_project_path_current_imported,
@@ -463,11 +455,8 @@ def test_export_duplicate_output_dir_gets_timestamp(
     dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
     dialog.radio_button_sqlite.setChecked(True)
 
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
-        dialog.accept()
-        qtbot.wait(500)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(500)
+    dialog.accept()
+    wait_tasks_done(lambda: _export_done(dialog))
 
     # A timestamped sibling directory should have been created
     siblings = [d for d in tmp_path.iterdir() if d.is_dir() and d.name.startswith("057001_Accumoli_S42_Shapefile_")]
@@ -476,7 +465,7 @@ def test_export_duplicate_output_dir_gets_timestamp(
 
 def test_export_data_task_failure(
     plugin,
-    qgis_app,
+    wait_tasks_done,
     qgis_iface,
     prj_manager,
     base_project_path_current_imported,
@@ -501,11 +490,8 @@ def test_export_data_task_failure(
     dialog.output_dir_widget.lineEdit().setText(str(tmp_path))
     dialog.radio_button_sqlite.setChecked(True)
 
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=15000):
-        dialog.accept()
-        qtbot.wait(500)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(500)
+    dialog.accept()
+    wait_tasks_done(lambda: _export_done(dialog))
 
     assert dialog.export_data_task_manager is not None
     assert dialog.export_data_task_manager._task_failed is True

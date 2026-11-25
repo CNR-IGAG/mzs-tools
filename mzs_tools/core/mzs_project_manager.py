@@ -71,6 +71,7 @@ from .constants import (
     PRINT_LAYOUT_MODELS,
     PROJECT_MIGRATION_STEPS,
     REMOVED_EDITING_LAYERS,
+    get_incremental_migration_flags,
 )
 
 # Properly typed iface for better type checking
@@ -1189,36 +1190,9 @@ class MzSProjectManager:
     def _get_incremental_migration_flags(self, old_version: str) -> dict:
         """Return the union of the flags of all applicable migration steps.
 
-        A step is applicable when ``parse(old_version) < parse(step.version)``.
-        The boolean layer flags can be unpacked directly into ``add_default_layers(**flags)`` after
-        popping ``print_layouts`` and ``remove_hidden_layers``.
-
-        Args:
-            old_version: Version string of the project to be upgraded (e.g. ``"2.0.1"``).
-
-        Returns:
-            dict with keys ``add_base_layers``, ``add_editing_layers``, ``add_layout_groups``,
-            ``remove_hidden_layers`` (all bool) and ``print_layouts`` (list[str] of .qpt file names,
-            deduplicated, preserving first-occurrence order).
+        See ``mzs_tools.core.constants.get_incremental_migration_flags``.
         """
-        flags: dict = {
-            "add_base_layers": False,
-            "add_editing_layers": False,
-            "add_layout_groups": False,
-            "remove_hidden_layers": False,
-            "print_layouts": [],
-        }
-        parsed_old = parse_version(old_version)
-        for step in PROJECT_MIGRATION_STEPS:
-            if parsed_old < parse_version(step.version):
-                flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
-                flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
-                flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
-                flags["remove_hidden_layers"] = flags["remove_hidden_layers"] or step.remove_hidden_layers
-                for layout_file in step.add_print_layouts:
-                    if layout_file not in flags["print_layouts"]:
-                        flags["print_layouts"].append(layout_file)
-        return flags
+        return get_incremental_migration_flags(old_version)
 
     def _remove_hidden_layers(self):
         """Remove the project layers stored in the project database that have no node in the layer tree.

@@ -23,7 +23,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 
-@pytest.mark.no_qgis
 class TestRunCmdUnit:
     """Unit tests for run_cmd function with subprocess mocking."""
 
@@ -242,7 +241,6 @@ class TestRunCmdUnit:
         assert result is True
 
 
-@pytest.mark.no_qgis
 class TestRunCmdEdgeCases:
     """Test edge cases for run_cmd function."""
 

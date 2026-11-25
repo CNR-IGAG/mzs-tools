@@ -221,9 +221,8 @@ def test_validate_input_textchanged_signal(qtbot, gui_timeout):
 
     # Trigger text change on a QLineEdit field
     if hasattr(dialog, "resp_metadato_nome"):
-        # Use setText and wait for signal processing
+        # Use setText to trigger the text-changed signal
         dialog.resp_metadato_nome.setText("test")
-        qtbot.wait(100)  # Wait for signal to be processed
         # If the signal connection works, validation should have been called
         # However, since we replaced the method after connection, it might not fire
         # So let's verify the field can trigger validation when connected
@@ -612,9 +611,9 @@ def test_ok_button_accepts_dialog(qtbot, monkeypatch, mock_project_manager, gui_
     # The OK button is connected to accept() which closes the dialog
     # Click OK button and verify dialog was accepted
     dialog.ok_button.click()
-    qtbot.wait(100)  # Give time for dialog to process
-
-    # Verify the dialog's result is Accepted
     from mzs_tools.plugin_utils import DIALOG_ACCEPTED
 
+    qtbot.waitUntil(lambda: dialog.result() == DIALOG_ACCEPTED, timeout=2000)
+
+    # Verify the dialog's result is Accepted
     assert dialog.result() == DIALOG_ACCEPTED

@@ -18,17 +18,19 @@
 
 from unittest.mock import Mock
 
+import pytest
 from qgis.core import QgsProject
 from qgis.PyQt.QtWidgets import QMessageBox
 
 from mzs_tools.__about__ import __base_version__
 
 
-def test_open_existing_project_current(plugin, qgis_iface, prj_manager, base_project_path_current):
+def test_open_existing_project_current(plugin, qgis_iface, prj_manager, base_project_path_current, monkeypatch):
     """
     Test opening an existing QGIS project and verifying its contents.
     """
     plugin_instance = plugin(qgis_iface)
+    monkeypatch.setattr(plugin_instance, "show_project_update_dialog", Mock(), raising=False)
 
     project_file = base_project_path_current / "progetto_MS.qgz"
 
@@ -56,14 +58,28 @@ def test_open_existing_project_current(plugin, qgis_iface, prj_manager, base_pro
     layer_names = [lyr.name() for lyr in layers]
     assert "Comune del progetto" in layer_names, "Layer not found in reopened project!"
 
+    # an up-to-date project must not trigger the update dialog
+    plugin_instance.show_project_update_dialog.assert_not_called()
 
-def test_open_existing_project_2_0_5(plugin, qgis_iface, prj_manager, base_project_path_2_0_5, monkeypatch, qtbot):
+
+@pytest.mark.parametrize(
+    "project_fixture, expected_version, expect_issues",
+    [
+        pytest.param("base_project_path_2_0_5", "2.0.5", False, id="base_project_path_2_0_5"),
+        pytest.param("base_project_path_2_0_0", "2.0.0", False, id="base_project_path_2_0_0"),
+        pytest.param("base_project_path_0_7", "0.7", True, id="base_project_path_0_7"),
+    ],
+)
+def test_open_existing_project_requires_update(
+    project_fixture, expected_version, expect_issues, request, plugin, qgis_iface, prj_manager, monkeypatch, qtbot
+):
     """
     Test opening an existing QGIS project created with an older version of the plugin.
     """
+    base_project_path = request.getfixturevalue(project_fixture)
     plugin_instance = plugin(qgis_iface)
 
-    project_file = base_project_path_2_0_5 / "progetto_MS.qgz"
+    project_file = base_project_path / "progetto_MS.qgz"
 
     # Create a new project
     project = QgsProject.instance()
@@ -80,76 +96,14 @@ def test_open_existing_project_2_0_5(plugin, qgis_iface, prj_manager, base_proje
 
     assert prj_manager.is_mzs_project is True
     assert prj_manager.project_updateable is True
-    assert prj_manager.project_version == "2.0.5"
+    assert prj_manager.project_version == expected_version
 
-    # an outdated 2.x project should not have issues
-    assert prj_manager.project_issues == {}
-    # Verify that the update dialog was shown; a QTimer.singleShot is used to delay the dialog call
-    # after opening the project, so we need to wait for it
-    qtbot.waitUntil(lambda: plugin_instance.show_project_update_dialog.called, timeout=5000)
-    plugin_instance.show_project_update_dialog.assert_called_once()
-
-
-def test_open_existing_project_2_0_0(plugin, qgis_iface, prj_manager, base_project_path_2_0_0, monkeypatch, qtbot):
-    """
-    Test opening an existing QGIS project created with an older version of the plugin.
-    """
-    plugin_instance = plugin(qgis_iface)
-
-    project_file = base_project_path_2_0_0 / "progetto_MS.qgz"
-
-    # Create a new project
-    project = QgsProject.instance()
-
-    # open the project
-    project.read(str(project_file))
-
-    # patch show_project_update_dialog
-    monkeypatch.setattr(plugin_instance, "show_project_update_dialog", Mock(), raising=False)
-
-    # manually run check_project as qgis_iface lacks projectRead signal
-    # this will initialize the plugin's project manager - prj_manager.init_manager()
-    plugin_instance.check_project()
-
-    assert prj_manager.is_mzs_project is True
-    assert prj_manager.project_updateable is True
-    assert prj_manager.project_version == "2.0.0"
-
-    # an outdated 2.x project should not have issues
-    assert prj_manager.project_issues == {}
-    # Verify that the update dialog was shown; a QTimer.singleShot is used to delay the dialog call
-    # after opening the project, so we need to wait for it
-    qtbot.waitUntil(lambda: plugin_instance.show_project_update_dialog.called, timeout=5000)
-    plugin_instance.show_project_update_dialog.assert_called_once()
-
-
-def test_open_existing_project_0_7(plugin, qgis_iface, prj_manager, base_project_path_0_7, monkeypatch, qtbot):
-    """
-    Test opening an existing QGIS project created with an older version of the plugin.
-    """
-    plugin_instance = plugin(qgis_iface)
-
-    project_file = base_project_path_0_7 / "progetto_MS.qgz"
-
-    # Create a new project
-    project = QgsProject.instance()
-
-    # open the project
-    project.read(str(project_file))
-
-    # patch show_project_update_dialog
-    monkeypatch.setattr(plugin_instance, "show_project_update_dialog", Mock(), raising=False)
-
-    # manually run check_project as qgis_iface lacks projectRead signal
-    # this will initialize the plugin's project manager - prj_manager.init_manager()
-    plugin_instance.check_project()
-
-    assert prj_manager.is_mzs_project is True
-    assert prj_manager.project_updateable is True
-    assert prj_manager.project_version == "0.7"
-
-    # opening an outdated < 2.0.0 project should report multiple issues
-    assert prj_manager.project_issues != {}
+    if expect_issues:
+        # opening an outdated < 2.0.0 project should report multiple issues
+        assert prj_manager.project_issues != {}
+    else:
+        # an outdated 2.x project should not have issues
+        assert prj_manager.project_issues == {}
     # Verify that the update dialog was shown; a QTimer.singleShot is used to delay the dialog call
     # after opening the project, so we need to wait for it
     qtbot.waitUntil(lambda: plugin_instance.show_project_update_dialog.called, timeout=5000)

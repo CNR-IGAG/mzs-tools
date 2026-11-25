@@ -58,7 +58,7 @@ def _extract_project(dest: Path) -> Path:
         Path(__file__).parent.parent / "data" / "mzs_projects" / f"057001_Accumoli_v{__base_version__}_imported.zip"
     )
     if not archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
+        pytest.fail(f"Test data archive not found: {archive}")
     with zipfile.ZipFile(archive, "r") as zip_ref:
         zip_ref.extractall(dest)
     return dest / "057001_Accumoli"

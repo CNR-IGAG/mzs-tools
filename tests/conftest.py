@@ -18,6 +18,8 @@
 
 import importlib
 import os
+import shutil
+import sys
 import traceback
 import warnings
 import zipfile
@@ -161,130 +163,114 @@ def prj_manager(qgis_new_project):
     MzSProjectManager._instance = None
 
 
+DATA_DIR = Path(__file__).parent / "data"
+
+
+@pytest.fixture(scope="session")
+def extracted_archive(tmp_path_factory):
+    """Return a function extracting a test data archive once per session; missing archives fail the test."""
+    cache: dict[Path, Path] = {}
+
+    def _extract(archive: Path) -> Path:
+        if archive not in cache:
+            if not archive.exists():
+                pytest.fail(f"Test data archive not found: {archive}")
+            dest = tmp_path_factory.mktemp(archive.stem)
+            with zipfile.ZipFile(archive) as zip_ref:
+                zip_ref.extractall(dest)
+            cache[archive] = dest
+        return cache[archive]
+
+    return _extract
+
+
+def _copy_project(extracted_archive, tmp_path: Path, archive: Path, root_name: str) -> Path:
+    dst = tmp_path / root_name
+    shutil.copytree(extracted_archive(archive) / root_name, dst)
+    return dst
+
+
 @pytest.fixture
-def base_project_path_current(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing (current version)."""
+def base_project_path_current(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project for testing (current version)."""
     from mzs_tools.__about__ import __base_version__
 
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / f"057001_Accumoli_v{__base_version__}_new.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
+    archive = DATA_DIR / "mzs_projects" / f"057001_Accumoli_v{__base_version__}_new.zip"
+    return _copy_project(extracted_archive, tmp_path, archive, "057001_Accumoli")
 
 
 @pytest.fixture
-def base_project_path_current_imported(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing (current version)."""
+def base_project_path_current_imported(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project with imported data (current version)."""
     from mzs_tools.__about__ import __base_version__
 
-    project_archive = (
-        Path(__file__).parent / "data" / "mzs_projects" / f"057001_Accumoli_v{__base_version__}_imported.zip"
+    archive = DATA_DIR / "mzs_projects" / f"057001_Accumoli_v{__base_version__}_imported.zip"
+    return _copy_project(extracted_archive, tmp_path, archive, "057001_Accumoli")
+
+
+@pytest.fixture
+def base_project_path_2_0_5(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project (v2.0.5) for testing."""
+    return _copy_project(
+        extracted_archive, tmp_path, DATA_DIR / "mzs_projects" / "057001_Accumoli_v2.0.5_new.zip", "057001_Accumoli"
     )
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
 
 
 @pytest.fixture
-def base_project_path_2_0_5(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing."""
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v2.0.5_new.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
+def base_project_path_2_0_0(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project (v2.0.0) for testing."""
+    return _copy_project(
+        extracted_archive, tmp_path, DATA_DIR / "mzs_projects" / "057001_Accumoli_v2.0.0_new.zip", "057001_Accumoli"
+    )
 
 
 @pytest.fixture
-def base_project_path_2_0_0(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing."""
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v2.0.0_new.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
+def base_project_path_1_9_4(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project (v1.9.4) for testing."""
+    return _copy_project(
+        extracted_archive, tmp_path, DATA_DIR / "mzs_projects" / "057001_Accumoli_v1.9.4_new.zip", "057001_Accumoli"
+    )
 
 
 @pytest.fixture
-def base_project_path_1_9_4(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing."""
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.9.4_new.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
+def base_project_path_1_9_4_imported(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project (v1.9.4) with imported data."""
+    return _copy_project(
+        extracted_archive,
+        tmp_path,
+        DATA_DIR / "mzs_projects" / "057001_Accumoli_v1.9.4_imported.zip",
+        "057001_Accumoli",
+    )
 
 
 @pytest.fixture
-def base_project_path_1_9_4_imported(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing."""
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.9.4_imported.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
+def base_project_path_1_0(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project (v1.0) for testing."""
+    return _copy_project(
+        extracted_archive, tmp_path, DATA_DIR / "mzs_projects" / "057001_Accumoli_v1.0_new.zip", "057001_Accumoli"
+    )
 
 
 @pytest.fixture
-def base_project_path_1_0(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing."""
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.0_new.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
+def base_project_path_1_5(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project (v1.5) for testing."""
+    return _copy_project(
+        extracted_archive, tmp_path, DATA_DIR / "mzs_projects" / "057001_Accumoli_v1.5_new.zip", "057001_Accumoli"
+    )
 
 
 @pytest.fixture
-def base_project_path_1_5(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing."""
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v1.5_new.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
+def base_project_path_0_7(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample MzS Tools project (v0.7) for testing."""
+    return _copy_project(
+        extracted_archive, tmp_path, DATA_DIR / "mzs_projects" / "057001_Accumoli_v0.7_new.zip", "057001_Accumoli"
+    )
 
 
 @pytest.fixture
-def base_project_path_0_7(tmp_path) -> Path:
-    """Fixture that extracts a sample MzS Tools project for testing."""
-    project_archive = Path(__file__).parent / "data" / "mzs_projects" / "057001_Accumoli_v0.7_new.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MzS Tools project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "057001_Accumoli"
-    return project_dir
-
-
-@pytest.fixture
-def standard_project_path(tmp_path) -> Path:
-    """Fixture that extracts a sample "standard" project for testing."""
-    project_archive = Path(__file__).parent / "data" / "standard_projects" / "Accumoli.zip"
-    if not project_archive.exists():
-        pytest.skip("Sample MS standard project archive not available")
-    with zipfile.ZipFile(project_archive, "r") as zip_ref:
-        zip_ref.extractall(tmp_path)
-    project_dir = tmp_path / "Accumoli"
-    return project_dir
+def standard_project_path(extracted_archive, tmp_path) -> Path:
+    """Fixture that provides a copy of a sample "standard" project for testing."""
+    return _copy_project(extracted_archive, tmp_path, DATA_DIR / "standard_projects" / "Accumoli.zip", "Accumoli")
 
 
 @pytest.fixture(scope="session")
@@ -316,17 +302,33 @@ def mdb_deps_available() -> bool:
     return connected
 
 
+@pytest.fixture
+def wait_tasks_done(qtbot, qgis_app):
+    """Return a function waiting until no QGIS task is active and `done()` is true."""
+
+    def _wait(done, timeout_ms: int = 120_000) -> None:
+        qtbot.waitUntil(lambda: qgis_app.taskManager().countActiveTasks() == 0 and done(), timeout=timeout_ms)
+
+    return _wait
+
+
+EXIT_STATUS_KEY = pytest.StashKey[int]()
+
+
 def pytest_sessionfinish(session, exitstatus):
+    session.config.stash[EXIT_STATUS_KEY] = int(exitstatus)
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_unconfigure(config):
     """Force immediate process exit in CI to avoid QGIS teardown segfaults (exit code 139).
 
-    QGIS cleanup during Python shutdown can crash with SIGSEGV, causing the Docker
-    container to exit with code 139 even when all tests passed. Using os._exit()
-    bypasses the teardown entirely and preserves pytest's actual exit code.
-    Only active when the CI environment variable is set to avoid suppressing local
-    output such as warnings, coverage reports, and the summary.
+    Runs after the terminal summary and the coverage reports have been written.
     """
     if os.environ.get("CI"):
-        os._exit(int(exitstatus))
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(config.stash.get(EXIT_STATUS_KEY, 0))
 
 
 def pytest_collection_modifyitems(session, config, items):

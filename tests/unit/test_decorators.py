@@ -34,14 +34,12 @@ class TestDecorators:
 
     def test_skip_file_not_found_decorator_success(self):
         """Test skip_file_not_found decorator when function succeeds."""
-
-        @skip_file_not_found
-        def test_function():
-            return "success"
+        func = Mock(return_value="success")
+        wrapped = skip_file_not_found(func)
 
         # The decorator doesn't return the result, it just catches exceptions
-        result = test_function()
-        assert result is None  # The decorator swallows the return value
+        assert wrapped() is None
+        func.assert_called_once_with()
 
     @patch("mzs_tools.plugin_utils.misc.MzSToolsLogger")
     def test_skip_file_not_found_decorator_catches_error(self, mock_logger):
@@ -163,14 +161,20 @@ class TestDecorators:
         # Should not log retries for other error types
         mock_obj.log.assert_not_called()
 
-    def test_retry_on_lock_decorator_default_parameters(self):
-        """Test retry_on_lock decorator with default parameters."""
+    @patch("time.sleep")
+    def test_retry_on_lock_decorator_default_parameters(self, mock_sleep):
+        """Test retry_on_lock decorator with default parameters (retries=5, delay=1)."""
         mock_obj = Mock()
-        mock_obj.log = Mock()
+        calls = 0
 
-        @retry_on_lock()  # Use defaults: retries=5, delay=1
+        @retry_on_lock()
         def test_function(self):
-            return "success"
+            nonlocal calls
+            calls += 1
+            raise sqlite3.OperationalError("database is locked")
 
-        result = test_function(mock_obj)
-        assert result == "success"
+        with pytest.raises(sqlite3.OperationalError, match="Database is locked after multiple retries"):
+            test_function(mock_obj)
+
+        assert calls == 5
+        assert mock_sleep.call_count == 5

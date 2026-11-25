@@ -1,66 +1,39 @@
-#!/bin/bash
-# Test runner script for running pytest inside QGIS Docker containers
-# This script is designed to be executed inside a QGIS Docker container
+#!/usr/bin/env bash
+# Run the test suite inside an official qgis/qgis Docker image.
+# Used by the Tester workflow, `just test-docker` and `just test-act`.
+# Usage: tests/run_docker_tests.sh [extra pytest args...]
+set -euo pipefail
 
-set -e
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OWNER="$(stat -c %u:%g "$REPO_DIR")"
 
-# Default values
-DISPLAY="${DISPLAY:-:99}"
-QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-offscreen}"
-TEST_DIR="${TEST_DIR:-/tests_directory}"
-PLUGIN_NAME="${PLUGIN_NAME:-mzs_tools}"
+# files created by root in the mounted repository are given back to the repository owner
+restore_owner() {
+    if [ "$(id -u)" = 0 ] && [ "$OWNER" != "0:0" ]; then
+        find "$REPO_DIR" -path "$REPO_DIR/.git" -prune -o -path "$REPO_DIR/.venv" -prune -o -user 0 -exec chown -h "$OWNER" {} +
+    fi
+}
+trap restore_owner EXIT
 
-# Export environment variables
-export DISPLAY
-export QT_QPA_PLATFORM
-export PYTHONPATH="${TEST_DIR}:${TEST_DIR}/${PLUGIN_NAME}:${PYTHONPATH:-}"
+export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-offscreen}"
 export QGIS_PREFIX_PATH="${QGIS_PREFIX_PATH:-/usr}"
+export PYTHONPATH="/usr/share/qgis/python/plugins:/usr/share/qgis/python:$REPO_DIR"
+export PYTHONDONTWRITEBYTECODE=1
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/mzs-tools-venv}"
+export UV_LINK_MODE=copy
 
-# Print environment info
-echo "========================================"
-echo "QGIS Test Runner"
-echo "========================================"
-echo "QGIS Version: $(qgis --version 2>/dev/null || echo 'Unable to detect')"
-echo "Python Version: $(python3 --version)"
-echo "Display: ${DISPLAY}"
-echo "Platform: ${QT_QPA_PLATFORM}"
-echo "Test Directory: ${TEST_DIR}"
-echo "Plugin Name: ${PLUGIN_NAME}"
-echo "========================================"
-echo ""
-
-# Change to test directory
-cd "${TEST_DIR}"
-
-# Check if pytest is available, if not try to install it
-if ! python3 -c "import pytest" 2>/dev/null; then
-    echo "pytest not found, installing test dependencies..."
-    python3 -m pip install --break-system-packages pytest pytest-cov pytest-qt pytest-qgis pytest-sugar factory-boy
+apt-get update -qq
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+    default-jre-headless curl ca-certificates python3-venv
+if ! command -v uv >/dev/null 2>&1; then
+    curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 fi
 
-# Start Xvfb if needed and not already running (for non-offscreen testing)
-if [ "${QT_QPA_PLATFORM}" != "offscreen" ] && ! pgrep -x "Xvfb" > /dev/null; then
-    echo "Starting Xvfb on ${DISPLAY}..."
-    Xvfb "${DISPLAY}" -screen 0 1024x768x24 -ac +extension GLX +render -noreset -nolisten tcp &
-    XVFB_PID=$!
-    sleep 2
-    trap "kill ${XVFB_PID} 2>/dev/null || true" EXIT
-fi
+cd "$REPO_DIR"
+qgis --version || true
+python3 --version
 
-# Run tests with pytest
-echo "Running tests..."
-python3 -m pytest tests/ "$@"
-
-# Capture exit code
-TEST_EXIT_CODE=$?
-
-echo ""
-echo "========================================"
-if [ ${TEST_EXIT_CODE} -eq 0 ]; then
-    echo "Tests completed successfully!"
-else
-    echo "Tests failed with exit code: ${TEST_EXIT_CODE}"
-fi
-echo "========================================"
-
-exit ${TEST_EXIT_CODE}
+uv venv "$UV_PROJECT_ENVIRONMENT" --clear --system-site-packages --python /usr/bin/python3
+uv sync --locked --only-group testing
+uv run --no-sync python -m pytest tests/ -v -rs --qgis_disable_gui -p no:cacheprovider \
+    --basetemp=/tmp/mzs-tools-pytest "$@"

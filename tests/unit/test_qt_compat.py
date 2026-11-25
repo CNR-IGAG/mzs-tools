@@ -48,35 +48,25 @@ class TestQtCompat:
     def test_get_alignment_flag_single(self):
         """Test getting a single alignment flag."""
         result = get_alignment_flag("AlignLeft")
-        assert result is not None
-        # Result should be an integer or Qt alignment type
-        assert isinstance(result, (int, object))
+        assert int(result) == 0x0001
 
     def test_get_alignment_flag_multiple(self):
         """Test getting multiple alignment flags combined."""
         result = get_alignment_flag("AlignLeft", "AlignVCenter")
-        assert result is not None
-        assert isinstance(result, (int, object))
-
-        # Test that combining flags gives different result than single flag
-        left_only = get_alignment_flag("AlignLeft")
-        assert result != left_only
+        assert int(result) == 0x0001 | 0x0080
 
     def test_get_alignment_flag_common_combinations(self):
         """Test common alignment flag combinations."""
-        # Test various common combinations
-        combinations = [
-            ("AlignLeft", "AlignVCenter"),
-            ("AlignRight", "AlignTop"),
-            ("AlignHCenter", "AlignBottom"),
-            ("AlignLeft", "AlignTop"),
-            ("AlignRight", "AlignVCenter"),
-        ]
+        expected = {
+            ("AlignLeft", "AlignVCenter"): 0x81,
+            ("AlignRight", "AlignTop"): 0x22,
+            ("AlignHCenter", "AlignBottom"): 0x44,
+            ("AlignLeft", "AlignTop"): 0x21,
+            ("AlignRight", "AlignVCenter"): 0x82,
+        }
 
-        for combo in combinations:
-            result = get_alignment_flag(*combo)
-            assert result is not None
-            assert isinstance(result, (int, object))
+        for names, value in expected.items():
+            assert int(get_alignment_flag(*names)) == value, names
 
     def test_get_alignment_flag_unknown(self):
         """Test handling of unknown alignment flags."""

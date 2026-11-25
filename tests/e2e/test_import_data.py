@@ -16,7 +16,7 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
-import warnings
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -28,16 +28,19 @@ from mzs_tools.tasks.import_siti_lineari_task import ImportSitiLineariTask
 from mzs_tools.tasks.import_siti_puntuali_task import ImportSitiPuntualiTask
 
 
+def _log_has(path: Path | None, text: str) -> bool:
+    return path is not None and path.exists() and text in path.read_text(encoding="utf-8")
+
+
 def test_import_data(
     plugin,
-    qgis_app,
     qgis_iface,
     prj_manager,
     base_project_path_current,
     standard_project_path,
     mdb_deps_available,
     monkeypatch,
-    qtbot,
+    wait_tasks_done,
 ):
     # Substitute MockMessageBar from pytest-qgis with a simple Mock as it seems to have
     # issues with our use of pushMessage: https://github.com/osgeosuomi/pytest-qgis/issues/26
@@ -87,49 +90,20 @@ def test_import_data(
     # enable sqlite import option, siti puntuali and lineari checkboxes are automatically selected
     dialog.radio_button_sqlite.setChecked(True)
 
-    # https://pytest-qt.readthedocs.io/en/latest/signals.html
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:  # noqa: F841
-        # blocker.connect(app.worker.failed)  # Can add other signals to blocker
-        # accept() will run start_import_tasks
-        dialog.accept()
-        # Test will block at this point until either the signal is emitted.
-        # If 10 seconds passed without a signal, qtbot.TimeoutError will be raised.
-        # The allTasksFinished signal is bugged or unreliable though, so we make sure
-        # all tasks are really done by checking the active task count
-        # warnings.warn(f"Total tasks: {qgis_app.taskManager().countActiveTasks()}", UserWarning)
-        qtbot.wait(1000)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(1000)
+    # accept() will run start_import_tasks
+    dialog.accept()
+    log_path = dialog.import_data_task_manager.log_file_path
+    wait_tasks_done(lambda: _log_has(log_path, "Data imported") or _log_has(log_path, "Data import completed"))
 
-    # dialog.accept()
-    # while qgis_app.taskManager().countActiveTasks() > 0:
-    #     # qtbot.wait(1000)
-    #     time.sleep(1)
-
-    # dialog.task_manager.threadPool().waitForDone(100000)
-    # qgis_app.taskManager().threadPool().clear()
-
-    # # Poll until all tasks are complete (allTasksFinished signal is unreliable)
-    # # Use qtbot.waitUntil which handles Qt event processing safely
-    # qtbot.waitUntil(lambda: qgis_app.taskManager().countActiveTasks() == 0, timeout=100000)
-    # warnings.warn(f"tasks: {qgis_app.taskManager().tasks()[0].status()}", UserWarning)
-    # while qgis_app.taskManager().tasks()[0].status() != QgsTask.TaskStatus.Complete:
-    #     # qtbot.wait(1000)
-    #     time.sleep(1)
-    # warnings.warn(f"tasks: {qgis_app.taskManager().tasks()[0].status()}", UserWarning)
-    # qtbot.waitUntil(
-    #     lambda: len(qgis_app.taskManager().tasks()) > 0
-    #     and qgis_app.taskManager().tasks()[0].status() == QgsTask.TaskStatus.Complete,
-    #     timeout=10000,
-    # )
-
-    log_text = dialog.import_data_task_manager.log_file_path.read_text(encoding="utf-8")
-    # Check for TESTING_MODE in log to ensure that the pytest-env environment variable was read
-    assert "TESTING_MODE" in log_text
+    log_text = log_path.read_text(encoding="utf-8")
     assert dialog.import_data_task_manager.tr("Data imported successfully") in log_text
 
 
-def test_import_siti_puntuali_task_from_mdb(
+@pytest.mark.parametrize("source", ["mdb", "csv", "sqlite"])
+@pytest.mark.parametrize("kind", ["puntuali", "lineari"])
+def test_import_siti_task(
+    kind,
+    source,
     plugin,
     qgis_iface,
     prj_manager,
@@ -137,453 +111,93 @@ def test_import_siti_puntuali_task_from_mdb(
     standard_project_path,
     mdb_deps_available,
 ):
-    """Test ImportSitiPuntualiTask independently using mdb file as source.
+    """Test ImportSitiPuntualiTask / ImportSitiLineariTask independently, for each data source.
+
     Tasks are executed via the QGIS task manager and coverage.py does not track code executed
     in separate threads, so we run the task directly here.
     """
-    # exit if mdb dependencies are not available
-    if not mdb_deps_available:
-        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning, stacklevel=2)
-        return
+    if source == "mdb" and not mdb_deps_available:
+        pytest.skip("MDB dependencies (Java, JayDeBeApi) not available")
 
     plugin_instance = plugin(qgis_iface)
 
     project_file = base_project_path_current / "progetto_MS.qgz"
     project = QgsProject.instance()
 
-    # switch to passwordless MDB
-    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
+    indagini_dir = standard_project_path / "Indagini"
+
+    # remove the password protected MDB, and switch to the passwordless one for the mdb source
+    mdb_file = indagini_dir / "CdI_Tabelle.mdb"
     mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
-    (standard_project_path / "Indagini" / "CdI_Tabelle_no_pwd.mdb").rename(mdb_file)
+    if source == "mdb":
+        (indagini_dir / "CdI_Tabelle_no_pwd.mdb").rename(mdb_file)
 
     # open the project
     project.read(str(project_file))
     plugin_instance.check_project()
 
+    shapefile_name = "Ind_pu.shp" if kind == "puntuali" else "Ind_ln.shp"
     standard_proj_paths = {
         "CdI_Tabelle.mdb": {
             "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.mdb",
-            "checkbox": None,
-        },
-        "CdI_Tabelle.sqlite": {"parent": "Indagini", "path": None, "checkbox": None},
-        "Ind_pu.shp": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Ind_pu.shp",
-            "checkbox": None,
-        },
-        "Documenti": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Documenti",
-            "checkbox": None,
-        },
-    }
-
-    task = ImportSitiPuntualiTask(
-        standard_proj_paths,
-        data_source="mdb",
-        mdb_password=None,
-        csv_files=None,
-    )
-    task.run()
-
-    # verify that features were imported - for some reason this won't work here...
-    # dest_layer_id = plugin_instance.prj_manager.find_layer_by_table_name_role("sito_puntuale", "editing")
-    # dest_layer = plugin_instance.prj_manager.current_project.mapLayer(dest_layer_id)
-    # refresh layer to ensure feature count is updated
-    # dest_layer.dataProvider().reloadData()
-    # assert dest_layer.featureCount() > 0
-
-    # verify imported features directly in the db
-    result = prj_manager.db_manager.get_row_count("sito_puntuale")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("indagini_puntuali")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("parametri_puntuali")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("curve")
-    # no curve data in sample standard project
-    assert result == 0
-
-
-def test_import_siti_puntuali_task_from_csv(
-    plugin,
-    qgis_iface,
-    prj_manager,
-    base_project_path_current,
-    standard_project_path,
-):
-    """Test ImportSitiPuntualiTask independently using CSV files as source.
-    Tasks are executed via the QGIS task manager and coverage.py does not track code executed
-    in separate threads, so we run the task directly here.
-    """
-    plugin_instance = plugin(qgis_iface)
-
-    project_file = base_project_path_current / "progetto_MS.qgz"
-    project = QgsProject.instance()
-
-    # remove MDB
-    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
-    mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
-
-    # open the project
-    project.read(str(project_file))
-    plugin_instance.check_project()
-
-    standard_proj_paths = {
-        "CdI_Tabelle.mdb": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.mdb",
-            "checkbox": None,
-        },
-        "CdI_Tabelle.sqlite": {"parent": "Indagini", "path": None, "checkbox": None},
-        "Ind_pu.shp": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Ind_pu.shp",
-            "checkbox": None,
-        },
-        "Documenti": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Documenti",
-            "checkbox": None,
-        },
-    }
-
-    found_files = {"puntuali": {}, "lineari": {}}
-    found_files["puntuali"]["sito_puntuale"] = standard_project_path / "CSV" / "Sito_Puntuale.txt"
-    found_files["puntuali"]["indagini_puntuali"] = standard_project_path / "CSV" / "Indagini_Puntuali.txt"
-    found_files["puntuali"]["parametri_puntuali"] = standard_project_path / "CSV" / "Parametri_Puntuali.txt"
-    found_files["puntuali"]["curve"] = standard_project_path / "CSV" / "Curve.txt"
-
-    found_files["lineari"]["sito_lineare"] = standard_project_path / "CSV" / "Sito_Lineare.txt"
-    found_files["lineari"]["indagini_lineari"] = standard_project_path / "CSV" / "Indagini_Lineari.txt"
-    found_files["lineari"]["parametri_lineari"] = standard_project_path / "CSV" / "Parametri_Lineari.txt"
-
-    task = ImportSitiPuntualiTask(
-        standard_proj_paths,
-        data_source="csv",
-        mdb_password=None,
-        csv_files=found_files,
-    )
-    task.run()
-
-    # verify imported features directly in the db
-    result = prj_manager.db_manager.get_row_count("sito_puntuale")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("indagini_puntuali")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("parametri_puntuali")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("curve")
-    # dummy curve data in csv
-    assert result > 0
-
-
-def test_import_siti_puntuali_task_from_sqlite(
-    plugin,
-    qgis_iface,
-    prj_manager,
-    base_project_path_current,
-    standard_project_path,
-):
-    """Test ImportSitiPuntualiTask independently using sqlite db as source.
-    Tasks are executed via the QGIS task manager and coverage.py does not track code executed
-    in separate threads, so we run the task directly here.
-    """
-    plugin_instance = plugin(qgis_iface)
-
-    project_file = base_project_path_current / "progetto_MS.qgz"
-    project = QgsProject.instance()
-
-    # remove MDB
-    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
-    mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
-
-    # open the project
-    project.read(str(project_file))
-    plugin_instance.check_project()
-
-    standard_proj_paths = {
-        "CdI_Tabelle.mdb": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.mdb",
+            "path": indagini_dir / "CdI_Tabelle.mdb",
             "checkbox": None,
         },
         "CdI_Tabelle.sqlite": {
             "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.sqlite",
+            "path": indagini_dir / "CdI_Tabelle.sqlite" if source == "sqlite" else None,
             "checkbox": None,
         },
-        "Ind_pu.shp": {
+        shapefile_name: {
             "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Ind_pu.shp",
+            "path": indagini_dir / shapefile_name,
             "checkbox": None,
         },
         "Documenti": {
             "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Documenti",
+            "path": indagini_dir / "Documenti",
             "checkbox": None,
         },
     }
 
-    task = ImportSitiPuntualiTask(
+    csv_files = None
+    if source == "csv":
+        csv_dir = standard_project_path / "CSV"
+        csv_files = {"puntuali": {}, "lineari": {}}
+        csv_files["puntuali"]["sito_puntuale"] = csv_dir / "Sito_Puntuale.txt"
+        csv_files["puntuali"]["indagini_puntuali"] = csv_dir / "Indagini_Puntuali.txt"
+        csv_files["puntuali"]["parametri_puntuali"] = csv_dir / "Parametri_Puntuali.txt"
+        csv_files["puntuali"]["curve"] = csv_dir / "Curve.txt"
+
+        csv_files["lineari"]["sito_lineare"] = csv_dir / "Sito_Lineare.txt"
+        csv_files["lineari"]["indagini_lineari"] = csv_dir / "Indagini_Lineari.txt"
+        csv_files["lineari"]["parametri_lineari"] = csv_dir / "Parametri_Lineari.txt"
+
+    task_class = ImportSitiPuntualiTask if kind == "puntuali" else ImportSitiLineariTask
+    task = task_class(
         standard_proj_paths,
-        data_source="sqlite",
+        data_source=source,
         mdb_password=None,
-        csv_files=None,
-    )
-    task.run()
-
-    # verify that features were imported - for some reason this won't work here...
-    # dest_layer_id = plugin_instance.prj_manager.find_layer_by_table_name_role("sito_puntuale", "editing")
-    # dest_layer = plugin_instance.prj_manager.current_project.mapLayer(dest_layer_id)
-    # refresh layer to ensure feature count is updated
-    # dest_layer.dataProvider().reloadData()
-    # assert dest_layer.featureCount() > 0
-
-    # verify imported features directly in the db
-    result = prj_manager.db_manager.get_row_count("sito_puntuale")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("indagini_puntuali")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("parametri_puntuali")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("curve")
-    # no curve data in sample standard project
-    assert result == 0
-
-
-def test_import_siti_lineari_task_from_mdb(
-    plugin,
-    qgis_iface,
-    prj_manager,
-    base_project_path_current,
-    standard_project_path,
-    mdb_deps_available,
-):
-    """Test ImportSitiLineariTask independently using mdb file as source.
-    Tasks are executed via the QGIS task manager and coverage.py does not track code executed
-    in separate threads, so we run the task directly here.
-    """
-    # exit if mdb dependencies are not available
-    if not mdb_deps_available:
-        warnings.warn("MDB dependencies not available, skipping MDB import test", UserWarning, stacklevel=2)
-        return
-
-    plugin_instance = plugin(qgis_iface)
-
-    project_file = base_project_path_current / "progetto_MS.qgz"
-    project = QgsProject.instance()
-
-    # switch to passwordless MDB
-    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
-    mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
-    (standard_project_path / "Indagini" / "CdI_Tabelle_no_pwd.mdb").rename(mdb_file)
-
-    # open the project
-    project.read(str(project_file))
-    plugin_instance.check_project()
-
-    standard_proj_paths = {
-        "CdI_Tabelle.mdb": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.mdb",
-            "checkbox": None,
-        },
-        "CdI_Tabelle.sqlite": {"parent": "Indagini", "path": None, "checkbox": None},
-        "Ind_ln.shp": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Ind_ln.shp",
-            "checkbox": None,
-        },
-        "Documenti": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Documenti",
-            "checkbox": None,
-        },
-    }
-
-    # task = ImportShapefileTask(standard_proj_paths, "Ind_pu.shp")
-    # task.run()
-
-    task = ImportSitiLineariTask(
-        standard_proj_paths,
-        data_source="mdb",
-        mdb_password=None,
-        csv_files=None,
-    )
-    task.run()
-
-    # verify that features were imported - for some reason this won't work here...
-    # dest_layer_id = plugin_instance.prj_manager.find_layer_by_table_name_role("sito_puntuale", "editing")
-    # dest_layer = plugin_instance.prj_manager.current_project.mapLayer(dest_layer_id)
-    # refresh layer to ensure feature count is updated
-    # dest_layer.dataProvider().reloadData()
-    # assert dest_layer.featureCount() > 0
-
-    # verify imported features directly in the db
-    result = prj_manager.db_manager.get_row_count("sito_lineare")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("indagini_lineari")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("parametri_lineari")
-    assert result > 0
-
-
-def test_import_siti_lineari_task_from_csv(
-    plugin,
-    qgis_iface,
-    prj_manager,
-    base_project_path_current,
-    standard_project_path,
-):
-    """Test ImportSitiLineariTask independently using CSV files as source.
-    Tasks are executed via the QGIS task manager and coverage.py does not track code executed
-    in separate threads, so we run the task directly here.
-    """
-    plugin_instance = plugin(qgis_iface)
-
-    project_file = base_project_path_current / "progetto_MS.qgz"
-    project = QgsProject.instance()
-
-    # remove MDB
-    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
-    mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
-
-    # open the project
-    project.read(str(project_file))
-    plugin_instance.check_project()
-
-    standard_proj_paths = {
-        "CdI_Tabelle.mdb": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.mdb",
-            "checkbox": None,
-        },
-        "CdI_Tabelle.sqlite": {"parent": "Indagini", "path": None, "checkbox": None},
-        "Ind_ln.shp": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Ind_ln.shp",
-            "checkbox": None,
-        },
-        "Documenti": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Documenti",
-            "checkbox": None,
-        },
-    }
-
-    found_files = {"puntuali": {}, "lineari": {}}
-    found_files["puntuali"]["sito_puntuale"] = standard_project_path / "CSV" / "Sito_Puntuale.txt"
-    found_files["puntuali"]["indagini_puntuali"] = standard_project_path / "CSV" / "Indagini_Puntuali.txt"
-    found_files["puntuali"]["parametri_puntuali"] = standard_project_path / "CSV" / "Parametri_Puntuali.txt"
-    found_files["puntuali"]["curve"] = standard_project_path / "CSV" / "Curve.txt"
-
-    found_files["lineari"]["sito_lineare"] = standard_project_path / "CSV" / "Sito_Lineare.txt"
-    found_files["lineari"]["indagini_lineari"] = standard_project_path / "CSV" / "Indagini_Lineari.txt"
-    found_files["lineari"]["parametri_lineari"] = standard_project_path / "CSV" / "Parametri_Lineari.txt"
-
-    task = ImportSitiLineariTask(
-        standard_proj_paths,
-        data_source="csv",
-        mdb_password=None,
-        csv_files=found_files,
+        csv_files=csv_files,
     )
     task.run()
 
     # verify imported features directly in the db
-    result = prj_manager.db_manager.get_row_count("sito_lineare")
-    assert result > 0
+    if kind == "puntuali":
+        tables = ["sito_puntuale", "indagini_puntuali", "parametri_puntuali"]
+    else:
+        tables = ["sito_lineare", "indagini_lineari", "parametri_lineari"]
+    for table in tables:
+        assert prj_manager.db_manager.get_row_count(table) > 0, f"no rows imported in {table}"
 
-    result = prj_manager.db_manager.get_row_count("indagini_lineari")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("parametri_lineari")
-    assert result > 0
-
-
-def test_import_siti_lineari_task_from_sqlite(
-    plugin,
-    qgis_iface,
-    prj_manager,
-    base_project_path_current,
-    standard_project_path,
-):
-    """Test ImportSitiLineariTask independently using sqlite db as source.
-    Tasks are executed via the QGIS task manager and coverage.py does not track code executed
-    in separate threads, so we run the task directly here.
-    """
-    plugin_instance = plugin(qgis_iface)
-
-    project_file = base_project_path_current / "progetto_MS.qgz"
-    project = QgsProject.instance()
-
-    # remove MDB
-    mdb_file = standard_project_path / "Indagini" / "CdI_Tabelle.mdb"
-    mdb_file.rename(mdb_file.with_suffix(".mdb.bak"))
-
-    # open the project
-    project.read(str(project_file))
-    plugin_instance.check_project()
-
-    standard_proj_paths = {
-        "CdI_Tabelle.mdb": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.mdb",
-            "checkbox": None,
-        },
-        "CdI_Tabelle.sqlite": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "CdI_Tabelle.sqlite",
-            "checkbox": None,
-        },
-        "Ind_ln.shp": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Ind_ln.shp",
-            "checkbox": None,
-        },
-        "Documenti": {
-            "parent": "Indagini",
-            "path": standard_project_path / "Indagini" / "Documenti",
-            "checkbox": None,
-        },
-    }
-
-    task = ImportSitiLineariTask(
-        standard_proj_paths,
-        data_source="sqlite",
-        mdb_password=None,
-        csv_files=None,
-    )
-    task.run()
-
-    # verify that features were imported - for some reason this won't work here...
-    # dest_layer_id = plugin_instance.prj_manager.find_layer_by_table_name_role("sito_puntuale", "editing")
-    # dest_layer = plugin_instance.prj_manager.current_project.mapLayer(dest_layer_id)
-    # refresh layer to ensure feature count is updated
-    # dest_layer.dataProvider().reloadData()
-    # assert dest_layer.featureCount() > 0
-
-    # verify imported features directly in the db
-    result = prj_manager.db_manager.get_row_count("sito_lineare")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("indagini_lineari")
-    assert result > 0
-
-    result = prj_manager.db_manager.get_row_count("parametri_lineari")
-    assert result > 0
+    if kind == "puntuali":
+        curve_count = prj_manager.db_manager.get_row_count("curve")
+        if source == "csv":
+            # dummy curve data in csv
+            assert curve_count > 0
+        else:
+            # no curve data in sample standard project
+            assert curve_count == 0
 
 
 def _load_project_and_check(plugin_instance, prj_manager, base_project_path):
@@ -593,19 +207,6 @@ def _load_project_and_check(plugin_instance, prj_manager, base_project_path):
     plugin_instance.check_project()
     assert prj_manager.is_mzs_project is True
     assert prj_manager.project_updateable is False
-
-
-@pytest.mark.skip("Not implemented yet")
-def test_import_siti_puntuali_task_from_mdb_adapt_counters(
-    plugin,
-    qgis_iface,
-    prj_manager,
-    base_project_path_2_0_5,
-    standard_project_path,
-    mdb_deps_available,
-):
-    # insert a dummy site first and verify that counters are adapted
-    pass
 
 
 def test_import_siti_puntuali_task_from_mdb_cancelled_by_user(

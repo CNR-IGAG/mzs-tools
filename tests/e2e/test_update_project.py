@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
 
+import pytest
 from pytest_qgis import MockMessageBar
 from qgis.core import QgsProject, QgsVectorLayer
 
@@ -175,101 +176,27 @@ def verify_sql_scripts_applied(sql_scripts_applied: list, project_version: str) 
             assert script_file in notes_str
 
 
-def test_update_project_from_0_7(plugin, qgis_iface, prj_manager, base_project_path_0_7, monkeypatch):
-    """Test updating a project from version 0.7 to the current version."""
+@pytest.mark.parametrize(
+    "project_fixture, version",
+    [
+        ("base_project_path_0_7", "0.7"),
+        ("base_project_path_1_0", "1.0"),
+        ("base_project_path_1_5", "1.5"),
+        ("base_project_path_1_9_4", "1.9.4"),
+    ],
+)
+def test_update_project_from_legacy(project_fixture, version, request, plugin, qgis_iface, prj_manager, monkeypatch):
+    """Test updating a legacy (< 2.0.0) project to the current version."""
+    base_project_path = request.getfixturevalue(project_fixture)
     plugin_instance = plugin(qgis_iface)
 
     # Setup test environment
-    project, project_file = setup_test_environment(plugin_instance, qgis_iface, base_project_path_0_7, monkeypatch)
+    project, project_file = setup_test_environment(plugin_instance, qgis_iface, base_project_path, monkeypatch)
 
     # Check initial project state
     plugin_instance.check_project()
     project_version = prj_manager.project_version
-    assert project_version == "0.7"
-    assert prj_manager.is_mzs_project is True
-    assert prj_manager.project_updateable is True
-    # verify db < 2.0.0 has no history table
-    assert prj_manager.db.table_exists("mzs_tools_update_history") is False
-
-    # Perform update
-    perform_update(plugin_instance, project, project_file, qgis_iface, monkeypatch)
-
-    # Verify update results
-    assert prj_manager.project_updateable is False
-    assert prj_manager.project_version == __base_version__
-
-    # Verify update history and SQL scripts
-    sql_scripts_applied = verify_update_history(prj_manager, project_version, check_history_table_before=True)
-    verify_sql_scripts_applied(sql_scripts_applied, project_version)
-
-
-def test_update_project_from_1_0(plugin, qgis_iface, prj_manager, base_project_path_1_0, monkeypatch):
-    """Test updating a project from version 1.0 to the current version."""
-    plugin_instance = plugin(qgis_iface)
-
-    # Setup test environment
-    project, project_file = setup_test_environment(plugin_instance, qgis_iface, base_project_path_1_0, monkeypatch)
-
-    # Check initial project state
-    plugin_instance.check_project()
-    project_version = prj_manager.project_version
-    assert project_version == "1.0"
-    assert prj_manager.is_mzs_project is True
-    assert prj_manager.project_updateable is True
-    # verify db < 2.0.0 has no history table
-    assert prj_manager.db.table_exists("mzs_tools_update_history") is False
-
-    # Perform update
-    perform_update(plugin_instance, project, project_file, qgis_iface, monkeypatch)
-
-    # Verify update results
-    assert prj_manager.project_updateable is False
-    assert prj_manager.project_version == __base_version__
-
-    # Verify update history and SQL scripts
-    sql_scripts_applied = verify_update_history(prj_manager, project_version, check_history_table_before=True)
-    verify_sql_scripts_applied(sql_scripts_applied, project_version)
-
-
-def test_update_project_from_1_5(plugin, qgis_iface, prj_manager, base_project_path_1_5, monkeypatch):
-    """Test updating a project from version 1.5 to the current version."""
-    plugin_instance = plugin(qgis_iface)
-
-    # Setup test environment
-    project, project_file = setup_test_environment(plugin_instance, qgis_iface, base_project_path_1_5, monkeypatch)
-
-    # Check initial project state
-    plugin_instance.check_project()
-    project_version = prj_manager.project_version
-    assert project_version == "1.5"
-    assert prj_manager.is_mzs_project is True
-    assert prj_manager.project_updateable is True
-    # verify db < 2.0.0 has no history table
-    assert prj_manager.db.table_exists("mzs_tools_update_history") is False
-
-    # Perform update
-    perform_update(plugin_instance, project, project_file, qgis_iface, monkeypatch)
-
-    # Verify update results
-    assert prj_manager.project_updateable is False
-    assert prj_manager.project_version == __base_version__
-
-    # Verify update history and SQL scripts
-    sql_scripts_applied = verify_update_history(prj_manager, project_version, check_history_table_before=True)
-    verify_sql_scripts_applied(sql_scripts_applied, project_version)
-
-
-def test_update_project_from_1_9_4(plugin, qgis_iface, prj_manager, base_project_path_1_9_4, monkeypatch):
-    """Test updating a project from version 1.9.4 to the current version."""
-    plugin_instance = plugin(qgis_iface)
-
-    # Setup test environment
-    project, project_file = setup_test_environment(plugin_instance, qgis_iface, base_project_path_1_9_4, monkeypatch)
-
-    # Check initial project state
-    plugin_instance.check_project()
-    project_version = prj_manager.project_version
-    assert project_version == "1.9.4"
+    assert project_version == version
     assert prj_manager.is_mzs_project is True
     assert prj_manager.project_updateable is True
     # verify db < 2.0.0 has no history table
@@ -318,7 +245,7 @@ def test_update_project_from_1_9_4_with_data(
     sql_scripts_applied = verify_update_history(prj_manager, project_version, check_history_table_before=True)
     verify_sql_scripts_applied(sql_scripts_applied, project_version)
 
-    # TODO: verify data
+    assert prj_manager.db_manager.get_row_count("sito_puntuale") == 8
 
 
 def test_update_project_from_2_0_0(plugin, qgis_iface, prj_manager, base_project_path_2_0_0, monkeypatch):

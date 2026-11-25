@@ -19,7 +19,7 @@
 import os
 
 import pytest
-from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsRasterLayer, QgsVectorLayer
+from qgis.core import QgsCoordinateReferenceSystem, QgsProject, QgsVectorLayer
 
 DEFAULT_TIMEOUT_SECS = 2
 
@@ -39,7 +39,6 @@ def get_timeout():
 TIMEOUT = get_timeout()
 
 
-@pytest.mark.visual
 class TestQGISMap:
     """Test QGIS map display functionality of pytest-qgis."""
 
@@ -54,28 +53,26 @@ class TestQGISMap:
     def test_qgis_custom_map(self, qgis_new_project):
         """Test QGIS map display with custom basemap."""
 
-        # qgis_new_project correctly remove layers added in previous tests,
-        # but crs seems to persist, so we explicitly set it
-        QgsProject.instance().setCrs(QgsCoordinateReferenceSystem("EPSG:3857"))
-
-        # Test adding a basemap layer - qgis_new_project makes sure that all the
+        # Test adding a layer - qgis_new_project makes sure that all the
         # map layers and configurations are removed
-        basemap_url = "type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        basemap_layer = QgsRasterLayer(basemap_url, "OpenStreetMap", "wms")
-        assert basemap_layer.isValid(), "Basemap layer is not valid."
+        layer = QgsVectorLayer("Polygon?crs=EPSG:32633", "memory_layer", "memory")
+        assert layer.isValid(), "Memory layer is not valid."
 
-        QgsProject.instance().addMapLayer(basemap_layer)
+        QgsProject.instance().addMapLayer(layer)
+
+        # the first layer added to an empty project may set the project CRS,
+        # so the map CRS is set explicitly afterwards
+        QgsProject.instance().setCrs(QgsCoordinateReferenceSystem("EPSG:3857"))
 
         assert QgsProject.instance().count() == 1
         assert QgsProject.instance().crs().authid() == "EPSG:3857"
 
     @pytest.mark.qgis_show_map(timeout=TIMEOUT, add_basemap=True)
-    def test_show_map_with_basemap(self):
-        # without qgis_new_project the previous map with osm basemap is still present
-        # and add_basemap=True add Natural Earth on top
-        # layer added with add_basemap=True does not seem to be counted though:
-        assert QgsProject.instance().count() == 1
+    def test_show_map_with_basemap(self, qgis_new_project):
+        # the Natural Earth layer requested with add_basemap=True is added after the test body
+        # and is not counted here
+        assert qgis_new_project.count() == 0
 
         layer = QgsVectorLayer("Polygon", "dummy_polygon_layer", "memory")
-        QgsProject.instance().addMapLayer(layer)
-        assert QgsProject.instance().count() == 2
+        qgis_new_project.addMapLayer(layer)
+        assert qgis_new_project.count() == 1

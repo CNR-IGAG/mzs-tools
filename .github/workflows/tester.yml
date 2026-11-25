@@ -1,6 +1,7 @@
 name: "🎳 Tester"
 
 on:
+  workflow_call:
   push:
     branches:
       - master
@@ -8,6 +9,9 @@ on:
       - '**.py'
       - .github/workflows/tester.yml
       - pyproject.toml
+      - uv.lock
+      - mzs_tools/**
+      - tests/**
 
   pull_request:
     branches:
@@ -16,6 +20,9 @@ on:
       - '**.py'
       - .github/workflows/tester.yml
       - pyproject.toml
+      - uv.lock
+      - mzs_tools/**
+      - tests/**
 
 env:
   PROJECT_FOLDER: "mzs-tools"
@@ -24,10 +31,8 @@ env:
 jobs:
   test-all:
     runs-on: ubuntu-latest
-    continue-on-error: true
-    # continue-on-error: ${{ matrix.experimental || false }}
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         # bookworm = Debian 12 with Python 3.11 (3.34 image is frozen, no longer rebuilt upstream)
         # jammy = Ubuntu 22.04 with Python 3.10
@@ -69,32 +74,16 @@ jobs:
       - name: Get source code
         uses: actions/checkout@v7
 
-      - name: Print QGIS version
-        run: qgis --version
-
-      # - name: Install uv
-      #   uses: astral-sh/setup-uv@v10.4.0
-      #   with:
-      #     version: "latest"
-
-      - name: Install Python requirements
-        run: |
-          apt-get update && apt-get install -y --no-install-recommends python3-pip python3-venv curl default-jre
-          # Install uv
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          # Add uv to PATH for this session
-          export PATH="$HOME/.local/bin:$PATH"
-          cd /home/root/${{ env.PROJECT_FOLDER }}
-          # Create venv in container's temp directory (unique per job)
-          export UV_PROJECT_ENVIRONMENT=/tmp/.venv-${{ matrix.qgis-version }}
-          uv venv $UV_PROJECT_ENVIRONMENT --clear --system-site-packages
-          # Install project dependencies using uv
-          uv sync --group testing
-
       - name: Run tests
-        run: |
-          cd /home/root/${{ env.PROJECT_FOLDER }}
-          export PATH="$HOME/.local/bin:$PATH"
-          export UV_PROJECT_ENVIRONMENT=/tmp/.venv-${{ matrix.qgis-version }}
-          # Run tests
-          uv run pytest tests/ -v -rs --qgis_disable_gui
+        run: >-
+          bash /home/root/${{ env.PROJECT_FOLDER }}/tests/run_docker_tests.sh
+          ${{ matrix.qgis-version == 'stable-resolute' && '--cov=mzs_tools --cov-report=xml --cov-report=term' || '' }}
+
+      - name: Upload coverage report
+        # skipped by act (ACT=true): JavaScript actions need node inside the job container there
+        if: ${{ matrix.qgis-version == 'stable-resolute' && !cancelled() && !env.ACT }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-xml
+          path: coverage.xml
+          if-no-files-found: warn

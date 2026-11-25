@@ -30,6 +30,7 @@ from mzs_tools.core.constants import (
     PRINT_LAYOUT_MODELS,
     PROJECT_MIGRATION_STEPS,
     ProjectMigrationStep,
+    get_incremental_migration_flags,
 )
 
 
@@ -164,34 +165,6 @@ class TestConstants:
             assert legend.find("layer-tree") is None and legend.find("layer-tree-group") is None
 
 
-# ---------------------------------------------------------------------------
-# Helper function extracted from MzSProjectManager._get_incremental_migration_flags
-# tested here as pure Python (no QGIS dependency)
-# ---------------------------------------------------------------------------
-
-
-def _compute_migration_flags(old_version: str, steps) -> dict:
-    """Pure-Python replica of MzSProjectManager._get_incremental_migration_flags."""
-    flags: dict = {
-        "add_base_layers": False,
-        "add_editing_layers": False,
-        "add_layout_groups": False,
-        "remove_hidden_layers": False,
-        "print_layouts": [],
-    }
-    parsed_old = parse_version(old_version)
-    for step in steps:
-        if parsed_old < parse_version(step.version):
-            flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
-            flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
-            flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
-            flags["remove_hidden_layers"] = flags["remove_hidden_layers"] or step.remove_hidden_layers
-            for layout_file in step.add_print_layouts:
-                if layout_file not in flags["print_layouts"]:
-                    flags["print_layouts"].append(layout_file)
-    return flags
-
-
 class TestProjectMigrationSteps:
     """Tests for the PROJECT_MIGRATION_STEPS registry and migration flag logic."""
 
@@ -207,7 +180,7 @@ class TestProjectMigrationSteps:
 
     def test_flags_for_version_2_0_0(self):
         """Project at 2.0.0 should get editing + layout update (all steps apply)."""
-        flags = _compute_migration_flags("2.0.0", PROJECT_MIGRATION_STEPS)
+        flags = get_incremental_migration_flags("2.0.0", PROJECT_MIGRATION_STEPS)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is True
         assert flags["add_layout_groups"] is True
@@ -216,7 +189,7 @@ class TestProjectMigrationSteps:
 
     def test_flags_for_version_2_0_1(self):
         """Project at 2.0.1 should get layout-only update (2.0.2, 2.0.4, 2.0.6, 2.0.8 steps apply)."""
-        flags = _compute_migration_flags("2.0.1", PROJECT_MIGRATION_STEPS)
+        flags = get_incremental_migration_flags("2.0.1", PROJECT_MIGRATION_STEPS)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is False
         assert flags["add_layout_groups"] is True
@@ -224,7 +197,7 @@ class TestProjectMigrationSteps:
 
     def test_flags_for_version_2_0_2(self):
         """Project at 2.0.2 should get layout-only update (2.0.4, 2.0.6, 2.0.8 steps apply)."""
-        flags = _compute_migration_flags("2.0.2", PROJECT_MIGRATION_STEPS)
+        flags = get_incremental_migration_flags("2.0.2", PROJECT_MIGRATION_STEPS)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is False
         assert flags["add_layout_groups"] is True
@@ -232,7 +205,7 @@ class TestProjectMigrationSteps:
 
     def test_flags_for_version_2_0_6(self):
         """Project at 2.0.6 should get layout update + new FA print layout (2.0.8 step applies)."""
-        flags = _compute_migration_flags("2.0.6", PROJECT_MIGRATION_STEPS)
+        flags = get_incremental_migration_flags("2.0.6", PROJECT_MIGRATION_STEPS)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is False
         assert flags["add_layout_groups"] is True
@@ -240,7 +213,7 @@ class TestProjectMigrationSteps:
 
     def test_flags_for_version_2_0_7(self):
         """Project at 2.0.7 should get layout update + new FA print layout (2.0.8 step applies)."""
-        flags = _compute_migration_flags("2.0.7", PROJECT_MIGRATION_STEPS)
+        flags = get_incremental_migration_flags("2.0.7", PROJECT_MIGRATION_STEPS)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is False
         assert flags["add_layout_groups"] is True
@@ -250,7 +223,7 @@ class TestProjectMigrationSteps:
     def test_flags_for_current_version_no_action(self):
         """A project at the latest registered version should require no update."""
         latest_threshold = max(parse_version(s.version) for s in PROJECT_MIGRATION_STEPS)
-        flags = _compute_migration_flags(str(latest_threshold), PROJECT_MIGRATION_STEPS)
+        flags = get_incremental_migration_flags(str(latest_threshold), PROJECT_MIGRATION_STEPS)
         bool_flags = {k: v for k, v in flags.items() if k != "print_layouts"}
         assert not any(bool_flags.values()), "No migration should be needed for the latest threshold version"
         assert flags["print_layouts"] == [], "No print layouts should be added for the latest threshold version"
@@ -261,7 +234,7 @@ class TestProjectMigrationSteps:
             ProjectMigrationStep(version="1.0.0", description="base only", add_base_layers=True),
             ProjectMigrationStep(version="2.0.0", description="editing only", add_editing_layers=True),
         ]
-        flags = _compute_migration_flags("0.9.0", custom_steps)
+        flags = get_incremental_migration_flags("0.9.0", custom_steps)
         assert flags["add_base_layers"] is True
         assert flags["add_editing_layers"] is True
         assert flags["add_layout_groups"] is False
@@ -273,7 +246,7 @@ class TestProjectMigrationSteps:
             ProjectMigrationStep(version="1.0.0", description="base only", add_base_layers=True),
             ProjectMigrationStep(version="2.0.0", description="editing only", add_editing_layers=True),
         ]
-        flags = _compute_migration_flags("1.5.0", custom_steps)
+        flags = get_incremental_migration_flags("1.5.0", custom_steps)
         assert flags["add_base_layers"] is False
         assert flags["add_editing_layers"] is True
         assert flags["add_layout_groups"] is False
@@ -285,9 +258,9 @@ class TestProjectMigrationSteps:
             ProjectMigrationStep(version="2.0.10", description="layout update", add_layout_groups=True),
         ]
         # 2.0.9 < 2.0.10 → step should apply
-        flags_old = _compute_migration_flags("2.0.9", custom_steps)
+        flags_old = get_incremental_migration_flags("2.0.9", custom_steps)
         assert flags_old["add_layout_groups"] is True
 
         # 2.0.10 is NOT < 2.0.10 → step should NOT apply
-        flags_exact = _compute_migration_flags("2.0.10", custom_steps)
+        flags_exact = get_incremental_migration_flags("2.0.10", custom_steps)
         assert flags_exact["add_layout_groups"] is False

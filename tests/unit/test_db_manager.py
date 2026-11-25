@@ -160,7 +160,7 @@ class TestDatabaseManagerContextManager:
         with pytest.raises(ValueError), DatabaseManager(temp_db_path) as db:
             assert db.is_connected()
             raise ValueError("Test error")
-        # Connection should be closed (can't easily verify without accessing internals)
+        assert db.connection is None
 
 
 class TestDatabaseManagerQueries:
@@ -331,7 +331,7 @@ class TestDatabaseManagerTransactions:
 
     def test_transaction_rollback_on_error(self, db_with_test_table):
         """Test that transaction rolls back on error."""
-        with pytest.raises(Exception), db_with_test_table.transaction() as cursor:  # noqa: B017
+        with pytest.raises(ValueError, match="Test error"), db_with_test_table.transaction() as cursor:
             cursor.execute("INSERT INTO test_table (name, value) VALUES (?, ?)", ("Test", 42))
             # Force an error
             raise ValueError("Test error")
@@ -341,7 +341,7 @@ class TestDatabaseManagerTransactions:
 
     def test_transaction_rollback_on_constraint_violation(self, db_with_test_table):
         """Test that transaction rolls back on constraint violation."""
-        with pytest.raises(Exception), db_with_test_table.transaction() as cursor:  # noqa: B017
+        with pytest.raises(sqlite3.IntegrityError), db_with_test_table.transaction() as cursor:
             cursor.execute("INSERT INTO test_table (id, name, value) VALUES (?, ?, ?)", (1, "Test1", 10))
             # Try to insert duplicate primary key
             cursor.execute("INSERT INTO test_table (id, name, value) VALUES (?, ?, ?)", (1, "Test2", 20))
@@ -409,14 +409,16 @@ class TestDatabaseManagerCursor:
             cursor.execute("SELECT 1")
             result = cursor.fetchone()
             assert result == (1,)
-        # Cursor should be closed now (can't easily verify without accessing internals)
+        with pytest.raises(sqlite3.ProgrammingError):
+            cursor.execute("SELECT 1")
 
     def test_cursor_context_manager_with_error(self, db_manager):
         """Test cursor context manager closes cursor even on error."""
-        with pytest.raises(Exception), db_manager.cursor() as cursor:  # noqa: B017
+        with pytest.raises(ValueError), db_manager.cursor() as cursor:
             cursor.execute("SELECT 1")
             raise ValueError("Test error")
-        # Cursor should still be closed
+        with pytest.raises(sqlite3.ProgrammingError):
+            cursor.execute("SELECT 1")
 
     def test_cursor_without_connection(self, temp_db_path):
         """Test cursor context manager without connection raises error."""

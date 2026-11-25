@@ -1,13 +1,9 @@
-uv.lock
 *.qgs~
 /*.zip
 .continue/rules/
 mzs_tools/CHANGELOG.md
 mzs_tools/CREDITS.md
 mzs_tools/LICENSE
-
-tests/data/mzs_projects/*imported*
-tests/data/standard_projects/
 
 AGENTS.md
 docs/development/plans/

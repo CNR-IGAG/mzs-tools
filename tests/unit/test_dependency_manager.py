@@ -20,10 +20,7 @@
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 
-
-@pytest.mark.no_qgis
 class TestGetRequiredPackages:
     """Test _get_required_packages method."""
 
@@ -132,7 +129,6 @@ class TestGetRequiredPackages:
         assert packages == ["jaydebeapi", "package2", "package3"]
 
 
-@pytest.mark.no_qgis
 class TestGetRequirementsForInstall:
     """Test _get_requirements_for_install method."""
 
@@ -176,7 +172,6 @@ class TestGetRequirementsForInstall:
         assert requirements == ["jaydebeapi"]
 
 
-@pytest.mark.no_qgis
 class TestCheckDependencies:
     """Test check_dependencies method."""
 
@@ -221,7 +216,6 @@ class TestCheckDependencies:
         assert result == {}
 
 
-@pytest.mark.no_qgis
 class TestPythonCommand:
     """Test python_command method for different platforms."""
 
@@ -379,7 +373,6 @@ class TestPythonCommand:
         assert result == "/nonexistent/path/to/python3"
 
 
-@pytest.mark.no_qgis
 class TestCheckPythonDependencies:
     """Test check_python_dependencies method."""
 
@@ -425,7 +418,6 @@ class TestCheckPythonDependencies:
         assert result is False
 
 
-@pytest.mark.no_qgis
 class TestInstallDependencies:
     """Test install_dependencies method."""
 

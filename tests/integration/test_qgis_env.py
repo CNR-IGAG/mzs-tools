@@ -36,22 +36,3 @@ def test_qgis_environment():
     assert "ogr" in r.providerList()
     assert "gdal" in r.providerList()
     assert "postgres" in r.providerList()
-
-
-# def test_qgis_environment_alt():
-#     """
-#     Test that the full QGIS environment is set up correctly (without pytest-qgis)
-#     If this is the case, we should have access to some common
-#     data providers initialized by QgsApplication.initQgis()
-#     """
-#     QgsApplication.setPrefixPath("/usr", True)
-#     from qgis.testing import start_app
-#     start_app()
-
-#     from qgis.core import QgsProviderRegistry
-
-#     r = QgsProviderRegistry.instance()
-#     assert "spatialite" in r.providerList()
-#     assert "ogr" in r.providerList()
-#     assert "gdal" in r.providerList()
-#     assert "postgres" in r.providerList()

@@ -18,6 +18,8 @@
 
 from dataclasses import dataclass, field
 
+from packaging.version import parse as parse_version
+
 
 @dataclass
 class ProjectMigrationStep:
@@ -100,6 +102,43 @@ PROJECT_MIGRATION_STEPS: list[ProjectMigrationStep] = [
         remove_hidden_layers=True,
     ),
 ]
+
+
+def get_incremental_migration_flags(old_version: str, steps: list[ProjectMigrationStep] | None = None) -> dict:
+    """Return the union of the flags of all applicable migration steps.
+
+    A step is applicable when ``parse(old_version) < parse(step.version)``.
+    The boolean layer flags can be unpacked directly into ``add_default_layers(**flags)`` after
+    popping ``print_layouts`` and ``remove_hidden_layers``.
+
+    Args:
+        old_version: Version string of the project to be upgraded (e.g. ``"2.0.1"``).
+        steps: Migration steps to evaluate; defaults to ``PROJECT_MIGRATION_STEPS``.
+
+    Returns:
+        dict with keys ``add_base_layers``, ``add_editing_layers``, ``add_layout_groups``,
+        ``remove_hidden_layers`` (all bool) and ``print_layouts`` (list[str] of .qpt file names,
+        deduplicated, preserving first-occurrence order).
+    """
+    flags: dict = {
+        "add_base_layers": False,
+        "add_editing_layers": False,
+        "add_layout_groups": False,
+        "remove_hidden_layers": False,
+        "print_layouts": [],
+    }
+    parsed_old = parse_version(old_version)
+    for step in steps if steps is not None else PROJECT_MIGRATION_STEPS:
+        if parsed_old < parse_version(step.version):
+            flags["add_base_layers"] = flags["add_base_layers"] or step.add_base_layers
+            flags["add_editing_layers"] = flags["add_editing_layers"] or step.add_editing_layers
+            flags["add_layout_groups"] = flags["add_layout_groups"] or step.add_layout_groups
+            flags["remove_hidden_layers"] = flags["remove_hidden_layers"] or step.remove_hidden_layers
+            for layout_file in step.add_print_layouts:
+                if layout_file not in flags["print_layouts"]:
+                    flags["print_layouts"].append(layout_file)
+    return flags
+
 
 DB_MIGRATION_SCRIPTS = {
     "0.8": "query_v08.sql",

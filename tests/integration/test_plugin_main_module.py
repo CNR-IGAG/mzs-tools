@@ -19,10 +19,18 @@
 from pathlib import Path
 from unittest.mock import Mock
 
+import pytest
 from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 
 from mzs_tools.gui.dlg_create_project import DlgCreateProject
 from mzs_tools.gui.dlg_metadata_edit import DlgMetadataEdit
+
+
+@pytest.fixture(autouse=True)
+def _silence_message_boxes(monkeypatch):
+    """Prevent modal message boxes from blocking the tests."""
+    for name in ("information", "warning", "critical"):
+        monkeypatch.setattr(QMessageBox, name, lambda *a, **k: QMessageBox.StandardButton.Ok)
 
 
 def test_add_action_method(plugin, qgis_iface, qgis_app):
@@ -75,8 +83,6 @@ def test_on_new_project_action(plugin, qgis_iface, monkeypatch, qgis_new_project
 
     # if import_data is True, dependency_manager.check_python_dependencies() should be called
     monkeypatch.setattr(plugin_instance, "dependency_manager", Mock())
-    # prevent QmessageBox from blocking the test
-    monkeypatch.setattr(QMessageBox, "information", lambda *args, **kwargs: None)
     # prevent import dialog from opening
     monkeypatch.setattr(plugin_instance, "on_import_data_action", Mock())
     plugin_instance.on_new_project_action(import_data=True)
@@ -89,8 +95,6 @@ def test_on_new_project_action(plugin, qgis_iface, monkeypatch, qgis_new_project
         raise Exception("Test exception")
 
     monkeypatch.setattr(plugin_instance.prj_manager, "create_project", raise_exception)
-    # prevent QmessageBox from blocking the test
-    monkeypatch.setattr(QMessageBox, "critical", lambda *args, **kwargs: None)
     plugin_instance.on_new_project_action()
     assert plugin_instance.dlg_create_project is not None
 
@@ -154,8 +158,6 @@ def test_on_import_data_action(plugin, qgis_iface, monkeypatch):
 
     # simulate a project with some indagini data
     monkeypatch.setattr(plugin_instance.prj_manager, "count_indagini_data", lambda x=10: mock_count_indagini_data(x))
-    # monkeypatch QMessageBox to prevent blocking the test
-    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
     plugin_instance.on_import_data_action()
 
     # when missing dependencies, _show_missing_dependencies_dialog should be called
@@ -234,7 +236,6 @@ def test_on_dependency_manager_action(plugin, qgis_iface, monkeypatch):
     # Mock check_mdb_connection with successful result
     mock_result = {"deps_ok": True, "jvm_ok": True, "connected": True}
     monkeypatch.setattr("mzs_tools.mzs_tools.check_mdb_connection", lambda x: mock_result)
-    monkeypatch.setattr(QMessageBox, "information", lambda *args, **kwargs: None)
 
     plugin_instance.on_dependency_manager_action()
     # Should call QMessageBox.information for success
@@ -242,7 +243,6 @@ def test_on_dependency_manager_action(plugin, qgis_iface, monkeypatch):
     # Mock check_mdb_connection with failed connection
     mock_result = {"deps_ok": True, "jvm_ok": True, "connected": False}
     monkeypatch.setattr("mzs_tools.mzs_tools.check_mdb_connection", lambda x: mock_result)
-    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
 
     plugin_instance.on_dependency_manager_action()
     # Should call QMessageBox.warning for failure
@@ -303,7 +303,6 @@ def test_on_backup_project_action(plugin, qgis_iface, monkeypatch, tmp_path):
 
     # Simulate user selecting the same directory as the project
     monkeypatch.setattr(QFileDialog, "getExistingDirectory", lambda *args, **kwargs: str(project_path))
-    monkeypatch.setattr(QMessageBox, "warning", lambda *args, **kwargs: None)
     plugin_instance.on_backup_project_action()
     # backup_project should not be called when selecting same directory
 
@@ -329,7 +328,6 @@ def test_on_backup_project_action(plugin, qgis_iface, monkeypatch, tmp_path):
         raise Exception("Test exception")
 
     monkeypatch.setattr(plugin_instance.prj_manager, "backup_project", raise_exception)
-    monkeypatch.setattr(QMessageBox, "critical", lambda *args, **kwargs: None)
     plugin_instance.on_backup_project_action()
     # Should handle exception gracefully
 
@@ -356,7 +354,6 @@ def test_on_backup_db_action(plugin, qgis_iface, monkeypatch, tmp_path):
         raise Exception("Test exception")
 
     monkeypatch.setattr(plugin_instance.prj_manager, "backup_database", raise_exception)
-    monkeypatch.setattr(QMessageBox, "critical", lambda *args, **kwargs: None)
     plugin_instance.on_backup_db_action()
     # Should handle exception gracefully
 

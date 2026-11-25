@@ -16,6 +16,7 @@
 # along with MzS Tools.  If not, see <https://www.gnu.org/licenses/>.
 # -----------------------------------------------------------------------------
 
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -25,9 +26,13 @@ from mzs_tools.gui.dlg_manage_attachments import DlgManageAttachments
 from mzs_tools.tasks.attachments_task import AttachmentsTask
 
 
+def _log_has(path: Path | None, text: str) -> bool:
+    return path is not None and path.exists() and text in path.read_text(encoding="utf-8")
+
+
 @pytest.mark.display
 def test_manage_attachments(
-    plugin, qgis_app, qgis_iface, prj_manager, base_project_path_current_imported, monkeypatch, qtbot
+    plugin, qgis_iface, prj_manager, base_project_path_current_imported, monkeypatch, qtbot, wait_tasks_done
 ):
     monkeypatch.setattr(qgis_iface, "messageBar", lambda: Mock(), raising=False)
     plugin_instance = plugin(qgis_iface)
@@ -46,14 +51,10 @@ def test_manage_attachments(
     # Test without prepending IDs
     dialog.chk_prepend_ids.setChecked(False)
 
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:
-        dialog.accept()
-        # save task description for later checks
-        task_description = dialog.manager.manage_attachments_task.description()
-        # small delay to allow task to start
-        qtbot.wait(100)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(100)
+    dialog.accept()
+    # save task description for later checks
+    task_description = dialog.manager.manage_attachments_task.description()
+    wait_tasks_done(lambda: _log_has(dialog.manager.log_file_path, "Attachment check"), timeout_ms=60_000)
 
     assert dialog.manager.log_file_path.exists() is True
     log_text = dialog.manager.log_file_path.read_text(encoding="utf-8")
@@ -64,20 +65,16 @@ def test_manage_attachments(
     assert "057001P238_057001P39.pdf for indagini_puntuali 057001P238DN287 does not exist!" in log_text
     assert "A2 for parametri_puntuali 057001P240HVSR289FR799 does not exist!" in log_text
 
-    # Wait a second to ensure different timestamps for log files
+    # Wait a second to ensure different timestamps for log files (names have a one-second resolution)
     qtbot.wait(1000)
 
     # Run task again with prepending IDs option enabled
     dialog = DlgManageAttachments()
     dialog.chk_prepend_ids.setChecked(True)
-    with qtbot.waitSignal(qgis_app.taskManager().allTasksFinished, timeout=10000) as blocker:  # noqa: F841
-        dialog.accept()
-        # save task description for later checks
-        task_description = dialog.manager.manage_attachments_task.description()
-        # small delay to allow task to start
-        qtbot.wait(100)
-        while qgis_app.taskManager().countActiveTasks() > 0:
-            qtbot.wait(100)
+    dialog.accept()
+    # save task description for later checks
+    task_description = dialog.manager.manage_attachments_task.description()
+    wait_tasks_done(lambda: _log_has(dialog.manager.log_file_path, "Attachment check"), timeout_ms=60_000)
 
     assert dialog.manager.log_file_path.exists() is True
     log_text = dialog.manager.log_file_path.read_text(encoding="utf-8")

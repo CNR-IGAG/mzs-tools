@@ -11,7 +11,6 @@ dev = [
     "pre-commit>=4.5.1",
     "ruff>=0.14.11",
     "esbonio>=1.0.0",
-    "JayDeBeApi>=1.2.3",
     "bandit>=1.9.4",
     "detect-secrets>=1.5.0",
     "flake8>=7.3.0",
@@ -22,9 +21,9 @@ testing = [
     "pytest-qt>=4.5.0",
     "pytest-qgis>=2.1.0",
     "pytest-sugar>=1.1.1",
-    "pytest-env>=1.2.0",
+    "pytest-timeout>=2.3.1",
     "factory-boy>=3.3.3",
-    "tox>=4.34.1",
+    "JayDeBeApi>=1.2.3",
 ]
 ci = [
     "qgis-plugin-ci>=2.9.1",
@@ -105,6 +104,8 @@ addopts = [
     "--strict-config",
     # "--verbose",
 ]
+timeout = 300
+timeout_method = "thread"
 # filterwarnings = [
 #     "ignore::UserWarning",
 #     "ignore::DeprecationWarning",
@@ -113,17 +114,13 @@ markers = [
     "unit: Unit tests",
     "integration: Integration tests",
     "e2e: End-to-end tests that simulate full user interaction with the plugin in a QGIS GUI environment",
-    "no_qgis: Tests that don't require pyqgis or full QGIS environment",
     "display: Tests that display GUIs for visual inspection, but can be run in headless CI environments by setting QT_QPA_PLATFORM or --qgis_disable_gui",
     "visual: Tests that require visual inspection of GUIs or visual output (e.g., map rendering) and are not suitable for headless CI environments",
 ]
 
-[tool.pytest_env]
-TESTING_MODE = 1
-# QGIS_PREFIX_PATH = "/usr"
-
 [tool.coverage.run]
 source = ["mzs_tools"]
+branch = true
 omit = [
     "*/tests/*",
     "*/test_*",
