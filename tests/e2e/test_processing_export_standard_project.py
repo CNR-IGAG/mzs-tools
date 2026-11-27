@@ -52,6 +52,7 @@ def test_export_project_to_standard_algorithm(mzs_provider, base_project_path_cu
     assert results["STATUS"] == "exported"
     assert results["COD_ISTAT"] == "057001"
     assert results["EXPORT_PATH"] == str(export_path)
+    assert results["OUTPUT_FOLDER"] == str(out)
     log_file = Path(results["LOG_FILE"])
     assert log_file.parent == p / "Allegati" / "log"
     assert log_file.stat().st_size > 0
@@ -128,4 +129,5 @@ def test_export_projects_in_folder_to_standard_algorithm(mzs_provider, base_proj
     assert results["SKIPPED_COUNT"] == 1
     assert results["FAILED_COUNT"] == 0
     assert len(results["EXPORTED_PATHS"].splitlines()) == 2
+    assert results["OUTPUT_FOLDER"] == str(out)
     assert len(list(out.iterdir())) == 2

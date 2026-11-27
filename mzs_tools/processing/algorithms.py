@@ -20,11 +20,13 @@ from pathlib import Path
 
 from qgis.core import (
     QgsProcessingAlgorithm,
+    QgsProcessingOutputFolder,
     QgsProcessingOutputNumber,
     QgsProcessingOutputString,
     QgsProcessingParameterBoolean,
     QgsProcessingParameterEnum,
     QgsProcessingParameterFile,
+    QgsProcessingParameterFolderDestination,
     QgsProcessingParameterString,
 )
 from qgis.PyQt.QtCore import QCoreApplication
@@ -69,6 +71,16 @@ class _MzSToolsAlgorithmBase(QgsProcessingAlgorithm):
             if translated != message:
                 return translated
         return message
+
+    def _add_output_folder_parameter(self, description: str):
+        # a destination parameter also adds the OUTPUT_FOLDER output, so that algorithms can be chained in models
+        self.addParameter(QgsProcessingParameterFolderDestination("OUTPUT_FOLDER", description))
+
+    def _output_folder(self, parameters, context) -> Path:
+        # QGIS does not create the destination folder (e.g. a temporary one)
+        folder = Path(self.parameterAsFileOutput(parameters, "OUTPUT_FOLDER", context))
+        folder.mkdir(parents=True, exist_ok=True)
+        return folder
 
 
 class _MzSProjectUpdateAlgorithmBase(_MzSToolsAlgorithmBase):
@@ -124,6 +136,7 @@ class UpdateProjectAlgorithm(_MzSProjectUpdateAlgorithmBase):
         self.addOutput(QgsProcessingOutputString("FROM_VERSION", self.tr("Project version before the update")))
         self.addOutput(QgsProcessingOutputString("TO_VERSION", self.tr("Project version after the update")))
         self.addOutput(QgsProcessingOutputString("BACKUP_PATH", self.tr("Backup folder")))
+        self.addOutput(QgsProcessingOutputFolder("OUTPUT_FOLDER", self.tr("Project folder")))
 
     def processAlgorithm(self, parameters, context, feedback):
         project_file = Path(self.parameterAsFile(parameters, "INPUT", context))
@@ -141,6 +154,7 @@ class UpdateProjectAlgorithm(_MzSProjectUpdateAlgorithmBase):
             "FROM_VERSION": result.from_version,
             "TO_VERSION": result.to_version,
             "BACKUP_PATH": str(result.backup_path) if result.backup_path else "",
+            "OUTPUT_FOLDER": str(project_file.parent),
         }
 
 
@@ -175,6 +189,7 @@ class UpdateProjectsInFolderAlgorithm(_MzSProjectUpdateAlgorithmBase):
         self.addOutput(QgsProcessingOutputNumber("SKIPPED_COUNT", self.tr("Skipped projects")))
         self.addOutput(QgsProcessingOutputNumber("FAILED_COUNT", self.tr("Failed projects")))
         self.addOutput(QgsProcessingOutputString("FAILED_PROJECTS", self.tr("Failed project files")))
+        self.addOutput(QgsProcessingOutputFolder("OUTPUT_FOLDER", self.tr("Scanned folder")))
 
     def processAlgorithm(self, parameters, context, feedback):
         folder = Path(self.parameterAsFile(parameters, "INPUT_FOLDER", context))
@@ -221,6 +236,7 @@ class UpdateProjectsInFolderAlgorithm(_MzSProjectUpdateAlgorithmBase):
             "SKIPPED_COUNT": counts[UPDATE_STATUS_SKIPPED],
             "FAILED_COUNT": len(failed),
             "FAILED_PROJECTS": "\n".join(failed),
+            "OUTPUT_FOLDER": str(folder),
         }
 
 
@@ -232,13 +248,7 @@ class _StandardProjectImportAlgorithmBase(_MzSToolsAlgorithmBase):
         return "standard_project_import"
 
     def _add_common_parameters(self):
-        self.addParameter(
-            QgsProcessingParameterFile(
-                "OUTPUT_FOLDER",
-                self.tr("Output folder for the new MzS Tools projects"),
-                behavior=QgsProcessingParameterFile.Folder,
-            )
-        )
+        self._add_output_folder_parameter(self.tr("Output folder for the new MzS Tools projects"))
         self.addParameter(
             QgsProcessingParameterEnum(
                 "INDAGINI_SOURCE",
@@ -331,11 +341,12 @@ class ImportStandardProjectAlgorithm(_StandardProjectImportAlgorithmBase):
 
     def processAlgorithm(self, parameters, context, feedback):
         csv_folder = self.parameterAsFile(parameters, "CSV_FOLDER", context)
+        output_folder = self._output_folder(parameters, context)
 
         # failures propagate as QgsProcessingException
         result = import_standard_project(
             Path(self.parameterAsFile(parameters, "INPUT_FOLDER", context)),
-            Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context)),
+            output_folder,
             cod_istat=self.parameterAsString(parameters, "COD_ISTAT", context) or None,
             csv_dir=Path(csv_folder) if csv_folder else None,
             comuni_names=load_comuni_names(),
@@ -353,6 +364,7 @@ class ImportStandardProjectAlgorithm(_StandardProjectImportAlgorithmBase):
             "COD_ISTAT": result.cod_istat,
             "INDAGINI_SOURCE": result.indagini_source,
             "LOG_FILE": str(result.log_file) if result.log_file else "",
+            "OUTPUT_FOLDER": str(output_folder),
         }
 
 
@@ -392,7 +404,7 @@ class ImportStandardProjectsInFolderAlgorithm(_StandardProjectImportAlgorithmBas
 
     def processAlgorithm(self, parameters, context, feedback):
         folder = Path(self.parameterAsFile(parameters, "INPUT_FOLDER", context))
-        output_folder = Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context))
+        output_folder = self._output_folder(parameters, context)
         common_values = self._common_parameter_values(parameters, context)
 
         created: list[str] = []
@@ -442,6 +454,7 @@ class ImportStandardProjectsInFolderAlgorithm(_StandardProjectImportAlgorithmBas
             "FAILED_COUNT": len(failed),
             "CREATED_PROJECTS": "\n".join(created),
             "FAILED_PROJECTS": "\n".join(failed),
+            "OUTPUT_FOLDER": str(output_folder),
         }
 
 
@@ -453,13 +466,7 @@ class _StandardProjectExportAlgorithmBase(_MzSToolsAlgorithmBase):
         return "standard_project_export"
 
     def _add_common_parameters(self):
-        self.addParameter(
-            QgsProcessingParameterFile(
-                "OUTPUT_FOLDER",
-                self.tr("Output folder for the exported standard projects"),
-                behavior=QgsProcessingParameterFile.Folder,
-            )
-        )
+        self._add_output_folder_parameter(self.tr("Output folder for the exported standard projects"))
         self.addParameter(
             QgsProcessingParameterEnum(
                 "OUTPUT_FORMAT",
@@ -520,11 +527,14 @@ class ExportProjectToStandardAlgorithm(_StandardProjectExportAlgorithmBase):
         self.addOutput(QgsProcessingOutputString("LOG_FILE", self.tr("Export log file")))
 
     def processAlgorithm(self, parameters, context, feedback):
+        fmt = self._indagini_format(parameters, context)
+        output_folder = self._output_folder(parameters, context)
+
         # failures propagate as QgsProcessingException
         result = export_project_to_standard(
             Path(self.parameterAsFile(parameters, "INPUT", context)),
-            Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context)),
-            indagini_format=self._indagini_format(parameters, context),
+            output_folder,
+            indagini_format=fmt,
             feedback=feedback,
         )
         if result.status == EXPORT_STATUS_SKIPPED:
@@ -537,6 +547,7 @@ class ExportProjectToStandardAlgorithm(_StandardProjectExportAlgorithmBase):
             "EXPORT_PATH": str(result.export_path) if result.export_path else "",
             "COD_ISTAT": result.cod_istat,
             "LOG_FILE": str(result.log_file) if result.log_file else "",
+            "OUTPUT_FOLDER": str(output_folder),
         }
 
 
@@ -574,8 +585,8 @@ class ExportProjectsInFolderToStandardAlgorithm(_StandardProjectExportAlgorithmB
 
     def processAlgorithm(self, parameters, context, feedback):
         folder = Path(self.parameterAsFile(parameters, "INPUT_FOLDER", context))
-        output_folder = Path(self.parameterAsFile(parameters, "OUTPUT_FOLDER", context))
         fmt = self._indagini_format(parameters, context)
+        output_folder = self._output_folder(parameters, context)
 
         exported: list[str] = []
         skipped = 0
@@ -615,4 +626,5 @@ class ExportProjectsInFolderToStandardAlgorithm(_StandardProjectExportAlgorithmB
             "FAILED_COUNT": len(failed),
             "EXPORTED_PATHS": "\n".join(exported),
             "FAILED_PROJECTS": "\n".join(failed),
+            "OUTPUT_FOLDER": str(output_folder),
         }

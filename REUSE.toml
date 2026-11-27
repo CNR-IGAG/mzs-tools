@@ -5,7 +5,6 @@ path = [
   "*",
   "mzs_tools/**",
   ".github/**",
-  ".vscode/**",
   "docker/**",
   "tests/**",
 ]

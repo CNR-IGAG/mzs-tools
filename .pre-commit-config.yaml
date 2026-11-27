@@ -1,4 +1,4 @@
-exclude: '.venv|__pycache__|tests/data/|mzs_tools/i18n/|docs/|/migrations/|devcontainer.json|.vscode/'
+exclude: '.venv|__pycache__|tests/data/|mzs_tools/i18n/|docs/|/migrations/|devcontainer.json'
 default_stages: [pre-commit]
 minimum_pre_commit_version: "3.2.0"
 

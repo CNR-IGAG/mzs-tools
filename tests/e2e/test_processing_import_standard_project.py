@@ -59,6 +59,7 @@ def test_import_standard_project_algorithm(mzs_provider, standard_project_path, 
     assert results["COD_ISTAT"] == "057001"
     assert results["INDAGINI_SOURCE"] == "sqlite"
     assert results["PROJECT_PATH"] == str(project_dir)
+    assert results["OUTPUT_FOLDER"] == str(out)
     assert (project_dir / "progetto" / "versione.txt").read_text().strip() == __base_version__
     log_file = Path(results["LOG_FILE"])
     assert log_file.is_file()
@@ -107,14 +108,15 @@ def test_import_standard_project_algorithm(mzs_provider, standard_project_path, 
 def test_import_standard_project_algorithm_csv_fallback(mzs_provider, standard_project_path, tmp_path):
     for name in ("CdI_Tabelle.sqlite", "CdI_Tabelle.mdb", "CdI_Tabelle_no_pwd.mdb"):
         (standard_project_path / "Indagini" / name).unlink()
-    out = tmp_path / "out"
-    out.mkdir()
 
+    # a temporary output folder is created by the algorithm
     results = run_algorithm(
-        "mzs_tools:import_standard_project", {"INPUT_FOLDER": str(standard_project_path), "OUTPUT_FOLDER": str(out)}
+        "mzs_tools:import_standard_project",
+        {"INPUT_FOLDER": str(standard_project_path), "OUTPUT_FOLDER": "TEMPORARY_OUTPUT"},
     )
 
     project_dir = Path(results["PROJECT_PATH"])
+    assert project_dir.parent == Path(results["OUTPUT_FOLDER"])
     assert results["INDAGINI_SOURCE"] == "csv"
     assert count_rows(project_dir, "sito_puntuale") > 0
     assert count_rows(project_dir, "curve") > 0
@@ -148,6 +150,7 @@ def test_import_standard_projects_in_folder_algorithm(mzs_provider, standard_pro
     assert results["SKIPPED_COUNT"] == 1
     assert results["FAILED_COUNT"] == 0
     assert results["CREATED_PROJECTS"] == str(out / "057001_Accumoli")
+    assert results["OUTPUT_FOLDER"] == str(out)
 
     results = run_algorithm("mzs_tools:import_standard_projects_in_folder", params)
     assert results["CREATED_COUNT"] == 0

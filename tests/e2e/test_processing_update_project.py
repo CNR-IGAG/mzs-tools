@@ -50,6 +50,7 @@ def test_update_project_algorithm_from_2_0_5(mzs_provider, base_project_path_2_0
     assert results["STATUS"] == "updated"
     assert results["FROM_VERSION"] == "2.0.5"
     assert results["TO_VERSION"] == __base_version__
+    assert results["OUTPUT_FOLDER"] == str(base_project_path_2_0_5)
     backup_path = Path(results["BACKUP_PATH"])
     assert backup_path.is_dir()
     assert read_version(backup_path) == "2.0.5"
@@ -102,6 +103,7 @@ def test_update_projects_in_folder_algorithm(mzs_provider, base_project_path_2_0
     assert results["UPDATED_COUNT"] == 2
     assert results["SKIPPED_COUNT"] == 1
     assert results["FAILED_COUNT"] == 0
+    assert results["OUTPUT_FOLDER"] == str(tmp_path)
     assert read_version(legacy_dir) == "1.9.4"
 
     # backup folders created by the first run are ignored
